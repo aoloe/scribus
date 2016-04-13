@@ -44,7 +44,10 @@ class SCRIBUS_API ResourceManager : public QDialog, Ui::ResourceManagerBase
 		RM_HYPH,
 		RM_PROFILES,
 		RM_SPELL,
-		RM_TEMPLATES
+		RM_TEMPLATES,
+		RM_HELP,
+		RM_PALETTES,
+		RM_TEST=99
 	};
 	public:
 		ResourceManager(QWidget* parent);
@@ -57,19 +60,21 @@ class SCRIBUS_API ResourceManager : public QDialog, Ui::ResourceManagerBase
 		void languageChange();
 
 	protected:
-		void setFontCategory();
-		void setHyphCategory();
-		void setSpellCategory();
-		void setTemplatesCategory();
-
 		void updateInstalledFonts();
 		void updateInstalledHyph();
 		void updateInstalledSpell();
 		void updateInstalledTemplates();
+		void updateInstalledHelp();
+		void updateInstalledPalettes();
+		void updateInstalledTest();
+
 		void updateAvailableFonts();
 		void updateAvailableHyph();
 		void updateAvailableSpell();
 		void updateAvailableTemplates();
+		void updateAvailableHelp();
+		void updateAvailablePalettes();
+		void updateAvailableTest();
 
 		QString currentCategory;
 		QMap <int, QString> resourceCategories;
@@ -80,8 +85,11 @@ class SCRIBUS_API ResourceManager : public QDialog, Ui::ResourceManagerBase
 		QList <DownloadItem> dictList;
 		QList <DownloadItem> fontList;
 		QList <DownloadItem> templateList;
+		QList <DownloadItem> helpList;
+		QList <DownloadItem> paletteList;
 		QList <DownloadItem> profileList;
 		QList <DownloadItem> downloadList;
+		QList <DownloadItem> testList;
 		QString affixFileName(QStringList files);
 		QString dictFileName(QStringList files);
 		QString findDestinationFolder();
@@ -95,6 +103,7 @@ class SCRIBUS_API ResourceManager : public QDialog, Ui::ResourceManagerBase
 		void downloadLicenseFileFinished(const QString &);
 		void downloadLicenseFileFailed(const QString &);
 		void updateProgressBar();
+		void updateProgressData(qint64 bytesReceived, qint64 bytesTotal);
 		void startDownload();
 		void showLicense();
 

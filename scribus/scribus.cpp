@@ -320,6 +320,7 @@ int ScribusMainWindow::initScMW(bool primaryMainWindow)
 		qApp->setStyleSheet(QString(stylesheet));
 	}
 
+	qApp->setLayoutDirection(QLocale(ScCore->getGuiLanguage()).textDirection());
 	previewDinUse = false;
 	printDinUse = false;
 	internalCopy = false;
@@ -995,7 +996,7 @@ void ScribusMainWindow::initMenuBar()
 	scrMenuMgr->addMenuItemString("unicodeQuoteCJKDoubleLeft", "InsertQuote");
 	scrMenuMgr->addMenuItemString("unicodeQuoteCJKDoubleRight", "InsertQuote");
 
-	scrMenuMgr->createMenu("InsertSpace", tr("S&paces/Breaks"), "Insert");
+	scrMenuMgr->createMenu("InsertSpace", tr("S&paces && Breaks"), "Insert");
 	scrMenuMgr->addMenuItemString("InsertSpace", "Insert");
 	scrMenuMgr->addMenuItemString("unicodeNonBreakingSpace", "InsertSpace");
 	scrMenuMgr->addMenuItemString("unicodeSpaceEN", "InsertSpace");
@@ -1932,6 +1933,24 @@ void ScribusMainWindow::closeEvent(QCloseEvent *ce)
 	editToolBar->connectPrefsSlot(false);
 	modeToolBar->connectPrefsSlot(false);
 	pdfToolBar->connectPrefsSlot(false);
+
+	m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.clear();
+	QList<QTabBar *> bars = findChildren<QTabBar *>(QString());
+	for (int i = 0; i < bars.count(); ++i)
+	{
+		QTabBar *bar = bars[i];
+		tabPrefs currentTab;
+		for (int ii = 0; ii < bar->count(); ii++)
+		{
+			currentTab.activeTab = bar->currentIndex();
+			QObject *obj = (QObject*)bar->tabData(ii).toULongLong();
+			if (obj != NULL)
+				currentTab.palettes.append(obj->objectName());
+		}
+		if (!currentTab.palettes.isEmpty())
+			m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.append(currentTab);
+	}
+
 	propertiesPalette->hide();
 	outlinePalette->hide();
 	scrapbookPalette->hide();
@@ -2247,7 +2266,6 @@ ScribusDoc *ScribusMainWindow::doFileNew(double width, double height, double top
 	}
 	if (requiresGUI)
 	{
-		connect(w, SIGNAL(autoSaved()), this, SLOT(slotAutoSaved()));
 		connect(ScCore->fileWatcher, SIGNAL(fileChanged(QString)), tempDoc, SLOT(updatePict(QString)));
 		connect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString)), tempDoc, SLOT(removePict(QString)));
 		connect(ScCore->fileWatcher, SIGNAL(dirChanged(QString )), tempDoc, SLOT(updatePictDir(QString )));
@@ -3707,7 +3725,6 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		view->zoom();
 		view->GotoPage(0);
 		connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(newActWin(QMdiSubWindow *)));
-		connect(w, SIGNAL(autoSaved()), this, SLOT(slotAutoSaved()));
 		connect(ScCore->fileWatcher, SIGNAL(fileChanged(QString )), doc, SLOT(updatePict(QString)));
 		connect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString )), doc, SLOT(removePict(QString)));
 		connect(ScCore->fileWatcher, SIGNAL(dirChanged(QString )), doc, SLOT(updatePictDir(QString )));
@@ -4014,12 +4031,6 @@ void ScribusMainWindow::slotFileRevert()
 	}
 }
 
-void ScribusMainWindow::slotAutoSaved()
-{
-	if (ActWin == sender())
-		updateActiveWindowCaption(doc->DocName);
-}
-
 bool ScribusMainWindow::slotFileSave()
 {
 	bool ret = false;
@@ -4152,8 +4163,6 @@ bool ScribusMainWindow::DoFileClose()
 	slotSelect();
 	doc->autoSaveTimer->stop();
 	doc->disconnectDocSignals();
-	disconnect(doc, SIGNAL(saved(QString)));
-	disconnect(doc->WinHan, SIGNAL(autoSaved()));
 	disconnect(ScCore->fileWatcher, SIGNAL(fileChanged(QString )), doc, SLOT(updatePict(QString)));
 	disconnect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString )), doc, SLOT(removePict(QString)));
 	disconnect(ScCore->fileWatcher, SIGNAL(dirChanged(QString )), doc, SLOT(updatePictDir(QString )));
@@ -6615,6 +6624,49 @@ int ScribusMainWindow::ShowSubs()
 	marksManager->startup();
 	nsEditor->startup();
 	symbolPalette->startup();
+	if (!m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.isEmpty())
+	{
+		for (int a = 0; a < m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.count(); a++)
+		{
+			QStringList actTab = m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[a].palettes;
+			QDockWidget *container = findChild<QDockWidget *>(actTab[0]);
+			if (container)
+			{
+				for (int i = 1; i < actTab.count(); i++)
+				{
+					QDockWidget *content = findChild<QDockWidget *>(actTab[i]);
+					if (content)
+						tabifyDockWidget(container, content);
+				}
+			}
+			QList<QTabBar *> bars = findChildren<QTabBar *>(QString());
+			bool found = false;
+			for (int i = 0; i < bars.count(); ++i)
+			{
+				QTabBar *bar = bars[i];
+				for (int ii = 0; ii < bar->count(); ii++)
+				{
+					QObject *obj = (QObject*)bar->tabData(ii).toULongLong();
+					if (obj != NULL)
+					{
+						if (obj->objectName() == container->objectName())
+						{
+							if (m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[a].activeTab > -1)
+							{
+								bar->setCurrentIndex(m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[a].activeTab);
+								found = true;
+								break;
+							}
+						}
+					}
+				}
+				if (found)
+					break;
+			}
+		}
+		move(m_prefsManager->appPrefs.uiPrefs.mainWinSettings.xPosition, m_prefsManager->appPrefs.uiPrefs.mainWinSettings.yPosition);
+		resize(m_prefsManager->appPrefs.uiPrefs.mainWinSettings.width, m_prefsManager->appPrefs.uiPrefs.mainWinSettings.height);
+	}
 
 	// init the toolbars
 	fileToolBar->initVisibility();
@@ -8124,17 +8176,25 @@ void ScribusMainWindow::emergencySave()
 		ActWin = (ScribusWin*)windows.at(i)->widget();
 		doc = ActWin->doc();
 		view = ActWin->view();
+		doc->autoSaveTimer->stop();
+		doc->setMasterPageMode(false);
 		doc->setModified(false);
+		QString base = tr("Document");
+		QString path = m_prefsManager->documentDir();
+		QString fileName = "";
 		if (doc->hasName)
 		{
-			std::cout << "Saving: " << doc->DocName.toStdString() << ".emergency" << std::endl;
-			doc->autoSaveTimer->stop();
-			QString emName = doc->DocName+".emergency";
-			if (doc->DocName.right(2) == "gz")
-				emName += ".gz";
-			FileLoader fl(emName);
-			fl.saveFile(emName, doc, 0);
+			QFileInfo fi(doc->DocName);
+			base = fi.baseName();
+			path = fi.absolutePath();
 		}
+		QDateTime dat = QDateTime::currentDateTime();
+		if ((!doc->prefsData().docSetupPrefs.AutoSaveLocation) && (!doc->prefsData().docSetupPrefs.AutoSaveDir.isEmpty()))
+			path = doc->prefsData().docSetupPrefs.AutoSaveDir;
+		fileName = QDir::cleanPath(path + "/" + base + QString("_emergency_%1.sla").arg(dat.toString("dd_MM_yyyy_hh_mm")));
+		std::cout << "Saving: " << fileName.toStdString() << std::endl;
+		FileLoader fl(fileName);
+		fl.saveFile(fileName, doc, 0);
 		view->close();
 		uint numPages=doc->Pages->count();
 		for (uint a=0; a<numPages; ++a)
@@ -8362,6 +8422,7 @@ void ScribusMainWindow::languageChange()
 	m_prefsManager->languageChange();
 	CommonStrings::languageChange();
 	LanguageManager::instance()->languageChange();
+	qApp->setLayoutDirection(QLocale(ScCore->getGuiLanguage()).textDirection());
 	//Update actions
 	if (actionManager!=NULL)
 	{

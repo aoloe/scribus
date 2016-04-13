@@ -324,7 +324,11 @@ void PrefsManager::initDefaults()
 	appPrefs.hyphPrefs.AutoCheck = false;
 	appPrefs.docSetupPrefs.AutoSave = true;
 	appPrefs.docSetupPrefs.AutoSaveTime = 600000;
+	appPrefs.docSetupPrefs.AutoSaveCount = 1;
+	appPrefs.docSetupPrefs.AutoSaveKeep = false;
 	appPrefs.docSetupPrefs.saveCompressed = false;
+	appPrefs.docSetupPrefs.AutoSaveLocation = true;
+	appPrefs.docSetupPrefs.AutoSaveDir = "";
 	int dpi = qApp->desktop()->logicalDpiX();
 	if ((dpi < 60) || (dpi > 200))
 		dpi = 72;
@@ -938,6 +942,27 @@ void PrefsManager::ReadPrefsXML()
 		{
 			appPrefs.uiPrefs.language = userprefsContext->get("gui_language","");
 			appPrefs.uiPrefs.mainWinState = QByteArray::fromBase64(userprefsContext->get("mainwinstate","").toLatin1());
+			appPrefs.uiPrefs.tabbedPalettes.clear();
+			PrefsTable *tabsTable = userprefsContext->getTable("tabbedPalettes");
+			PrefsTable *actTabsTable = userprefsContext->getTable("activeTabs");
+			if (tabsTable)
+			{
+				for (int r = 0; r < tabsTable->getRowCount(); r++)
+				{
+					tabPrefs tabs;
+					for (int c = 0; c < tabsTable->getColCount(); c++)
+					{
+						QString tabName = tabsTable->get(r, c);
+						if (!tabName.isEmpty())
+							tabs.palettes.append(tabsTable->get(r, c));
+					}
+					if (actTabsTable)
+						tabs.activeTab = actTabsTable->getInt(r, 0);
+					else
+						tabs.activeTab = -1;
+					appPrefs.uiPrefs.tabbedPalettes.append(tabs);
+				}
+			}
 			//continue here...
 			//Prefs."blah blah" =...
 		}
@@ -992,6 +1017,35 @@ void PrefsManager::SavePrefsXML()
 		{
 			userprefsContext->set("gui_language", appPrefs.uiPrefs.language);
 			userprefsContext->set("mainwinstate", QString::fromLatin1(appPrefs.uiPrefs.mainWinState.toBase64()));
+			if (!appPrefs.uiPrefs.tabbedPalettes.isEmpty())
+			{
+				int maxCols = 0;
+				for (int a = 0; a < appPrefs.uiPrefs.tabbedPalettes.count(); a++)
+				{
+					maxCols = qMax(maxCols, appPrefs.uiPrefs.tabbedPalettes[a].palettes.count());
+				}
+				PrefsTable *tabsTable = userprefsContext->getTable("tabbedPalettes");
+				tabsTable->clear();
+				PrefsTable *actTabsTable = userprefsContext->getTable("activeTabs");
+				actTabsTable->clear();
+				for (int a = 0; a < appPrefs.uiPrefs.tabbedPalettes.count(); a++)
+				{
+					QStringList actTab = appPrefs.uiPrefs.tabbedPalettes[a].palettes;
+					for (int i = 0; i < actTab.count(); i++)
+					{
+						tabsTable->set(a, i, actTab[i]);
+					}
+					actTabsTable->set(a, 0, appPrefs.uiPrefs.tabbedPalettes[a].activeTab);
+					if (actTab.count() < maxCols)
+					{
+						for (int i = actTab.count(); i < maxCols; i++)
+						{
+							tabsTable->set(a, i, "dummy");
+						}
+					}
+
+				}
+			}
 			//continue here...
 			//Prefs."blah blah" =...
 		}
@@ -1328,6 +1382,10 @@ bool PrefsManager::WritePref(QString ho)
 	deDocumentSetup.setAttribute("PagePositioning", appPrefs.docSetupPrefs.pagePositioning);
 	deDocumentSetup.setAttribute("AutoSave", static_cast<int>(appPrefs.docSetupPrefs.AutoSave));
 	deDocumentSetup.setAttribute("AutoSaveTime", appPrefs.docSetupPrefs.AutoSaveTime);
+	deDocumentSetup.setAttribute("AutoSaveCount", appPrefs.docSetupPrefs.AutoSaveCount);
+	deDocumentSetup.setAttribute("AutoSaveKeep", static_cast<int>(appPrefs.docSetupPrefs.AutoSaveKeep));
+	deDocumentSetup.setAttribute("AutoSaveLoc", static_cast<int>(appPrefs.docSetupPrefs.AutoSaveLocation));
+	deDocumentSetup.setAttribute("AutoSaveDir", appPrefs.docSetupPrefs.AutoSaveDir);
 	deDocumentSetup.setAttribute("SaveCompressed", static_cast<int>(appPrefs.docSetupPrefs.saveCompressed));
 	deDocumentSetup.setAttribute("BleedTop", ScCLocale::toQStringC(appPrefs.docSetupPrefs.bleeds.top()));
 	deDocumentSetup.setAttribute("BleedLeft", ScCLocale::toQStringC(appPrefs.docSetupPrefs.bleeds.left()));
@@ -1937,6 +1995,10 @@ bool PrefsManager::ReadPref(QString ho)
 			appPrefs.docSetupPrefs.pagePositioning	= dc.attribute("PagePositioning", "0").toInt();
 			appPrefs.docSetupPrefs.AutoSave	  = static_cast<bool>(dc.attribute("AutoSave", "0").toInt());
 			appPrefs.docSetupPrefs.AutoSaveTime  = dc.attribute("AutoSaveTime", "600000").toInt();
+			appPrefs.docSetupPrefs.AutoSaveCount  = dc.attribute("AutoSaveCount", "1").toInt();
+			appPrefs.docSetupPrefs.AutoSaveKeep = static_cast<bool>(dc.attribute("AutoSaveKeep", "0").toInt());
+			appPrefs.docSetupPrefs.AutoSaveLocation = static_cast<bool>(dc.attribute("AutoSaveLoc", "1").toInt());
+			appPrefs.docSetupPrefs.AutoSaveDir = dc.attribute("AutoSaveDir","");
 			appPrefs.docSetupPrefs.saveCompressed = static_cast<bool>(dc.attribute("SaveCompressed", "0").toInt());
 			appPrefs.docSetupPrefs.bleeds.setTop(ScCLocale::toDoubleC(dc.attribute("BleedTop"), 0.0));
 			appPrefs.docSetupPrefs.bleeds.setLeft(ScCLocale::toDoubleC(dc.attribute("BleedLeft"), 0.0));

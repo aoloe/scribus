@@ -5,6 +5,7 @@ a copyright and/or license notice that predates the release of Scribus 1.3.2
 for which a new license (GPL+exception) is in place.
 */
 #include <QButtonGroup>
+#include <QFileDialog>
 
 #include "ui/prefs_documentsetup.h"
 #include "commonstrings.h"
@@ -61,6 +62,7 @@ Prefs_DocumentSetup::Prefs_DocumentSetup(QWidget* parent, ScribusDoc* doc)
 	connect(pageLayoutButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(pageLayoutChanged(int)));
 	connect(pageUnitsComboBox, SIGNAL(activated(int)), this, SLOT(unitChange()));
 	connect(undoCheckBox, SIGNAL(toggled(bool)), this, SLOT(slotUndo(bool)));
+	connect(changeAutoDir, SIGNAL(clicked()), this, SLOT(changeAutoDocDir()));
 }
 
 Prefs_DocumentSetup::~Prefs_DocumentSetup()
@@ -114,11 +116,12 @@ void Prefs_DocumentSetup::languageChange()
 	pageSizeLinkToolButton->setToolTip( "<qt>" + tr( "Enable or disable more page sizes by jumping to Page Size preferences" ) + "</qt>" );
 	pageOrientationComboBox->setToolTip( "<qt>" + tr( "Default orientation of document pages" ) + "</qt>" );
 	pageUnitsComboBox->setToolTip( "<qt>" + tr( "Default unit of measurement for document editing" ) + "</qt>" );
-	autosaveCheckBox->setToolTip( "<qt>" + tr( "When enabled, Scribus saves a backup copy of your file with the .bak extension each time the time period elapses" ) + "</qt>" );
+	autosaveCheckBox->setToolTip( "<qt>" + tr( "When enabled, Scribus saves backup copys of your file each time the time period elapses" ) + "</qt>" );
 	autosaveIntervalSpinBox->setToolTip( "<qt>" + tr( "Time period between saving automatically" ) + "</qt>" );
 	undoLengthSpinBox->setToolTip( "<qt>" + tr("Set the length of the action history in steps. If set to 0 infinite amount of actions will be stored.") + "</qt>");
 	applySizesToAllPagesCheckBox->setToolTip( "<qt>" + tr( "Apply the page size changes to all existing pages in the document" ) + "</qt>" );
 	applyMarginsToAllPagesCheckBox->setToolTip( "<qt>" + tr( "Apply the page size changes to all existing master pages in the document" ) + "</qt>" );
+	autosaveCountSpinBox->setToolTip("<qt>" + tr("Keep this many files during the editing session. Backup files will be removed when you close the document.") + "</qt>");
 }
 
 void Prefs_DocumentSetup::restoreDefaults(struct ApplicationPrefs *prefsData)
@@ -180,6 +183,14 @@ void Prefs_DocumentSetup::restoreDefaults(struct ApplicationPrefs *prefsData)
 	saveCompressedCheckBox->setChecked(prefsData->docSetupPrefs.saveCompressed);
 	autosaveCheckBox->setChecked( prefsData->docSetupPrefs.AutoSave );
 	autosaveIntervalSpinBox->setValue(prefsData->docSetupPrefs.AutoSaveTime / 1000 / 60);
+	autosaveCountSpinBox->setValue(prefsData->docSetupPrefs.AutoSaveCount);
+	autosaveKeepCheckBox->setChecked(prefsData->docSetupPrefs.AutoSaveKeep);
+	autosaveDocRadio->setChecked(prefsData->docSetupPrefs.AutoSaveLocation);
+	autosaveDirRadio->setChecked(!prefsData->docSetupPrefs.AutoSaveLocation);
+	autosaveDirEdit->setText(prefsData->docSetupPrefs.AutoSaveDir);
+	autosaveDirEdit->setEnabled(!prefsData->docSetupPrefs.AutoSaveLocation);
+	changeAutoDir->setEnabled(!prefsData->docSetupPrefs.AutoSaveLocation);
+	showAutosaveClockOnCanvasCheckBox->setChecked(prefsData->displayPrefs.showAutosaveClockOnCanvas);
 	undoCheckBox->setChecked(PrefsManager::instance()->prefsFile->getContext("undo")->getBool("enabled", true));
 	int undoLength = UndoManager::instance()->getHistoryLength();
 	if (undoLength == -1)
@@ -204,6 +215,11 @@ void Prefs_DocumentSetup::saveGuiToPrefs(struct ApplicationPrefs *prefsData) con
 	prefsData->docSetupPrefs.saveCompressed=saveCompressedCheckBox->isChecked();
 	prefsData->docSetupPrefs.AutoSave=autosaveCheckBox->isChecked();
 	prefsData->docSetupPrefs.AutoSaveTime = autosaveIntervalSpinBox->value() * 1000 * 60;
+	prefsData->docSetupPrefs.AutoSaveCount = autosaveCountSpinBox->value();
+	prefsData->docSetupPrefs.AutoSaveKeep = autosaveKeepCheckBox->isChecked();
+	prefsData->docSetupPrefs.AutoSaveLocation = autosaveDocRadio->isChecked();
+	prefsData->docSetupPrefs.AutoSaveDir = autosaveDirEdit->text();
+	prefsData->displayPrefs.showAutosaveClockOnCanvas=showAutosaveClockOnCanvasCheckBox->isChecked();
 	bool undoActive=undoCheckBox->isChecked();
 	if (!undoActive)
 		UndoManager::instance()->clearStack();
@@ -369,6 +385,13 @@ void Prefs_DocumentSetup::getResizeDocumentPages(bool &resizePages, bool &resize
 	resizeMasterPages=applySizesToAllMasterPagesCheckBox->isChecked();
 	resizePageMargins=applyMarginsToAllPagesCheckBox->isChecked();
 	resizeMasterPageMargins=applyMarginsToAllMasterPagesCheckBox->isChecked();
+}
+
+void Prefs_DocumentSetup::changeAutoDocDir()
+{
+	QString s = QFileDialog::getExistingDirectory(this, tr("Choose a Directory"), autosaveDirEdit->text());
+	if (!s.isEmpty())
+		autosaveDirEdit->setText( QDir::toNativeSeparators(s) );
 }
 
 void Prefs_DocumentSetup::emitSectionChange()

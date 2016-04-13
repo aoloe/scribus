@@ -283,3 +283,28 @@ PageItem*  getVectorFileFromData(ScribusDoc *doc, QByteArray &data, QString ext,
 	delete tempFile;
 	return retObj;
 }
+
+bool checkFileHash(const QString& directory, const QString& filename, const QString& hashFilename, QCryptographicHash::Algorithm method)
+{
+	//In a single directory, make a hash of filename, and compare it to the string for that file in hashFilename
+	//Assumption is that the hash file only has one line for now
+	QByteArray ba_hash;
+	if (loadRawText(directory + hashFilename, ba_hash))
+	{
+		QFile source(directory + filename);
+		if (source.open(QIODevice::ReadOnly))
+		{
+			ba_hash = ba_hash.simplified();
+			QList<QByteArray> fileData(ba_hash.split(' '));
+			QCryptographicHash ch(method);
+			ch.addData(&source);
+			source.close();
+			if (fileData[0] == ch.result().toHex() && fileData[1] == filename)
+				return true;
+			qDebug()<<"checkFileHash: checksum failed for"<<directory<<filename;
+		}
+	}
+	else
+		qDebug()<<"checkFileHash: loadRawText file unsuccessful";
+	return false;
+}

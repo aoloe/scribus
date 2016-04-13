@@ -11,9 +11,9 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string notr="true">Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
     <widget class="QLabel" name="titleLabel">
      <property name="font">
@@ -305,8 +305,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>428</width>
-            <height>525</height>
+            <width>242</width>
+            <height>208</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -479,7 +479,7 @@
       <attribute name="title">
        <string>Saving &amp;&amp; Undo</string>
       </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
         <widget class="QCheckBox" name="saveCompressedCheckBox">
          <property name="text">
@@ -533,18 +533,39 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLabel" name="label">
-           <property name="text">
-            <string>Interval:</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QSpinBox" name="autosaveIntervalSpinBox">
-           <property name="suffix">
-            <string> min</string>
-           </property>
-          </widget>
+          <layout class="QFormLayout" name="formLayout_2">
+           <item row="0" column="0">
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Interval:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="autosaveIntervalSpinBox">
+             <property name="suffix">
+              <string> min</string>
+             </property>
+             <property name="minimum">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Number of Files to keep:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="autosaveCountSpinBox">
+             <property name="minimum">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
          </item>
          <item>
           <spacer name="horizontalSpacer_2">
@@ -560,6 +581,60 @@
           </spacer>
          </item>
         </layout>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="autosaveDocRadio">
+         <property name="text">
+          <string>Save into the same Directory as Document</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="spacing">
+          <number>1</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="autosaveDirRadio">
+           <property name="text">
+            <string>Save into:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="autosaveDirEdit"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="changeAutoDir">
+           <property name="maximumSize">
+            <size>
+             <width>20</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="autosaveKeepCheckBox">
+         <property name="text">
+          <string>Keep Backup Files after closing the Document</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="showAutosaveClockOnCanvasCheckBox">
+         <property name="text">
+          <string>Show Autosave Countdown Clock on the Canvas</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_7">
@@ -688,7 +763,72 @@
   <tabstop>undoLengthSpinBox</tabstop>
  </tabstops>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>autosaveDocRadio</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>autosaveDirEdit</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>68</x>
+     <y>261</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>151</x>
+     <y>285</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>autosaveDocRadio</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>changeAutoDir</receiver>
+   <slot>setDisabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>209</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>465</x>
+     <y>286</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>autosaveDirRadio</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>autosaveDirEdit</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>74</x>
+     <y>293</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>142</x>
+     <y>296</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>autosaveDirRadio</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>changeAutoDir</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>85</x>
+     <y>283</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>469</x>
+     <y>290</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
  <buttongroups>
   <buttongroup name="pageLayoutButtonGroup"/>
  </buttongroups>

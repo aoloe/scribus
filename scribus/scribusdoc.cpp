@@ -754,6 +754,18 @@ ScribusDoc::~ScribusDoc()
 		delete m_serializer;
 	if (m_tserializer)
 		delete m_tserializer;
+	if (!m_docPrefsData.docSetupPrefs.AutoSaveKeep)
+	{
+		if (autoSaveFiles.count() != 0)
+		{
+			for (int a = 0; a < autoSaveFiles.count(); a++)
+			{
+				QFile f(autoSaveFiles[a]);
+				f.remove();
+			}
+			autoSaveFiles.clear();
+		}
+	}
 	ScCore->fileWatcher->start();
 }
 
@@ -5652,9 +5664,11 @@ void ScribusDoc::itemAddDetails(const PageItem::ItemType itemType, const PageIte
 			newItem->setFillShade(m_docPrefsData.itemToolPrefs.textFillColorShade);
 			newItem->setLineColor(m_docPrefsData.itemToolPrefs.textLineColor);
 			newItem->setLineShade(m_docPrefsData.itemToolPrefs.textLineColorShade);
-			defaultParagraphStyle.setParent(CommonStrings::DefaultParagraphStyle);
+			// 13792 : Commented out because this trigger the first line of a text frame having
+			// default character style explictly assigned, which we don't want
+			/*defaultParagraphStyle.setParent(CommonStrings::DefaultParagraphStyle);
 			defaultParagraphStyle.charStyle().setParent(CommonStrings::DefaultCharacterStyle);
-			newItem->itemText.setDefaultStyle(defaultParagraphStyle);
+			newItem->itemText.setDefaultStyle(defaultParagraphStyle);*/
 			break;
 		case PageItem::Line:
 			newItem->PLineArt = Qt::PenStyle(m_docPrefsData.itemToolPrefs.lineStyle);
@@ -9798,7 +9812,6 @@ void ScribusDoc::connectDocSignals()
 		{
 			connect(this, SIGNAL(docChanged()), m_ScMW, SLOT(slotDocCh()));
 			connect(this, SIGNAL(firstSelectedItemType(int)), m_ScMW, SLOT(HaveNewSel()));
-			connect(this, SIGNAL(saved(QString)), WinHan, SLOT(slotSaved(QString)));
 			connect(this->m_Selection, SIGNAL(selectionChanged()), m_ScMW, SLOT(HaveNewSel()));
 			connect(autoSaveTimer, SIGNAL(timeout()), this, SLOT(slotAutoSave()));
 		}
@@ -9813,7 +9826,6 @@ void ScribusDoc::disconnectDocSignals()
 		{
 			disconnect(this, SIGNAL(docChanged()), m_ScMW, SLOT(slotDocCh()));
 			disconnect(this, SIGNAL(firstSelectedItemType(int)), m_ScMW, SLOT(HaveNewSel()));
-			disconnect(this, SIGNAL(saved(QString)), WinHan, SLOT(slotSaved(QString)));
 			disconnect(this->m_Selection, SIGNAL(selectionChanged()), m_ScMW, SLOT(HaveNewSel()));
 			disconnect(autoSaveTimer, SIGNAL(timeout()), this, SLOT(slotAutoSave()));
 		}
@@ -16394,11 +16406,35 @@ void ScribusDoc::restartAutoSaveTimer()
 
 void ScribusDoc::slotAutoSave()
 {
-	if (hasName && isModified())
+	if (isModified())
 	{
-		FileLoader fl(DocName);
-		if (fl.saveFile(DocName+".autosave", this, 0))
-			emit saved(DocName);
+		autoSaveTimer->stop();
+		QString base = tr("Document");
+		QString path = m_docPrefsData.pathPrefs.documents;
+		QString fileName = "";
+		if (hasName)
+		{
+			QFileInfo fi(DocName);
+			base = fi.baseName();
+			path = fi.absolutePath();
+		}
+		QDateTime dat = QDateTime::currentDateTime();
+		if ((!m_docPrefsData.docSetupPrefs.AutoSaveLocation) && (!m_docPrefsData.docSetupPrefs.AutoSaveDir.isEmpty()))
+			path = m_docPrefsData.docSetupPrefs.AutoSaveDir;
+		fileName = QDir::cleanPath(path + "/" + base + QString("_autosave_%1.sla").arg(dat.toString("dd_MM_yyyy_hh_mm")));
+		FileLoader fl(fileName);
+		if (fl.saveFile(fileName, this, 0))
+		{
+			if (autoSaveFiles.count() >= m_docPrefsData.docSetupPrefs.AutoSaveCount)
+			{
+				QFile f(autoSaveFiles.first());
+				f.remove();
+				autoSaveFiles.removeFirst();
+			}
+			autoSaveFiles.append(fileName);
+		}
+		if (m_docPrefsData.docSetupPrefs.AutoSave)
+			autoSaveTimer->start(m_docPrefsData.docSetupPrefs.AutoSaveTime);
 	}
 }
 

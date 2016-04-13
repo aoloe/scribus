@@ -323,6 +323,7 @@ QStringList ScPaths::hyphDirs() const
 	QString linuxLocalPath("/usr/local/share/hunspell/");
 	QString linuxHunspellPath("/usr/share/hunspell/");
 	QString linuxMyspellPath("/usr/share/myspell/");
+	QString linuxHyphen1Path("/usr/share/hyphen/");
 	QString windowsLOPath("LibreOffice 3.5/share/extensions");
 	QDir d;
 	QStringList hyphDirs;
@@ -366,6 +367,9 @@ QStringList ScPaths::hyphDirs() const
 			hyphDirs.append(progFiles+windowsLOPath + "/" + dir + "/");
 	}
 #elif defined(Q_OS_LINUX)
+	d.setPath(linuxHyphen1Path);
+	if (d.exists())
+		hyphDirs.append(linuxHyphen1Path);
 	d.setPath(linuxHunspellPath);
 	if (d.exists())
 		hyphDirs.append(linuxHunspellPath);
@@ -525,35 +529,46 @@ QString ScPaths::getUserDictDir(ScPaths::DictType dictType, bool createIfNotExis
 		dictSuffix = "hyph/";
 	if (dictType == ScPaths::Spell)
 		dictSuffix = "spell/";
-	QDir userDictDirectory(getApplicationDataDir() + "dicts/" + dictSuffix);
+	QDir useFilesDirectory(getApplicationDataDir() + "dicts/" + dictSuffix);
 	if(createIfNotExists)
 	{
-		if (!userDictDirectory.exists())
-			userDictDirectory.mkpath(userDictDirectory.absolutePath());
+		if (!useFilesDirectory.exists())
+			useFilesDirectory.mkpath(useFilesDirectory.absolutePath());
 	}
-	return userDictDirectory.absolutePath()+"/";
+	return useFilesDirectory.absolutePath()+"/";
 }
 
 QString ScPaths::getUserFontDir(bool createIfNotExists)
 {
-	QDir userDictDirectory(getApplicationDataDir() + "fonts/");
+	QDir useFilesDirectory(getApplicationDataDir() + "fonts/");
 	if(createIfNotExists)
 	{
-		if (!userDictDirectory.exists())
-			userDictDirectory.mkpath(userDictDirectory.absolutePath());
+		if (!useFilesDirectory.exists())
+			useFilesDirectory.mkpath(useFilesDirectory.absolutePath());
 	}
-	return userDictDirectory.absolutePath()+"/";
+	return useFilesDirectory.absolutePath()+"/";
 }
 
 QString ScPaths::getUserHelpFilesDir(bool createIfNotExists)
 {
-	QDir userHelpDocsDirectory(getApplicationDataDir() + "helpfiles/");
+	QDir useFilesDirectory(getApplicationDataDir() + "helpfiles/");
 	if(createIfNotExists)
 	{
-		if (!userHelpDocsDirectory.exists())
-			userHelpDocsDirectory.mkpath(userHelpDocsDirectory.absolutePath());
+		if (!useFilesDirectory.exists())
+			useFilesDirectory.mkpath(useFilesDirectory.absolutePath());
 	}
-	return userHelpDocsDirectory.absolutePath()+"/";
+	return useFilesDirectory.absolutePath()+"/";
+}
+
+QString ScPaths::getUserPaletteFilesDir(bool createIfNotExists)
+{
+	QDir useFilesDirectory(getApplicationDataDir() + "palettes/");
+	if(createIfNotExists)
+	{
+		if (!useFilesDirectory.exists())
+			useFilesDirectory.mkpath(useFilesDirectory.absolutePath());
+	}
+	return useFilesDirectory.absolutePath()+"/";
 }
 
 QString ScPaths::getUserDocumentDir(void)

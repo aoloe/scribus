@@ -19,11 +19,15 @@ for which a new license (GPL+exception) is in place.
 *                                                                         *
 ***************************************************************************/
 
+#include <QByteArray>
 #include <QComboBox>
+#include <QCryptographicHash>
 #include <QDebug>
 #include <QDomDocument>
 #include <QFile>
 #include <QFileInfo>
+#include <QLabel>
+#include <QList>
 #include <QMessageBox>
 #include <QString>
 #include <QStringList>
@@ -49,6 +53,7 @@ ResourceManager::ResourceManager(QWidget* parent)
 	downloadButton->setEnabled(false);
 	downloadProgressBar->setValue(0);
 	downloadProgressBar->setVisible(false);
+	dataReceivedLabel->setVisible(false);
 	languageChange();
 
 	connect(categoryComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(categoryChanged()));
@@ -70,15 +75,22 @@ void ResourceManager::languageChange()
 	resourceCategories.insert(RM_FONTS, tr("Fonts"));
 	resourceCategories.insert(RM_HYPH, tr("Hyphenation Dictionaries"));
 	resourceCategories.insert(RM_SPELL, tr("Spelling Dictionaries"));
+	resourceCategories.insert(RM_HELP, tr("Help Manuals"));
+	resourceCategories.insert(RM_PALETTES, tr("Palettes"));
 	//resourceCategories.insert(RM_TEMPLATES, tr("Templates"));
 	//resourceCategories.insert(RM_PROFILES, tr("Color Profiles"));
+//	resourceCategories.insert(RM_TEST, tr("Test"));
 
 	dataFiles.clear();
-	dataFiles.insert(RM_FONTS, "scribus_fonts_151.xml");
-	dataFiles.insert(RM_HYPH, "scribus_hyph_dicts_151.xml");
-	dataFiles.insert(RM_SPELL, "scribus_spell_dicts_151.xml");
+	dataFiles.insert(RM_FONTS, "scribus_fonts.xml");
+	dataFiles.insert(RM_HYPH, "scribus_hyph_dicts.xml");
+	dataFiles.insert(RM_SPELL, "scribus_spell_dicts.xml");
+	dataFiles.insert(RM_HELP, "scribus_help.xml");
+	dataFiles.insert(RM_PALETTES, "scribus_palettes.xml");
 	//dataFiles.insert(RM_TEMPLATES, "scribus_templates.xml");
 	//dataFiles.insert(RM_PROFILES, "scribus_profiles.xml");
+//	dataFiles.insert(RM_TEST, "test.txt");
+
 
 	installedTableWidget->clear();
 	availableTableWidget->clear();
@@ -92,30 +104,6 @@ void ResourceManager::languageChange()
 		categoryComboBox->addItem(i.value(), i.key());
 	}
 	categoryChanged();
-}
-
-void ResourceManager::setFontCategory()
-{
-	updateInstalledFonts();
-	updateAvailableFonts();
-}
-
-void ResourceManager::setHyphCategory()
-{
-	updateInstalledHyph();
-	updateAvailableHyph();
-}
-
-void ResourceManager::setSpellCategory()
-{
-	updateInstalledSpell();
-	updateAvailableSpell();
-}
-
-void ResourceManager::setTemplatesCategory()
-{
-	updateInstalledTemplates();
-	updateAvailableTemplates();
 }
 
 void ResourceManager::updateInstalledFonts()
@@ -214,6 +202,25 @@ void ResourceManager::updateInstalledSpell()
 
 void ResourceManager::updateInstalledTemplates()
 {
+	dictionaryMap.clear();
+	installedTableWidget->clear();
+}
+
+void ResourceManager::updateInstalledHelp()
+{
+	dictionaryMap.clear();
+	installedTableWidget->clear();
+}
+
+void ResourceManager::updateInstalledPalettes()
+{
+	dictionaryMap.clear();
+	installedTableWidget->clear();
+}
+
+void ResourceManager::updateInstalledTest()
+{
+	dictionaryMap.clear();
 	installedTableWidget->clear();
 }
 
@@ -518,6 +525,205 @@ void ResourceManager::updateAvailableTemplates()
 	availableTableWidget->clear();
 }
 
+void ResourceManager::updateAvailableHelp()
+{
+	QFile dataFile(ScPaths::downloadDir() + dataFiles[RM_HELP]);
+	if (!dataFile.exists())
+		return;
+	dataFile.open(QIODevice::ReadOnly);
+	QTextStream ts(&dataFile);
+	ts.setCodec(QTextCodec::codecForName("UTF-8"));
+	QString errorMsg;
+	int eline;
+	int ecol;
+	QDomDocument doc( QString(dataFiles[RM_HELP]).remove(".xml") );
+	QString data(ts.readAll());
+	dataFile.close();
+	if ( !doc.setContent( data, &errorMsg, &eline, &ecol ))
+	{
+		if (data.toLower().contains("404 not found"))
+			qDebug()<<"File not found on server";
+		else
+			qDebug()<<"Could not open file"<<dataFile.fileName();
+		return;
+	}
+	helpList.clear();
+	QDomElement docElem = doc.documentElement();
+	QDomNode n = docElem.firstChild();
+	while( !n.isNull() )
+	{
+		QDomElement e = n.toElement();
+		if( !e.isNull() )
+		{
+			if (e.tagName()=="help")
+			{
+				if (e.hasAttribute("type") && e.hasAttribute("filetype"))
+				{
+					if (e.attribute("type")=="scribusofficial")
+					{
+						struct DownloadItem d;
+						d.desc=e.attribute("description");
+						d.download=false;
+						d.files=e.attribute("files");
+						d.extractfiles="";
+						d.url=e.attribute("URL");
+						d.version=e.attribute("version");
+						d.lang=e.attribute("language");
+						d.license=e.attribute("license");
+						d.filetype=e.attribute("filetype");
+						d.type=e.attribute("type");
+						QUrl url(d.url);
+						if (url.isValid() && !url.isEmpty() && !url.host().isEmpty())
+							helpList.append(d);
+					}
+				}
+			}
+		}
+		n = n.nextSibling();
+	}
+	availableTableWidget->clear();
+	if(helpList.isEmpty())
+	{
+		downloadButton->setEnabled(false);
+		return;
+	}
+	availableTableWidget->setRowCount(helpList.count());
+	availableTableWidget->setColumnCount(5);
+	availableTableWidget->setSortingEnabled(false);
+	int row=0;
+	foreach(DownloadItem d, helpList)
+	{
+		int column=0;
+		QTableWidgetItem *newItem1 = new QTableWidgetItem(d.desc);
+		newItem1->setFlags(newItem1->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
+		availableTableWidget->setItem(row, column++, newItem1);
+		QTableWidgetItem *newItem2 = new QTableWidgetItem(d.lang);
+		newItem2->setFlags(newItem1->flags());
+		availableTableWidget->setItem(row, column++, newItem2);
+		QTableWidgetItem *newItem3 = new QTableWidgetItem();
+		newItem3->setCheckState(dictionaryMap.contains(d.lang) ? Qt::Checked : Qt::Unchecked);
+		newItem3->setFlags(newItem1->flags() & ~Qt::ItemIsUserCheckable);
+		availableTableWidget->setItem(row, column++, newItem3);
+		QTableWidgetItem *newItem4 = new QTableWidgetItem(d.license);
+		availableTableWidget->setItem(row, column++, newItem4);
+		newItem4->setFlags(newItem4->flags() & ~Qt::ItemIsEditable);
+		QTableWidgetItem *newItem5 = new QTableWidgetItem();
+		newItem5->setFlags(newItem1->flags());
+		newItem5->setCheckState(d.download ? Qt::Checked : Qt::Unchecked);
+		availableTableWidget->setItem(row, column++, newItem5);
+		++row;
+	}
+	QStringList headers;
+	headers << tr("Description") << tr("Language") << tr("Installed") << tr("License") << tr("Download");
+	availableTableWidget->setHorizontalHeaderLabels(headers);
+	availableTableWidget->resizeColumnsToContents();
+	availableTableWidget->setSortingEnabled(true);
+	availableTableWidget->sortByColumn(0, Qt::AscendingOrder);
+	downloadButton->setEnabled(true);
+}
+
+void ResourceManager::updateAvailablePalettes()
+{
+	QFile dataFile(ScPaths::downloadDir() + dataFiles[RM_PALETTES]);
+	if (!dataFile.exists())
+		return;
+	dataFile.open(QIODevice::ReadOnly);
+	QTextStream ts(&dataFile);
+	ts.setCodec(QTextCodec::codecForName("UTF-8"));
+	QString errorMsg;
+	int eline;
+	int ecol;
+	QDomDocument doc( QString(dataFiles[RM_PALETTES]).remove(".xml") );
+	QString data(ts.readAll());
+	dataFile.close();
+	if ( !doc.setContent( data, &errorMsg, &eline, &ecol ))
+	{
+		if (data.toLower().contains("404 not found"))
+			qDebug()<<"File not found on server";
+		else
+			qDebug()<<"Could not open file"<<dataFile.fileName();
+		return;
+	}
+	paletteList.clear();
+	QDomElement docElem = doc.documentElement();
+	QDomNode n = docElem.firstChild();
+	while( !n.isNull() )
+	{
+		QDomElement e = n.toElement();
+		if( !e.isNull() )
+		{
+			if (e.tagName()=="palette")
+			{
+				if (e.hasAttribute("type") && e.hasAttribute("filetype"))
+				{
+					//if (e.attribute("type")=="scribusofficial")
+					{
+						struct DownloadItem d;
+						d.desc=e.attribute("description");
+						d.download=false;
+						d.files=e.attribute("files");
+						d.extractfiles="";
+						d.url=e.attribute("URL");
+						d.version=e.attribute("version");
+						d.lang=e.attribute("language");
+						d.license=e.attribute("license");
+						d.filetype=e.attribute("filetype");
+						d.type=e.attribute("type");
+						QUrl url(d.url);
+						if (url.isValid() && !url.isEmpty() && !url.host().isEmpty())
+							paletteList.append(d);
+					}
+				}
+			}
+		}
+		n = n.nextSibling();
+	}
+	availableTableWidget->clear();
+	if(paletteList.isEmpty())
+	{
+		downloadButton->setEnabled(false);
+		return;
+	}
+	availableTableWidget->setRowCount(paletteList.count());
+	availableTableWidget->setColumnCount(5);
+	availableTableWidget->setSortingEnabled(false);
+	int row=0;
+	foreach(DownloadItem d, paletteList)
+	{
+		int column=0;
+		QTableWidgetItem *newItem1 = new QTableWidgetItem(d.desc);
+		newItem1->setFlags(newItem1->flags() & ~Qt::ItemIsEditable & ~Qt::ItemIsSelectable);
+		availableTableWidget->setItem(row, column++, newItem1);
+		QTableWidgetItem *newItem2 = new QTableWidgetItem("");
+		newItem2->setFlags(newItem1->flags());
+		availableTableWidget->setItem(row, column++, newItem2);
+		QTableWidgetItem *newItem3 = new QTableWidgetItem();
+		newItem3->setCheckState(dictionaryMap.contains(d.lang) ? Qt::Checked : Qt::Unchecked);
+		newItem3->setFlags(newItem1->flags() & ~Qt::ItemIsUserCheckable);
+		availableTableWidget->setItem(row, column++, newItem3);
+		QTableWidgetItem *newItem4 = new QTableWidgetItem(d.license);
+		availableTableWidget->setItem(row, column++, newItem4);
+		newItem4->setFlags(newItem4->flags() & ~Qt::ItemIsEditable);
+		QTableWidgetItem *newItem5 = new QTableWidgetItem();
+		newItem5->setFlags(newItem1->flags());
+		newItem5->setCheckState(d.download ? Qt::Checked : Qt::Unchecked);
+		availableTableWidget->setItem(row, column++, newItem5);
+		++row;
+	}
+	QStringList headers;
+	headers << tr("Description") << tr("") << tr("Installed") << tr("License") << tr("Download");
+	availableTableWidget->setHorizontalHeaderLabels(headers);
+	availableTableWidget->resizeColumnsToContents();
+	availableTableWidget->setSortingEnabled(true);
+	availableTableWidget->sortByColumn(0, Qt::AscendingOrder);
+	downloadButton->setEnabled(true);
+}
+
+void ResourceManager::updateAvailableTest()
+{
+	availableTableWidget->clear();
+}
+
 QString ResourceManager::findDestinationFolder()
 {
 	QString destinationFolder;
@@ -538,6 +744,15 @@ QString ResourceManager::findDestinationFolder()
 			destinationFolder=ScPaths::getTempFileDir();
 			//TODO!!!! destinationFolder=ScPaths::getUserDictDir(true);
 			break;
+		case RM_HELP:
+			destinationFolder=ScPaths::getUserHelpFilesDir(true);
+			break;
+		case RM_PALETTES:
+			destinationFolder=ScPaths::getUserPaletteFilesDir(true);
+			break;
+		case RM_TEST:
+			destinationFolder=ScPaths::downloadDir();
+			break;
 	}
 	return destinationFolder;
 }
@@ -548,16 +763,32 @@ void ResourceManager::categoryChanged()
 	switch (category)
 	{
 		case RM_FONTS:
-			setFontCategory();
+			updateInstalledFonts();
+			updateAvailableFonts();
 			break;
 		case RM_HYPH:
-			setHyphCategory();
+			updateInstalledHyph();
+			updateAvailableHyph();
 			break;
 		case RM_SPELL:
-			setSpellCategory();
+			updateInstalledSpell();
+			updateAvailableSpell();
 			break;
 		case RM_TEMPLATES:
-			setTemplatesCategory();
+			updateInstalledTemplates();
+			updateAvailableTemplates();
+			break;
+		case RM_HELP:
+			updateInstalledHelp();
+			updateAvailableHelp();
+			break;
+		case RM_PALETTES:
+			updateInstalledPalettes();
+			updateAvailablePalettes();
+			break;
+		case RM_TEST:
+			updateInstalledTest();
+			updateAvailableTest();
 			break;
 	}
 }
@@ -568,12 +799,17 @@ void ResourceManager::updateDownloadLists()
 	downloadButton->setEnabled(false);
 	downloadProgressBar->setValue(0);
 	downloadProgressBar->setVisible(true);
+	dataReceivedLabel->setVisible(true);
 	downloadProgressBar->setRange(0, dataFiles.count());
 	foreach(QString f, dataFiles)
 		ScQApp->dlManager()->addURL("http://services.scribus.net/"+f, true, ScPaths::downloadDir(), ScPaths::downloadDir());
+	foreach(QString f, dataFiles)
+		ScQApp->dlManager()->addURL("http://services.scribus.net/"+f+".sha256", true, ScPaths::downloadDir(), ScPaths::downloadDir());
 	connect(ScQApp->dlManager(), SIGNAL(finished()), this, SLOT(downloadListFinished()));
 	connect(ScQApp->dlManager(), SIGNAL(fileReceived(const QString&)), this, SLOT(updateProgressBar()));
 	connect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(updateProgressBar()));
+	connect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(updateProgressBar()));
+	connect(ScQApp->dlManager(), SIGNAL(fileDownloadProgress(qint64, qint64)), this, SLOT(updateProgressData(qint64, qint64)));
 	ScQApp->dlManager()->startDownloads();
 }
 
@@ -582,27 +818,52 @@ void ResourceManager::downloadListFinished()
 	disconnect(ScQApp->dlManager(), SIGNAL(finished()), this, SLOT(downloadListFinished()));
 	disconnect(ScQApp->dlManager(), SIGNAL(fileReceived(const QString&)), this, SLOT(updateProgressBar()));
 	disconnect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(updateProgressBar()));
+	disconnect(ScQApp->dlManager(), SIGNAL(fileDownloadProgress(qint64, qint64)), this, SLOT(updateProgressData(qint64, qint64)));
 
 	int category = categoryComboBox->currentData().toInt();
+	bool fileOk=checkFileHash(ScPaths::downloadDir(), dataFiles[category], dataFiles[category] + ".sha256", QCryptographicHash::Sha256);
 	switch (category)
 	{
 		case RM_FONTS:
-			updateAvailableFonts();
+			if (fileOk)
+				updateAvailableFonts();
 			break;
 		case RM_HYPH:
-			updateAvailableHyph();
+			if (fileOk)
+				updateAvailableHyph();
 			break;
 		case RM_SPELL:
-			updateAvailableSpell();
+			if (fileOk)
+				updateAvailableSpell();
 			break;
 		case RM_TEMPLATES:
-			updateAvailableTemplates();
+			if (fileOk)
+				updateAvailableTemplates();
+			break;
+		case RM_HELP:
+			if (fileOk)
+				updateAvailableHelp();
+			else
+				qDebug()<<"Help Failure :(";
+			break;
+		case RM_PALETTES:
+			if (fileOk)
+				updateAvailablePalettes();
+			else
+				qDebug()<<"Palette Failure :(";
+			break;
+		case RM_TEST:
+			if (fileOk)
+				qDebug()<<"Success!!!";
+			else
+				qDebug()<<"Failure :(";
 			break;
 	}
 	updateAvailableButton->setEnabled(true);
 	downloadButton->setEnabled(true);
 	downloadProgressBar->setValue(0);
 	downloadProgressBar->setVisible(false);
+	dataReceivedLabel->setVisible(false);
 }
 
 void ResourceManager::downloadFilesFinished()
@@ -610,10 +871,11 @@ void ResourceManager::downloadFilesFinished()
 	disconnect(ScQApp->dlManager(), SIGNAL(finished()), this, SLOT(downloadFilesFinished()));
 	disconnect(ScQApp->dlManager(), SIGNAL(fileReceived(const QString&)), this, SLOT(updateProgressBar()));
 	disconnect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(updateProgressBar()));
+	disconnect(ScQApp->dlManager(), SIGNAL(fileDownloadProgress(qint64, qint64)), this, SLOT(updateProgressData(qint64, qint64)));
 	categoryChanged();
 	downloadProgressBar->setValue(0);
 	downloadProgressBar->setVisible(false);
-//	dlLabel->setVisible(false);
+	dataReceivedLabel->setVisible(false);
 	downloadButton->setEnabled(true);
 
 	int category = categoryComboBox->currentData().toInt();
@@ -622,11 +884,9 @@ void ResourceManager::downloadFilesFinished()
 		case RM_FONTS:
 			foreach(DownloadItem d, downloadList)
 			{
-				//qDebug()<<d.desc<<d.download<<d.files<<d.type;
 				if (d.filetype=="zip")
 				{
 					QString fn(ScPaths::getUserFontDir(true)+d.files);
-					//qDebug()<<fn;
 					QFile dledFile(fn);
 					QFileInfo fi(dledFile);
 					if (!dledFile.exists())
@@ -641,13 +901,12 @@ void ResourceManager::downloadFilesFinished()
 							QStringList zipFileContents(fun->files());
 							QStringList extractFiles(d.extractfiles.split(";", QString::SkipEmptyParts));
 							QString toDir(ScPaths::getUserFontDir(false)+fi.baseName()+"/");
-							QDir d(ScPaths::getUserFontDir(false));
-							if (!d.exists(fi.baseName()))
-								d.mkdir(fi.baseName());
+							QDir dir(ScPaths::getUserFontDir(false));
+							if (!dir.exists(fi.baseName()))
+								dir.mkdir(fi.baseName());
 							foreach (QString f2e, zipFileContents)
 							{
-								//qDebug()<<"Unzipping"<<f2e<<"to"<<toDir;
-								fun->extract(f2e, toDir);
+								fun->extract(f2e, toDir, ScZipHandler::SkipPaths);
 							}
 						}
 						delete fun;
@@ -661,43 +920,90 @@ void ResourceManager::downloadFilesFinished()
 			break;
 		case RM_HYPH:
 		case RM_SPELL:
-			int fileType = category == RM_HYPH ? ScPaths::Hyph : ScPaths::Spell;
-			foreach(DownloadItem d, downloadList)
 			{
-//				qDebug()<<d.desc<<d.download<<d.files<<d.type;
-				if (d.filetype=="zip")
+				int fileType = category == RM_HYPH ? ScPaths::Hyph : ScPaths::Spell;
+				foreach(DownloadItem d, downloadList)
 				{
-					QString fn(ScPaths::getUserDictDir(static_cast<ScPaths::DictType>(fileType), true)+d.files);
-//					qDebug()<<fn;
-					QFile dledFile(fn);
-					QFileInfo fi(dledFile);
-					if (!dledFile.exists())
-						qDebug()<<"File doesn\'t exist"<<fn;
-					else
+					if (d.filetype=="zip")
 					{
-						ScZipHandler* fun = new ScZipHandler();
-						if (!fun->open(fn))
-							qDebug()<<"Zip file doesn\'t open"<<fn;
+						QString fn(ScPaths::getUserDictDir(static_cast<ScPaths::DictType>(fileType), true)+d.files);
+						QFile dledFile(fn);
+						QFileInfo fi(dledFile);
+						if (!dledFile.exists())
+							qDebug()<<"File doesn\'t exist"<<fn;
 						else
 						{
-							QStringList zipContents(fun->files());
-							QStringList extractFiles(d.extractfiles.split(";", QString::SkipEmptyParts));
-//							QString toDir(ScPaths::getUserDictDir(false)+fi.baseName()+"/");
-							QString toDir(ScPaths::getUserDictDir(static_cast<ScPaths::DictType>(fileType), false));
-							QDir d(toDir);
-							if (d.exists())
+							ScZipHandler* fun = new ScZipHandler();
+							if (!fun->open(fn))
+								qDebug()<<"Zip file doesn\'t open"<<fn;
+							else
 							{
-								foreach (QString f2e, zipContents)
+								QStringList zipContents(fun->files());
+								QStringList extractFiles(d.extractfiles.split(";", QString::SkipEmptyParts));
+								QString toDir(ScPaths::getUserDictDir(static_cast<ScPaths::DictType>(fileType), false));
+								QDir dir(toDir);
+								if (dir.exists())
 								{
-									if (extractFiles.contains(f2e))
+									foreach (QString f2e, zipContents)
 									{
-//										qDebug()<<"Unzipping"<<f2e<<"to"<<toDir;
-										fun->extract(f2e, toDir);
+										if (extractFiles.contains(f2e))
+										{
+											fun->extract(f2e, toDir, ScZipHandler::SkipPaths);
+										}
 									}
 								}
 							}
+							delete fun;
 						}
-						delete fun;
+					}
+					if (d.filetype=="plain")
+					{
+						//do nothing as the file is alread in place from dl mgr
+					}
+				}
+			}
+			break;
+		case RM_HELP:
+			foreach(DownloadItem d, downloadList)
+			{
+				//qDebug()<<d.desc<<d.download<<d.files<<d.type;
+				if (d.filetype=="zip")
+				{
+					QString fn(ScPaths::getUserHelpFilesDir(true)+d.files);
+					//qDebug()<<fn;
+					QFile dledFile(fn);
+					QFileInfo fi(dledFile);
+					QFile dledFileSHA256(fn+".sha256");
+					QFileInfo fiSHA256(dledFileSHA256);
+					if (!dledFile.exists() || !dledFileSHA256.exists())
+						qDebug()<<"File doesn\'t exist"<<fn<<fn+".sha256";
+					else
+					{
+						if (checkFileHash(ScPaths::getUserHelpFilesDir(false), fi.fileName(), fiSHA256.fileName(), QCryptographicHash::Sha256))
+						{
+							ScZipHandler* fun = new ScZipHandler();
+							if (!fun->open(fn))
+								qDebug()<<"Zip file doesn\'t open"<<fn;
+							else
+							{
+								QStringList zipFileContents(fun->files());
+								QStringList extractFiles(d.extractfiles.split(";", QString::SkipEmptyParts));
+								QString toDir(ScPaths::getUserHelpFilesDir(false)+d.lang+"/");
+								QDir dir(ScPaths::getUserHelpFilesDir(false));
+								if (!dir.exists(d.lang))
+									dir.mkdir(d.lang);
+								foreach (QString f2e, zipFileContents)
+								{
+									//qDebug()<<"Unzipping"<<f2e<<"to"<<toDir;
+									fun->extract(f2e, toDir, ScZipHandler::ExtractPaths);
+								}
+							}
+							delete fun;
+						}
+						else
+							qDebug()<<"checksum failed for"<<fn + ".sha256";
+						dledFile.remove();
+						dledFileSHA256.remove();
 					}
 				}
 				if (d.filetype=="plain")
@@ -705,6 +1011,7 @@ void ResourceManager::downloadFilesFinished()
 					//do nothing as the file is alread in place from dl mgr
 				}
 			}
+			break;
 	}
 
 }
@@ -748,6 +1055,20 @@ void ResourceManager::updateProgressBar()
 	downloadProgressBar->setValue(downloadProgressBar->value() + 1);
 }
 
+void ResourceManager::updateProgressData(qint64 bytesReceived, qint64 bytesTotal)
+{
+	QString totalText;
+	if (bytesTotal == -1)
+		totalText = QString("%1 kB").arg(bytesReceived/1000);
+	else
+//	{
+		totalText = QString("%1 / %2 kB").arg(bytesReceived/1000).arg(bytesTotal/1000);
+//		QString totalTextWidth = QString("%1 / %2 kB").arg(bytesTotal).arg(bytesTotal);
+//		dataReceivedLabel->setMinimumWidth(QWidget::fontMetrics().width(totalTextWidth));
+//	}
+	dataReceivedLabel->setText(totalText);
+}
+
 void ResourceManager::startDownload()
 {
 	int rows = availableTableWidget->rowCount();
@@ -766,11 +1087,12 @@ void ResourceManager::startDownload()
 	downloadList.clear();
 	downloadProgressBar->setValue(0);
 	downloadProgressBar->setVisible(true);
+	dataReceivedLabel->setVisible(true);
 //	dlLabel->setVisible(true);
 	int dlCount=0;
 
 	//Set up destination
-	QString destinationFolder=findDestinationFolder();
+	QString destinationFolder(findDestinationFolder());
 	int category = categoryComboBox->currentData().toInt();
 	switch (category)
 	{
@@ -839,6 +1161,50 @@ void ResourceManager::startDownload()
 				}
 			}
 			break;
+		case RM_HELP:
+			foreach(DownloadItem d, helpList)
+			{
+//				qDebug()<<d.desc;
+				if (filesToDownload.contains(d.desc))
+				{
+					if (d.filetype=="zip")
+					{
+//						qDebug()<<"zip type:"<<d.url<<d.files;
+						QStringList plainURLs(d.files.split(";", QString::SkipEmptyParts));
+						foreach (QString s, plainURLs)
+						{
+							ScQApp->dlManager()->addURL(d.url+"/"+s, true, ScPaths::downloadDir(), destinationFolder);
+							ScQApp->dlManager()->addURL(d.url+"/"+s+".sha256", true, ScPaths::downloadDir(), destinationFolder);
+							dlCount+=2;
+						}
+						downloadList.append(d);
+						d.download=true;
+					}
+				}
+			}
+			break;
+		case RM_PALETTES:
+			foreach(DownloadItem d, paletteList)
+			{
+//				qDebug()<<d.desc;
+				if (filesToDownload.contains(d.desc))
+				{
+					if (d.filetype=="zip")
+					{
+//						qDebug()<<"zip type:"<<d.url<<d.files;
+						QStringList plainURLs(d.files.split(";", QString::SkipEmptyParts));
+						foreach (QString s, plainURLs)
+						{
+							ScQApp->dlManager()->addURL(d.url+"/"+s, true, ScPaths::downloadDir(), destinationFolder);
+							ScQApp->dlManager()->addURL(d.url+"/"+s+".sha256", true, ScPaths::downloadDir(), destinationFolder);
+							dlCount+=2;
+						}
+						downloadList.append(d);
+						d.download=true;
+					}
+				}
+			}
+			break;
 		default:
 			break;
 	}
@@ -848,6 +1214,7 @@ void ResourceManager::startDownload()
 		connect(ScQApp->dlManager(), SIGNAL(finished()), this, SLOT(downloadFilesFinished()));
 		connect(ScQApp->dlManager(), SIGNAL(fileReceived(const QString&)), this, SLOT(updateProgressBar()));
 		connect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(updateProgressBar()));
+		connect(ScQApp->dlManager(), SIGNAL(fileDownloadProgress(qint64, qint64)), this, SLOT(updateProgressData(qint64, qint64)));
 		ScQApp->dlManager()->startDownloads();
 	}
 }
@@ -871,6 +1238,7 @@ void ResourceManager::showLicense()
 			break;
 		}
 	}
+	qDebug()<<lang<<licenceFileName;
 	if (!licenceFileName.isEmpty())
 	{
 		bool doDownload=true;
@@ -880,9 +1248,9 @@ void ResourceManager::showLicense()
 		{
 			QString destinationFolder=findDestinationFolder();
 			QFile dataFile(destinationFolder + licenceFileName);
-			QTextStream ts(&dataFile);
 			if (dataFile.exists())
 			{
+				QTextStream ts(&dataFile);
 				dataFile.open(QIODevice::ReadOnly);
 				data = ts.readAll();
 				dataFile.close();
@@ -895,19 +1263,42 @@ void ResourceManager::showLicense()
 			QStringList filesToDownload;
 			filesToDownload<<lang;
 			//There's only one here... foreach?
-			foreach(DownloadItem d, dictList)
+			int category = categoryComboBox->currentData().toInt();
+			switch (category)
 			{
-				if (filesToDownload.contains(d.desc))
-				{
-					if (d.filetype=="plain")
+				case RM_HYPH:
+				case RM_SPELL:
+					foreach(DownloadItem d, dictList)
 					{
-						ScQApp->dlManager()->addURL(d.url+"/"+licenceFileName, true, ScPaths::downloadDir(), ScPaths::getTempFileDir());
-						connect(ScQApp->dlManager(), SIGNAL(finished()), this, SLOT(downloadLicenseFinished()));
-						connect(ScQApp->dlManager(), SIGNAL(fileReceived(const QString&)), this, SLOT(downloadLicenseFileFinished(const QString&)));
-						connect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(downloadLicenseFileFailed(const QString&)));
-						ScQApp->dlManager()->startDownloads();
+						if (filesToDownload.contains(d.desc))
+						{
+							if (d.filetype=="plain")
+							{
+								ScQApp->dlManager()->addURL(d.url+"/"+licenceFileName, true, ScPaths::downloadDir(), ScPaths::getTempFileDir());
+								connect(ScQApp->dlManager(), SIGNAL(finished()), this, SLOT(downloadLicenseFinished()));
+								connect(ScQApp->dlManager(), SIGNAL(fileReceived(const QString&)), this, SLOT(downloadLicenseFileFinished(const QString&)));
+								connect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(downloadLicenseFileFailed(const QString&)));
+								ScQApp->dlManager()->startDownloads();
+							}
+						}
 					}
-				}
+					break;
+				case RM_PALETTES:
+					foreach(DownloadItem d, paletteList)
+					{
+						if (filesToDownload.contains(d.desc))
+						{
+//							if (d.filetype=="plain")
+							{
+								ScQApp->dlManager()->addURL(d.url+"/"+licenceFileName, true, ScPaths::downloadDir(), ScPaths::getTempFileDir());
+								connect(ScQApp->dlManager(), SIGNAL(finished()), this, SLOT(downloadLicenseFinished()));
+								connect(ScQApp->dlManager(), SIGNAL(fileReceived(const QString&)), this, SLOT(downloadLicenseFileFinished(const QString&)));
+								connect(ScQApp->dlManager(), SIGNAL(fileFailed(const QString&)), this, SLOT(downloadLicenseFileFailed(const QString&)));
+								ScQApp->dlManager()->startDownloads();
+							}
+						}
+					}
+					break;
 			}
 		}
 	}

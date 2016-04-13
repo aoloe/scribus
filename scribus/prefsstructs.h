@@ -111,6 +111,12 @@ struct WindowPrefs
 	bool maximized;
 };
 
+struct tabPrefs
+{
+	int activeTab;
+	QStringList palettes;
+};
+
 //User Interface
 struct UIPrefs
 {
@@ -145,6 +151,7 @@ struct UIPrefs
 	QString iconSet; //! Icon set name
 	WindowPrefs mainWinSettings;
 	QByteArray mainWinState;
+	QList<tabPrefs> tabbedPalettes;
 };
 
 //Paths
@@ -170,6 +177,10 @@ struct DocumentSetupPrefs
 	int docUnitIndex; //! The index of the default unit
 	bool AutoSave;
 	int AutoSaveTime;
+	int AutoSaveCount;
+	bool AutoSaveKeep;
+	bool AutoSaveLocation;
+	QString AutoSaveDir;
 	bool saveCompressed;
 };
 

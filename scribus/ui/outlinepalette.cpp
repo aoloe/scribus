@@ -78,7 +78,7 @@ void OutlineWidget::selectItems(QList<QTreeWidgetItem*> items)
 			itemSelection.select(index, index);
 		}
 	}
-	selectionModel()->select(itemSelection, QItemSelectionModel::Select);
+	selectionModel()->select(itemSelection, QItemSelectionModel::Select); // a.l.e: here it gets selected when an item is activated on canvas
 }
 
 void OutlineWidget::dropEvent(QDropEvent *e)
@@ -773,6 +773,7 @@ void OutlinePalette::slotShowSelect(uint SNr, PageItem *Nr)
 	else
 	{
 		QTreeWidgetItem *retVal = getListItem(SNr, Nr);
+        qDebug() << "retval" << ((OutlineTreeItem*) retVal)->type;
 		if (retVal != 0 && !retVal->isHidden())
 			retVal->setSelected(true);
 	}

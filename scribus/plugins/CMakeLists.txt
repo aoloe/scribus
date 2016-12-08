@@ -23,4 +23,9 @@ add_subdirectory(tools)
 add_subdirectory(picbrowser)
 add_subdirectory(shapes)
 
+ADD_SUBDIRECTORY(scribusAPI)
+ADD_SUBDIRECTORY(applyStyle)
+ADD_SUBDIRECTORY(runCommand)
+ADD_SUBDIRECTORY(tableOfContents)
+
 # add_subdirectory(myplugin)

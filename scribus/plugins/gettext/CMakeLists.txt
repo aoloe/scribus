@@ -15,3 +15,5 @@ endif()
 add_subdirectory(textfilter)
 add_subdirectory(txtim)
 add_subdirectory(xtgim)
+
+ADD_SUBDIRECTORY(markdown)

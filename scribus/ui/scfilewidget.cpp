@@ -71,11 +71,10 @@ QString ScFileWidget::selectedFile()
    click, leaving user no time to see preview. Drawback: in other 
    Linux desktop environment, this may force user to click OK for
    opening/saving file. */
+   // hack removed to get the dialog to work correctly on all other systems (ale)
 void ScFileWidget::accept()
 {
-#ifndef Q_OS_LINUX
 	QFileDialog::accept();
-#endif
 }
 
 void ScFileWidget::locationDropped(QString fileUrl)

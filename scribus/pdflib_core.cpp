@@ -1218,160 +1218,108 @@ PDFLibCore::PDF_Begin_FindUsedFonts(SCFonts &AllFonts, const QMap<QString, QMap<
 	size_t ar = sizeof(tmpf) / sizeof(*tmpf);
 	for (uint ax = 0; ax < ar; ++ax)
 		ind2PDFabr[ax] = tmpf[ax];
-	QList<PageItem*> allItems;
-	for (QHash<int, PageItem*>::iterator itf = doc.FrameItems.begin(); itf != doc.FrameItems.end(); ++itf)
+
+	QList<PageItem*> allItems = doc.FrameItems.values();
+	while (allItems.count() > 0)
 	{
-		pgit = itf.value();
-		if (pgit->isGroup())
-			allItems = pgit->asGroupFrame()->getItemList();
-		else
-			allItems.append(pgit);
-		for (int ii = 0; ii < allItems.count(); ii++)
+		pgit = allItems.takeFirst();
+		if (pgit->isGroup() || pgit->isTable())
 		{
-			pgit = allItems.at(ii);
-			if (pgit->isTable())
+			allItems = pgit->getItemList() + allItems;
+			continue;
+		}
+		if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+		{
+			if (pgit->isAnnotation())
 			{
-				for (int row = 0; row < pgit->asTable()->rows(); ++row)
+				int annotType  = pgit->annotation().Type();
+				bool mustEmbed = ((annotType >= Annotation::Button) && (annotType <= Annotation::Listbox) && (annotType != Annotation::Checkbox));
+				if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
+					StdFonts.insert("/ZapfDingbats", "");
+				if (pgit->itemText.length() > 0 || mustEmbed)
 				{
-					for (int col = 0; col < pgit->asTable()->columns(); col ++)
-					{
-						TableCell cell = pgit->asTable()->cellAt(row, col);
-						if (cell.row() == row && cell.column() == col)
-						{
-							PageItem* textFrame = cell.textFrame();
-							for (uint e = 0; e < static_cast<uint>(textFrame->itemText.length()); ++e)
-							{
-								ReallyUsed.insert(textFrame->itemText.charStyle(e).font().replacementName(), DocFonts[textFrame->itemText.charStyle(e).font().replacementName()]);
-							}
-						}
-					}
+					if (Options.Version < PDFOptions::PDFVersion_14)
+						StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
+					QString replacementName = pgit->itemText.defaultStyle().charStyle().font().replacementName();
+					ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 				}
 			}
-			if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+			uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
+			uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
+			for (uint e = start; e < stop; ++e)
 			{
-				if (pgit->isAnnotation())
-				{
-					int annotType  = pgit->annotation().Type();
-					bool mustEmbed = ((annotType >= Annotation::Button) && (annotType <= Annotation::Listbox) && (annotType != Annotation::Checkbox));
-					if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
-						StdFonts.insert("/ZapfDingbats", "");
-					if (pgit->itemText.length() > 0 || mustEmbed)
-					{
-						if (Options.Version < PDFOptions::PDFVersion_14)
-							StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
-						ReallyUsed.insert(pgit->itemText.defaultStyle().charStyle().font().replacementName(), DocFonts[pgit->itemText.defaultStyle().charStyle().font().replacementName()]);
-					}
-				}
-				uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
-				uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
-				for (uint e = start; e < stop; ++e)
-				{
-					ReallyUsed.insert(pgit->itemText.charStyle(e).font().replacementName(), DocFonts[pgit->itemText.charStyle(e).font().replacementName()]);
-				}
+				QString replacementName = pgit->itemText.charStyle(e).font().replacementName();
+				ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 			}
 		}
 	}
-	for (int c = 0; c < doc.MasterItems.count(); ++c)
+
+	allItems = doc.MasterItems;
+	while (allItems.count() > 0)
 	{
-		pgit = doc.MasterItems.at(c);
-		if (pgit->isGroup())
-			allItems = pgit->asGroupFrame()->getItemList();
-		else
-			allItems.append(pgit);
-		for (int ii = 0; ii < allItems.count(); ii++)
+		pgit = allItems.takeFirst();
+		if (pgit->isGroup() || pgit->isTable())
 		{
-			pgit = allItems.at(ii);
-			if (pgit->isTable())
+			allItems = pgit->getItemList() + allItems;
+			continue;
+		}
+		if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+		{
+			if (pgit->isAnnotation())
 			{
-				for (int row = 0; row < pgit->asTable()->rows(); ++row)
+				int annotType  = pgit->annotation().Type();
+				bool mustEmbed = ((annotType >= Annotation::Button) && (annotType <= Annotation::Listbox) && (annotType != Annotation::Checkbox));
+				if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
+					StdFonts.insert("/ZapfDingbats", "");
+				if (pgit->itemText.length() > 0 || mustEmbed)
 				{
-					for (int col = 0; col < pgit->asTable()->columns(); col ++)
-					{
-						TableCell cell = pgit->asTable()->cellAt(row, col);
-						if (cell.row() == row && cell.column() == col)
-						{
-							PageItem* textFrame = cell.textFrame();
-							for (uint e = 0; e < static_cast<uint>(textFrame->itemText.length()); ++e)
-							{
-								ReallyUsed.insert(textFrame->itemText.charStyle(e).font().replacementName(), DocFonts[textFrame->itemText.charStyle(e).font().replacementName()]);
-							}
-						}
-					}
+					if (Options.Version < PDFOptions::PDFVersion_14)
+						StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
+					QString replacementName = pgit->itemText.defaultStyle().charStyle().font().replacementName();
+					ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 				}
 			}
-			if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+			uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
+			uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
+			for (uint e = start; e < stop; ++e)
 			{
-				if (pgit->isAnnotation())
-				{
-					int annotType  = pgit->annotation().Type();
-					bool mustEmbed = ((annotType >= Annotation::Button) && (annotType <= Annotation::Listbox) && (annotType != Annotation::Checkbox));
-					if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
-						StdFonts.insert("/ZapfDingbats", "");
-					if (pgit->itemText.length() > 0 || mustEmbed)
-					{
-						if (Options.Version < PDFOptions::PDFVersion_14)
-							StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
-						ReallyUsed.insert(pgit->itemText.defaultStyle().charStyle().font().replacementName(), DocFonts[pgit->itemText.defaultStyle().charStyle().font().replacementName()]);
-					}
-				}
-				uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
-				uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
-				for (uint e = start; e < stop; ++e)
-				{
-					ReallyUsed.insert(pgit->itemText.charStyle(e).font().replacementName(), DocFonts[pgit->itemText.charStyle(e).font().replacementName()]);
-				}
+				QString replacementName = pgit->itemText.charStyle(e).font().replacementName();
+				ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 			}
 		}
 	}
-	for (int d = 0; d < doc.Items->count(); ++d)
+
+	allItems = *(doc.Items);
+	while (allItems.count() > 0)
 	{
-		pgit = doc.Items->at(d);
-		if (pgit->isGroup())
-			allItems = pgit->asGroupFrame()->getItemList();
-		else
-			allItems.append(pgit);
-		for (int ii = 0; ii < allItems.count(); ii++)
+		pgit = allItems.takeFirst();
+		if (pgit->isGroup() || pgit->isTable())
 		{
-			pgit = allItems.at(ii);
-			if (pgit->isTable())
+			allItems = pgit->getItemList() + allItems;
+			continue;
+		}
+		if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+		{
+			if (pgit->isAnnotation())
 			{
-				for (int row = 0; row < pgit->asTable()->rows(); ++row)
+				int annotType  = pgit->annotation().Type();
+				bool mustEmbed = ((annotType >= Annotation::Button) && (annotType <= Annotation::Listbox) && (annotType != Annotation::Checkbox));
+				if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
+					StdFonts.insert("/ZapfDingbats", "");
+				if (pgit->itemText.length() > 0 || mustEmbed)
 				{
-					for (int col = 0; col < pgit->asTable()->columns(); col ++)
-					{
-						TableCell cell = pgit->asTable()->cellAt(row, col);
-						if (cell.row() == row && cell.column() == col)
-						{
-							PageItem* textFrame = cell.textFrame();
-							for (uint e = 0; e < static_cast<uint>(textFrame->itemText.length()); ++e)
-							{
-								ReallyUsed.insert(textFrame->itemText.charStyle(e).font().replacementName(), DocFonts[textFrame->itemText.charStyle(e).font().replacementName()]);
-							}
-						}
-					}
+					if (Options.Version < PDFOptions::PDFVersion_14)
+						StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
+					QString replacementName = pgit->itemText.defaultStyle().charStyle().font().replacementName();
+					ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 				}
 			}
-			if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+			uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
+			uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
+			for (uint e = start; e < stop; ++e)
 			{
-				if (pgit->isAnnotation())
-				{
-					int annotType  = pgit->annotation().Type();
-					bool mustEmbed = ((annotType >= Annotation::Button) && (annotType <= Annotation::Listbox) && (annotType != Annotation::Checkbox));
-					if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
-						StdFonts.insert("/ZapfDingbats", "");
-					if (pgit->itemText.length() > 0 || mustEmbed)
-					{
-						if (Options.Version < PDFOptions::PDFVersion_14)
-							StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
-						ReallyUsed.insert(pgit->itemText.defaultStyle().charStyle().font().replacementName(), DocFonts[pgit->itemText.defaultStyle().charStyle().font().replacementName()]);
-					}
-				}
-				uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
-				uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
-				for (uint e = start; e < stop; ++e)
-				{
-					ReallyUsed.insert(pgit->itemText.charStyle(e).font().replacementName(), DocFonts[pgit->itemText.charStyle(e).font().replacementName()]);
-				}
+				QString replacementName = pgit->itemText.charStyle(e).font().replacementName();
+				ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 			}
 		}
 	}
@@ -1383,53 +1331,35 @@ PDFLibCore::PDF_Begin_FindUsedFonts(SCFonts &AllFonts, const QMap<QString, QMap<
 	for (int c = 0; c < patterns.count(); ++c)
 	{
 		ScPattern pa = doc.docPatterns[patterns[c]];
-		for (int o = 0; o < pa.items.count(); o++)
+		allItems = pa.items;
+		while (allItems.count() > 0)
 		{
-			pgit = pa.items.at(o);
-			if (pgit->isGroup())
-				allItems = pgit->asGroupFrame()->getItemList();
-			else
-				allItems.append(pgit);
-			for (int ii = 0; ii < allItems.count(); ii++)
+			pgit = allItems.takeFirst();
+			if (pgit->isGroup() || pgit->isTable())
 			{
-				pgit = allItems.at(ii);
-				if (pgit->isTable())
+				allItems = pgit->getItemList() + allItems;
+				continue;
+			}
+			if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+			{
+				if (pgit->isAnnotation())
 				{
-					for (int row = 0; row < pgit->asTable()->rows(); ++row)
+					if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
+						StdFonts.insert("/ZapfDingbats", "");
+					if (pgit->itemText.length() > 0)
 					{
-						for (int col = 0; col < pgit->asTable()->columns(); col ++)
-						{
-							TableCell cell = pgit->asTable()->cellAt(row, col);
-							if (cell.row() == row && cell.column() == col)
-							{
-								PageItem* textFrame = cell.textFrame();
-								for (uint e = 0; e < static_cast<uint>(textFrame->itemText.length()); ++e)
-								{
-									ReallyUsed.insert(textFrame->itemText.charStyle(e).font().replacementName(), DocFonts[textFrame->itemText.charStyle(e).font().replacementName()]);
-								}
-							}
-						}
+						if (Options.Version < PDFOptions::PDFVersion_14)
+							StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
+						QString replacementName = pgit->itemText.defaultStyle().charStyle().font().replacementName();
+						ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 					}
 				}
-				if ((pgit->itemType() == PageItem::TextFrame) || (pgit->itemType() == PageItem::PathText))
+				uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
+				uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
+				for (uint e = start; e < stop; ++e)
 				{
-					if (pgit->isAnnotation())
-					{
-						if ((pgit->annotation().Type() == Annotation::Checkbox) || (pgit->annotation().Type() == Annotation::RadioButton))
-							StdFonts.insert("/ZapfDingbats", "");
-						if (pgit->itemText.length() > 0)
-						{
-							if (Options.Version < PDFOptions::PDFVersion_14)
-								StdFonts.insert(ind2PDFabr[pgit->annotation().Font()], "");
-							ReallyUsed.insert(pgit->itemText.defaultStyle().charStyle().font().replacementName(), DocFonts[pgit->itemText.defaultStyle().charStyle().font().replacementName()]);
-						}
-					}
-					uint start = pgit->isTextFrame() ? (uint) pgit->firstInFrame() : 0;
-					uint stop  = pgit->isTextFrame() ? (uint) pgit->lastInFrame() + 1 : (uint) pgit->itemText.length();
-					for (uint e = start; e < stop; ++e)
-					{
-						ReallyUsed.insert(pgit->itemText.charStyle(e).font().replacementName(), DocFonts[pgit->itemText.charStyle(e).font().replacementName()]);
-					}
+					QString replacementName = pgit->itemText.charStyle(e).font().replacementName();
+					ReallyUsed.insert(replacementName, DocFonts[replacementName]);
 				}
 			}
 		}
@@ -1481,7 +1411,7 @@ void PDFLibCore::PDF_WriteStandardFonts()
 			PutDoc("24 /breve /caron /circumflex /dotaccent /hungarumlaut /ogonek /ring /tilde\n");
 			PutDoc("39 /quotesingle 96 /grave 128 /bullet /dagger /daggerdbl /ellipsis /emdash /endash /florin /fraction /guilsinglleft /guilsinglright\n");
 			PutDoc("/minus /perthousand /quotedblbase /quotedblleft /quotedblright /quoteleft /quoteright /quotesinglbase /trademark /fi /fl /Lslash /OE /Scaron\n");
-			PutDoc("/Ydieresis /Zcaron /dotlessi /lslash /oe /scaron /zcaron 164 /currency 166 /brokenbar 168 /dieresis /copyright /ordfeminine 172 /logicalnot\n");
+			PutDoc("/Ydieresis /Zcaron /dotlessi /lslash /oe /scaron /zcaron 160 /Euro 164 /currency 166 /brokenbar 168 /dieresis /copyright /ordfeminine 172 /logicalnot\n");
 			PutDoc("/.notdef /registered /macron /degree /plusminus /twosuperior /threesuperior /acute /mu 183 /periodcentered /cedilla /onesuperior /ordmasculine\n");
 			PutDoc("188 /onequarter /onehalf /threequarters 192 /Agrave /Aacute /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla /Egrave /Eacute /Ecircumflex\n");
 			PutDoc("/Edieresis /Igrave /Iacute /Icircumflex /Idieresis /Eth /Ntilde /Ograve /Oacute /Ocircumflex /Otilde /Odieresis /multiply /Oslash\n");
@@ -2021,47 +1951,43 @@ PdfFont PDFLibCore::PDF_EncodeSimpleFont(const QByteArray& fontName, ScFace& fac
 		writer.endObj(fontObject2);
 		pageData.FObjects[fontName + "S"+Pdf::toPdf(Fc)] = fontObject2;
 	} // for(Fc)
+
+	return result;
+}
+
+PdfFont PDFLibCore::PDF_EncodeFormFont(const QByteArray& fontName, ScFace& face, const QByteArray& baseFont, const QByteArray& subtype, PdfId fontDes)
+{
+	PdfFont formFont;
+	formFont.name = Pdf::toName(fontName) + "Form";
+	formFont.usage = Used_in_Forms;
+	
 	PdfId fontWidthsForm = writer.newObject();
 	writer.startObj(fontWidthsForm);
 	PutDoc("[ 0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 ");
 	for (uint ww = 32; ww < 256; ++ww)
 	{
-		uint glyph = face.char2CMap(ww);
-		if (gl.contains(glyph))
+		int unicode = Pdf::fromPDFDocEncoding(ww);
+		uint glyph  = face.char2CMap(unicode);
+		if (glyph > 0)
 			PutDoc(Pdf::toPdf(static_cast<int>(face.glyphWidth(glyph)* 1000))+" ");
 		else
 			PutDoc("0 ");
 	}
 	PutDoc("]");
 	writer.endObj(fontWidthsForm);
+
 	PdfId fontObjectForm = writer.newObject();
-	PdfFont formFont;
-	formFont.name = Pdf::toName(fontName) + "Form";
-	formFont.usage = Used_in_Forms;
 	writer.startObj(fontObjectForm);
 	PutDoc("<<\n/Type /Font\n/Subtype ");
 	PutDoc(subtype + "\n");
-	//				if (fformat == ScFace::SFNT || fformat == ScFace::TTCF)
-	//				{
-	//					PutDoc("/TrueType\n");
 	PutDoc("/Name " + formFont.name+ "\n");
-	pageData.FObjects[fontName + "Form"] = fontObjectForm;
-	UsedFontsF.insert(face.replacementName(), formFont);
-	/*				}
-	 else
-	 {
-	 PutDoc("/Type1\n");
-	 PutDoc("/Name /"+face.psName().replace( QRegExp("[\\s\\/\\{\\[\\]\\}\\<\\>\\(\\)\\%]"), "_" )+"\n");
-	 pageData.FObjects[face.psName().replace( QRegExp("[\\s\\/\\{\\[\\]\\}\\<\\>\\(\\)\\%]"), "_" )] = ObjCounter;
-	 UsedFontsF.insert(it.key(), "/"+face.psName().replace( QRegExp("[\\s\\/\\{\\[\\]\\}\\<\\>\\(\\)\\%]"), "_" ));
-	 } */
 	PutDoc("/BaseFont "+Pdf::toName(sanitizeFontName(face.psName()))+"\n");
 	PutDoc("/Encoding << \n");
 	PutDoc("/Differences [ \n");
 	PutDoc("24 /breve /caron /circumflex /dotaccent /hungarumlaut /ogonek /ring /tilde\n");
 	PutDoc("39 /quotesingle 96 /grave 128 /bullet /dagger /daggerdbl /ellipsis /emdash /endash /florin /fraction /guilsinglleft /guilsinglright\n");
 	PutDoc("/minus /perthousand /quotedblbase /quotedblleft /quotedblright /quoteleft /quoteright /quotesinglbase /trademark /fi /fl /Lslash /OE /Scaron\n");
-	PutDoc("/Ydieresis /Zcaron /dotlessi /lslash /oe /scaron /zcaron 164 /currency 166 /brokenbar 168 /dieresis /copyright /ordfeminine 172 /logicalnot\n");
+	PutDoc("/Ydieresis /Zcaron /dotlessi /lslash /oe /scaron /zcaron 160 /Euro 164 /currency 166 /brokenbar 168 /dieresis /copyright /ordfeminine 172 /logicalnot\n");
 	PutDoc("/.notdef /registered /macron /degree /plusminus /twosuperior /threesuperior /acute /mu 183 /periodcentered /cedilla /onesuperior /ordmasculine\n");
 	PutDoc("188 /onequarter /onehalf /threequarters 192 /Agrave /Aacute /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla /Egrave /Eacute /Ecircumflex\n");
 	PutDoc("/Edieresis /Igrave /Iacute /Icircumflex /Idieresis /Eth /Ntilde /Ograve /Oacute /Ocircumflex /Otilde /Odieresis /multiply /Oslash\n");
@@ -2076,7 +2002,10 @@ PdfFont PDFLibCore::PDF_EncodeSimpleFont(const QByteArray& fontName, ScFace& fac
 	PutDoc(">>");
 	writer.endObj(fontObjectForm);
 
-	return result;
+	pageData.FObjects[fontName + "Form"] = fontObjectForm;
+	UsedFontsF.insert(face.replacementName(), formFont);
+
+	return formFont;
 }
 
 /*
@@ -2355,19 +2284,40 @@ void PDFLibCore::PDF_Begin_WriteUsedFonts(SCFonts &AllFonts, const QMap<QString,
 				
 				ScFace::FaceEncoding gl;
 				face.glyphNames(gl);
+
+				// #14550 : for TTF fonts, we already avoid using the Postscript glyph name table
+				// as it is notoriously unreliable. We hence retrieve glyph names using unicode cmap
+				// and adobe glyph names uniXXXX convention. Unfortunately we may still not get all
+				// required glyph names and some glyphs may not have a name anyway. So check we have
+				// ps names for all glyphs we need and if not, then use CID encoding
+				bool hasNeededGlyphNames = face.hasNames() && (gl.count() >= usedGlyphs.count());
+				if ((fformat == ScFace::SFNT || fformat == ScFace::TTCF))
+				{
+					QMap<uint, FPointArray>::const_iterator it;
+					for (it = usedGlyphs.begin(); it != usedGlyphs.end(); ++it)
+					{
+						int glyphIndex = it.key();
+						hasNeededGlyphNames &= gl.contains(glyphIndex);
+						if (!hasNeededGlyphNames)
+							break;
+					}
+				}
 				
 				QByteArray baseFont = Pdf::toName(sanitizeFontName(face.psName()));
+				QByteArray subtype = (fformat == ScFace::SFNT || fformat == ScFace::TTCF) ? "/TrueType" : "/Type1";
 				
-				if ((face.isSymbolic() || !face.hasNames() || Options.Version == PDFOptions::PDFVersion_X4 || face.type() == ScFace::OTF) &&
+				if ((face.isSymbolic() || !hasNeededGlyphNames || Options.Version == PDFOptions::PDFVersion_X4 || face.type() == ScFace::OTF) &&
 					(fformat == ScFace::SFNT || fformat == ScFace::TTCF))
 				{
 					pdfFont = PDF_EncodeCidFont(fontName, face, baseFont, fontDescriptor, gl, QMap<uint,uint>());
 				}
 				else
 				{
-					QByteArray subtype = (fformat == ScFace::SFNT || fformat == ScFace::TTCF) ? "/TrueType" : "/Type1";
 					pdfFont = PDF_EncodeSimpleFont(fontName, face, baseFont, subtype, embeddedFontObject != 0, fontDescriptor, gl);
 				}
+
+				if ((Options.Version != PDFOptions::PDFVersion_X4) && (face.type() != ScFace::OTF))
+					PDF_EncodeFormFont(fontName, face, baseFont, subtype, fontDescriptor);
 			}
 			pdfFont.usage = Used_in_Content;
 		}
@@ -9174,11 +9124,11 @@ bool PDFLibCore::PDF_Annotation(PageItem *ite, uint PNr)
 					  break;
 					case 2:
 					  // XFDF
-					  PutDoc("/Flags 64"); // bit 6 on
+					  PutDoc("/Flags 32"); // bit 6 on
 					  break;
 					case 3:
 					  // PDF
-					  PutDoc("/Flags 512"); // bit 9 on
+					  PutDoc("/Flags 256"); // bit 9 on
 					  break;
 					case 0:
 					default:

@@ -37,6 +37,7 @@ for which a new license (GPL+exception) is in place.
 #include <QFileDialog>
 #include <QFrame>
 #include <QFont>
+#include <QHBoxLayout>
 #include <QIcon>
 #include <QInputDialog>
 #include <QKeyEvent>
@@ -52,12 +53,11 @@ for which a new license (GPL+exception) is in place.
 #include <QProgressBar>
 #include <QPushButton>
 //<<QML testing
-#include <QHBoxLayout>
-#include <QQuickView>
-#include <QQmlEngine>
-#include <QQmlComponent>
-#include <QQuickItem>
-#include <QQmlProperty>
+//#include <QQuickView>
+//#include <QQmlEngine>
+//#include <QQmlComponent>
+//#include <QQuickItem>
+//#include <QQmlProperty>
 //>>
 #include <QRegExp>
 #include <QScopedPointer>
@@ -2680,7 +2680,6 @@ void ScribusMainWindow::SwitchWin()
 	inlinePalette->setDoc(doc);
 	rebuildLayersList();
 	updateLayerMenu();
-	setLayerMenuText(doc->activeLayerName());
 	//Do not set this!, it doesn't get valid pointers unless its in EditClip mode and its not
 	//if we are switching windows #4357
 	//nodePalette->setDoc(doc, view);
@@ -2726,7 +2725,6 @@ void ScribusMainWindow::HaveNewDoc()
 		outlinePalette->BuildTree();
 	rebuildLayersList();
 	updateLayerMenu();
-	setLayerMenuText(doc->activeLayerName());
 	slotChangeUnit(doc->unitIndex());
 	windowsMenuAboutToShow();
 
@@ -7389,6 +7387,13 @@ void ScribusMainWindow::updateLayerMenu()
 		pm.fill(doc->Layers.layerByName(*it)->markerColor);
 		layerMenu->addItem(pm, *it);
 	}
+
+	if (layerMenu->count() != 0)
+	{
+		QString layerName = doc->activeLayerName();
+		setCurrentComboItem(layerMenu, layerName);
+	}
+
 	layerMenu->blockSignals(b);
 }
 
@@ -8174,7 +8179,6 @@ void ScribusMainWindow::changeLayer(int )
 	layerPalette->rebuildList();
 	layerPalette->markActiveLayer();
 	updateLayerMenu();
-	setLayerMenuText(doc->activeLayerName());
 	view->DrawNew();
 	bool setter = !doc->layerLocked( doc->activeLayer() );
 	scrMenuMgr->setMenuEnabled("EditPasteRecent", ((scrapbookPalette->tempBView->objectMap.count() > 0) && (setter)));
@@ -9993,7 +9997,7 @@ void ScribusMainWindow::setPreviewToolbar()
 }
 
 
-void ScribusMainWindow::testQTQuick2_1()
+/*void ScribusMainWindow::testQTQuick2_1()
 {
 	qDebug()<<"Testing Qt Quick 2.0";
 
@@ -10038,7 +10042,7 @@ void ScribusMainWindow::testQT_slot4()
 	}
 	m_qqview->close();
 	m_qqview->deleteLater();
-}
+}*/
 
 void ScribusMainWindow::changePreviewQuality(int index)
 {

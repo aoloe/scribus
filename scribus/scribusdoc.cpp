@@ -5448,48 +5448,50 @@ int ScribusDoc::itemAddUserFrame(InsertAFrameData &iafData)
 		
 		if (iafData.positionType==0) // Frame starts at top left of page margins
 		{
-			x1=targetPage->xOffset()+targetPage->Margins.left();
-			y1=targetPage->yOffset()+targetPage->Margins.top();
+			x1 = targetPage->xOffset() + targetPage->Margins.left();
+			y1 = targetPage->yOffset() + targetPage->Margins.top();
 		}
 		else if (iafData.positionType==1) // Frame starts at top left of page
 		{
-			x1=targetPage->xOffset();
-			y1=targetPage->yOffset();
+			x1 = targetPage->xOffset();
+			y1 = targetPage->yOffset();
 		}
 		else if (iafData.positionType==2) // Frame starts at top left of page - bleeds
 		{
-			x1=targetPage->xOffset()-m_docPrefsData.docSetupPrefs.bleeds.left();
-			y1=targetPage->yOffset()-m_docPrefsData.docSetupPrefs.bleeds.top();
+			MarginStruct values;
+			getBleeds(targetPage, m_docPrefsData.docSetupPrefs.bleeds, values);
+			x1 = targetPage->xOffset() - values.left();
+			y1 = targetPage->yOffset() - values.top();
 		}
 		else if (iafData.positionType==3) // Frame starts at custom position
 		{
-			x1=targetPage->xOffset()+iafData.x;
-			y1=targetPage->yOffset()+iafData.y;
+			x1 = targetPage->xOffset() + iafData.x;
+			y1 = targetPage->yOffset() + iafData.y;
 		}
 		
 		if (iafData.sizeType==0) // Frame is size of page margins
 		{
-			w1=targetPage->width()-targetPage->Margins.right()-targetPage->Margins.left();
-			h1=targetPage->height()-targetPage->Margins.bottom()-targetPage->Margins.top();
+			w1 = targetPage->width() - targetPage->Margins.right()- targetPage->Margins.left();
+			h1 = targetPage->height() - targetPage->Margins.bottom()- targetPage->Margins.top();
 		}
 		else if (iafData.sizeType==1) // Frame is size of page
 		{
-			w1=targetPage->width();
-			h1=targetPage->height();
+			w1 = targetPage->width();
+			h1 = targetPage->height();
 		}
 		else if (iafData.sizeType==2) // Frame is size of page + bleed 
 		{
-			w1=targetPage->width()+m_docPrefsData.docSetupPrefs.bleeds.right()+m_docPrefsData.docSetupPrefs.bleeds.left();
-			h1=targetPage->height()+m_docPrefsData.docSetupPrefs.bleeds.bottom()+m_docPrefsData.docSetupPrefs.bleeds.top();
+			w1 = targetPage->width() + m_docPrefsData.docSetupPrefs.bleeds.right() + m_docPrefsData.docSetupPrefs.bleeds.left();
+			h1 = targetPage->height() + m_docPrefsData.docSetupPrefs.bleeds.bottom() + m_docPrefsData.docSetupPrefs.bleeds.top();
 		}
 		else if (iafData.sizeType==3) //Frame is size of imported image, we resize below when we load it
 		{
-			w1=h1=1;
+			w1 = h1 =1;
 		}
 		else if (iafData.sizeType==4) // Frame is custom size
 		{
-			w1=iafData.width;
-			h1=iafData.height;
+			w1 = iafData.width;
+			h1 = iafData.height;
 		}
 		z=itemAdd(iafData.frameType, PageItem::Unspecified, x1, y1, w1, h1, m_docPrefsData.itemToolPrefs.shapeLineWidth, CommonStrings::None, m_docPrefsData.itemToolPrefs.textColor);
 		if (z!=-1)
@@ -7830,7 +7832,7 @@ void ScribusDoc::itemSelection_SetHyphenChar(uint hyphenChar, Selection *customS
 void ScribusDoc::itemSelection_SetNamedCharStyle(const QString& name, Selection* customSelection)
 {
 	CharStyle newStyle;
-	newStyle.setParent(name.isEmpty()? Style::INHERIT_PARENT : name);
+	newStyle.setParent(name.isEmpty()? BaseStyle::INHERIT_PARENT : name);
 	itemSelection_ApplyCharStyle(newStyle, customSelection, "NAMED_STYLE");
 }
 
@@ -7839,7 +7841,7 @@ void ScribusDoc::itemSelection_SetNamedCharStyle(const QString& name, Selection*
 void ScribusDoc::itemSelection_SetNamedParagraphStyle(const QString& name, Selection* customSelection)
 {
 	ParagraphStyle newStyle;
-	newStyle.setParent(name.isEmpty()? Style::INHERIT_PARENT : name);
+	newStyle.setParent(name.isEmpty()? BaseStyle::INHERIT_PARENT : name);
 	itemSelection_ApplyParagraphStyle(newStyle, customSelection, true);
 }
 
@@ -15417,7 +15419,7 @@ void ScribusDoc::itemSelection_UniteItems(Selection* /*customSelection*/)
 			ma2.translate(currItem->xPos(), currItem->yPos());
 			ma2.rotate(currItem->rotation());
 			ma2 = ma2.inverted();
-			ma=ma*ma2;
+			ma = ma * ma2;
 			bb->PoLine.map(ma);
 			m_undoManager->setUndoEnabled(true);
 			if (UndoManager::undoEnabled())
@@ -15426,7 +15428,10 @@ void ScribusDoc::itemSelection_UniteItems(Selection* /*customSelection*/)
 			currItem->PoLine.setMarker();
 			currItem->PoLine.putPoints(currItem->PoLine.size(), bb->PoLine.size(), bb->PoLine);
 		}
+		int oldRotMode = m_rotMode;
+		m_rotMode = 0;
 		adjustItemSize(currItem);
+		m_rotMode = oldRotMode;
 		currItem->ContourLine = currItem->PoLine.copy();
 		m_undoManager->setUndoEnabled(true);
 		//FIXME: stop using m_View
@@ -15459,6 +15464,8 @@ void ScribusDoc::itemSelection_SplitItems(Selection* /*customSelection*/)
 	if (UndoManager::undoEnabled())
 		transaction = m_undoManager->beginTransaction(Um::SelectionGroup, Um::IGroup, Um::SplitItem, "", Um::IGroup);
 	m_undoManager->setUndoEnabled(false);
+	int oldRotMode = m_rotMode;
+	m_rotMode = 0;
 	for (int i = 0; i < m_Selection->count(); ++i)
 	{
 		QList< int> itemsList;
@@ -15507,6 +15514,7 @@ void ScribusDoc::itemSelection_SplitItems(Selection* /*customSelection*/)
 		}
 		m_undoManager->setUndoEnabled(false);
 	}
+	m_rotMode = oldRotMode;
 	m_undoManager->setUndoEnabled(true);
 	m_Selection->delaySignalsOff();
 	view()->Deselect(true);
@@ -15966,6 +15974,8 @@ Serializer *ScribusDoc::textSerializer()
 
 void ScribusDoc::setRotationMode(const int val)
 {
+	if (m_rotMode == val)
+		return;
 	m_rotMode = val;
 	emit rotationMode(m_rotMode);
 }
@@ -18018,7 +18028,7 @@ void ScribusDoc::delNoteFrame(PageItem_NoteFrame* nF, bool removeMarks, bool for
 		if (m->isType(MARK2ItemType) && (m->getItemPtr() == nF))
 		{
 			setUndoDelMark(m);
-			eraseMark(m,true);
+			eraseMark(m, true);
 		}
 	}
 	m_Selection->delaySignalsOn();
@@ -18033,6 +18043,19 @@ void ScribusDoc::delNoteFrame(PageItem_NoteFrame* nF, bool removeMarks, bool for
 	m_Selection->delaySignalsOff();
 
 	Items->removeOne(nF);
+
+	QList<PageItem*> allItems = *Items;
+	while (allItems.count() > 0)
+	{
+		PageItem* item = allItems.takeFirst();
+		if (item->isGroup() || item->isTable())
+		{
+			allItems = item->getItemList() + allItems;
+			continue;
+		}
+		if (item->isTextFrame())
+			item->asTextFrame()->removeNoteFrame(nF);
+	}
 	setNotesChanged(true);
 	if (forceDeletion)
 		delete nF;

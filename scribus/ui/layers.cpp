@@ -572,7 +572,9 @@ void LayerPalette::markLayer()
 			QPixmap pm(20,15);
 			pm.fill(neu);
 			((QToolButton*)(senderBox))->setIcon(pm);
-			m_Doc->setLayerMarker(layerID,neu);
+			m_Doc->setLayerMarker(layerID, neu);
+			m_Doc->scMW()->updateLayerMenu();
+			m_Doc->scMW()->rebuildLayersList();
 			emit LayerChanged();
 		}
 		setActiveLayer(Table->currentRow(), -1);

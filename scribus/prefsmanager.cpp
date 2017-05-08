@@ -133,19 +133,30 @@ void PrefsManager::setup()
 void PrefsManager::initDefaults()
 {
 	/** Default font and size **/
-	SCFontsIterator it(appPrefs.fontPrefs.AvailFonts);
+	QStringList defaultFonts;
+	defaultFonts << "Arial Regular";
+	defaultFonts << "Times New Roman Regular";
+	defaultFonts << "Helvetica Regular";
+	defaultFonts << "Helvetica Neue Regular";
+	defaultFonts << "DejaVu Sans Book";
+	defaultFonts << "DejaVu Sans Condensed";
+	defaultFonts << "Open Sans Regular";
+	defaultFonts << "Liberation Sans Regular";
+
 	bool goodFont = false;
-	for ( SCFontsIterator itf(appPrefs.fontPrefs.AvailFonts); itf.hasNext(); itf.next())
+	SCFonts& availableFonts = appPrefs.fontPrefs.AvailFonts;
+	for (int i = 0; i < defaultFonts.count(); ++i)
 	{
-		if ((itf.currentKey() == "Arial Regular") || (itf.currentKey() == "Times New Roman Regular"))
+		QString defCandidate = defaultFonts.at(i);
+		if (availableFonts.contains(defCandidate))
 		{
-			appPrefs.itemToolPrefs.textFont = itf.currentKey();
+			appPrefs.itemToolPrefs.textFont = defCandidate;
 			goodFont = true;
 			break;
 		}
 	}
 	if (!goodFont)
-		appPrefs.itemToolPrefs.textFont = it.currentKey();
+		appPrefs.itemToolPrefs.textFont = availableFonts.firstKey();
 	appPrefs.itemToolPrefs.textSize = 120;
 
 	/** Default colours **/
@@ -201,7 +212,7 @@ void PrefsManager::initDefaults()
 	appPrefs.guidesPrefs.guideColor = QColor(Qt::darkBlue);
 	appPrefs.guidesPrefs.baselineGridColor = QColor(Qt::lightGray);
 	appPrefs.guidesPrefs.renderStackOrder.clear();
-	appPrefs.guidesPrefs.renderStackOrder << 0 << 1 << 2 << 3 << 4;
+	appPrefs.guidesPrefs.renderStackOrder << 2 << 0 << 4 << 1 << 3;
 	appPrefs.guidesPrefs.gridType = 0;
 	appPrefs.typoPrefs.valueSuperScript = 33;
 	appPrefs.typoPrefs.scalingSuperScript = 66;
@@ -1727,7 +1738,8 @@ bool PrefsManager::WritePref(QString ho)
 	dcExternalTools.setAttribute("LatexForceDpi", static_cast<int>(appPrefs.extToolPrefs.latexForceDpi));
 	dcExternalTools.setAttribute("LatexStartWithEmptyFrames", static_cast<int>(appPrefs.extToolPrefs.latexStartWithEmptyFrames));
 	QStringList configs = latexConfigs();
-	foreach (QString config, configs) {
+	foreach (const QString& config, configs)
+	{
 		QDomElement domConfig = docu.createElement("LatexConfig");
 		domConfig.setAttribute("file", config);
 		domConfig.setAttribute("command", appPrefs.extToolPrefs.latexCommands[config]);
@@ -1886,8 +1898,7 @@ bool PrefsManager::WritePref(QString ho)
 	QFile f(ho);
 	if(!f.open(QIODevice::WriteOnly))
 	{
-		m_lastError = tr("Could not open preferences file \"%1\" for writing: %2")
-			.arg(ho).arg(qApp->translate("QFile",f.errorString().toLatin1().constData()));
+		m_lastError = tr("Could not open preferences file \"%1\" for writing: %2").arg(ho, qApp->translate("QFile",f.errorString().toLatin1().constData()));
 	}
 	else
 	{
@@ -1897,9 +1908,7 @@ bool PrefsManager::WritePref(QString ho)
 		if (f.error()==QFile::NoError)
 			result = true;
 		else
-			m_lastError = tr("Writing to preferences file \"%1\" failed: "
-							 "QIODevice status code %2")
-				.arg(ho).arg(f.errorString());
+			m_lastError = tr("Writing to preferences file \"%1\" failed: QIODevice status code %2").arg(ho, f.errorString());
 	}
 	if (f.isOpen())
 		f.close();
@@ -1912,8 +1921,7 @@ bool PrefsManager::ReadPref(QString ho)
 	QFile f(ho);
 	if(!f.open(QIODevice::ReadOnly))
 	{
-		m_lastError = tr("Failed to open prefs file \"%1\": %2")
-			.arg(ho).arg( qApp->translate("QFile",f.errorString().toLatin1().constData()) );
+		m_lastError = tr("Failed to open prefs file \"%1\": %2").arg(ho, qApp->translate("QFile",f.errorString().toLatin1().constData()) );
 		return false;
 	}
 	QTextStream ts(&f);
@@ -1922,8 +1930,7 @@ bool PrefsManager::ReadPref(QString ho)
 	int errorLine = 0, errorColumn = 0;
 	if( !docu.setContent(ts.readAll(), &errorMsg, &errorLine, &errorColumn) )
 	{
-		m_lastError = tr("Failed to read prefs XML from \"%1\": %2 at line %3, col %4")
-			.arg(ho).arg(errorMsg).arg(errorLine).arg(errorColumn);
+		m_lastError = tr("Failed to read prefs XML from \"%1\": %2 at line %3, col %4").arg(ho).arg(errorMsg).arg(errorLine).arg(errorColumn);
 		f.close();
 		return false;
 	}
@@ -2074,7 +2081,7 @@ bool PrefsManager::ReadPref(QString ho)
 			if (dc.hasAttribute("renderStack"))
 			{
 				appPrefs.guidesPrefs.renderStackOrder.clear();
-				QString renderStack = dc.attribute("renderStack", "0 1 2 3 4");
+				QString renderStack = dc.attribute("renderStack", "2 0 4 1 3");
 				ScTextStream fp(&renderStack, QIODevice::ReadOnly);
 				QString val;
 				while (!fp.atEnd())

@@ -45,9 +45,9 @@ if(LIBPODOFO_INCLUDE_DIR AND LIBPODOFO_LIBRARY)
 	#message(STATUS "PODOFO PATCH VERSION ${PODOFO_PATCH_VER}")
 	set(LIBPODOFO_VERSION "${PODOFO_MAJOR_VER}.${PODOFO_MINOR_VER}.${PODOFO_PATCH_VER}" CACHE STRING "PoDoFo version string")
 	if(LIBPODOFO_VERSION VERSION_GREATER "0.9.4")
-        # podofo 0.9.5 doesn't successfully include all its indirectly required headers.
-        # they are working on a fix for 0.9.6
-        # (https://bugs.scribus.net/view.php?id=14838)
+		# podofo 0.9.5 doesn't successfully include all its indirectly required headers.
+		# they are working on a fix for 0.9.6
+		# (https://bugs.scribus.net/view.php?id=14838)
 		find_package(OPENSSL)
 		if (OPENSSL_FOUND)
 			message("OpenSSL found OK for installed version of PoDoFo (>= 0.9.5) - Enabling support for PDF embedded in AI")

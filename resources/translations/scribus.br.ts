@@ -19456,7 +19456,6 @@ HE GWRIZIOÃ D&apos;UR VLEUNIENN WENN;</translation>
     </message>
     <message>
         <location filename="../../scribus/ui/prefs_pdfexportbase.ui" line="57"/>
-        <location filename="../../scribus/ui/prefs_pdfexportbase.ui" line="1282"/>
         <source>Export Range</source>
         <translation>Lijorenn ezporzhiañ</translation>
     </message>
@@ -19724,6 +19723,11 @@ HE GWRIZIOÃ D&apos;UR VLEUNIENN WENN;</translation>
         <location filename="../../scribus/ui/prefs_pdfexportbase.ui" line="1086"/>
         <source>Page Information</source>
         <translation>Stlennoù ar bajennad</translation>
+    </message>
+    <message>
+        <location filename="../../scribus/ui/prefs_pdfexportbase.ui" line="1282"/>
+        <source>Embedding</source>
+        <translation>Enkorfadur</translation>
     </message>
     <message>
         <location filename="../../scribus/ui/prefs_pdfexportbase.ui" line="1604"/>
@@ -30792,7 +30796,7 @@ Neuze ne vo ket dereat ar skeudenn marteze</translation>
         <translation>&lt;p&gt;Emaoc&apos;h o klask enporzhiañ muioc&apos;h a bajennoù eget pezh zo hegerz en teul, eus ar bajenn vremanel betek an dibenn. &lt;/p&gt;An dibaboù zo : &lt;br&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;Krouiñ&lt;/b&gt; ar pajennoù a vank&lt;/li&gt;&lt;li&gt;&lt;b&gt;Enprozhiañ&lt;/b&gt; ar pajennoù betek an hini diwezhañ eus an teul&lt;/li&gt;&lt;li&gt;&lt;b&gt;Dilezel&lt;/b&gt;&lt;/li&gt;&lt;/ul&gt;</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="18095"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="18111"/>
         <source>Unacceptable settings for note style</source>
         <translation>Arventennoù n&apos;hall ket bezañ bet degemeret evit ar stil notenn</translation>
     </message>
@@ -34641,7 +34645,7 @@ gant an handelv-mañ n&apos;hallo ket bezañ lennet gant un handelv koshoc&apos;
         <location filename="../../scribus/scribusdoc.cpp" line="205"/>
         <location filename="../../scribus/scribusdoc.cpp" line="244"/>
         <location filename="../../scribus/scribusdoc.cpp" line="320"/>
-        <location filename="../../scribus/scribusdoc.cpp" line="16447"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="16463"/>
         <source>Document</source>
         <translation>Teul</translation>
     </message>
@@ -34651,27 +34655,27 @@ gant an handelv-mañ n&apos;hallo ket bezañ lennet gant un handelv koshoc&apos;
         <translation>Drekleur</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="11390"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="11406"/>
         <source>Cannot Delete In-Use Item</source>
         <translation>N&apos;haller ket diverkañ un ergorenn war arver</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="11390"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="11406"/>
         <source>The item %1 is currently being edited by Story Editor. The delete operation will be cancelled</source>
         <translation>Emañ an ergorenn %1 o vezañ embannet gant an embanner diabarzh. Freuzet e vo ar gwezhiadur dilemel</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="11997"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="12013"/>
         <source>Some objects are locked.</source>
         <translation>Prennet ez eus ergorennoù zo.</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="11993"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="12009"/>
         <source>&amp;Unlock All</source>
         <translation>&amp;Dibrennañ pep tra</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="11994"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="12010"/>
         <source>&amp;Skip locked objects</source>
         <translation>Lammat drei&amp;st an ergorenn prennet</translation>
     </message>
@@ -34681,7 +34685,7 @@ gant an handelv-mañ n&apos;hallo ket bezañ lennet gant un handelv koshoc&apos;
         <translation>Degouezhet ez eus bet ur fazi e-pad digeriñ an aeladoù mod ICC, n&apos;eo ket bet gweredekaet an ardeiñ livioù.</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="13643"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="13659"/>
         <source>Number of copies: %1
 Horizontal gap: %2
 Vertical gap: %3</source>
@@ -34691,22 +34695,22 @@ Esaouiñ a-serzh : %3</translation>
     </message>
     <message>
         <location filename="../../scribus/scribusdoc.cpp" line="1113"/>
-        <location filename="../../scribus/scribusdoc.cpp" line="16043"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="16059"/>
         <source>Adjusting Colors</source>
         <translation>Kengeidadur al livioù</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="9042"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="9058"/>
         <source>remove direct paragraph formatting</source>
         <translation>dilemel mentrezhadur end-eeun ar rannbennad </translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="9504"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="9520"/>
         <source>remove direct char formatting</source>
         <translation>dilemel mentrezhañ eeun an arouezennoù</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="13607"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="13623"/>
         <source>Number of copies: %1
 Horizontal shift: %2
 Vertical shift: %3
@@ -34717,9 +34721,9 @@ Linkañ a-serzh : %3
 C&apos;hwelañ : %4</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="14827"/>
-        <location filename="../../scribus/scribusdoc.cpp" line="14882"/>
-        <location filename="../../scribus/scribusdoc.cpp" line="15015"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="14843"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="14898"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="15031"/>
         <source>Group%1</source>
         <translation>Kevrediñ%1</translation>
     </message>
@@ -34730,23 +34734,23 @@ C&apos;hwelañ : %4</translation>
         <translation>Enporzhiet </translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="16463"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="16479"/>
         <source>File %1 autosaved</source>
         <translation>Restr %1 bet enrollet ent-emgefreek</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="17720"/>
-        <location filename="../../scribus/scribusdoc.cpp" line="17758"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="17736"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="17774"/>
         <source>No Style</source>
         <translation>Stil ebet</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="18089"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="18105"/>
         <source>%1 note style has document as range and provide same numbering style as set %2</source>
         <translation>Un teul a dalv da lijorenn evit stil notenn %1 ha pourchas a ra an hevelep stil niverenniñ ouzh spletad %2</translation>
     </message>
     <message>
-        <location filename="../../scribus/scribusdoc.cpp" line="11293"/>
+        <location filename="../../scribus/scribusdoc.cpp" line="11309"/>
         <source>Do you really want to clear the content of all selected frames?</source>
         <translation>Ha fellout a ra deoc&apos;h skarzhañ endalc&apos;had an holl sterniadoù bet diuzet ?</translation>
     </message>
@@ -36531,17 +36535,17 @@ Gwell e vefe ober gant Gwirierez Preflight d&apos;o reizhañ</translation>
         <translation>Rannbennadoù : </translation>
     </message>
     <message>
-        <location filename="../../scribus/ui/storyeditor.cpp" line="3354"/>
+        <location filename="../../scribus/ui/storyeditor.cpp" line="3353"/>
         <source>Open</source>
         <translation>Digeriñ</translation>
     </message>
     <message>
-        <location filename="../../scribus/ui/storyeditor.cpp" line="3389"/>
+        <location filename="../../scribus/ui/storyeditor.cpp" line="3388"/>
         <source>Save as</source>
         <translation>Enrollañ evel</translation>
     </message>
     <message>
-        <location filename="../../scribus/ui/storyeditor.cpp" line="2174"/>
+        <location filename="../../scribus/ui/storyeditor.cpp" line="2173"/>
         <source>Do you want to save your changes?</source>
         <translation>Enrollañ an daskemmadurioù ?</translation>
     </message>
@@ -36659,12 +36663,12 @@ Gwell e vefe ober gant Gwirierez Preflight d&apos;o reizhañ</translation>
         <translation>Embanner diabarzh - %1</translation>
     </message>
     <message>
-        <location filename="../../scribus/ui/storyeditor.cpp" line="2779"/>
+        <location filename="../../scribus/ui/storyeditor.cpp" line="2778"/>
         <source>Do you really want to lose all your changes?</source>
         <translation>Fellout a ra deoc&apos;h dilezel ho taskemmadurioù holl ?</translation>
     </message>
     <message>
-        <location filename="../../scribus/ui/storyeditor.cpp" line="2810"/>
+        <location filename="../../scribus/ui/storyeditor.cpp" line="2809"/>
         <source>Do you really want to clear all your text?</source>
         <translation>Fellout a ra deoc&apos;h dilemel ho testenn a-bezh ?</translation>
     </message>
@@ -36702,8 +36706,8 @@ Gwell e vefe ober gant Gwirierez Preflight d&apos;o reizhañ</translation>
         <translation>Esaouioù</translation>
     </message>
     <message>
-        <location filename="../../scribus/ui/storyeditor.cpp" line="3354"/>
-        <location filename="../../scribus/ui/storyeditor.cpp" line="3389"/>
+        <location filename="../../scribus/ui/storyeditor.cpp" line="3353"/>
+        <location filename="../../scribus/ui/storyeditor.cpp" line="3388"/>
         <source>Text Files (*.txt);;All Files (*)</source>
         <translation>Restroù mod Testenn (*.txt);;An holl restroù (*)</translation>
     </message>

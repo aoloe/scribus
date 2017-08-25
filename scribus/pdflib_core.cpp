@@ -1459,13 +1459,20 @@ PdfFont PDFLibCore::PDF_WriteType3Font(const QByteArray& name, ScFace& face, con
 	double miny =  std::numeric_limits<double>::max();
 	double maxx = -std::numeric_limits<double>::max();
 	double maxy = -std::numeric_limits<double>::max();
+
 	QList<uint> glyphWidths;
 	QList<QByteArray> charProcs;
+	QStringList toUnicodeMaps;
+	QList<int> toUnicodeMapsCount;
+	QString toUnicodeMap = "";
+	int toUnicodeMapCounter = 0;
 	QByteArray encoding = "<< /Type /Encoding\n/Differences [ 0\n";
 	QByteArray fon;
 	QMap<uint, uint> glyphMapping;
+
 	ScFace::FaceEncoding gl;
 	face.glyphNames(gl);
+
 	QMap<uint,FPointArray>::ConstIterator ig;
 	for (ig = RealGlyphs.cbegin(); ig != RealGlyphs.cend(); ++ig)
 	{
@@ -1517,6 +1524,7 @@ PdfFont PDFLibCore::PDF_WriteType3Font(const QByteArray& name, ScFace& face, con
 		maxx = qMax(maxx, np1.x());
 		maxy = qMax(maxy, np1.y());
 		glyphWidths.append(qRound(np1.x()));
+
 		PdfId charProcObject = writer.newObject();
 		charProcs.append(Pdf::toName(gl[ig.key()].second)+" "+Pdf::toPdf(charProcObject)+" 0 R\n");
 		encoding += Pdf::toName(gl[ig.key()].second)+" ";
@@ -1529,6 +1537,20 @@ PdfFont PDFLibCore::PDF_WriteType3Font(const QByteArray& name, ScFace& face, con
 			PutDoc("\n/Filter /FlateDecode");
 		PutDoc("\n>>\nstream\n"+EncStream(fon, charProcObject)+"\nendstream");
 		writer.endObj(charProcObject);
+
+		QString tmp, tmp2;
+		tmp.sprintf("%02X", glyphCount);
+		tmp2.sprintf("%04X", gl[ig.key()].first);
+		toUnicodeMap += "<" + Pdf::toAscii(tmp) + "> <" + Pdf::toAscii(tmp2) + ">\n";
+		toUnicodeMapCounter++;
+		if (toUnicodeMapCounter == 100)
+		{
+			toUnicodeMaps.append(toUnicodeMap);
+			toUnicodeMapsCount.append(toUnicodeMapCounter);
+			toUnicodeMap = "";
+			toUnicodeMapCounter = 0;
+		}
+
 		glyphCount++;
 		int glyphsLeft = RealGlyphs.count() - SubFonts * 256;
 		if ((glyphCount > 255) || (glyphCount == glyphsLeft))
@@ -1557,6 +1579,40 @@ PdfFont PDFLibCore::PDF_WriteType3Font(const QByteArray& name, ScFace& face, con
 			PutDoc("]\n");
 			PutDoc(">>");
 			writer.endObj(fontEncoding);
+
+			if (toUnicodeMapCounter != 0)
+			{
+				toUnicodeMaps.append(toUnicodeMap);
+				toUnicodeMapsCount.append(toUnicodeMapCounter);
+			}
+
+			QByteArray toUnicodeMapStream = "";
+			toUnicodeMapStream += "/CIDInit /ProcSet findresource begin\n";
+			toUnicodeMapStream += "12 dict begin\n";
+			toUnicodeMapStream += "begincmap\n";
+			toUnicodeMapStream += "/CIDSystemInfo <<\n";
+			toUnicodeMapStream += "/Registry (Adobe)\n";
+			toUnicodeMapStream += "/Ordering (UCS)\n";
+			toUnicodeMapStream += "/Supplement 0\n";
+			toUnicodeMapStream += ">> def\n";
+			toUnicodeMapStream += "/CMapName /Adobe-Identity-UCS def\n";
+			toUnicodeMapStream += "/CMapType 2 def\n";
+			toUnicodeMapStream += "1 begincodespacerange\n";
+			toUnicodeMapStream += "<0000> <FFFF>\n";
+			toUnicodeMapStream += "endcodespacerange\n";
+			for (int uniC = 0; uniC < toUnicodeMaps.count(); uniC++)
+			{
+				toUnicodeMapStream += Pdf::toPdf(toUnicodeMapsCount[uniC]);
+				toUnicodeMapStream += " beginbfchar\n";
+				toUnicodeMapStream += toUnicodeMaps[uniC];
+				toUnicodeMapStream += "endbfchar\n";
+			}
+			toUnicodeMapStream += "endcmap\n";
+			toUnicodeMapStream += "CMapName currentdict /CMap defineresource pop\n";
+			toUnicodeMapStream += "end\n";
+			toUnicodeMapStream += "end\n";
+			PdfId fontToUnicode = WritePDFStream(toUnicodeMapStream);
+
 			PdfId font3Object = writer.newObject();
 			writer.startObj(font3Object);
 			PutDoc("<<\n/Type /Font\n/Subtype /Type3\n");
@@ -1568,12 +1624,16 @@ PdfFont PDFLibCore::PDF_WriteType3Font(const QByteArray& name, ScFace& face, con
 			PutDoc("/FontBBox ["+Pdf::toPdf(qRound(minx))+" "+Pdf::toPdf(qRound(miny))+" "+Pdf::toPdf(qRound(maxx))+ " "+Pdf::toPdf(qRound(maxy))+"]\n");
 			PutDoc("/FontMatrix [0.001 0 0 0.001 0 0]\n");
 			PutDoc("/Encoding "+Pdf::toPdf(fontEncoding)+" 0 R\n");
+			PutDoc("/ToUnicode " + Pdf::toPdf(fontToUnicode) + " 0 R\n");
 			PutDoc(">>");
 			writer.endObj(font3Object);
 			pageData.FObjects[name+"S"+Pdf::toPdf(SubFonts)] = font3Object;
 			charProcs.clear();
 			glyphWidths.clear();
-			//						glyphMapping.clear();
+			toUnicodeMaps.clear();
+			toUnicodeMapsCount.clear();
+			toUnicodeMap.clear();
+			toUnicodeMapCounter = 0;
 			glyphCount = 0;
 			++SubFonts;
 			minx =  std::numeric_limits<double>::max();
@@ -2774,7 +2834,8 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 								PutPage(PDF_TransparenzStroke(ite));
 							if (ite->NamedLStyle.isEmpty())
 							{
-								if (!ite->strokePattern().isEmpty())
+								ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+								if (strokePattern)
 								{
 									if (ite->patternStrokePath)
 									{
@@ -2800,7 +2861,7 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 									PutPage("h\nS\n");
 									PutPage("Q\n");
 								}
-								else
+								else if (ite->lineColor() != CommonStrings::None)
 								{
 									PutPage(SetClipPath(ite));
 									PutPage("h\nS\n");
@@ -2828,7 +2889,8 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 							PutPage(PDF_TransparenzStroke(ite));
 						if (ite->NamedLStyle.isEmpty())
 						{
-							if (!ite->strokePattern().isEmpty())
+							ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+							if (strokePattern)
 							{
 								if (ite->patternStrokePath)
 								{
@@ -2857,7 +2919,7 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 								PutPage(FToStr(ite->width())+" 0 l\n");
 								PutPage("S\nQ\n");
 							}
-							else
+							else if (ite->lineColor() != CommonStrings::None)
 							{
 								PutPage("0 0 m\n");
 								PutPage(FToStr(ite->width())+" 0 l\n");
@@ -2947,7 +3009,8 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 								PutPage(PDF_TransparenzStroke(ite));
 							if ((ite->NamedLStyle.isEmpty()) && (ite->lineWidth() != 0.0))
 							{
-								if (!ite->strokePattern().isEmpty())
+								ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+								if (strokePattern)
 								{
 									if (ite->patternStrokePath)
 									{
@@ -2972,7 +3035,7 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 									PutPage("h\nS\n");
 									PutPage("Q\n");
 								}
-								else
+								else if (ite->lineColor() != CommonStrings::None)
 								{
 									PutPage(SetClipPath(ite));
 									PutPage("h\nS\n");
@@ -3047,7 +3110,8 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 								PutPage(PDF_TransparenzStroke(ite));
 							if (ite->NamedLStyle.isEmpty())
 							{
-								if (!ite->strokePattern().isEmpty())
+								ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+								if (strokePattern)
 								{
 									if (ite->patternStrokePath)
 									{
@@ -3073,7 +3137,7 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 									PutPage("S\n");
 									PutPage("Q\n");
 								}
-								else
+								else if (ite->lineColor() != CommonStrings::None)
 								{
 									PutPage(SetClipPath(ite, false));
 									PutPage("S\n");
@@ -4479,7 +4543,8 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 					tmp += PDF_TransparenzStroke(ite);
 				if (ite->NamedLStyle.isEmpty()) //&& (ite->lineWidth() != 0.0))
 				{
-					if (!ite->strokePattern().isEmpty())
+					ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+					if (strokePattern)
 					{
 						if (ite->patternStrokePath)
 						{
@@ -4600,7 +4665,8 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 					tmp += PDF_TransparenzStroke(ite);
 				if (ite->NamedLStyle.isEmpty()) //&& (ite->lineWidth() != 0.0))
 				{
-					if (!ite->strokePattern().isEmpty())
+					ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+					if (strokePattern)
 					{
 						if (ite->patternStrokePath)
 						{
@@ -4652,7 +4718,8 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 				tmp += PDF_TransparenzStroke(ite);
 			if (ite->NamedLStyle.isEmpty())
 			{
-				if (!ite->strokePattern().isEmpty())
+				ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+				if (strokePattern)
 				{
 					if (ite->patternStrokePath)
 					{
@@ -4772,7 +4839,8 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 					tmp += PDF_TransparenzStroke(ite);
 				if (ite->NamedLStyle.isEmpty()) //&& (ite->lineWidth() != 0.0))
 				{
-					if (!ite->strokePattern().isEmpty())
+					ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+					if (strokePattern)
 					{
 						if (ite->patternStrokePath)
 						{
@@ -4873,7 +4941,8 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 					tmp += PDF_TransparenzStroke(ite);
 				if (ite->NamedLStyle.isEmpty()) //&& (ite->lineWidth() != 0.0))
 				{
-					if (!ite->strokePattern().isEmpty())
+					ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+					if (strokePattern)
 					{
 						if (ite->patternStrokePath)
 						{
@@ -4968,7 +5037,8 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 							tmp += PDF_TransparenzStroke(ite);
 						if (ite->NamedLStyle.isEmpty()) //&& (ite->lineWidth() != 0.0))
 						{
-							if (!ite->strokePattern().isEmpty())
+							ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+							if (strokePattern)
 							{
 								if (ite->patternStrokePath)
 								{
@@ -5440,7 +5510,8 @@ QByteArray PDFLibCore::drawArrow(PageItem *ite, QTransform &arrowTrans, int arro
 	}
 	if (ite->NamedLStyle.isEmpty())
 	{
-		if (!ite->strokePattern().isEmpty())
+		ScPattern* strokePattern = doc.checkedPattern(ite->strokePattern());
+		if (strokePattern)
 		{
 			tmp += SetClipPathArray(&arrow);
 			QByteArray tmpOut;
@@ -6476,18 +6547,19 @@ bool PDFLibCore::PDF_PatternFillStroke(QByteArray& output, PageItem *currItem, i
 	if (kind == 0)
 	{
 		QString itemPattern = currItem->pattern();
-		if (itemPattern.isEmpty() || !doc.docPatterns.contains(itemPattern))
+		pat = doc.checkedPattern(itemPattern);
+		if (!pat)
 		{
 			if (currItem->fillColor() != CommonStrings::None)
 				output += putColor(currItem->fillColor(), currItem->fillShade(), true);
 			return true;
 		}
-		pat = &doc.docPatterns[currItem->pattern()];
 	}
 	else if (kind == 1)
 	{
 		QString strokePattern = currItem->strokePattern();
-		if (strokePattern.isEmpty() || !doc.docPatterns.contains(strokePattern))
+		pat = doc.checkedPattern(strokePattern);
+		if (!pat)
 		{
 			if (currItem->lineColor() != CommonStrings::None)
 			{
@@ -6496,14 +6568,13 @@ bool PDFLibCore::PDF_PatternFillStroke(QByteArray& output, PageItem *currItem, i
 			}
 			return true;
 		}
-		pat = &doc.docPatterns[currItem->strokePattern()];
 	}
 	else if (kind == 2)
 	{
 		QString patternMask = currItem->patternMask();
-		if (patternMask.isEmpty() || !doc.docPatterns.contains(patternMask))
+		pat = doc.checkedPattern(patternMask);
+		if (!pat)
 			return true;
-		pat = &doc.docPatterns[currItem->patternMask()];
 	}
 	else
 		return false;

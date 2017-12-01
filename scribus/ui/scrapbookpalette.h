@@ -54,7 +54,6 @@ public:
 	bool canWrite;
 
 signals:
-	void ToggleAllPalettes();
 	void objDropped(QString text);
 	void fileDropped(QString path, int testResult);
 	void paletteClosed();

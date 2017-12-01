@@ -47,6 +47,7 @@ for which a new license (GPL+exception) is in place.
 #include <QLocale>
 #include <QMdiArea>
 #include <QMdiSubWindow>
+#include <QWindow>
 #include <QMessageBox>
 #include <QMouseEvent>
 #include <QPixmap>
@@ -545,6 +546,9 @@ void ScribusMainWindow::initDefaultValues()
 		m_palettesStatus[i] = false;
 	for (int i=0; i<GS_MAX ; ++i)
 		m_guidesStatus[i] = false;
+	// for (int i=0; i<TOOLBAR_MAX ; ++i)
+	// 	m_toolbarsStatus[i] = false;
+
 #ifdef HAVE_OSG
 	QStringList supportedExts;
 	supportedExts << "osg" << "dxf" << "flt" << "ive" << "geo" << "sta" << "stl" << "logo" << "3ds" << "ac" << "obj";
@@ -1109,6 +1113,8 @@ void ScribusMainWindow::initMenuBar()
 	scrMenuMgr->addMenuItemString("ViewGrids", "View");
 	scrMenuMgr->addMenuItemString("viewShowGrid", "ViewGrids");
 	scrMenuMgr->addMenuItemString("viewShowGuides", "ViewGrids");
+	scrMenuMgr->addMenuItemString("viewFullScreen", "View");
+	scrMenuMgr->addMenuItemString("viewCanvasOnly", "View");
 
 	//CB If this is viewNewView imeplemented, it should be on the windows menu
 //	scrMenuMgr->addMenuItem(scrActions["viewNewView"], "View");
@@ -1613,9 +1619,6 @@ bool ScribusMainWindow::eventFilter( QObject* /*o*/, QEvent *e )
 			return false;
 		retVal=true;
 		//Palette actions
-		if (actionManager->compareKeySeqToShortcut(currKeySeq, "specialToggleAllPalettes"))
-			scrActions["specialToggleAllPalettes"]->activate(QAction::Trigger);
-		else
 		if (actionManager->compareKeySeqToShortcut(currKeySeq, "specialToggleAllGuides"))
 			scrActions["specialToggleAllGuides"]->activate(QAction::Trigger);
 		else
@@ -3531,6 +3534,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 			m_prefsManager->appPrefs.fontPrefs.AvailFonts.AddScalableFonts(fi.absolutePath()+"/Fonts", FName);
 		QDir docFontDir3(fi.absolutePath() + "/Document fonts");
 		if (docFontDir3.exists())
+            qDebug() << "chuilalala";
 			m_prefsManager->appPrefs.fontPrefs.AvailFonts.AddScalableFonts(fi.absolutePath()+"/Document fonts", FName);
 		m_prefsManager->appPrefs.fontPrefs.AvailFonts.updateFontMap();
 		if (view != NULL)
@@ -5539,62 +5543,6 @@ void ScribusMainWindow::ToggleStickyTools()
 		view->requestMode(modeNormal);
 }
 
-void ScribusMainWindow::ToggleAllPalettes()
-{
-	if (m_palettesStatus[PAL_ALL])
-	{
-		m_palettesStatus[PAL_ALL] = false;
-		if (m_palettesStatus[PAL_PROPERTIES])
-			propertiesPalette->show();
-		if (m_palettesStatus[PAL_TEXT])
-			textPalette->show();
-		if (m_palettesStatus[PAL_OUTLINE])
-			outlinePalette->show();
-		if (m_palettesStatus[PAL_SCRAPBOOK])
-			scrapbookPalette->show();
-		if (m_palettesStatus[PAL_LAYER])
-			layerPalette->show();
-		if (m_palettesStatus[PAL_PAGE])
-			pagePalette->show();
-		if (m_palettesStatus[PAL_BOOKMARK])
-			bookmarkPalette->show();
-		if (m_palettesStatus[PAL_VERIFIER])
-			docCheckerPalette->show();
-		if (m_palettesStatus[PAL_DOWNLOADS])
-			downloadsPalette->show();
-		setUndoPalette(m_palettesStatus[PAL_UNDO]);
-	}
-	else
-	{
-		m_palettesStatus[PAL_PROPERTIES] = propertiesPalette->isVisible();
-		m_palettesStatus[PAL_TEXT] = textPalette->isVisible();
-		m_palettesStatus[PAL_OUTLINE] = outlinePalette->isVisible();
-		m_palettesStatus[PAL_SCRAPBOOK] = scrapbookPalette->isVisible();
-		m_palettesStatus[PAL_LAYER] = layerPalette->isVisible();
-		m_palettesStatus[PAL_PAGE] = pagePalette->isVisible();
-		m_palettesStatus[PAL_BOOKMARK] = bookmarkPalette->isVisible();
-		m_palettesStatus[PAL_UNDO] = undoPalette->isVisible();
-		m_palettesStatus[PAL_VERIFIER] = docCheckerPalette->isVisible();
-		m_palettesStatus[PAL_DOWNLOADS] = downloadsPalette->isVisible();
-		propertiesPalette->hide();
-		textPalette->hide();
-		outlinePalette->hide();
-		scrapbookPalette->hide();
-		bookmarkPalette->hide();
-		pagePalette->hide();
-		layerPalette->hide();
-		docCheckerPalette->hide();
-		downloadsPalette->hide();
-		setUndoPalette(false);
-		m_palettesStatus[PAL_ALL] = true;
-	}
-}
-
-void ScribusMainWindow::toggleCheckPal()
-{
-	m_palettesStatus[PAL_ALL] = false;
-}
-
 void ScribusMainWindow::setUndoPalette(bool visible)
 {
 	undoPalette->setPaletteShown(visible);
@@ -5742,6 +5690,144 @@ void ScribusMainWindow::toggleBleeds()
 	m_guidesStatus[GS_ALL] = false;
 	doc->guidesPrefs().showBleed = !doc->guidesPrefs().showBleed;
 	view->DrawNew();
+}
+
+void ScribusMainWindow::toggleFullScreen()
+{
+    // TODO: make sure that toggleFullScreen() is called before quit
+    if (scrActions["viewFullScreen"]->isChecked())
+    {
+        // hiddenToolbar.push_back(static_cast<QWidget*>(menuBar()));
+        // hiddenToolbar.push_back(static_cast<QWidget*>(statusBar()));
+        // setWindowState( windowState() & ~Qt::WindowFullScreen);
+        windowHandle()->showFullScreen();
+    }
+    else
+    {
+        // setWindowState(windowState() & Qt::WindowFullScreen);
+        windowHandle()->showNormal();
+    }
+}
+
+/**
+ * Hide all palettes and toolbars
+ *
+ * @TODO:
+ * - replace the code to restore the the toolbars on quit (same as palettes)
+ * - eventually also hide the windows (style manager, ...)
+ * - eventually also hide the rules (but, then, the document should not move when hiding them)
+ * @notes:
+ * - removed void ScribusMainWindow::ToggleAllPalettes() 
+ * - in scribus.[cpp|h] ScribusMainWindow::togglePagePalette() and the other togglePalette functions are only used by the new scripter. we can probably remove them, if the pybind11 scripter is coming.
+ */
+void ScribusMainWindow::toggleCanvasOnly()
+{
+	if (m_toolbarsStatus[TOOLBAR_ALL])
+	{
+		m_toolbarsStatus[TOOLBAR_ALL] = false;
+		if (m_toolbarsStatus[TOOLBAR_EDIT])
+			editToolBar->show();
+		if (m_toolbarsStatus[TOOLBAR_FILE])
+			fileToolBar->show();
+		if (m_toolbarsStatus[TOOLBAR_MODE])
+			modeToolBar->show();
+		if (m_toolbarsStatus[TOOLBAR_PDF])
+			pdfToolBar->show();
+		if (m_toolbarsStatus[TOOLBAR_STATUS])
+			statusBar()->show();
+	}
+	else
+	{
+		m_toolbarsStatus[TOOLBAR_EDIT] = editToolBar->isVisible();
+		m_toolbarsStatus[TOOLBAR_FILE] = fileToolBar->isVisible();
+		m_toolbarsStatus[TOOLBAR_MODE] = modeToolBar->isVisible();
+		m_toolbarsStatus[TOOLBAR_PDF] = pdfToolBar->isVisible();
+		m_toolbarsStatus[TOOLBAR_STATUS] = statusBar()->isVisible();
+
+		editToolBar->hide();
+		fileToolBar->hide();
+		modeToolBar->hide();
+		pdfToolBar->hide();
+		statusBar()->hide();
+
+		m_toolbarsStatus[PAL_ALL] = true;
+	}
+
+	if (m_palettesStatus[PAL_ALL])
+	{
+		m_palettesStatus[PAL_ALL] = false;
+		if (m_palettesStatus[PAL_PROPERTIES])
+			propertiesPalette->show();
+		if (m_palettesStatus[PAL_TEXT])
+			textPalette->show();
+		if (m_palettesStatus[PAL_OUTLINE])
+			outlinePalette->show();
+		if (m_palettesStatus[PAL_SCRAPBOOK])
+			scrapbookPalette->show();
+		if (m_palettesStatus[PAL_LAYER])
+			layerPalette->show();
+		if (m_palettesStatus[PAL_PAGE])
+			pagePalette->show();
+		if (m_palettesStatus[PAL_BOOKMARK])
+			bookmarkPalette->show();
+		if (m_palettesStatus[PAL_VERIFIER])
+			docCheckerPalette->show();
+		if (m_palettesStatus[PAL_DOWNLOADS])
+			downloadsPalette->show();
+
+		if (m_palettesStatus[PAL_UNDO])
+			undoPalette->show();
+		if (m_palettesStatus[PAL_ALIGNDISTRIBUTE])
+			alignDistributePalette->show();
+		if (m_palettesStatus[PAL_GUIDE])
+			guidePalette->show();
+		if (m_palettesStatus[PAL_CHAR])
+			charPalette->show();
+		if (m_palettesStatus[PAL_SYMBOL])
+			symbolPalette->show();
+		if (m_palettesStatus[PAL_INLINE])
+			inlinePalette->show();
+
+		setUndoPalette(m_palettesStatus[PAL_UNDO]);
+	}
+	else
+	{
+		m_palettesStatus[PAL_PROPERTIES] = propertiesPalette->isVisible();
+		m_palettesStatus[PAL_TEXT] = textPalette->isVisible();
+		m_palettesStatus[PAL_OUTLINE] = outlinePalette->isVisible();
+		m_palettesStatus[PAL_SCRAPBOOK] = scrapbookPalette->isVisible();
+		m_palettesStatus[PAL_LAYER] = layerPalette->isVisible();
+		m_palettesStatus[PAL_PAGE] = pagePalette->isVisible();
+		m_palettesStatus[PAL_BOOKMARK] = bookmarkPalette->isVisible();
+		m_palettesStatus[PAL_UNDO] = undoPalette->isVisible();
+		m_palettesStatus[PAL_VERIFIER] = docCheckerPalette->isVisible();
+		m_palettesStatus[PAL_DOWNLOADS] = downloadsPalette->isVisible();
+
+		m_palettesStatus[PAL_ALIGNDISTRIBUTE] = alignDistributePalette->isVisible();
+		m_palettesStatus[PAL_GUIDE] = guidePalette->isVisible();
+		m_palettesStatus[PAL_CHAR] = charPalette->isVisible();
+		m_palettesStatus[PAL_SYMBOL] = symbolPalette->isVisible();
+		m_palettesStatus[PAL_INLINE] = inlinePalette->isVisible();
+
+		propertiesPalette->hide();
+		textPalette->hide();
+		outlinePalette->hide();
+		scrapbookPalette->hide();
+		bookmarkPalette->hide();
+		pagePalette->hide();
+		layerPalette->hide();
+		docCheckerPalette->hide();
+		downloadsPalette->hide();
+		setUndoPalette(false);
+		undoPalette->hide();
+		alignDistributePalette->hide();
+		guidePalette->hide();
+		charPalette->hide();
+		symbolPalette->hide();
+		inlinePalette->hide();
+
+		m_palettesStatus[PAL_ALL] = true;
+	}
 }
 
 void ScribusMainWindow::toggleFrames()

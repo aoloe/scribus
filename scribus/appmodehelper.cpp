@@ -1037,6 +1037,7 @@ void AppModeHelper::setTextEditMode(bool b)
 	(*a_scrActions)["itemPreviewNormal"]->setEnabled(b2);
 	(*a_scrActions)["itemPreviewLow"]->setEnabled(b2);
 	(*a_scrActions)["itemAttributes"]->setEnabled(b2);
+	(*a_scrActions)["viewCanvasOnly"]->setEnabled(b2);
 }
 
 void AppModeHelper::setSpecialEditMode(bool b)

@@ -707,6 +707,13 @@ void ActionManager::initViewMenuActions()
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="viewShowContextMenu";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
+	name="viewFullScreen";
+	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
+	// attach shortcut also to the mainwindow: the one in the menu does not work when the menu is hidden
+	mainWindow->addAction((*scrActions)[name]);
+	name="viewCanvasOnly";
+	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
+
 	name="showMouseCoordinates";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 
@@ -739,6 +746,8 @@ void ActionManager::initViewMenuActions()
 	(*scrActions)["viewSnapToGrid"]->setToggleAction(true);
 	(*scrActions)["viewSnapToGuides"]->setToggleAction(true);
 	(*scrActions)["viewSnapToElements"]->setToggleAction(true);
+	(*scrActions)["viewFullScreen"]->setToggleAction(true);
+	(*scrActions)["viewCanvasOnly"]->setToggleAction(true);
 	(*scrActions)["showMouseCoordinates"]->setToggleAction(true);
 
 	(*scrActions)["viewPreviewMode"]->setChecked(false);
@@ -753,6 +762,8 @@ void ActionManager::initViewMenuActions()
 	(*scrActions)["viewShowColumnBorders"]->setChecked(false);
 	(*scrActions)["viewShowRulers"]->setChecked(true);
 	(*scrActions)["viewRulerMode"]->setChecked(true);
+	(*scrActions)["viewFullScreen"]->setChecked(false);
+	(*scrActions)["viewCanvasOnly"]->setChecked(false);
 	(*scrActions)["showMouseCoordinates"]->setChecked(true);
 
 	connect( (*scrActions)["viewFitInWindow"], SIGNAL(triggeredData(double)), mainWindow, SLOT(slotZoom(double)) );
@@ -778,6 +789,8 @@ void ActionManager::initViewMenuActions()
 	connect( (*scrActions)["viewSnapToGrid"], SIGNAL(triggered()), mainWindow, SLOT(toggleSnapGrid()) );
 	connect( (*scrActions)["viewSnapToGuides"], SIGNAL(triggered()), mainWindow, SLOT(toggleSnapGuides()) );
 	connect( (*scrActions)["viewSnapToElements"], SIGNAL(triggered()), mainWindow, SLOT(toggleSnapElements()) );
+	connect( (*scrActions)["viewFullScreen"], SIGNAL(triggered()), mainWindow, SLOT(toggleFullScreen()) );
+	connect( (*scrActions)["viewCanvasOnly"], SIGNAL(triggered()), mainWindow, SLOT(toggleCanvasOnly()) );
 	connect( (*scrActions)["showMouseCoordinates"], SIGNAL(triggered()), mainWindow, SLOT(ToggleMouseTips()) );
 //	connect( (*scrActions)["viewNewView"], SIGNAL(triggered()), mainWindow, SLOT(newView()) );
 
@@ -908,6 +921,8 @@ void ActionManager::initToolsMenuActions()
 	(*scrActions)["toolsAlignDistribute"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsSymbols"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsInline"]->setShortcutContext(Qt::ApplicationShortcut);
+	(*scrActions)["viewFullScreen"]->setShortcutContext(Qt::ApplicationShortcut);
+	(*scrActions)["viewCanvasOnly"]->setShortcutContext(Qt::ApplicationShortcut);
 
 
 	(*scrActions)["toolsProperties"]->setToggleAction(true);
@@ -1186,13 +1201,10 @@ void ActionManager::initSpecialActions()
 {
 	QString name;
 	//GUI
-	name="specialToggleAllPalettes";
-	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="specialToggleAllGuides";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="specialUnicodeSequenceBegin";
 	scrActions->insert(name, new ScrAction( "", defaultKey(name), mainWindow));
-	connect( (*scrActions)["specialToggleAllPalettes"], SIGNAL(triggered()), mainWindow, SLOT(ToggleAllPalettes()) );
 	connect( (*scrActions)["specialToggleAllGuides"], SIGNAL(triggered()), mainWindow, SLOT(ToggleAllGuides()) );
 }
 
@@ -1676,6 +1688,8 @@ void ActionManager::languageChange()
 	(*scrActions)["viewSnapToElements"]->setTexts( tr("Snap to Items"));
 	(*scrActions)["viewShowContextMenu"]->setTexts( tr("Show Context Menu"));
 //	(*scrActions)["viewNewView"]->setTexts( tr("New View"));
+	(*scrActions)["viewFullScreen"]->setTexts( tr("&Full Screen"));
+	(*scrActions)["viewCanvasOnly"]->setTexts( tr("Show only the &Canvas"));
 
 	//Tool menu
 	(*scrActions)["toolsProperties"]->setTexts( tr("&Properties"));
@@ -1762,7 +1776,6 @@ void ActionManager::languageChange()
 	(*scrActions)["helpChat"]->setTexts( tr("Chat with the Community"));
 
 	//GUI and specials
-	(*scrActions)["specialToggleAllPalettes"]->setTexts( tr("Toggle Palettes"));
 	(*scrActions)["specialToggleAllGuides"]->setTexts( tr("Toggle Guides"));
 	(*scrActions)["specialUnicodeSequenceBegin"]->setTexts( tr("Insert Unicode Character Begin Sequence"));
 
@@ -1942,7 +1955,9 @@ void ActionManager::createDefaultShortcuts()
 	defKeys.insert("viewFit100", Qt::CTRL+Qt::Key_1);
 	defKeys.insert("viewPreviewMode", Qt::CTRL+Qt::ALT+Qt::Key_P);
 	defKeys.insert("viewShowRulers", Qt::CTRL+Qt::SHIFT+Qt::Key_R);
-	defKeys.insert("viewShowContextMenu", Qt::Key_Menu); //Context menu key on Windows. Do we have one to use on Linux/OSX? Super_L ?
+	defKeys.insert("viewShowContextMenu", Qt::Key_Menu); //Context menu key on Windows. Do we have one to use on Linux/OSX? Super_L ? a.l.e: on linux the context menu key works correctly
+	defKeys.insert("viewFullScreen", Qt::Key_F12);
+	defKeys.insert("viewCanvasOnly", Qt::Key_Tab);
 
 	//Tool menu
 	defKeys.insert("toolsProperties", Qt::Key_F2);
@@ -1978,7 +1993,6 @@ void ActionManager::createDefaultShortcuts()
 	defKeys.insert("helpManual", Qt::Key_F1);
 
 	//GUI and specials
-	defKeys.insert("specialToggleAllPalettes", Qt::Key_F12);
 	defKeys.insert("specialToggleAllGuides", Qt::Key_F11);
 	defKeys.insert("specialUnicodeSequenceBegin", Qt::CTRL+Qt::SHIFT+Qt::Key_U);
 
@@ -2323,6 +2337,8 @@ void ActionManager::createDefaultMenus()
 		<< "viewShowTextControls"
 		<< "viewShowRulers"
 		<< "viewRulerMode"
+		<< "viewFullScreen"
+		<< "viewCanvasOnly"
 		<< "showMouseCoordinates";
 	++itmenu;
 	itmenu->second
@@ -2452,7 +2468,6 @@ void ActionManager::createDefaultNonMenuActions()
 #ifdef HAVE_OSG
 	itnmenua->second << "toolsPDFAnnot3D";
 #endif
-	itnmenua->second << "specialToggleAllPalettes";
 	itnmenua->second << "specialToggleAllGuides";
 	itnmenua->second << "specialUnicodeSequenceBegin";
 	itnmenua->second << "viewShowContextMenu";

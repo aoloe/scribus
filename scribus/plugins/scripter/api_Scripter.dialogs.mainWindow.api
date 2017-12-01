@@ -610,10 +610,6 @@
 */
 
 /**
-* Scripter.dialogs.mainWindow.ToggleAllPalettes()
-*/
-
-/**
 * Scripter.dialogs.mainWindow.slotStoryEditor()
 */
 
@@ -1113,10 +1109,6 @@
 /**
 * Scripter.dialogs.mainWindow.setUndoPalette(visible)
 * visible is a bool
-*/
-
-/**
-* Scripter.dialogs.mainWindow.toggleCheckPal()
 */
 
 /**

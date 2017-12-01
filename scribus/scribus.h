@@ -276,7 +276,6 @@ public slots:
 	void newView();
 	void ToggleStickyTools();
 	void ToggleAllGuides();
-	void ToggleAllPalettes();
 	void slotStoryEditor(bool fromTable);
 	void slotCharSelect();
 	void ImageEffects();
@@ -427,6 +426,9 @@ public slots:
 	/** \brief Schaltet Raender ein/aus */
 	void toggleMarks();
 	void toggleBleeds();
+	/** \brief toggles Full Screen on/off */
+	void toggleFullScreen();
+	void toggleCanvasOnly();
 	void toggleFrames();
 	void toggleLayerMarkers();
 	void toggleTextLinks();
@@ -437,7 +439,6 @@ public slots:
 	void togglePagePalette();
 	void toggleUndoPalette();
 	void setUndoPalette(bool visible);
-	void toggleCheckPal();
 	/** \brief Schaltet M_ViewShowImages ein/aus */
 	void toggleImageVisibility();
 	/** \brief Schaltet Raster ein/aus */
@@ -629,8 +630,9 @@ private:
 	int m_viewBopal;
 	int m_viewUndoPalette;
 
-	bool m_palettesStatus[12];
+	bool m_palettesStatus[17];
 	bool m_guidesStatus[13];
+	bool m_toolbarsStatus[6];
 
 	bool m_keyrep;
 	/** @brief Tells if an arrow key is pressed down */
@@ -666,6 +668,8 @@ private:
 	int m_marksCount; //remember marks count from last call
 	bool m_WasAutoSave;
 	bool m_pagePalVisible;
+
+	QList<QWidget*> hiddenToolbar;
 
 	//QQuickView *m_qqview;
 };

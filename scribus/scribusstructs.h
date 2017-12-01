@@ -412,6 +412,11 @@ struct DownloadData
 	DownloadState state;
 };
 
+/**
+ * Guide status (visible / hidden)
+ *
+ * Used as index when storing the guides visibility in Scribus::m_guidesStatus;
+ */
 enum
 {
 	GS_ALL,
@@ -430,6 +435,11 @@ enum
 	GS_MAX
 };
 
+/**
+ * Palettes status (visible / hidden)
+ *
+ * Used as index when storing the guides visibility in Scribus::m_palettesStatus;
+ */
 enum
 {
 	PAL_ALL,
@@ -444,7 +454,28 @@ enum
 	PAL_VERIFIER,
 	PAL_DOWNLOADS,
 	PAL_TEXT,
+    PAL_ALIGNDISTRIBUTE,
+    PAL_GUIDE,
+    PAL_CHAR,
+    PAL_SYMBOL,
+    PAL_INLINE,
 	PAL_MAX
+};
+
+/**
+ * Toolbars status (visible / hidden)
+ *
+ * Used as index when storing the guides visibility in Scribus::m_toolbarsStatus;
+ */
+enum
+{
+	TOOLBAR_ALL,
+	TOOLBAR_EDIT,
+	TOOLBAR_FILE,
+	TOOLBAR_MODE,
+	TOOLBAR_PDF,
+	TOOLBAR_STATUS,
+	TOOLBAR_MAX
 };
 
 #endif

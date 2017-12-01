@@ -533,10 +533,6 @@
 */
 
 /**
-* Scripter.dialogs.outline.ToggleAllPalettes()
-*/
-
-/**
 * Scripter.dialogs.outline.selectElement(arg1, arg2, arg3)
 * arg1 is a int
 * arg2 is a int

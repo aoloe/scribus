@@ -82,16 +82,16 @@ const QString FileLoader::getLoadFilterString()
 	QStringList fmts = LoadSavePlugin::fileDialogLoadFilter();
 	QString fmtString = QObject::tr("All Supported Formats")+" (";
 	int ind = -1;
-	for (int a = 0; a < fmts.count()-1; a++)
+	for (int i = 0; i < fmts.count()-1; i++)
 	{
-		QString fmt = fmts[a];
+		QString fmt = fmts[i];
 		int s = fmt.indexOf("(");
 		int e = fmt.lastIndexOf(")");
 		QString f = fmt.mid(s+1, e-s-1);
 #ifndef HAVE_POPPLER
 		if (f.contains("pdf"))	// for removing PDF from the list
 		{
-			ind = a;
+			ind = i;
 			continue;
 		}
 #endif
@@ -117,55 +117,51 @@ int FileLoader::testFile()
 	int ret = -1;
 	if (!fi.exists())
 		ret = -1;
-	QString ext = fi.completeSuffix().toLower();
+	QString lwrFileName = m_fileName.toLower();
 
 	bool found = false;
 	QList<FileFormat> fileFormats(LoadSavePlugin::supportedFormats());
 	QList<FileFormat>::const_iterator it(fileFormats.constBegin());
 	QList<FileFormat>::const_iterator itEnd(fileFormats.constEnd());
-	for ( ; it != itEnd ; ++it )
+	for ( ; (it != itEnd) && (!found); ++it)
 	{
+		if (!it->plug)
+			continue;
 		for (int a = 0; a < it->fileExtensions.count(); a++)
 		{
-			QString exts = it->fileExtensions[a].toLower();
-			if (ext == exts)
+			QString ext = it->fileExtensions[a].toLower();
+			if (lwrFileName.endsWith("." + ext)) // Beware of file names containing multiple points
 			{
-				if (it->plug != 0)
+				if (it->plug->fileSupported(0, m_fileName))
 				{
-					if (it->plug->fileSupported(0, m_fileName))
-					{
-						ret = it->formatId;
-						found = true;
-						break;
-					}
+					ret = it->formatId;
+					found = true;
+					break;
 				}
 			}
 		}
-		if (found)
-			break;
 	}
 	if (!found)
 	{
 	// now try for the last suffix
-		ext = fi.suffix().toLower();
+		QString ext = fi.suffix().toLower();
 		it = fileFormats.constBegin();
 		itEnd = fileFormats.constEnd();
-		for ( ; it != itEnd ; ++it )
+		for ( ; (it != itEnd) && (!found); ++it)
 		{
+			if (!it->plug)
+				continue;
 			bool found = false;
 			for (int a = 0; a < it->fileExtensions.count(); a++)
 			{
 				QString exts = it->fileExtensions[a].toLower();
 				if (ext == exts)
 				{
-					if (it->plug != 0)
+					if (it->plug->fileSupported(0, m_fileName))
 					{
-						if (it->plug->fileSupported(0, m_fileName))
-						{
-							ret = it->formatId;
-							found = true;
-							break;
-						}
+						ret = it->formatId;
+						found = true;
+						break;
 					}
 				}
 			}

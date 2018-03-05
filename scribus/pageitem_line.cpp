@@ -39,6 +39,7 @@ for which a new license (GPL+exception) is in place.
 
 #include "scribusstructs.h"
 #include "scribusdoc.h"
+#include "scribusview.h"
 #include "undomanager.h"
 #include "undostate.h"
 #include "util.h"
@@ -62,7 +63,8 @@ void PageItem_Line::DrawObj_Item(ScPainter *p, QRectF /*e*/)
 	{
 		if (NamedLStyle.isEmpty())
 		{
-			if ((!patternStrokeVal.isEmpty()) && (m_Doc->docPatterns.contains(patternStrokeVal)))
+			ScPattern *strokePattern = m_Doc->checkedPattern(patternStrokeVal);
+			if (strokePattern)
 			{
 				if (patternStrokePath)
 				{
@@ -73,7 +75,7 @@ void PageItem_Line::DrawObj_Item(ScPainter *p, QRectF /*e*/)
 				}
 				else
 				{
-					p->setPattern(&m_Doc->docPatterns[patternStrokeVal], patternStrokeScaleX, patternStrokeScaleY, patternStrokeOffsetX, patternStrokeOffsetY, patternStrokeRotation, patternStrokeSkewX, patternStrokeSkewY, patternStrokeMirrorX, patternStrokeMirrorY);
+					p->setPattern(strokePattern, patternStrokeScaleX, patternStrokeScaleY, patternStrokeOffsetX, patternStrokeOffsetY, patternStrokeRotation, patternStrokeSkewX, patternStrokeSkewY, patternStrokeMirrorX, patternStrokeMirrorY);
 					p->setStrokeMode(ScPainter::Pattern);
 					p->drawLine(FPoint(0, 0), FPoint(m_width, 0));
 				}
@@ -271,6 +273,8 @@ void PageItem_Line::getVisualBoundingRect(double * x1, double * y1, double * x2,
 		if ((lineColor() != CommonStrings::None) || (!patternStrokeVal.isEmpty()) || (GrTypeStroke > 0))
 		{
 			extraSpace = m_lineWidth / 2.0;
+			if ((extraSpace == 0) && m_Doc->view()) // Hairline case
+				extraSpace = 0.5 / m_Doc->view()->scale();
 		}
 		if ((!patternStrokeVal.isEmpty()) && (m_Doc->docPatterns.contains(patternStrokeVal)) && (patternStrokePath))
 		{
@@ -286,9 +290,13 @@ void PageItem_Line::getVisualBoundingRect(double * x1, double * y1, double * x2,
 	else
 	{
 		multiLine ml = m_Doc->MLineStyles[NamedLStyle];
-		struct SingleLine& sl = ml[ml.size()-1];
-		if ((sl.Color != CommonStrings::None) && (sl.Width != 0))
+		const SingleLine& sl = ml.last();
+		if (sl.Color != CommonStrings::None)
+		{
 			extraSpace = sl.Width / 2.0;
+			if ((extraSpace == 0) && m_Doc->view()) // Hairline case
+				extraSpace = 0.5 / m_Doc->view()->scale();
+		}
 	}
 	if (m_rotation != 0)
 	{

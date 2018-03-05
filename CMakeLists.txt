@@ -2,7 +2,7 @@
 ########## CMake Setup                                                                              ##########
 
 #Set our CMake minimum version
-#Require 2.8.9 for Qt5
+#Require 2.8.9 for Qt5 and CMAKE_POSITION_INDEPENDENT_CODE property
 #Require 3.1.0 for Qt 5.7 C++ 11 easy support
 #Require 3.2.0 for add_custom_target with byproducts
 cmake_minimum_required(VERSION 3.2.0 FATAL_ERROR)
@@ -159,13 +159,15 @@ endif()
 # http://www.gentoo.org/proj/en/base/amd64/howtos/index.xml?part=1&chap=3 and
 # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=559133
 
-if (ARCH_X86_64 EQUAL 1 OR ARCH_HPPA EQUAL 1 OR ARCH_MIPS EQUAL 1 OR ARCH_MIPS_64 EQUAL 1 OR ARCH_PPC_64 EQUAL 1)
-	set(CMAKE_CXX_FLAGS_FPIC "-fPIC")
-endif()
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 ## Do our Apple OSX version setup
 if (APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND (ARCH_X86 EQUAL 1 OR ARCH_X86_64 EQUAL 1))
 	string(REGEX REPLACE ".*-darwin([0-9]+).*" "\\1" _apple_ver "${MACHINE}")
+	if (_apple_ver EQUAL "17")
+		message(STATUS "Found macOS High Sierra Target: Apple, 64 bit, X86")
+		set(APPLE_10_13_X 1 CACHE TYPE BOOL)
+	endif()
 	if (_apple_ver EQUAL "16")
 	    message(STATUS "Found macOS Sierra Target: Apple, 64 bit, X86")
 		set(APPLE_10_12_X 1 CACHE TYPE BOOL)
@@ -450,7 +452,17 @@ endif()
 
 #Based on our build type, setup our build options
 if(APPLE)
-    if(APPLE_10_12_X)
+	if(APPLE_10_13_X)
+		set(OSXMINVER "10.13" CACHE TYPE STRING)
+		if (WANT_OSX_SDK)
+			if(EXISTS("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk"))
+				set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk")
+			elseif(EXISTS("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"))
+				set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk")
+			endif()
+		endif()
+	endif()
+	if(APPLE_10_12_X)
 	    set(OSXMINVER "10.12" CACHE TYPE STRING)
 		if (WANT_OSX_SDK)
 		    if(EXISTS("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk"))
@@ -530,7 +542,7 @@ if(APPLE)
 			if (WANT_OSX_SDK)
 				set(CMAKE_OSX_DEPLOYMENT_TARGET "${OSXMINVER}")
 			endif()
-			if(APPLE_10_6_X OR APPLE_10_7_X OR APPLE_10_8_X OR APPLE_10_9_X OR APPLE_10_10_X OR APPLE_10_11_X OR APPLE_10_12_X)
+			if(APPLE_10_6_X OR APPLE_10_7_X OR APPLE_10_8_X OR APPLE_10_9_X OR APPLE_10_10_X OR APPLE_10_11_X OR APPLE_10_12_X OR APPLE_10_13_X)
 				message("Setting x86_64 Architecture for OSX Build/Bundle")
 				set(CMAKE_OSX_ARCHITECTURES "x86_64" )
 				set(CMAKE_TRY_COMPILE_OSX_ARCHITECTURES "x86_64" )

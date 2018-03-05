@@ -75,8 +75,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,5,3,0
- PRODUCTVERSION 1,5,3,0
+ FILEVERSION 1,5,4,0
+ PRODUCTVERSION 1,5,4,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -95,7 +95,7 @@ BEGIN
             VALUE "FileDescription", "Scribus 1.5.4.svn"
             VALUE "FileVersion", "1.5.4.svn"
             VALUE "InternalName", "Scribus 1.5.4.svn"
-            VALUE "LegalCopyright", "Copyright (C) 2001-2017 by The Scribus Team"
+            VALUE "LegalCopyright", "Copyright (C) 2001-2018 by The Scribus Team"
             VALUE "OriginalFilename", "Scribus.exe"
             VALUE "ProductName", "Scribus - Open Source Desktop Publishing"
             VALUE "ProductVersion", "1.5.4.svn"

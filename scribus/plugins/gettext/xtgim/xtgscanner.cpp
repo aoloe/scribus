@@ -401,17 +401,25 @@ QString XtgScanner::getFontName(QString name)
 		}
 	}
 
-	if (!PrefsManager::instance()->appPrefs.fontPrefs.GFontSub.contains(fontName))
+	if (PrefsManager::instance()->appPrefs.fontPrefs.GFontSub.contains(fontName))
 	{
-		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
-		MissingFont dia(0, fontName, doc);
-		dia.exec();
-		qApp->changeOverrideCursor(QCursor(Qt::WaitCursor));
-		PrefsManager::instance()->appPrefs.fontPrefs.GFontSub[fontName] = dia.getReplacementFont();
-		fontName = dia.getReplacementFont();
+		fontName = PrefsManager::instance()->appPrefs.fontPrefs.GFontSub[fontName];
+		return fontName;
+	}
+
+	qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
+	QScopedPointer<MissingFont> dia(new MissingFont(0, fontName, doc));
+	if (dia->exec())
+	{
+		PrefsManager::instance()->appPrefs.fontPrefs.GFontSub[fontName] = dia->getReplacementFont();
+		fontName = dia->getReplacementFont();
 	}
 	else
-		fontName = PrefsManager::instance()->appPrefs.fontPrefs.GFontSub[fontName];
+	{
+		PrefsManager::instance()->appPrefs.fontPrefs.GFontSub[fontName] = doc->itemToolPrefs().textFont;
+		fontName = doc->itemToolPrefs().textFont;
+	}
+	qApp->changeOverrideCursor(QCursor(Qt::WaitCursor));
 
 	return fontName;
 }
@@ -428,7 +436,7 @@ void XtgScanner::setFontSize()
 void XtgScanner::setColor()
 {
 	flushText();
-	token = getToken();	
+	token = getToken();
 
 	QHash<QString,QString> color;
 	color.insert("cC","Cyan");
@@ -1103,7 +1111,7 @@ void XtgScanner::defColor()
 			double m = getToken().toDouble();
 			double y = getToken().toDouble();
 			double k = getToken().toDouble();
-			tmp.setColor(qRound(c * 2.55), qRound(m * 255), qRound(y * 255), qRound(k * 255));
+			tmp.setColorF(c / 100.0, m / 100.0, y / 100.0, k / 100.0);
 			tmp.setSpotColor(isSpot);
 			tmp.setRegistrationColor(false);
 			doc->PageColors.tryAddColor(sfcName, tmp);
@@ -1120,7 +1128,7 @@ void XtgScanner::defColor()
 			double r = getToken().toDouble();
 			double g = getToken().toDouble();
 			double b = getToken().toDouble();
-			tmp.setColorRGB(qRound(r * 2.55), qRound(g * 255), qRound(b * 255));
+			tmp.setRgbColorF(r / 100.0, g / 100.0, b / 100.0);
 			tmp.setSpotColor(isSpot);
 			tmp.setRegistrationColor(false);
 			doc->PageColors.tryAddColor(sfcName, tmp);
@@ -1132,7 +1140,7 @@ void XtgScanner::defColor()
 
 void XtgScanner::definePStyles()
 {
-	QString s1,s2,s3;
+	QString s1, s2, s3;
 	enterState(stringMode);
 	define = 2;
 	if (token == "[S\"")

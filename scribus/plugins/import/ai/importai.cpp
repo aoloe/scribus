@@ -7,6 +7,7 @@ for which a new license (GPL+exception) is in place.
 
 #include <QByteArray>
 #include <QCursor>
+#include <QDataStream>
 #include <QDrag>
 #include <QFile>
 #include <QList>
@@ -28,6 +29,7 @@ for which a new license (GPL+exception) is in place.
 #include "prefsfile.h"
 #include "prefsmanager.h"
 #include "prefstable.h"
+#include "qtiocompressor.h"
 #include "rawimage.h"
 #include "scclocale.h"
 #include "sccolorengine.h"
@@ -715,87 +717,52 @@ bool AIPlug::extractFromPDF(QString infile, QString outfile)
 bool AIPlug::decompressAIData(QString &fName)
 {
 	QString f2 = fName+"_decom.ai";
-	FILE *source, *dest;
-	int ret;
-	unsigned have;
-	z_stream strm;
-	char in[4096];
-	char out[4096];
+	char buffer[4096];
 
-	source = fopen(fName.toLocal8Bit().constData(), "rb");
-	if (!source)
+	QFile source(fName);
+	if (!source.open(QFile::ReadOnly))
 		return false;
-	if(!fseek(source, 20, SEEK_SET))
+	if (!source.seek(20))
 	{
-		fclose(source);
-		return false;
-	}
-	dest = fopen(f2.toLocal8Bit().constData(), "wb");
-	if (!dest)
-	{
-		fclose(source);
+		source.close();
 		return false;
 	}
 
-	strm.zalloc = Z_NULL;
-	strm.zfree = Z_NULL;
-	strm.opaque = Z_NULL;
-	strm.avail_in = 0;
-	strm.next_in = Z_NULL;
-
-	ret = inflateInit(&strm);
-	if (ret != Z_OK)
+	QtIOCompressor compressor(&source);
+	compressor.setStreamFormat(QtIOCompressor::ZlibFormat);
+	if (!compressor.open(QIODevice::ReadOnly))
 	{
-		fclose(source);
-		fclose(dest);
+		source.close();
 		return false;
 	}
 
-	do
+	QFile dest(f2);
+	if (!dest.open(QFile::WriteOnly))
 	{
-		strm.avail_in = fread(in, 1, 4096, source);
-		if (ferror(source))
-		{
-			(void)inflateEnd(&strm);
-			fclose(source);
-			fclose(dest);
-			return false;
-		}
-		if (strm.avail_in == 0)
+		source.close();
+		return false;
+	}
+	QDataStream destStream(&dest);
+
+	qint64 bytesRead = -1;
+	qint64 bytesWritten = -1;
+
+	bytesRead = compressor.read(buffer, 4096);
+	while (bytesRead > 0)
+	{
+		bytesWritten = destStream.writeRawData(buffer, (int) bytesRead);
+		if (bytesWritten < 0)
 			break;
-		strm.next_in = (Bytef*)in;
-		do
-		{
-			strm.avail_out = 4096;
-			strm.next_out = (Bytef*)out;
-			ret = inflate(&strm, Z_NO_FLUSH);
-			assert(ret != Z_STREAM_ERROR);
-			switch (ret)
-			{
-				case Z_NEED_DICT:
-					ret = Z_DATA_ERROR;
-				case Z_DATA_ERROR:
-				case Z_MEM_ERROR:
-					(void)inflateEnd(&strm);
-					fclose(source);
-					fclose(dest);
-					return false;
-			}
-			have = 4096 - strm.avail_out;
-			if (fwrite(out, 1, have, dest) != have || ferror(dest))
-			{
-				(void)inflateEnd(&strm);
-				fclose(source);
-				fclose(dest);
-				return false;
-			}
-		}
-		while (strm.avail_out == 0);
+		bytesRead = compressor.read(buffer, 4096);
 	}
-	while (ret != Z_STREAM_END);
-	(void)inflateEnd(&strm);
-	fclose(source);
-	fclose(dest);
+
+	compressor.close();
+	source.close();
+	dest.close();
+
+	if (bytesRead < 0 || bytesWritten < 0)
+		return false;
+
 	if (!convertedPDF)
 	{
 		QFileInfo bF2(fName);
@@ -826,7 +793,7 @@ bool AIPlug::parseHeader(QString fName, double &x, double &y, double &b, double 
 		QDataStream ts(&f);
 		while (!ts.atEnd())
 		{
-			tmp = readLinefromDataStream(ts);
+			tmp = readLineFromDataStream(ts);
 			if (tmp.startsWith("%%BoundingBox:"))
 			{
 				found = true;
@@ -913,7 +880,7 @@ bool AIPlug::parseHeader(QString fName, double &x, double &y, double &b, double 
 					while (!ts.atEnd())
 					{
 						quint64 oldPos = ts.device()->pos();
-						tmp = readLinefromDataStream(ts);
+						tmp = readLineFromDataStream(ts);
 						if (!tmp.startsWith("%%+"))
 						{
 							ts.device()->seek(oldPos);
@@ -977,7 +944,7 @@ bool AIPlug::parseHeader(QString fName, double &x, double &y, double &b, double 
 					while (!ts.atEnd())
 					{
 						quint64 oldPos = ts.device()->pos();
-						tmp = readLinefromDataStream(ts);
+						tmp = readLineFromDataStream(ts);
 						if (!tmp.startsWith("%%+"))
 						{
 							ts.device()->seek(oldPos);
@@ -1012,7 +979,7 @@ bool AIPlug::parseHeader(QString fName, double &x, double &y, double &b, double 
 				while (!ts.atEnd())
 				{
 					bool isX = false;
-					tmp = readLinefromDataStream(ts);
+					tmp = readLineFromDataStream(ts);
 					if ((tmp.endsWith("Xa") || tmp.endsWith(" k") || tmp.endsWith(" x")) && (tmp.length() > 4))
 					{
 						ScTextStream ts2(&tmp, QIODevice::ReadOnly);
@@ -1035,7 +1002,7 @@ bool AIPlug::parseHeader(QString fName, double &x, double &y, double &b, double 
 							}
 							FarNam = QString::fromUtf8(farN.constData());
 						}
-						tmp = readLinefromDataStream(ts);
+						tmp = readLineFromDataStream(ts);
 						if (tmp.endsWith("Pc"))
 						{
 							if (!isX)
@@ -1107,11 +1074,7 @@ QString AIPlug::parseColor(QString data)
 	Code >> m;
 	Code >> y;
 	Code >> k;
-	int Cc = qRound(c * 255);
-	int Mc = qRound(m * 255);
-	int Yc = qRound(y * 255);
-	int Kc = qRound(k * 255);
-	tmp.setColor(Cc, Mc, Yc, Kc);
+	tmp.setColorF(c, m, y, k);
 	tmp.setSpotColor(false);
 	tmp.setRegistrationColor(false);
 	QString namPrefix = "FromAI";
@@ -1133,8 +1096,7 @@ QString AIPlug::parseColorGray(QString data)
 	ColorList::Iterator it;
 	ScTextStream Code(&data, QIODevice::ReadOnly);
 	Code >> k;
-	int Kc = 255 - qRound(k * 255);
-	tmp.setColor(0, 0, 0, Kc);
+	tmp.setColorF(0, 0, 0, 1.0 - k);
 	tmp.setSpotColor(false);
 	tmp.setRegistrationColor(false);
 	QString namPrefix = "FromAI";
@@ -1157,10 +1119,7 @@ QString AIPlug::parseColorRGB(QString data)
 	Code >> r;
 	Code >> g;
 	Code >> b;
-	int Rc = qRound(r * 255);
-	int Gc = qRound(g * 255);
-	int Bc = qRound(b * 255);
-	tmp.setColorRGB(Rc, Gc, Bc);
+	tmp.setRgbColorF(r, g, b);
 	tmp.setSpotColor(false);
 	tmp.setRegistrationColor(false);
 	QString namPrefix = "FromAI";
@@ -1192,11 +1151,7 @@ QString AIPlug::parseCustomColor(QString data, double &shade)
 	ScTextStream Val(&FarSha, QIODevice::ReadOnly);
 	Val >> sh;
 	shade = (1.0 - sh) * 100.0;
-	int Cc = qRound(c * 255);
-	int Mc = qRound(m * 255);
-	int Yc = qRound(y * 255);
-	int Kc = qRound(k * 255);
-	tmp.setColor(Cc, Mc, Yc, Kc);
+	tmp.setColorF(c, m, y, k);
 	tmp.setSpotColor(true);
 	tmp.setRegistrationColor(false);
 	QString fNam = m_Doc->PageColors.tryAddColor(FarNam, tmp);
@@ -1220,10 +1175,7 @@ QString AIPlug::parseCustomColorX(QString data, double &shade, QString type)
 		Code >> r;
 		Code >> g;
 		Code >> b;
-		int Rc = qRound(r * 255);
-		int Gc = qRound(g * 255);
-		int Bc = qRound(b * 255);
-		tmp.setColorRGB(Rc, Gc, Bc);
+		tmp.setRgbColorF(r, g, b);
 		meshColorMode = 1;
 	}
 	else
@@ -1232,11 +1184,7 @@ QString AIPlug::parseCustomColorX(QString data, double &shade, QString type)
 		Code >> m;
 		Code >> y;
 		Code >> k;
-		int Cc = qRound(c * 255);
-		int Mc = qRound(m * 255);
-		int Yc = qRound(y * 255);
-		int Kc = qRound(k * 255);
-		tmp.setColor(Cc, Mc, Yc, Kc);
+		tmp.setColorF(c, m, y, k);
 		meshColorMode = 0;
 	}
 	int an = data.indexOf("(");
@@ -2106,7 +2054,7 @@ void AIPlug::processData(QString data)
 					{
 						for (int gcol = 0; gcol < ite->meshGradientArray[grow].count(); gcol++)
 						{
-							meshPoint mp = ite->meshGradientArray[grow][gcol];
+							MeshPoint mp = ite->meshGradientArray[grow][gcol];
 							ite->setMeshPointColor(grow, gcol, mp.colorName, mp.shade, mp.transparency);
 						}
 					}
@@ -2149,10 +2097,10 @@ void AIPlug::processData(QString data)
 				mVals2 >> meshXSize >> meshYSize;
 				for (int mgr = 0; mgr < meshYSize+1; mgr++)
 				{
-					QList<meshPoint> ml;
+					QList<MeshPoint> ml;
 					for (int mgc = 0; mgc < meshXSize+1; mgc++)
 					{
-						meshPoint mp;
+						MeshPoint mp;
 						ml.append(mp);
 					}
 					meshGradientArray.append(ml);
@@ -2252,7 +2200,7 @@ void AIPlug::processData(QString data)
 				}
 				else if (meshColorMode == 1)
 				{
-					tmpColor.setColorRGB(Cc, Mc, Yc);
+					tmpColor.setRgbColor(Cc, Mc, Yc);
 					for (it = m_Doc->PageColors.begin(); it != m_Doc->PageColors.end(); ++it)
 					{
 						if (it.value().getColorModel() == colorModelRGB)
@@ -2771,7 +2719,7 @@ void AIPlug::processPattern(QDataStream &ts)
 	QString tmpData = "";
 	while (!ts.atEnd())
 	{
-		tmp = removeAIPrefix(readLinefromDataStream(ts));
+		tmp = removeAIPrefix(readLineFromDataStream(ts));
 		if (importerFlags & LoadSavePlugin::lfKeepPatterns)
 		{
 			if (tmp.startsWith("%_"))
@@ -2885,7 +2833,7 @@ void AIPlug::processPattern(QDataStream &ts)
 		{
 			while (!ts.atEnd())
 			{
-				tmp = readLinefromDataStream(ts);
+				tmp = readLineFromDataStream(ts);
 				if (tmp.contains("EndRaster"))
 					break;
 				if(progressDialog)
@@ -2922,7 +2870,7 @@ void AIPlug::processSymbol(QDataStream &ts, bool sym)
 	QString tmp;
 	while (!ts.atEnd())
 	{
-		tmp = removeAIPrefix(readLinefromDataStream(ts));
+		tmp = removeAIPrefix(readLineFromDataStream(ts));
 		if (!patternMode)
 		{
 			int an = tmp.indexOf("(");
@@ -2983,7 +2931,7 @@ void AIPlug::processSymbol(QDataStream &ts, bool sym)
 		{
 			while (!ts.atEnd())
 			{
-				tmp = readLinefromDataStream(ts);
+				tmp = readLineFromDataStream(ts);
 				if (tmp.contains("EndRaster"))
 					break;
 				if(progressDialog)
@@ -3009,7 +2957,7 @@ void AIPlug::processRaster(QDataStream &ts)
 	QString cumulated = "";
 	while (!ts.atEnd())
 	{
-		tmp = readLinefromDataStream(ts);
+		tmp = readLineFromDataStream(ts);
 		if (tmp.startsWith("%"))
 			break;
 		tmp.remove("[");
@@ -3038,7 +2986,7 @@ void AIPlug::processRaster(QDataStream &ts)
 	if (tmp.startsWith("%%BeginData"))
 	{
 		ScTextStream gVals2(&tmp, QIODevice::ReadOnly);
-		tmp = readLinefromDataStream(ts);
+		tmp = readLineFromDataStream(ts);
 	}
 	QByteArray psdata;
 	psdata.resize(dataSize);
@@ -3064,7 +3012,7 @@ void AIPlug::processRaster(QDataStream &ts)
 		while (!ts.atEnd())
 		{
 			if (first)
-				tmp = readLinefromDataStream(ts);
+				tmp = readLineFromDataStream(ts);
 			first = true;
 			if (tmp.startsWith("%AI5_EndRaster"))
 				break;
@@ -3180,12 +3128,12 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("BeginGradient"))
 			{
 				while (!ts.atEnd())
 				{
-					tmp = removeAIPrefix(readLinefromDataStream(ts));
+					tmp = removeAIPrefix(readLineFromDataStream(ts));
 					if (tmp.startsWith("EndGradient"))
 						break;
 					else
@@ -3213,7 +3161,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndGradient"))
 				break;
 			else
@@ -3229,7 +3177,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndPalette"))
 				break;
 			if(progressDialog)
@@ -3247,7 +3195,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 		while (!ts.atEnd())
 		{
 			processSymbol(ts);
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndSymbol"))
 				break;
 			if(progressDialog)
@@ -3261,7 +3209,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndDocumentData"))
 				break;
 			if(progressDialog)
@@ -3273,10 +3221,10 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	}
 	else if (tmp.startsWith("BeginTextDocument"))
 	{
-		tmp = removeAIPrefix(readLinefromDataStream(ts));
+		tmp = removeAIPrefix(readLineFromDataStream(ts));
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndTextDocument"))
 			{
 			//	QByteArray fData;
@@ -3296,7 +3244,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("%%EndProlog"))
 				break;
 			if(progressDialog)
@@ -3310,7 +3258,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("%%EndData"))
 				break;
 			if(progressDialog)
@@ -3324,7 +3272,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("%%EndCrops"))
 				break;
 			if(progressDialog)
@@ -3347,7 +3295,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = readLinefromDataStream(ts);
+			tmp = readLineFromDataStream(ts);
 			if (tmp.contains("EndRaster"))
 				break;
 			if(progressDialog)
@@ -3361,7 +3309,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndSVGFilter"))
 				break;
 			if(progressDialog)
@@ -3375,7 +3323,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndArtStyles"))
 				break;
 			if(progressDialog)
@@ -3389,7 +3337,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			tmp = removeAIPrefix(readLinefromDataStream(ts));
+			tmp = removeAIPrefix(readLineFromDataStream(ts));
 			if (tmp.startsWith("EndPluginObject"))
 				break;
 			if(progressDialog)
@@ -3403,7 +3351,7 @@ void AIPlug::processComment(QDataStream &ts, QString comment)
 	{
 		while (!ts.atEnd())
 		{
-			QString rl = readLinefromDataStream(ts);
+			QString rl = readLineFromDataStream(ts);
 			tmp = removeAIPrefix(rl);
 			if (tmp.startsWith("BeginRaster"))
 			{
@@ -3519,7 +3467,7 @@ bool AIPlug::convert(QString fn)
 		QDataStream ts(&f);
 		while (!ts.atEnd())
 		{
-			tmp = readLinefromDataStream(ts);
+			tmp = readLineFromDataStream(ts);
 			if (tmp.startsWith("%"))
 				processComment(ts, tmp);
 			else

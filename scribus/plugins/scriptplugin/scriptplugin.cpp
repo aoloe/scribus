@@ -302,8 +302,11 @@ PyMethodDef scribus_methods[] = {
 	// 2004-11-06 cr - move aliasing to dynamically generated wrapper functions, sort methoddef
 	{const_cast<char*>("applyMasterPage"), scribus_applymasterpage, METH_VARARGS, tr(scribus_applymasterpage__doc__)},
 	{const_cast<char*>("changeColor"), scribus_setcolor, METH_VARARGS, tr(scribus_setcolor__doc__)},
+	{const_cast<char*>("changeColorLab"), scribus_setcolorlab, METH_VARARGS, tr(scribus_setcolorlab__doc__) },
 	{const_cast<char*>("changeColorRGB"), scribus_setcolorrgb, METH_VARARGS, tr(scribus_setcolorrgb__doc__)},
+	{const_cast<char*>("changeColorRGBFloat"), scribus_setcolorrgbfloat, METH_VARARGS, tr(scribus_setcolorrgbfloat__doc__)},
 	{const_cast<char*>("changeColorCMYK"), scribus_setcolorcmyk, METH_VARARGS, tr(scribus_setcolorcmyk__doc__)},
+	{const_cast<char*>("changeColorCMYKFloat"), scribus_setcolorcmykfloat, METH_VARARGS, tr(scribus_setcolorcmykfloat__doc__)},
 	{const_cast<char*>("closeDoc"), (PyCFunction)scribus_closedoc, METH_NOARGS, tr(scribus_closedoc__doc__)},
 	{const_cast<char*>("closeMasterPage"), (PyCFunction)scribus_closemasterpage, METH_NOARGS, tr(scribus_closemasterpage__doc__)},
 	{const_cast<char*>("createBezierLine"), scribus_bezierline, METH_VARARGS, tr(scribus_bezierline__doc__)},
@@ -320,10 +323,14 @@ PyMethodDef scribus_methods[] = {
 	{const_cast<char*>("createTable"), scribus_newtable, METH_VARARGS, tr(scribus_newtable__doc__)},
 	{const_cast<char*>("createParagraphStyle"), (PyCFunction)scribus_createparagraphstyle, METH_KEYWORDS, tr(scribus_createparagraphstyle__doc__)},
 	{const_cast<char*>("createCharStyle"), (PyCFunction)scribus_createcharstyle, METH_KEYWORDS, tr(scribus_createcharstyle__doc__)},
+	{const_cast<char*>("createCustomLineStyle"), scribus_createcustomlinestyle, METH_VARARGS, tr(scribus_createcustomlinestyle__doc__)},
 	{const_cast<char*>("currentPage"), (PyCFunction)scribus_actualpage, METH_NOARGS, tr(scribus_actualpage__doc__)},
 	{const_cast<char*>("defineColor"), scribus_newcolor, METH_VARARGS, tr(scribus_newcolor__doc__)},
+	{const_cast<char*>("defineColorLab"), scribus_newcolorlab, METH_VARARGS, tr(scribus_newcolorlab__doc__) },
 	{const_cast<char*>("defineColorRGB"), scribus_newcolorrgb, METH_VARARGS, tr(scribus_newcolorrgb__doc__)},
+	{const_cast<char*>("defineColorRGBFloat"), scribus_newcolorrgb, METH_VARARGS, tr(scribus_newcolorrgbfloat__doc__)},
 	{const_cast<char*>("defineColorCMYK"), scribus_newcolorcmyk, METH_VARARGS, tr(scribus_newcolorcmyk__doc__)},
+	{const_cast<char*>("defineColorCMYKFloat"), scribus_newcolorcmykfloat, METH_VARARGS, tr(scribus_newcolorcmykfloat__doc__)},
 	{const_cast<char*>("deleteColor"), scribus_delcolor, METH_VARARGS, tr(scribus_delcolor__doc__)},
 	{const_cast<char*>("deleteLayer"), scribus_removelayer, METH_VARARGS, tr(scribus_removelayer__doc__)},
 	{const_cast<char*>("deleteMasterPage"), scribus_deletemasterpage, METH_VARARGS, tr(scribus_deletemasterpage__doc__)},
@@ -347,13 +354,16 @@ PyMethodDef scribus_methods[] = {
 	{const_cast<char*>("getCellFillColor"), scribus_getcellfillcolor, METH_VARARGS, tr(scribus_getcellfillcolor__doc__)},
 	{const_cast<char*>("getColorNames"), (PyCFunction)scribus_colornames, METH_NOARGS, tr(scribus_colornames__doc__)},
 	{const_cast<char*>("getColor"), scribus_getcolor, METH_VARARGS, tr(scribus_getcolor__doc__)},
+	{const_cast<char*>("getColorFloat"), scribus_getcolorfloat, METH_VARARGS, tr(scribus_getcolorfloat__doc__)},
 	{const_cast<char*>("getColorAsRGB"), scribus_getcolorasrgb, METH_VARARGS, tr(scribus_getcolorasrgb__doc__)},
+	{const_cast<char*>("getColorAsRGBFloat"), scribus_getcolorasrgbfloat, METH_VARARGS, tr(scribus_getcolorasrgbfloat__doc__)},
 	{const_cast<char*>("isSpotColor"), scribus_isspotcolor, METH_VARARGS, tr(scribus_isspotcolor__doc__)},
 	{const_cast<char*>("setSpotColor"), scribus_setspotcolor, METH_VARARGS, tr(scribus_setspotcolor__doc__)},
 	{const_cast<char*>("getTextDistances"), scribus_gettextdistances, METH_VARARGS, tr(scribus_gettextdistances__doc__)},
 	{const_cast<char*>("getColumnGap"), scribus_getcolumngap, METH_VARARGS, tr(scribus_getcolumngap__doc__)},
 	{const_cast<char*>("getColumns"), scribus_getcolumns, METH_VARARGS, tr(scribus_getcolumns__doc__)},
 	{const_cast<char*>("getCornerRadius"), scribus_getcornerrad, METH_VARARGS, tr(scribus_getcornerrad__doc__)},
+	{const_cast<char*>("getCustomLineStyle"), scribus_getcustomlinestyle, METH_VARARGS, tr(scribus_getcustomlinestyle__doc__)},
 	{const_cast<char*>("getFillColor"), scribus_getfillcolor, METH_VARARGS, tr(scribus_getfillcolor__doc__)},
 	{const_cast<char*>("getFillShade"), scribus_getfillshade, METH_VARARGS, tr(scribus_getfillshade__doc__)},
 	{const_cast<char*>("getFillBlendmode"), scribus_getfillblend, METH_VARARGS, tr(scribus_getfillblend__doc__)},
@@ -490,6 +500,7 @@ PyMethodDef scribus_methods[] = {
 	{const_cast<char*>("setColumns"), scribus_setcolumns, METH_VARARGS, tr(scribus_setcolumns__doc__)},
 	{const_cast<char*>("setCornerRadius"), scribus_setcornerrad, METH_VARARGS, tr(scribus_setcornerrad__doc__)},
 	{const_cast<char*>("setCursor"), scribus_setcursor, METH_VARARGS, tr(scribus_setcursor__doc__)},
+	{const_cast<char*>("setCustomLineStyle"), scribus_setcustomlinestyle, METH_VARARGS, tr(scribus_setcustomlinestyle__doc__)},
 	{const_cast<char*>("setDocType"), scribus_setdoctype, METH_VARARGS, tr(scribus_setdoctype__doc__)},
 	{const_cast<char*>("setFillColor"), scribus_setfillcolor, METH_VARARGS, tr(scribus_setfillcolor__doc__)},
 	{const_cast<char*>("setFillTransparency"), scribus_setfilltrans, METH_VARARGS, tr(scribus_setfilltrans__doc__)},
@@ -706,6 +717,16 @@ void initscribus(ScribusMainWindow *pl)
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_A7"), Py_BuildValue(const_cast<char*>("(ff)"), 210.0, 297.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_A8"), Py_BuildValue(const_cast<char*>("(ff)"), 148.0, 210.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_A9"), Py_BuildValue(const_cast<char*>("(ff)"), 105.0, 148.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A0_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 841.0, 1189.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A1_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 594.0, 841.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A2_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 420.0, 594.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A3_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 297.0, 420.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A4_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 210.0, 297.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A5_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 148.0, 210.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A6_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 105.0, 148.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A7_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 74.0, 105.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A8_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 52.0, 74.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_A9_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 37.0, 52.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_B0"), Py_BuildValue(const_cast<char*>("(ff)"), 2836.0, 4008.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_B1"), Py_BuildValue(const_cast<char*>("(ff)"), 2004.0, 2836.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_B2"), Py_BuildValue(const_cast<char*>("(ff)"), 1418.0, 2004.0));
@@ -717,6 +738,17 @@ void initscribus(ScribusMainWindow *pl)
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_B8"), Py_BuildValue(const_cast<char*>("(ff)"), 178.0, 250.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_B9"), Py_BuildValue(const_cast<char*>("(ff)"), 125.0, 178.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_B10"), Py_BuildValue(const_cast<char*>("(ff)"), 89.0, 125.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B0_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 1000.0, 1414.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B1_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 707.0, 1000.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B2_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 500.0, 707.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B3_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 353.0, 500.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B4_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 250.0, 353.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B5_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 176.0, 250.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B6_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 125.0, 176.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B7_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 88.0, 125.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B8_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 62.0, 88.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B9_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 44.0, 62.0));
+	PyDict_SetItemString(d, const_cast<char*>("PAPER_B10_MM"), Py_BuildValue(const_cast<char*>("(ff)"), 31.0, 44.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_C5E"), Py_BuildValue(const_cast<char*>("(ff)"), 462.0, 649.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_COMM10E"), Py_BuildValue(const_cast<char*>("(ff)"), 298.0, 683.0));
 	PyDict_SetItemString(d, const_cast<char*>("PAPER_DLE"),  Py_BuildValue(const_cast<char*>("(ff)"), 312.0, 624.0));

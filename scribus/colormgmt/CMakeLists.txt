@@ -13,6 +13,9 @@ set(SCRIBUS_LCMS_IMPL_SOURCES
 )
 
 set(SCRIBUS_COLORMGMT_LIB_SOURCES
+	scciedata.cpp
+	sccieilluminants.cpp
+	sccieobservers.cpp
 	sccolormgmtengine.cpp
 	sccolormgmtenginedata.cpp
 	sccolormgmtenginefactory.cpp
@@ -25,6 +28,7 @@ set(SCRIBUS_COLORMGMT_LIB_SOURCES
 	sccolorspacedata.cpp
 	sccolortransform.cpp
 	sccolortransformpool.cpp
+	scspectralvaluesconvertor.cpp
 	${SCRIBUS_LCMS_IMPL_SOURCES}
 )
 

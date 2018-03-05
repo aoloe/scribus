@@ -33,6 +33,7 @@ static QDataStream & operator>> ( QDataStream & s, PSDHeader & header )
 
 ScImgDataLoader_PSD::ScImgDataLoader_PSD(void)
 {
+	m_maxChannels = 0;
 	initSupportedFormatList();
 }
 
@@ -329,7 +330,7 @@ bool ScImgDataLoader_PSD::LoadPSDResources( QDataStream & s, const PSDHeader & h
 				switch (signature)
 				{
 					case 0:	// RGB colour
-						col.setColorRGB(c >> 8, m >> 8, y >> 8);
+						col.setRgbColor(c >> 8, m >> 8, y >> 8);
 						m_colorTableSc.append(col);
 						break;
 					case 1:	// HSB colour
@@ -337,7 +338,7 @@ bool ScImgDataLoader_PSD::LoadPSDResources( QDataStream & s, const PSDHeader & h
 						sc = m >> 8;
 						bc = y >> 8;
 						HSVTORGB(hc, sc, bc);
-						col.setColorRGB(hc, sc, bc);
+						col.setRgbColor(hc, sc, bc);
 						m_colorTableSc.append(col);
 						break;
 					case 2:	// CMYK colour

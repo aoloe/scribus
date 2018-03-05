@@ -202,17 +202,18 @@ public:
 	// private:
 	PdfId CatalogObj; // 1
 	PdfId InfoObj; // 2
-	PdfId OutlinesObj; // 3
-	PdfId PagesObj; // 4
-	PdfId DestsObj; // 5
-	PdfId AcroFormObj; // 6
-	PdfId NamesObj; // 7
-	PdfId ThreadsObj; // 8
+	PdfId PagesObj; // 3
+	PdfId AcroFormObj;
+	PdfId DestsObj; 
+	PdfId OutlinesObj;
+	PdfId NamesObj;
+	PdfId ThreadsObj;
 	PdfId OCPropertiesObj; // (9)
 	PdfId OutputIntentObj; // (9 or 10)
 	PdfId EncryptObj; 
 	PdfId MetaDataObj;
 	PdfId ResourcesObj;
+	PdfId OpenActionObj;
 	
 private:
 	PdfId m_ObjCounter;

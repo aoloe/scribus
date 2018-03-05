@@ -115,10 +115,12 @@
 	<area text="For Developers" file="developers.html">
 		<submenuitem text="Scribus Document Format" file="scribusfileformat.html"/>
 		<submenuitem text="Scripter" file="scripter1.html"/>
+		<submenuitem text="Scripts Included with Scribus" file="scripter2.html"/>
 		<submenuitem text="Scripter FAQ" file="scripter-faq.html"/>
 		<submenuitem text="Scripter API" file="scripterapi.html">
 			<submenuitem text="Document Commands" file="scripterapi-doc.html"/>
 			<submenuitem text="Page Commands" file="scripterapi-page.html"/>
+			<submenuitem text="Master Page Commands" file="scripterapi-masterpages.html"/>
 			<submenuitem text="Creating &amp; Destroying Objects" file="scripterapi-object.html"/>
 			<submenuitem text="Selecting Objects" file="scripterapi-select.html"/>
 			<submenuitem text="Setting Object Properties" file="scripterapi-setobjprop.html"/>
@@ -135,7 +137,7 @@
 			<submenuitem text="PDF Export" file="scripterapi-PDFfile.html"/>
 			<submenuitem text="Printing" file="scripterapi-Printer.html"/>
 			<submenuitem text="Image Export" file="scripterapi-ImageExport.html"/>
-			<submenuitem text="Pre-defined Constants" file="scripterapi-constants.html"/>
+			<submenuitem text="Predefined Constants" file="scripterapi-constants.html"/>
 			<submenuitem text="Scripter Extensions" file="scripter-extensions.html"/>
 			<submenuitem text="Scripter Extensions API" file="scripterapi-extensions.html"/>
 		</submenuitem>

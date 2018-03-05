@@ -354,6 +354,8 @@ set(SCRIBUS_MOC_CLASSES
 	ui/extimageprops.h
 	ui/filedialogeventcatcher.h
 	ui/fontcombo.h
+	ui/fontembeddingcombo.h
+	ui/fontembeddingmodel.h
 	ui/fontlistview.h
 	ui/fontreplacedialog.h
 	ui/gradientaddedit.h
@@ -615,8 +617,6 @@ set(SCRIBUS_SOURCES
 	docinfo.cpp
 	documentchecker.cpp
 	documentinformation.cpp
-	downloadmanager/scdlmgr.cpp
-	downloadmanager/scdlthread.cpp
 	exif.cpp
 	fileloader.cpp
 	filesearch.cpp
@@ -708,19 +708,6 @@ set(SCRIBUS_SOURCES
 	scimagecachemanager.cpp
 	scimagecachewriteaction.cpp
 	scimagestructs.cpp
-	imagedataloaders/scimgdataloader.cpp
-	imagedataloaders/scimgdataloader_gimp.cpp
-	imagedataloaders/scimgdataloader_jpeg.cpp
-	imagedataloaders/scimgdataloader_kra.cpp
-	imagedataloaders/scimgdataloader_ora.cpp
-	imagedataloaders/scimgdataloader_pdf.cpp
-	imagedataloaders/scimgdataloader_pgf.cpp
-	imagedataloaders/scimgdataloader_pict.cpp
-	imagedataloaders/scimgdataloader_ps.cpp
-	imagedataloaders/scimgdataloader_psd.cpp
-	imagedataloaders/scimgdataloader_qt.cpp
-	imagedataloaders/scimgdataloader_tiff.cpp
-	imagedataloaders/scimgdataloader_wpg.cpp
 	sclayer.cpp
 	sclockedfile.cpp
 	scmimedata.cpp
@@ -760,8 +747,6 @@ set(SCRIBUS_SOURCES
 	tablecell.cpp
 	tableutils.cpp
 	textwriter.cpp
-	third_party/fparser/fpoptimizer.cc
-	third_party/fparser/fparser.cc
 	tocgenerator.cpp
 	transaction.cpp
 	undogui.cpp
@@ -787,6 +772,31 @@ set(SCRIBUS_SOURCES
 	util_text.cpp
 	vgradient.cpp
 	vgradientex.cpp
+	downloadmanager/scdlmgr.cpp
+	downloadmanager/scdlthread.cpp
+	imagedataloaders/scimgdataloader.cpp
+	imagedataloaders/scimgdataloader_gimp.cpp
+	imagedataloaders/scimgdataloader_jpeg.cpp
+	imagedataloaders/scimgdataloader_kra.cpp
+	imagedataloaders/scimgdataloader_ora.cpp
+	imagedataloaders/scimgdataloader_pdf.cpp
+	imagedataloaders/scimgdataloader_pgf.cpp
+	imagedataloaders/scimgdataloader_pict.cpp
+	imagedataloaders/scimgdataloader_ps.cpp
+	imagedataloaders/scimgdataloader_psd.cpp
+	imagedataloaders/scimgdataloader_qt.cpp
+	imagedataloaders/scimgdataloader_tiff.cpp
+	imagedataloaders/scimgdataloader_wpg.cpp
+	palettes/paletteloader.cpp
+	palettes/paletteloader_adobe_acb.cpp
+	palettes/paletteloader_adobe_aco.cpp
+	palettes/paletteloader_adobe_ase.cpp
+	palettes/paletteloader_autocad_acb.cpp
+	palettes/paletteloader_ps.cpp
+	palettes/paletteloader_sk1.cpp
+	palettes/paletteloader_swatchbook.cpp
+	third_party/fparser/fpoptimizer.cc
+	third_party/fparser/fparser.cc
 	ui/about.cpp
 	ui/aboutplugins.cpp
 	ui/adjustcmsdialog.cpp
@@ -832,6 +842,8 @@ set(SCRIBUS_SOURCES
 	ui/extimageprops.cpp
 	ui/filedialogeventcatcher.cpp
 	ui/fontcombo.cpp
+	ui/fontembeddingcombo.cpp
+	ui/fontembeddingmodel.cpp
 	ui/fontlistview.cpp
 	ui/fontreplacedialog.cpp
 	ui/gradientaddedit.cpp

@@ -4,8 +4,8 @@ to the COPYING file provided with the program. Following this notice may exist
 a copyright and/or license notice that predates the release of Scribus 1.3.2
 for which a new license (GPL+exception) is in place.
 */
-#ifndef SCRIBUS134FORMAT_H
-#define SCRIBUS134FORMAT_H
+#ifndef SCRIBUS150FORMAT_H
+#define SCRIBUS150FORMAT_H
 
 #include "pluginapi.h"
 #include "loadsaveplugin.h"
@@ -119,7 +119,7 @@ class PLUGIN_API Scribus150Format : public LoadSavePlugin
 		bool readLatexInfo(PageItem_LatexFrame* item, ScXmlStreamReader& reader);
 		void readLayers(ScLayer& layer, ScXmlStreamAttributes& attrs);
 		bool readMultiline(multiLine& ml, ScXmlStreamReader& reader);
-		bool readObject(ScribusDoc* doc, ScXmlStreamReader& reader, ItemInfo& info, const QString& baseDir, bool loadPage);
+		bool readObject(ScribusDoc* doc, ScXmlStreamReader& reader, ItemInfo& info, const QString& baseDir, bool loadPage, QString renamedPageName = QString());
 		bool readPage(ScribusDoc* doc, ScXmlStreamReader& reader);
 		bool readPageItemAttributes(PageItem* item, ScXmlStreamReader& reader);
 		bool readPageSets(ScribusDoc* doc, ScXmlStreamReader& reader);

@@ -13189,6 +13189,14 @@ void ScribusDoc::endUpdate()
 	m_docUpdater->endUpdate();
 }
 
+void ScribusDoc::itemSelection_SwapHorizontally()
+{
+}
+
+void ScribusDoc::itemSelection_SwapVertically()
+{
+}
+
 void ScribusDoc::itemSelection_SwapLeft()
 {
 	if (!startAlign(2))
@@ -13411,6 +13419,14 @@ void ScribusDoc::itemSelection_SwapRight()
 		if (!AObjects[0].Objects.at(j)->locked())
 			AObjects[0].Objects.at(j)->moveBy(diffX3, diffY3);
 	endAlign();
+}
+
+void ScribusDoc::itemSelection_SwapTop()
+{
+}
+
+void ScribusDoc::itemSelection_SwapBottom()
+{
 }
 
 void ScribusDoc::changed()

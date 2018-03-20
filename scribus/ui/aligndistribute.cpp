@@ -145,6 +145,8 @@ void AlignDistributePalette::languageChange()
 
 	swapLeftToolButton->setToolTip( tr( "Swap items to the left" ) );
 	swapRightToolButton->setToolTip( tr( "Swap items to the right" ) );
+	swapTopToolButton->setToolTip( tr( "Swap items to the top" ) );
+	swapBottomToolButton->setToolTip( tr( "Swap items to the bottom" ) );
 }
 
 void AlignDistributePalette::init()
@@ -182,6 +184,8 @@ void AlignDistributePalette::init()
 
 	swapLeftToolButton->setIcon(im->loadIcon("22/swap-left.png"));
 	swapRightToolButton->setIcon(im->loadIcon("22/swap-right.png"));
+	swapTopToolButton->setIcon(im->loadIcon("22/swap-top.png"));
+	swapBottomToolButton->setIcon(im->loadIcon("22/swap-bottom.png"));
 
 	QSize s(24,24);
 	alignLeftOutToolButton->setMinimumSize(s);
@@ -215,6 +219,8 @@ void AlignDistributePalette::init()
 
 	swapLeftToolButton->setMinimumSize(s);
 	swapRightToolButton->setMinimumSize(s);
+	swapTopToolButton->setMinimumSize(s);
+	swapBottomToolButton->setMinimumSize(s);
 
 	alignLeftOutToolButton->setMaximumSize(s);
 	alignLeftInToolButton->setMaximumSize(s);
@@ -247,6 +253,8 @@ void AlignDistributePalette::init()
 
 	swapLeftToolButton->setMaximumSize(s);
 	swapRightToolButton->setMaximumSize(s);
+	swapTopToolButton->setMaximumSize(s);
+	swapBottomToolButton->setMaximumSize(s);
 
 
 	connect(alignLeftOutToolButton, SIGNAL(clicked()), this, SLOT(alignLeftOut()));
@@ -275,6 +283,8 @@ void AlignDistributePalette::init()
 	connect(distributeDownMarginsToolButton, SIGNAL(clicked()), this, SLOT(distributeDistDownMargins()));
 	connect(swapLeftToolButton, SIGNAL(clicked()), this, SLOT(swapLeft()));
 	connect(swapRightToolButton, SIGNAL(clicked()), this, SLOT(swapRight()));
+	connect(swapTopToolButton, SIGNAL(clicked()), this, SLOT(swapTop()));
+	connect(swapBottomToolButton, SIGNAL(clicked()), this, SLOT(swapBottom()));
 	
 	alignRelativeToCombo->setCurrentIndex(0);
 	alignToChanged(0);
@@ -468,6 +478,18 @@ void AlignDistributePalette::swapRight()
 {
 	if (currDoc!=NULL)
 		currDoc->itemSelection_SwapRight();
+}
+
+void AlignDistributePalette::swapTop()
+{
+	if (currDoc!=NULL)
+		currDoc->itemSelection_SwapTop();
+}
+
+void AlignDistributePalette::swapBottom()
+{
+	if (currDoc!=NULL)
+		currDoc->itemSelection_SwapBottom();
 }
 
 void AlignDistributePalette::alignToChanged(int newAlignTo)

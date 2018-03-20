@@ -1510,6 +1510,8 @@ public slots:
 	void itemSelection_DistributeTop();
 	void itemSelection_SwapLeft();
 	void itemSelection_SwapRight();
+	void itemSelection_SwapTop();
+	void itemSelection_SwapBottom();
 	void itemSelection_MultipleDuplicate(ItemMultipleDuplicateData&);
 	void itemSelection_UniteItems(Selection* customSelection=0);
 	void itemSelection_SplitItems(Selection* customSelection=0);
@@ -1671,6 +1673,10 @@ public slots:
 	void updatePict(QString name);
 	void updatePictDir(QString name);
 	void removePict(QString name);
+
+private:
+	void itemSelection_SwapHorizontally();
+	void itemSelection_SwapVertically();
 
 // Marks and notes
 public:

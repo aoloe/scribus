@@ -99,6 +99,8 @@ protected slots:
 	void distributeTop();
 	void swapLeft();
 	void swapRight();
+	void swapTop();
+	void swapBottom();
 	
 	void alignToChanged(int);
 	void alignMethodChanged(int);

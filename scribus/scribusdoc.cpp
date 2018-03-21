@@ -12118,6 +12118,9 @@ void ScribusDoc::buildAlignItemList(Selection* customSelection)
 		Object.Group = 0;
 		Object.ObjNr = Items->indexOf(currItem);
 		Object.Objects.append(currItem);
+        qDebug() << 'vvvvvvv';
+        qDebug() << Object.Objects.count();
+        qDebug() << '^^^^^^^';
 		AObjects.append(Object);
 	}
 	for (int i = 0; i < AObjects.count(); ++i)
@@ -13187,14 +13190,6 @@ void ScribusDoc::endUpdate()
 {
 	m_updateManager.setUpdatesEnabled(true);
 	m_docUpdater->endUpdate();
-}
-
-void ScribusDoc::itemSelection_SwapHorizontally()
-{
-}
-
-void ScribusDoc::itemSelection_SwapVertically()
-{
 }
 
 void ScribusDoc::itemSelection_SwapLeft()

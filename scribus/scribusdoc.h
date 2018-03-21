@@ -1510,8 +1510,6 @@ public slots:
 	void itemSelection_DistributeTop();
 	void itemSelection_SwapLeft();
 	void itemSelection_SwapRight();
-	void itemSelection_SwapTop();
-	void itemSelection_SwapBottom();
 	void itemSelection_MultipleDuplicate(ItemMultipleDuplicateData&);
 	void itemSelection_UniteItems(Selection* customSelection=0);
 	void itemSelection_SplitItems(Selection* customSelection=0);

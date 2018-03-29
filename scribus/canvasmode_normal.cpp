@@ -533,6 +533,8 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 					}
 					else
 					{
+                        // TODO: might be a class variable...
+                        bool onTheFlySnapToElement = (m->modifiers() & Qt::ShiftModifier) && !(m->modifiers() & Qt::ControlModifier) && !(m->modifiers() & Qt::AltModifier);
 						//Dragging orthogonally - Ctrl Drag
 						if ((m->modifiers() & Qt::ControlModifier) && !(m->modifiers() & Qt::ShiftModifier) && !(m->modifiers() & Qt::AltModifier))
 						{
@@ -580,8 +582,9 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 								m_objectDeltaPos += FPoint(nx-nxo, ny-nyo);
 							}
 						}
-						if (m_doc->SnapElement)
+						if (onTheFlySnapToElement || m_doc->SnapElement)
 						{
+                            qDebug() << "---" << onTheFlySnapToElement;
 							xSnap = 0;
 							ySnap = 0;
 							double snapWidth[] = {0,gw,gw/2};
@@ -595,9 +598,19 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 							{
 								nx = gx + snapWidth[i] + m_objectDeltaPos.x();
 								ny = gy + snapHeight[i] + m_objectDeltaPos.y();
+                                bool tmpSnapElement = m_doc->SnapElement;
+                                if (onTheFlySnapToElement) {
+                                    m_doc->SnapElement = true;
+                                }
 								nxo = nx, nyo = ny;
 								m_doc->ApplyGuides(&nx, &ny,true);
 								m_objectDeltaPos += FPoint(nx - nxo, ny - nyo);
+                                // TODO: implement also for multiple selections
+                                // TODO: why does scribusdoc check for SnapElement, too?
+                                if (onTheFlySnapToElement) {
+                                    m_doc->SnapElement = false;
+                                    m_doc->SnapElement = tmpSnapElement;
+                                }
 								if (ny != nyo)
 									ySnap = ny;
 								if (nx != nxo)
@@ -629,6 +642,7 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 					m_doc->m_Selection->getVisualGroupRect(&gx, &gy, &gw, &gh);
 					int dX=qRound(newX - m_mousePressPoint.x()), dY=qRound(newY - m_mousePressPoint.y());
 					erf = true;
+                    bool onTheFlySnapToElement = (m->modifiers() & Qt::ShiftModifier) && !(m->modifiers() & Qt::ControlModifier) && !(m->modifiers() & Qt::AltModifier);
 					if (m->modifiers() & Qt::ControlModifier)
 					{
 						if (abs(dX)>abs(dY))
@@ -660,7 +674,7 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 							m_objectDeltaPos += FPoint(nx-nxo, ny-nyo);
 						}
 					}
-					if (m_doc->SnapElement)
+                    if (onTheFlySnapToElement || m_doc->SnapElement)
 					{
 						xSnap = 0;
 						ySnap = 0;

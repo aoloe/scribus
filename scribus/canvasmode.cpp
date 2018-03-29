@@ -947,8 +947,9 @@ void CanvasMode::clearPixmapCache()
 
 void CanvasMode::drawSnapLine(QPainter* p)
 {
-	if (!m_doc->SnapElement)
+	if (!m_doc->SnapElement && !m_doc->snapLineVisible)
 		return;
+    m_doc->snapLineVisible = false;
 	if (xSnap == 0.0 && ySnap == 0.0)
 		return;
 	int page = m_doc->OnPage(m_view->m_mousePointDoc.x(), m_view->m_mousePointDoc.y());

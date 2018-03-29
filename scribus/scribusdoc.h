@@ -1237,6 +1237,7 @@ public: // Public attributes
 	bool SnapGrid;
 	bool SnapGuides;
 	bool SnapElement;
+	bool snapLineVisible = false;
 	bool GuideLock;
 	bool dontResize;
 	/** \brief Minimum and Maximum Points of Document */

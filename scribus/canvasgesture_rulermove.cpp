@@ -312,7 +312,13 @@ void RulerGesture::movePoint(QMouseEvent* m, bool mouseRelease)
 
 void RulerGesture::mouseMoveEvent(QMouseEvent* m)
 {
+    qDebug() << m->globalPos();
 	m_mousePoint=m_canvas->globalToCanvas(m->globalPos());
+    double nx = m_mousePoint.x();
+    double ny = m_mousePoint.y();
+    m_doc->ApplyGuides(&nx, &ny,true);
+    m_mousePoint.setXY(nx, ny);
+
 	m->accept();
 	if (m_view->moveTimerElapsed())
 	{

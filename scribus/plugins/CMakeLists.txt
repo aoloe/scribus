@@ -27,5 +27,6 @@ ADD_SUBDIRECTORY(scribusAPI)
 ADD_SUBDIRECTORY(applyStyle)
 ADD_SUBDIRECTORY(runCommand)
 ADD_SUBDIRECTORY(tableOfContents)
+ADD_SUBDIRECTORY(projectSummary)
 
 # add_subdirectory(myplugin)

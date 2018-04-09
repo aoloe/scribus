@@ -5249,12 +5249,12 @@ void ScribusMainWindow::slotOnlineHelpClosed()
 
 void ScribusMainWindow::slotResourceManager()
 {
-	if (!resourceManager)
+	if (!resourceManager) // in case its allocated???? maybe can remove in future
 	{
 		resourceManager=new ResourceManager(this);
 		resourceManager->exec();
 		resourceManager->deleteLater();
-		resourceManager=0;
+		resourceManager=NULL;
 	}
 }
 
@@ -7700,7 +7700,7 @@ void ScribusMainWindow::editMasterPagesStart(QString temp)
 	if (!HaveDoc)
 		return;
 	m_pagePalVisible = pagePalette->isVisible();
-	QString mpName = "";
+	QString mpName;
 	if (temp.isEmpty())
 		mpName = doc->currentPage()->MPageNam;
 	else
@@ -8027,8 +8027,7 @@ void ScribusMainWindow::restoreAddPage(SimpleState *state, bool isUndo)
 		}
 		for (int i = delFrom - 1; i < delTo; ++i)
 		{
-			UndoObject *tmp = m_undoManager->replaceObject(
-					state->getUInt(QString("Page%1").arg(i)), doc->Pages->at(i));
+			UndoObject *tmp = m_undoManager->replaceObject(state->getUInt(QString("Page%1").arg(i)), doc->Pages->at(i));
 			delete tmp;
 		}
 	}

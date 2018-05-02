@@ -1360,8 +1360,7 @@ void SlaOutputDev::endPage()
 {
 	if (!m_radioMap.isEmpty())
 	{
-		QHash<QString, QList<int> >::iterator it;
-		for (it = m_radioMap.begin(); it != m_radioMap.end(); ++it)
+		for (auto it = m_radioMap.begin(); it != m_radioMap.end(); ++it)
 		{
 			tmpSel->clear();
 			QList<int> refList = it.value();
@@ -4252,7 +4251,7 @@ void SlaOutputDev::pushGroup(QString maskName, GBool forSoftMask, GBool alpha, b
 	m_groupStack.push(gElements);
 }
 
-QString SlaOutputDev::UnicodeParsedString(GooString *s1)
+QString SlaOutputDev::UnicodeParsedString(const GooString *s1)
 {
 	if ( !s1 || s1->getLength() == 0 )
 		return QString();

@@ -230,7 +230,6 @@ ScribusView::ScribusView(QWidget* win, ScribusMainWindow* mw, ScribusDoc *doc) :
 	endEditButton->setVisible(false);
 	connect(endEditButton, SIGNAL(clicked()), m_ScMW, SLOT(slotEndSpecialEdit()));
 
-	m_oldSnapToElem = Doc->SnapElement;
 	languageChange();
 }
 
@@ -2783,6 +2782,8 @@ QImage ScribusView::PageToPixmap(int Nr, int maxGr, PageToPixmapFlags flags)
 	ScPainter *painter = new ScPainter(&im, im.width(), im.height(), 1.0, 0);
 	if (flags & Pixmap_DrawBackground)
 		painter->clear(Doc->paperColor());
+	else if (flags & Pixmap_DrawWhiteBackground)
+		painter->clear(QColor(255, 255, 255));
 	painter->translate(-clipx, -clipy);
 	painter->setFillMode(ScPainter::Solid);
 	if (flags & Pixmap_DrawFrame)
@@ -3093,7 +3094,8 @@ public:
 
 	void drawGlyph(const GlyphCluster& gc)
 	{
-		foreach (const GlyphLayout& gl, gc.glyphs()) {
+		for (const GlyphLayout& gl : gc.glyphs())
+		{
 			FPointArray outline = font().glyphOutline(gl.glyph);
 			if (outline.size() < 4)
 				return;
@@ -3140,7 +3142,8 @@ public:
 	}
 	void drawGlyphOutline(const GlyphCluster& gc, bool fill)
 	{
-		foreach (const GlyphLayout& gl, gc.glyphs()) {
+		for (const GlyphLayout& gl : gc.glyphs())
+		{
 			FPointArray outline = font().glyphOutline(gl.glyph);
 			if (outline.size() < 4)
 				return;
@@ -3582,13 +3585,6 @@ bool ScribusView::eventFilter(QObject *obj, QEvent *event)
 	else if (event->type() == QEvent::KeyPress)
 	{
 		QKeyEvent* m = static_cast<QKeyEvent*> (event);
-		/* #12453... what do we use this for?
-		 if(m->key() == Qt::Key_Shift)
-		{
-			m_oldSnapToElem = Doc->SnapElement;
-			m_ScMW->SetSnapElements(false);
-		}
-		*/
 		if (m_canvasMode->handleKeyEvents())
 			m_canvasMode->keyPressEvent(m);
 		else
@@ -3598,10 +3594,6 @@ bool ScribusView::eventFilter(QObject *obj, QEvent *event)
 	else if (event->type() == QEvent::KeyRelease)
 	{
 		QKeyEvent* m = static_cast<QKeyEvent*> (event);
-		/* #12453... what do we use this for?
-		if(m->key() == Qt::Key_Shift)
-			m_ScMW->SetSnapElements(m_oldSnapToElem);
-		*/
 		if (m_canvasMode->handleKeyEvents())
 			m_canvasMode->keyReleaseEvent(m);
 		else

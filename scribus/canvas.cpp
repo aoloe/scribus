@@ -1167,11 +1167,11 @@ void Canvas::drawControlsMovingItemsRect(QPainter* pp)
 {
 	if (m_doc->m_Selection->count() != 0)
 	{
-		uint selectedItemCount = m_doc->m_Selection->count();
-		PageItem *currItem = m_doc->m_Selection->itemAt(0);
+		int selectedItemCount = m_doc->m_Selection->count();
+		PageItem *currItem = NULL;
 		if (selectedItemCount < moveWithBoxesOnlyThreshold)
 		{
-			for (uint cu = 0; cu < selectedItemCount; cu++)
+			for (int cu = 0; cu < selectedItemCount; cu++)
 			{
 				currItem = m_doc->m_Selection->itemAt(cu);
 				pp->save();
@@ -1183,10 +1183,10 @@ void Canvas::drawControlsMovingItemsRect(QPainter* pp)
 				{
 					PageItem_Group* gItem = currItem->asGroupFrame();
 					pp->scale(gItem->width() / gItem->groupWidth, gItem->height() / gItem->groupHeight);
-					uint itemCountG = gItem->groupItemList.count();
+					int itemCountG = gItem->groupItemList.count();
 					if (itemCountG < moveWithFullOutlinesThreshold)
 					{
-						for (uint cg = 0; cg < itemCountG; cg++)
+						for (int cg = 0; cg < itemCountG; cg++)
 						{
 							currItem = gItem->groupItemList.at(cg);
 							if (!(currItem->asLine()))
@@ -1467,7 +1467,7 @@ void Canvas::DrawPageItems(ScPainter *painter, ScLayer& layer, QRect clip, bool 
 	//then we must be sure that text frames are valid and all notes frames are created before we start drawing
 	if (!notesFramesPass && !m_doc->notesList().isEmpty())
 	{
-		for (QList<PageItem*>::iterator it = m_doc->Items->begin(); it != m_doc->Items->end(); ++it)
+		for (auto it = m_doc->Items->begin(); it != m_doc->Items->end(); ++it)
 		{
 			PageItem* currItem = *it;
 			if ( !currItem->isTextFrame()
@@ -2596,7 +2596,8 @@ void Canvas::setupEditHRuler(PageItem * item, bool forceAndReset)
 			+ item->currentStyle().rightMargin()	* 9.0
 			+ (item->imageFlippedH() ? 32.32 : 13.13);
 	
-	foreach(const ParagraphStyle::TabRecord& tabrec, item->currentStyle().tabValues())
+	const ParagraphStyle& currParaStyle = item->currentStyle();
+	for (const ParagraphStyle::TabRecord& tabrec : currParaStyle.tabValues())
 	{
 		controlHash += tabrec.tabPosition;
 	}

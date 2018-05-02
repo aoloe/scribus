@@ -563,7 +563,7 @@ void ScribusMainWindow::initDefaultValues()
 			continue;
 		if (osgDB::queryPlugin(*itr, infoList))
 		{
-			for(osgDB::ReaderWriterInfoList::iterator rwi_itr = infoList.begin(); rwi_itr != infoList.end(); ++rwi_itr)
+			for (auto rwi_itr = infoList.begin(); rwi_itr != infoList.end(); ++rwi_itr)
 			{
 				osgDB::ReaderWriterInfo& info = *(*rwi_itr);
 				osgDB::ReaderWriter::FormatDescriptionMap::iterator fdm_itr;
@@ -763,7 +763,6 @@ void ScribusMainWindow::initScrapbook()
 	connect(ScCore->fileWatcher, SIGNAL(dirChanged(QString )), scrapbookPalette, SLOT(reloadLib(QString )));
 	connect(ScCore->fileWatcher, SIGNAL(dirDeleted(QString )), scrapbookPalette, SLOT(closeOnDel(QString )));
 }
-
 
 bool ScribusMainWindow::warningVersion(QWidget *parent)
 {
@@ -2432,7 +2431,7 @@ void ScribusMainWindow::windowsMenuAboutToShow()
 {
 	if (!scrWindowsActions.isEmpty())
 	{
-		for (QMap<QString, QPointer<ScrAction> >::iterator it = scrWindowsActions.begin(); it != scrWindowsActions.end(); ++it)
+		for (auto it = scrWindowsActions.begin(); it != scrWindowsActions.end(); ++it)
 		{
 			scrMenuMgr->removeMenuItem(it.key(), it.value(), "Windows");
 		}
@@ -3784,7 +3783,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		doc->reformPages();
 		doc->refreshGuides();
 		doc->setLoading(false);
-		for (QList<PageItem*>::iterator itm = doc->MasterItems.begin(); itm != doc->MasterItems.end(); ++itm)
+		for (auto itm = doc->MasterItems.begin(); itm != doc->MasterItems.end(); ++itm)
 		{
 			PageItem* ite = *itm;
 			// TODO fix that for Groups on Masterpages
@@ -3797,7 +3796,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		/*QTime t;
 		t.start();*/
 		doc->flag_Renumber = false;
-		for (QList<PageItem*>::iterator iti = doc->Items->begin(); iti != doc->Items->end(); ++iti)
+		for (auto iti = doc->Items->begin(); iti != doc->Items->end(); ++iti)
 		{
 			PageItem* ite = *iti;
 			if((ite->nextInChain() == NULL) && !ite->isNoteFrame())  //do not layout notes frames
@@ -3809,7 +3808,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 			doc->updateMarks(true);
 			doc->setLoading(false);
 		}
-		for (QHash<int, PageItem*>::iterator itf = doc->FrameItems.begin(); itf != doc->FrameItems.end(); ++itf)
+		for (auto itf = doc->FrameItems.begin(); itf != doc->FrameItems.end(); ++itf)
 		{
 			PageItem *ite = itf.value();
 //			qDebug() << QString("load F: %1 %2 %3").arg(azz).arg((uint)ite).arg(ite->itemType());
@@ -5249,12 +5248,12 @@ void ScribusMainWindow::slotOnlineHelpClosed()
 
 void ScribusMainWindow::slotResourceManager()
 {
-	if (!resourceManager)
+	if (!resourceManager) // in case its allocated???? maybe can remove in future
 	{
 		resourceManager=new ResourceManager(this);
 		resourceManager->exec();
 		resourceManager->deleteLater();
-		resourceManager=0;
+		resourceManager=NULL;
 	}
 }
 
@@ -7135,7 +7134,7 @@ void ScribusMainWindow::reallySaveAsEps()
 }
 
 bool ScribusMainWindow::getPDFDriver(const QString &filename, const QString &name, int components, const std::vector<int> & pageNumbers,
-									 const QMap<int,QPixmap> & thumbs, QString& error, bool* cancelled)
+									 const QMap<int, QImage>& thumbs, QString& error, bool* cancelled)
 {
 	ScCore->fileWatcher->forceScan();
 	ScCore->fileWatcher->stop();
@@ -7225,7 +7224,7 @@ void ScribusMainWindow::doSaveAsPDF()
 	QString pageString(dia.getPagesString());
 	std::vector<int> pageNs;
 	uint pageNumbersSize;
-	QMap<int,QPixmap> allThumbs, thumbs;
+	QMap<int, QImage> allThumbs, thumbs;
 	int components = dia.colorSpaceComponents();
 	QString nam(dia.cmsDescriptor());
 	QString fileName = doc->pdfOptions().fileName;
@@ -7249,14 +7248,14 @@ void ScribusMainWindow::doSaveAsPDF()
 	pageNumbersSize = pageNs.size();
 	for (uint i = 0; i < pageNumbersSize; ++i)
 	{
-		QPixmap pm(10, 10);
+		QImage thumb(10, 10, QImage::Format_ARGB32_Premultiplied);
 		if (doc->pdfOptions().Thumbnails)
 		{
 			// No need to load full res images for drawing small thumbnail
-			PageToPixmapFlags flags = Pixmap_DontReloadImages;
-			pm = QPixmap::fromImage(view->PageToPixmap(pageNs[i] - 1, 100, flags));
+			PageToPixmapFlags flags = Pixmap_DontReloadImages | Pixmap_DrawWhiteBackground;
+			thumb = view->PageToPixmap(pageNs[i] - 1, 100, flags);
 		}
-		allThumbs.insert(pageNs[i], pm);
+		allThumbs.insert(pageNs[i], thumb);
 	}
 	if (cmsCorr)
 	{
@@ -7279,10 +7278,10 @@ void ScribusMainWindow::doSaveAsPDF()
 			pageNs2.clear();
 			pageNs2.push_back(pageNs[aa]);
 			pageNumbersSize = pageNs2.size();
-			QPixmap pm(10,10);
+			QImage thumb(10, 10, QImage::Format_ARGB32_Premultiplied);
 			if (doc->pdfOptions().Thumbnails)
-				pm = allThumbs[pageNs[aa]];
-			thumbs.insert(1, pm);
+				thumb = allThumbs[pageNs[aa]];
+			thumbs.insert(1, thumb);
 			QString realName = QDir::toNativeSeparators(path+"/"+name+ tr("-Page%1").arg(pageNs[aa], 3, 10, QChar('0'))+"."+ext);
 			if (!getPDFDriver(realName, nam, components, pageNs2, thumbs, errorMsg, &cancelled))
 			{
@@ -7700,7 +7699,7 @@ void ScribusMainWindow::editMasterPagesStart(QString temp)
 	if (!HaveDoc)
 		return;
 	m_pagePalVisible = pagePalette->isVisible();
-	QString mpName = "";
+	QString mpName;
 	if (temp.isEmpty())
 		mpName = doc->currentPage()->MPageNam;
 	else
@@ -8027,8 +8026,7 @@ void ScribusMainWindow::restoreAddPage(SimpleState *state, bool isUndo)
 		}
 		for (int i = delFrom - 1; i < delTo; ++i)
 		{
-			UndoObject *tmp = m_undoManager->replaceObject(
-					state->getUInt(QString("Page%1").arg(i)), doc->Pages->at(i));
+			UndoObject *tmp = m_undoManager->replaceObject(state->getUInt(QString("Page%1").arg(i)), doc->Pages->at(i));
 			delete tmp;
 		}
 	}
@@ -8092,7 +8090,10 @@ QString ScribusMainWindow::CFileDialog(QString workingDirectory, QString dialogC
 	CustomFDialog *dia = new CustomFDialog(qApp->activeWindow(), workingDirectory, dialogCaption, fileFilter, optionFlags);
 	if (!defaultFilename.isEmpty())
 	{
-		QFileInfo f(defaultFilename);
+		QString tmpFileName = defaultFilename;
+		if (tmpFileName.endsWith(".gz", Qt::CaseInsensitive))
+			tmpFileName.chop(3);
+		QFileInfo f(tmpFileName);
 		dia->setExtension(f.suffix());
 		dia->setZipExtension(f.suffix() + ".gz");
 		dia->setSelection(defaultFilename);

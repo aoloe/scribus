@@ -161,7 +161,7 @@ void PropertiesPalette_XYZ::setDoc(ScribusDoc *d)
 	}
 
 	m_doc  = d;
-	m_item = NULL;
+	m_item = nullptr;
 	m_unitRatio   = m_doc->unitRatio();
 	m_unitIndex   = m_doc->unitIndex();
 	int precision = unitGetPrecisionFromIndex(m_unitIndex);
@@ -172,7 +172,7 @@ void PropertiesPalette_XYZ::setDoc(ScribusDoc *d)
 	m_haveDoc = true;
 	m_haveItem = false;
 
-	QMap<QString, double>* docConstants = m_doc? &m_doc->constants()  : NULL;
+	QMap<QString, double>* docConstants = m_doc? &m_doc->constants()  : nullptr;
 	xposSpin->setValues( minXYVal, maxXYWHVal, precision, minXYVal);
 	xposSpin->setConstants(docConstants);
 	yposSpin->setValues( minXYVal, maxXYWHVal, precision, minXYVal);
@@ -438,7 +438,7 @@ void PropertiesPalette_XYZ::handleSelectionChanged()
 			m_ScMW->view->RCenter = FPoint(gx + gw / 2.0, gy + gh / 2.0);
 		else if (bp == 3)
 			m_ScMW->view->RCenter = FPoint(gx, gy + gh);
-		else if (bp == 0)
+		else if (bp == 4)
 			m_ScMW->view->RCenter = FPoint(gx + gw, gy + gh);
 		xposLabel->setText( tr( "&X-Pos:" ) );
 		yposLabel->setText( tr( "&Y-Pos:" ) );

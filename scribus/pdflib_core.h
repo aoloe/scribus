@@ -66,8 +66,7 @@ friend class PdfPainter;
 public:
 	explicit PDFLibCore(ScribusDoc & docu);
 	~PDFLibCore();
-	bool doExport(const QString& fn, const QString& nam, int Components,
-				  const std::vector<int> & pageNs, const QMap<int,QPixmap> & thumbs);
+	bool doExport(const QString& fn, const QString& nam, int Components, const std::vector<int> & pageNs, const QMap<int, QImage> & thumbs);
 
 	const QString& errorMessage(void) const;
 	bool  exportAborted(void) const;
@@ -117,7 +116,7 @@ private:
 	void PDF_Begin_Colors();
 	void PDF_Begin_Layers();
 	
-	void PDF_Begin_Page(const ScPage* pag, QPixmap pm);
+	void PDF_Begin_Page(const ScPage* pag, const QImage& thumb);
 	void PDF_End_Page();
 	bool PDF_TemplatePage(const ScPage* pag, bool clip = false);
 	bool PDF_ProcessPage(const ScPage* pag, uint PNr, bool clip = false);
@@ -140,11 +139,11 @@ private:
 	bool closeAndCleanup();
 
 	void PDF_Error(const QString& errorMsg);
-	void PDF_Error_WriteFailure(void);
+	void PDF_Error_WriteFailure();
 	void PDF_Error_ImageLoadFailure(const QString& fileName);
 	void PDF_Error_ImageWriteFailure(const QString& fileName);
 	void PDF_Error_MaskLoadFailure(const QString& fileName);
-	void PDF_Error_InsufficientMemory(void);
+	void PDF_Error_InsufficientMemory();
 
 //	QByteArray EncodeUTF16(const QString &in);
 	QByteArray EncStream(const QByteArray & in, PdfId ObjNum);
@@ -223,7 +222,7 @@ private:
 	bool    PDF_Annotation(PageItem *ite, uint PNr);
 	void    PDF_Form(const QByteArray& im);
 	void    PDF_xForm(uint objNr, double w, double h, QByteArray im);
-	bool    PDF_Image(PageItem* c, const QString& fn, double sx, double sy, double x, double y, bool fromAN = false, const QString& Profil = "", bool Embedded = false, eRenderIntent Intent = Intent_Relative_Colorimetric, QByteArray* output = NULL);
+	bool    PDF_Image(PageItem* c, const QString& fn, double sx, double sy, double x, double y, bool fromAN = false, const QString& Profil = "", bool Embedded = false, eRenderIntent Intent = Intent_Relative_Colorimetric, QByteArray* output = nullptr);
 	bool    PDF_EmbeddedPDF(PageItem* c, const QString& fn, double sx, double sy, double x, double y, bool fromAN, ShIm& imgInfo, bool &fatalError);
 #if HAVE_PODOFO
 	void copyPoDoFoObject(const PoDoFo::PdfObject* obj, uint scObjID, QMap<PoDoFo::PdfReference, uint>& importedObjects);

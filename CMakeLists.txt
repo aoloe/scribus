@@ -63,7 +63,7 @@ project(scribus)
 #where VERSION_SUFFIX is of the form "", "svn" or "Nsvn" (N being the minor patch level)
 set (VERSION_MAJOR "1")
 set (VERSION_MINOR "5")
-set (VERSION_PATCH "4")
+set (VERSION_PATCH "5")
 set (VERSION_SUFFIX "svn")
 set (VERSION ${VERSION_MAJOR})
 if (VERSION_MINOR GREATER -1)
@@ -610,7 +610,7 @@ endif()
 ########## Find Dependencies                                                                        ##########
 
 #<< Qt
-set (QT_MIN_VERSION "5.5.0")
+set (QT_MIN_VERSION "5.7.0")
 set(CMAKE_PREFIX_PATH "${QT_PREFIX}/lib/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Qt5Core ${QT_MIN_VERSION} REQUIRED)
@@ -693,9 +693,17 @@ endif()
 
 
 #C++11 Support
-if(WANT_CPP11)
+#as of 1.5.5.svn, require C++11
+#if(WANT_CPP11)
 	message(STATUS "Enabling C++11 compiler features")
 	set(CMAKE_CXX_STANDARD 11)
+#endif()
+if(WANT_CPP14)
+	message(STATUS "Enabling C++14 compiler features")
+	set(CMAKE_CXX_STANDARD 14)
+elseif(WANT_CPP17)
+	    message(STATUS "Enabling C++17 compiler features")
+		set(CMAKE_CXX_STANDARD 17)
 endif()
 
 #<< ZLIB, PNG
@@ -1113,12 +1121,12 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
 	set(CPACK_TOPLEVEL_TAG "")
 	set(CPACK_SOURCE_IGNORE_FILES
 		CMakeCache.txt
-		scribus-1.5.4.tar.bz2
-		scribus-1.5.4.tar.Z
-		scribus-1.5.4.tar.gz
-		scribus-1.5.4.svn.tar.bz2
-		scribus-1.5.4.svn.tar.Z
-		scribus-1.5.4.svn.tar.gz
+		scribus-1.5.5.tar.bz2
+		scribus-1.5.5.tar.Z
+		scribus-1.5.5.tar.gz
+		scribus-1.5.5.svn.tar.bz2
+		scribus-1.5.5.svn.tar.Z
+		scribus-1.5.5.svn.tar.gz
 		"~$"
 		"\\\\.cvsignore$"
 		"\\\\.o$"

@@ -6,7 +6,7 @@ for which a new license (GPL+exception) is in place.
 */
 
 #include "slaoutput.h"
-#include <poppler/cpp/poppler-version.h>
+
 #include <poppler/GlobalParams.h>
 #include <poppler/poppler-config.h>
 #include <poppler/FileSpec.h>
@@ -20,16 +20,10 @@ for which a new license (GPL+exception) is in place.
 #include "util_math.h"
 #include <tiffio.h>
 
-#define POPPLER_VERSION_ENCODE(major, minor, micro) (	\
-	  ((major) * 10000)				\
-	+ ((minor) *   100)				\
-	+ ((micro) *     1))
-#define POPPLER_ENCODED_VERSION POPPLER_VERSION_ENCODE(POPPLER_VERSION_MAJOR, POPPLER_VERSION_MINOR, POPPLER_VERSION_MICRO)
-
 LinkSubmitForm::LinkSubmitForm(Object *actionObj)
 {
 	Object obj1, obj2, obj3;
-	fileName = NULL;
+	fileName = nullptr;
 	m_flags = 0;
 #if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 	if (actionObj->isDict())
@@ -44,7 +38,7 @@ LinkSubmitForm::LinkSubmitForm(Object *actionObj)
 				{
 					if (obj3.isName())
 					{
-						char *name = obj3.getName();
+						POPPLER_CONST char *name = obj3.getName();
 						if (!strcmp(name, "URL"))
 						{
 							obj2 = obj1.dictLookup("F");
@@ -105,7 +99,7 @@ LinkSubmitForm::~LinkSubmitForm()
 LinkImportData::LinkImportData(Object *actionObj)
 {
 	Object obj1, obj3;
-	fileName = NULL;
+	fileName = nullptr;
 #if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 	if (actionObj->isDict())
 	{
@@ -157,8 +151,8 @@ AnoOutputDev::AnoOutputDev(ScribusDoc* doc, QStringList *importedColors)
 	CurrColorFill = CommonStrings::None;
 	CurrColorText = "Black";
 	m_fontSize = 12.0;
-	m_fontName = NULL;
-	m_itemText = NULL;
+	m_fontName = nullptr;
+	m_itemText = nullptr;
 }
 
 void AnoOutputDev::eoFill(GfxState *state)
@@ -285,7 +279,7 @@ SlaOutputDev::SlaOutputDev(ScribusDoc* doc, QList<PageItem*> *Elements, QStringL
 	layerNum = 1;
 	importerFlags = flags;
 	currentLayer = m_doc->activeLayer();
-	xref = NULL;
+	xref = nullptr;
 	m_fontEngine = 0;
 	m_font = 0;
 	m_formWidgets = 0;
@@ -307,7 +301,7 @@ SlaOutputDev::~SlaOutputDev()
 /* get Actions not implemented by Poppler */
 LinkAction* SlaOutputDev::SC_getAction(AnnotWidget *ano)
 {
-	LinkAction *linkAction = NULL;
+	LinkAction *linkAction = nullptr;
 	Object obj;
 	Ref refa = ano->getRef();
 	Object additionalActions;
@@ -366,7 +360,7 @@ LinkAction* SlaOutputDev::SC_getAction(AnnotWidget *ano)
 /* Replacement for the crippled Poppler function LinkAction* AnnotWidget::getAdditionalAction(AdditionalActionsType type) */
 LinkAction* SlaOutputDev::SC_getAdditionalAction(const char *key, AnnotWidget *ano)
 {
-	LinkAction *linkAction = NULL;
+	LinkAction *linkAction = nullptr;
 	Object obj;
 	Ref refa = ano->getRef();
 	Object additionalActions;
@@ -508,8 +502,8 @@ bool SlaOutputDev::handleLinkAnnot(Annot* annota, double xCoor, double yCoor, do
 	QString fileName = "";
 	if (act->getKind() == actionGoTo)
 	{
-		LinkGoTo *gto = (LinkGoTo*)act;
-		LinkDest *dst = gto->getDest();
+		LinkGoTo *gto = (LinkGoTo*) act;
+		POPPLER_CONST LinkDest *dst = gto->getDest();
 		if (dst)
 		{
 			if (dst->getKind() == destXYZ)
@@ -528,7 +522,7 @@ bool SlaOutputDev::handleLinkAnnot(Annot* annota, double xCoor, double yCoor, do
 		}
 		else
 		{
-			GooString *ndst = gto->getNamedDest();
+			POPPLER_CONST GooString *ndst = gto->getNamedDest();
 			if (ndst)
 			{
 				LinkDest *dstn = pdfDoc->findDest(ndst);
@@ -555,7 +549,7 @@ bool SlaOutputDev::handleLinkAnnot(Annot* annota, double xCoor, double yCoor, do
 	{
 		LinkGoToR *gto = (LinkGoToR*)act;
 		fileName = UnicodeParsedString(gto->getFileName());
-		LinkDest *dst = gto->getDest();
+		POPPLER_CONST LinkDest *dst = gto->getDest();
 		if (dst)
 		{
 			if (dst->getKind() == destXYZ)
@@ -568,7 +562,7 @@ bool SlaOutputDev::handleLinkAnnot(Annot* annota, double xCoor, double yCoor, do
 		}
 		else
 		{
-			GooString *ndst = gto->getNamedDest();
+			POPPLER_CONST GooString *ndst = gto->getNamedDest();
 			if (ndst)
 			{
 				LinkDest *dstn = pdfDoc->findDest(ndst);
@@ -709,7 +703,7 @@ bool SlaOutputDev::handleWidgetAnnot(Annot* annota, double xCoor, double yCoor, 
 			bool bgFound = false;
 			if (achar)
 			{
-				AnnotColor *bgCol = achar->getBackColor();
+				POPPLER_CONST AnnotColor *bgCol = achar->getBackColor();
 				if (bgCol)
 				{
 					bgFound = true;
@@ -717,7 +711,7 @@ bool SlaOutputDev::handleWidgetAnnot(Annot* annota, double xCoor, double yCoor, 
 				}
 				else
 					CurrColorFill = CommonStrings::None;
-				AnnotColor *fgCol = achar->getBorderColor();
+				POPPLER_CONST AnnotColor *fgCol = achar->getBorderColor();
 				if (fgCol)
 				{
 					fgFound = true;
@@ -742,9 +736,9 @@ bool SlaOutputDev::handleWidgetAnnot(Annot* annota, double xCoor, double yCoor, 
 				AnoOutputDev *Adev = new AnoOutputDev(m_doc, m_importedColors);
 				Gfx *gfx;
 #ifdef POPPLER_VERSION
-				gfx = new Gfx(pdfDoc, Adev, pdfDoc->getPage(m_actPage)->getResourceDict(), annota->getRect(), NULL);
+				gfx = new Gfx(pdfDoc, Adev, pdfDoc->getPage(m_actPage)->getResourceDict(), annota->getRect(), nullptr);
 #else
-				gfx = new Gfx(xref, Adev, pdfDoc->getPage(m_actPage)->getResourceDict(), catalog, annota->getRect(), NULL);
+				gfx = new Gfx(xref, Adev, pdfDoc->getPage(m_actPage)->getResourceDict(), catalog, annota->getRect(), nullptr);
 #endif
 				ano->draw(gfx, false);
 				if (!bgFound)
@@ -1054,7 +1048,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 			int xco = 0;
 			int yco = 0;
 			LinkGoTo *gto = (LinkGoTo*)Lact;
-			LinkDest *dst = gto->getDest();
+			POPPLER_CONST LinkDest *dst = gto->getDest();
 			if (dst)
 			{
 				if (dst->getKind() == destXYZ)
@@ -1075,7 +1069,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 			}
 			else
 			{
-				GooString *ndst = gto->getNamedDest();
+				POPPLER_CONST GooString *ndst = gto->getNamedDest();
 				if (ndst)
 				{
 					LinkDest *dstn = pdfDoc->findDest(ndst);
@@ -1107,7 +1101,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 			int yco = 0;
 			LinkGoToR *gto = (LinkGoToR*)Lact;
 			QString fileName = UnicodeParsedString(gto->getFileName());
-			LinkDest *dst = gto->getDest();
+			POPPLER_CONST LinkDest *dst = gto->getDest();
 			if (dst)
 			{
 				if (dst->getKind() == destXYZ)
@@ -1123,7 +1117,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 			}
 			else
 			{
-				GooString *ndst = gto->getNamedDest();
+				POPPLER_CONST GooString *ndst = gto->getNamedDest();
 				if (ndst)
 				{
 					LinkDest *dstn = pdfDoc->findDest(ndst);
@@ -1207,7 +1201,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setAAact(true);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("E", ano);
 	if (Aact)
@@ -1221,7 +1215,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setAAact(true);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("X", ano);
 	if (Aact)
@@ -1235,7 +1229,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setAAact(true);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("Fo", ano);
 	if (Aact)
@@ -1249,7 +1243,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setAAact(true);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("Bl", ano);
 	if (Aact)
@@ -1263,7 +1257,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setAAact(true);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("C", ano);
 	if (Aact)
@@ -1277,7 +1271,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setAAact(true);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("F", ano);
 	if (Aact)
@@ -1292,7 +1286,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setFormat(5);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("K", ano);
 	if (Aact)
@@ -1307,7 +1301,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setFormat(5);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 	Aact = SC_getAdditionalAction("V", ano);
 	if (Aact)
@@ -1321,7 +1315,7 @@ void SlaOutputDev::handleActions(PageItem* ite, AnnotWidget *ano)
 				ite->annotation().setAAact(true);
 			}
 		}
-		Aact = NULL;
+		Aact = nullptr;
 	}
 }
 
@@ -2345,9 +2339,9 @@ GBool SlaOutputDev::tilingPatternFill(GfxState *state, Gfx * /*gfx*/, Catalog *c
 	QTransform mmx = mm * m_ctm;
 
 #ifdef POPPLER_VERSION
-	gfx = new Gfx(pdfDoc, this, resDict, &box, NULL);
+	gfx = new Gfx(pdfDoc, this, resDict, &box, nullptr);
 #else
-	gfx = new Gfx(xref, this, resDict, catalog, &box, NULL);
+	gfx = new Gfx(xref, this, resDict, catalog, &box, nullptr);
 #endif
 	inPattern++;
 	gfx->display(str);
@@ -2456,7 +2450,7 @@ void SlaOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str, int 
 #else
 	image = new QImage(width, height, QImage::Format_MonoLSB);
 #endif
-	if (image == NULL || image->isNull())
+	if (image == nullptr || image->isNull())
 	{
 		delete imgStr;
 		delete image;
@@ -2620,7 +2614,7 @@ void SlaOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref, Stream *str
 		colorMap->getRGBLine(pix, dest, width);
 	}
 	image = new QImage(buffer, width, height, QImage::Format_RGB32);
-	if (image == NULL || image->isNull())
+	if (image == nullptr || image->isNull())
 	{
 		delete imgStr;
 		delete[] buffer;
@@ -2763,7 +2757,7 @@ void SlaOutputDev::drawMaskedImage(GfxState *state, Object *ref, Stream *str,  i
 		colorMap->getRGBLine(pix, dest, width);
 	}
 	image = new QImage(buffer, width, height, QImage::Format_RGB32);
-	if (image == NULL || image->isNull())
+	if (image == nullptr || image->isNull())
 	{
 		delete imgStr;
 		delete[] buffer;
@@ -2966,7 +2960,7 @@ void SlaOutputDev::drawImage(GfxState *state, Object *ref, Stream *str, int widt
 			}
 		}
 	}
-	if (image == NULL || image->isNull())
+	if (image == nullptr || image->isNull())
 	{
 		delete imgStr;
 		delete image;
@@ -3001,6 +2995,14 @@ void SlaOutputDev::drawImage(GfxState *state, Object *ref, Stream *str, int widt
 	if ((mm.type() == QTransform::TxShear) || (mm.type() == QTransform::TxRotate))
 	{
 		ite->setImageRotation(-tline.angle());
+		/*QTransform rotMat;
+		rotMat.rotate(tline.angle());
+		QTransform imgMat = m_ctm * rotMat.inverted();
+		double scaleX = sqrt(imgMat.m11() * imgMat.m11() + imgMat.m12() * imgMat.m12());
+		double scaleY = sqrt(imgMat.m21() * imgMat.m21() + imgMat.m22() * imgMat.m22());
+		imgMat.scale(1.0 / scaleX, 1.0 / scaleY);
+		if (!imgMat.isIdentity())
+			img = img.transformed(imgMat);*/
 	}
 	else
 	{
@@ -3318,7 +3320,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 	GfxFontType fontType;
 	SplashOutFontFileID *id;
 	SplashFontFile *fontFile;
-	SplashFontSrc *fontsrc = NULL;
+	SplashFontSrc *fontsrc = nullptr;
 	FoFiTrueType *ff;
 	Object refObj, strObj;
 	GooString *fileName;
@@ -3332,10 +3334,10 @@ void SlaOutputDev::updateFont(GfxState *state)
 	int faceIndex = 0;
 	SplashCoord matrix[6];
 
-	m_font = NULL;
-	fileName = NULL;
-	tmpBuf = NULL;
-	fontLoc = NULL;
+	m_font = nullptr;
+	fileName = nullptr;
+	tmpBuf = nullptr;
+	fontLoc = nullptr;
 
 	if (!(gfxFont = state->getFont())) {
 		goto err1;
@@ -3427,7 +3429,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 				n = 256;
 				delete ff;
 			} else {
-				codeToGID = NULL;
+				codeToGID = nullptr;
 				n = 0;
 			}
 			if (!(fontFile = m_fontEngine->loadTrueTypeFont(
@@ -3460,7 +3462,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 				memcpy(codeToGID, ((GfxCIDFont *)gfxFont)->getCIDToGID(),
 				n * sizeof(int));
 			} else {
-				codeToGID = NULL;
+				codeToGID = nullptr;
 				n = 0;
 			}
 			if (!(fontFile = m_fontEngine->loadOpenTypeCFFFont(
@@ -3476,7 +3478,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 			break;
 		case fontCIDType2:
 		case fontCIDType2OT:
-			codeToGID = NULL;
+			codeToGID = nullptr;
 			n = 0;
 			if (((GfxCIDFont *)gfxFont)->getCIDToGID()) {
 				n = ((GfxCIDFont *)gfxFont)->getCIDToGIDLen();
@@ -3551,7 +3553,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 	GfxFontType fontType;
 	SplashOutFontFileID *id;
 	SplashFontFile *fontFile;
-	SplashFontSrc *fontsrc = NULL;
+	SplashFontSrc *fontsrc = nullptr;
 	FoFiTrueType *ff;
 	Ref embRef;
 	Object refObj, strObj;
@@ -3567,9 +3569,9 @@ void SlaOutputDev::updateFont(GfxState *state)
 	int faceIndex = 0;
 	SplashCoord matrix[6];
 
-	m_font = NULL;
-	fileName = NULL;
-	tmpBuf = NULL;
+	m_font = nullptr;
+	fileName = nullptr;
+	tmpBuf = nullptr;
 
 	if (!(gfxFont = state->getFont()))
 		goto err1;
@@ -3596,7 +3598,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 		else if (!(fileName = gfxFont->getExtFontFile()))
 		{
 			// look for a display font mapping or a substitute font
-			dfp = NULL;
+			dfp = nullptr;
 			if (gfxFont->getName())
 			{
 				dfp = globalParams->getDisplayFont(gfxFont);
@@ -3662,7 +3664,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 				}
 				else
 				{
-					codeToGID = NULL;
+					codeToGID = nullptr;
 					n = 0;
 				}
 				if (!(fontFile = m_fontEngine->loadTrueTypeFont( id, fontsrc, codeToGID, n)))
@@ -3688,7 +3690,7 @@ void SlaOutputDev::updateFont(GfxState *state)
 			break;
 		case fontCIDType2:
 		case fontCIDType2OT:
-			codeToGID = NULL;
+			codeToGID = nullptr;
 			n = 0;
 			if (((GfxCIDFont *)gfxFont)->getCIDToGID())
 			{
@@ -4031,7 +4033,7 @@ QString SlaOutputDev::getColor(GfxColorSpace *color_space, GfxColor *color, int 
 	return fNam;
 }
 
-QString SlaOutputDev::getAnnotationColor(AnnotColor *color)
+QString SlaOutputDev::getAnnotationColor(const AnnotColor *color)
 {
 	QString fNam;
 	QString namPrefix = "FromPDF";
@@ -4251,7 +4253,7 @@ void SlaOutputDev::pushGroup(QString maskName, GBool forSoftMask, GBool alpha, b
 	m_groupStack.push(gElements);
 }
 
-QString SlaOutputDev::UnicodeParsedString(const GooString *s1)
+QString SlaOutputDev::UnicodeParsedString(POPPLER_CONST GooString *s1)
 {
 	if ( !s1 || s1->getLength() == 0 )
 		return QString();

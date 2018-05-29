@@ -415,7 +415,7 @@ public:
 	 * @param color color of the marker
 	 * @return Success or failure
 	 */
-	bool setLayerMarker(const int layerID, QColor color);
+	bool setLayerMarker(const int layerID, const QColor& color);
 	/**
 	 * @brief returns the layer marker color
 	 * @param layerID ID of the layer
@@ -590,7 +590,7 @@ public:
 		ResourceCollection m_newNames;
 	};
 	void replaceNamedResources(ResourceCollection& newNames);
-	bool styleExists(QString styleName);
+	bool styleExists(const QString& styleName);
 	
 	QList<int> getSortedStyleList();
 	QList<int> getSortedCharStyleList();
@@ -705,13 +705,13 @@ public:
 	*/
 	QStringList getUsedPatterns() const;
 	QStringList getUsedPatternsSelection(Selection* customSelection) const;
-	QStringList getUsedPatternsHelper(QString pattern, QStringList &results) const;
-	QStringList getPatternDependencyList(QStringList used) const;
+	QStringList getUsedPatternsHelper(const QString& pattern, QStringList &results) const;
+	QStringList getPatternDependencyList(const QStringList& used) const;
 	/*!
 	* @brief Builds a QStringList of the symbols used within the document
 	*/
 	QStringList getUsedSymbols() const;
-	QStringList getUsedSymbolsHelper(QString pattern, QStringList &results) const;
+	QStringList getUsedSymbolsHelper(const QString& pattern, QStringList &results) const;
 
 	/*!
 	* @brief Check if document use Acrobat Form Fields
@@ -1011,7 +1011,7 @@ public:
 	 * @param y Yellow component
 	 * @param k Black component
 	 */
-	void insertColor(QString nam, double c, double m, double y, double k);
+	void insertColor(const QString& name, double c, double m, double y, double k);
 	
 	QMap<QString, double>& constants() { return m_constants; }
 	/**
@@ -1175,7 +1175,7 @@ public:
 	void adjustItemSize(PageItem *currItem, bool includeGroup = false, bool moveInGroup = true);
 	void moveGroup(double x, double y, Selection* customSelection = nullptr);
 	void rotateGroup(double angle, Selection* customSelection = nullptr);
-	void rotateGroup(double angle, FPoint RCenter, Selection* customSelection = nullptr);
+	void rotateGroup(double angle, const FPoint& RCenter, Selection* customSelection = nullptr);
 	void scaleGroup(double scx, double scy, bool scaleText=true, Selection* customSelection = nullptr, bool scaleLine = false);
 	//! \brief Get a list of frames of certain type
 	QHash<PageItem*, QString> getDocItemNames(PageItem::ItemType itemType);
@@ -1670,9 +1670,9 @@ public slots:
 	void undoRedoDone();
 
 	void updatePic();
-	void updatePict(QString name);
-	void updatePictDir(QString name);
-	void removePict(QString name);
+	void updatePict(const QString& name);
+	void updatePictDir(const QString& name);
+	void removePict(const QString& name);
 
 // Marks and notes
 public:
@@ -1818,8 +1818,8 @@ public:
 	QMap<QString, NumStruct*> numerations;
 	QStringList orgNumNames; //orgNumerations keeps original settings read from paragraph styles for reset settings overrided localy
 	void setupNumerations(); //read styles for used auto-numerations, initialize numCounters
-	QString getNumberStr(QString numName, int level, bool reset, const ParagraphStyle &style);
-	void setNumerationCounter(QString numName, int level, int number);
+	QString getNumberStr(const QString& numName, int level, bool reset, const ParagraphStyle &style);
+	void setNumerationCounter(const QString& numName, int level, int number);
 	bool flag_Renumber;
 	bool flag_NumUpdateRequest;
 	// for local numeration of paragraphs

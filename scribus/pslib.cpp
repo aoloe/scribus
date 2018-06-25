@@ -157,7 +157,7 @@ void PSPainter::drawGlyphOutline(const GlyphCluster& gc, bool fill)
 			m_ps->PS_showSub(gl.glyph, m_ps->FontSubsetMap[font().scName()], fontSize(), false);
 			m_ps->SetColor(strokeColor().color, strokeColor().shade, &h, &s, &v, &k);
 			m_ps->PS_setcmykcolor_stroke(h, s, v, k);
-			m_ps->SetClipPath(&gly, true);
+			m_ps->SetClipPath(gly, true);
 			m_ps->PS_closepath();
 			m_ps->putColor(strokeColor().color, strokeColor().shade, false);
 			m_ps->PS_restore();
@@ -219,10 +219,10 @@ PSLib::PSLib(PrintOptions &options, bool psart, SCFonts &AllFonts, QMap<QString,
 {
 	Options = options;
 	optimization = OptimizeCompat;
-	usingGUI=ScCore->usingGUI();
-	abortExport=false;
-	QStringList wt;
-	Seiten = 0;
+	m_Doc = nullptr;
+	progressDialog = nullptr;
+	abortExport = false;
+	PageIndex = 0;
 	User = "";
 	Creator = "Scribus" + QString(VERSION);
 	Titel = "";
@@ -396,6 +396,12 @@ PSLib::PSLib(PrintOptions &options, bool psart, SCFonts &AllFonts, QMap<QString,
 	if ((Options.cropMarks) || (Options.bleedMarks) || (Options.registrationMarks) || (Options.colorMarks))
 		Prolog += "/rb { [ /Separation (All)\n/DeviceCMYK { dup 0 mul exch dup 0 mul exch dup 0 mul exch 1 mul }\n] setcolorspace setcolor} bind def\n";
 	Prolog += "%%EndProlog\n";
+}
+
+PSLib::~PSLib()
+{
+	if (progressDialog)
+		progressDialog->deleteLater();
 }
 
 void PSLib::PutStream(const QString& c)
@@ -686,8 +692,8 @@ void PSLib::PS_begin_page(ScPage* pg, MarginStruct* Ma, bool Clipping)
 	GetBleeds(pg, bleedLeft, bleedRight);
 	double maxBoxX = pg->width()+bleedLeft+bleedRight+markOffs*2.0;
 	double maxBoxY = pg->height()+Options.bleeds.bottom()+Options.bleeds.top()+markOffs*2.0;
-	Seiten++;
-	PutStream("%%Page: " + IToStr(Seiten) + " " + IToStr(Seiten) + "\n");
+	PageIndex++;
+	PutStream("%%Page: " + IToStr(PageIndex) + " " + IToStr(PageIndex) + "\n");
 	if (psExport)
 	{
 		if (pg->orientation() == 0)
@@ -1102,7 +1108,7 @@ void PSLib::PS_showSub(uint chr, QString font, double size, bool stroke)
 	PutStream(stroke ? "shgs\n" : "shgf\n");
 }
 
-bool PSLib::PS_ImageData(PageItem *c, QString fn, QString Name, QString Prof, bool UseEmbedded)
+bool PSLib::PS_ImageData(PageItem *item, QString fn, QString Name, QString Prof, bool UseEmbedded)
 {
 	bool dummy;
 	QByteArray tmp;
@@ -1110,7 +1116,7 @@ bool PSLib::PS_ImageData(PageItem *c, QString fn, QString Name, QString Prof, bo
 	QString ext = fi.suffix().toLower();
 	if (ext.isEmpty())
 		ext = getImageType(fn);
-	if (extensionIndicatesEPS(ext) && (c->pixm.imgInfo.type != ImageType7))
+	if (extensionIndicatesEPS(ext) && (item->pixm.imgInfo.type != ImageType7))
 	{
 		if (loadRawText(fn, tmp))
 		{
@@ -1138,28 +1144,28 @@ bool PSLib::PS_ImageData(PageItem *c, QString fn, QString Name, QString Prof, bo
 	image.imgInfo.clipPath = "";
 	image.imgInfo.PDSpathData.clear();
 	image.imgInfo.layerInfo.clear();
-	image.imgInfo.RequestProps = c->pixm.imgInfo.RequestProps;
-	image.imgInfo.isRequest = c->pixm.imgInfo.isRequest;
-	CMSettings cms(c->doc(), Prof, c->IRender);
+	image.imgInfo.RequestProps = item->pixm.imgInfo.RequestProps;
+	image.imgInfo.isRequest = item->pixm.imgInfo.isRequest;
+	CMSettings cms(item->doc(), Prof, item->IRender);
 	cms.allowColorManagement(true);
 	cms.setUseEmbeddedProfile(UseEmbedded);
-	if (!image.loadPicture(fn, c->pixm.imgInfo.actualPageNumber, cms, ScImage::CMYKData, 300, &dummy))
+	if (!image.loadPicture(fn, item->pixm.imgInfo.actualPageNumber, cms, ScImage::CMYKData, 300, &dummy))
 	{
 		PS_Error_ImageLoadFailure(fn);
 		return false;
 	}
-	image.applyEffect(c->effectsInUse, colorsToUse, true);
+	image.applyEffect(item->effectsInUse, colorsToUse, true);
 	QByteArray maskArray;
-	if (c->pixm.imgInfo.type != ImageType7)
+	if (item->pixm.imgInfo.type != ImageType7)
 	{
-		bool alphaLoaded = image.getAlpha(fn, c->pixm.imgInfo.actualPageNumber, maskArray, false, true, 300);
+		bool alphaLoaded = image.getAlpha(fn, item->pixm.imgInfo.actualPageNumber, maskArray, false, true, 300);
 		if (!alphaLoaded)
 		{
 			PS_Error_MaskLoadFailure(fn);
 			return false;
 		}
 	}
-	if ((maskArray.size() > 0) && (c->pixm.imgInfo.type != ImageType7))
+	if ((maskArray.size() > 0) && (item->pixm.imgInfo.type != ImageType7))
 	{
 		PutStream("currentfile /ASCII85Decode filter /FlateDecode filter /ReusableStreamDecode filter\n");
 		if (!PutImageToStream(image, maskArray, -1))
@@ -1183,24 +1189,25 @@ bool PSLib::PS_ImageData(PageItem *c, QString fn, QString Name, QString Prof, bo
 	return true;
 }
 
-bool PSLib::PS_image(PageItem *c, double x, double y, QString fn, double scalex, double scaley, QString Prof, bool UseEmbedded, QString Name)
+bool PSLib::PS_image(PageItem *item, double x, double y, QString fn, double scalex, double scaley, QString Prof, bool UseEmbedded, QString Name)
 {
 	bool dummy;
 	QByteArray tmp;
+
 	QFileInfo fi = QFileInfo(fn);
 	QString ext = fi.suffix().toLower();
 	if (ext.isEmpty())
 		ext = getImageType(fn);
-	if (extensionIndicatesEPS(ext) && (c->pixm.imgInfo.type != ImageType7))
+	if (extensionIndicatesEPS(ext) && (item->pixm.imgInfo.type != ImageType7))
 	{
 		if (loadRawText(fn, tmp))
 		{
 			PutStream("bEPS\n");
 			PutStream(ToStr(PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 72.0 * scalex) + " " + ToStr(PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 72.0 * scaley) + " sc\n");
-			PutStream(ToStr(-c->BBoxX+x * scalex) + " " + ToStr(y * scalex) + " tr\n");
-			int h = c->pixm.height();
+			PutStream(ToStr(-item->BBoxX+x * scalex) + " " + ToStr(y * scalex) + " tr\n");
+			int h = item->pixm.height();
 			PutStream("0 " + ToStr(h*scaley) + " tr\n");
-			PutStream(ToStr(-c->imageRotation()) + " ro\n");
+			PutStream(ToStr(-item->imageRotation()) + " ro\n");
 			PutStream("0 " + ToStr(-h*scaley) + " tr\n");
 			if (!Name.isEmpty())
 			{
@@ -1226,129 +1233,127 @@ bool PSLib::PS_image(PageItem *c, double x, double y, QString fn, double scalex,
 		}
 		return false;
 	}
-	else
+
+	ScImage image;
+	image.imgInfo.valid = false;
+	image.imgInfo.clipPath = "";
+	image.imgInfo.PDSpathData.clear();
+	image.imgInfo.layerInfo.clear();
+	image.imgInfo.RequestProps = item->pixm.imgInfo.RequestProps;
+	image.imgInfo.isRequest = item->pixm.imgInfo.isRequest;
+	CMSettings cms(item->doc(), Prof, item->IRender);
+	cms.allowColorManagement(true);
+	cms.setUseEmbeddedProfile(UseEmbedded);
+	int resolution = 300;
+	if (item->asLatexFrame())
+		resolution = item->asLatexFrame()->realDpi();
+	else if (item->pixm.imgInfo.type == ImageType7)
+		resolution = 72;
+//	int resolution = (item->pixm.imgInfo.type == ImageType7) ? 72 : 300;
+	if ( !image.loadPicture(fn, item->pixm.imgInfo.actualPageNumber, cms, ScImage::CMYKData, resolution, &dummy) )
 	{
-		ScImage image;
-		image.imgInfo.valid = false;
-		image.imgInfo.clipPath = "";
-		image.imgInfo.PDSpathData.clear();
-		image.imgInfo.layerInfo.clear();
-		image.imgInfo.RequestProps = c->pixm.imgInfo.RequestProps;
-		image.imgInfo.isRequest = c->pixm.imgInfo.isRequest;
-		CMSettings cms(c->doc(), Prof, c->IRender);
-		cms.allowColorManagement(true);
-		cms.setUseEmbeddedProfile(UseEmbedded);
-		int resolution = 300;
-		if (c->asLatexFrame())
-			resolution = c->asLatexFrame()->realDpi();
-		else if (c->pixm.imgInfo.type == ImageType7)
-			resolution = 72;
-//		int resolution = (c->pixm.imgInfo.type == ImageType7) ? 72 : 300;
-		if ( !image.loadPicture(fn, c->pixm.imgInfo.actualPageNumber, cms, ScImage::CMYKData, resolution, &dummy) )
+		PS_Error_ImageLoadFailure(fn);
+		return false;
+	}
+	image.applyEffect(item->effectsInUse, colorsToUse, true);
+	int w = image.width();
+	int h = image.height();
+	PutStream(ToStr(x*scalex) + " " + ToStr(y*scaley) + " tr\n");
+	PutStream("0 " + ToStr(h*scaley) + " tr\n");
+	PutStream(ToStr(-item->imageRotation()) + " ro\n");
+	PutStream("0 " + ToStr(-h*scaley) + " tr\n");
+	if ((extensionIndicatesPDF(ext)) && (!item->asLatexFrame()))
+	{
+		scalex *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
+		scaley *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
+	}
+//	PutStream(ToStr(x*scalex) + " " + ToStr(y*scaley) + " tr\n");
+	PutStream(ToStr(qRound(scalex*w)) + " " + ToStr(qRound(scaley*h)) + " sc\n");
+	PutStream(((!DoSep) && (!GraySc)) ? "/DeviceCMYK setcolorspace\n" : "/DeviceGray setcolorspace\n");
+	QByteArray maskArray;
+	ScImage img2;
+	img2.imgInfo.clipPath = "";
+	img2.imgInfo.PDSpathData.clear();
+	img2.imgInfo.layerInfo.clear();
+	img2.imgInfo.RequestProps = item->pixm.imgInfo.RequestProps;
+	img2.imgInfo.isRequest = item->pixm.imgInfo.isRequest;
+	if (item->pixm.imgInfo.type != ImageType7)
+	{
+		bool alphaLoaded = img2.getAlpha(fn, item->pixm.imgInfo.actualPageNumber, maskArray, false, true, resolution);
+		if (!alphaLoaded)
 		{
-			PS_Error_ImageLoadFailure(fn);
+			PS_Error_MaskLoadFailure(fn);
 			return false;
 		}
-		image.applyEffect(c->effectsInUse, colorsToUse, true);
-		int w = image.width();
-		int h = image.height();
-		PutStream(ToStr(x*scalex) + " " + ToStr(y*scaley) + " tr\n");
-		PutStream("0 " + ToStr(h*scaley) + " tr\n");
-		PutStream(ToStr(-c->imageRotation()) + " ro\n");
-		PutStream("0 " + ToStr(-h*scaley) + " tr\n");
-		if ((extensionIndicatesPDF(ext)) && (!c->asLatexFrame()))
+	}
+ 	if ((maskArray.size() > 0) && (item->pixm.imgInfo.type != ImageType7))
+ 	{
+		int plate = DoSep ? Plate : (GraySc ? -2 : -1);
+		// JG - Experimental code using Type3 image instead of patterns
+		PutStream("<< /ImageType 3\n");
+		PutStream("   /DataDict <<\n");
+		PutStream("      /ImageType 1\n");
+		PutStream("      /Width  " + IToStr(w) + "\n");
+		PutStream("      /Height " + IToStr(h) + "\n");
+		PutStream("      /BitsPerComponent 8\n");
+		PutStream( (GraySc || DoSep) ? "      /Decode [1 0]\n" : "      /Decode [0 1 0 1 0 1 0 1]\n");
+		PutStream("      /ImageMatrix [" + IToStr(w) + " 0 0 " + IToStr(-h) + " 0 " + IToStr(h) + "]\n");
+		if (Name.length() > 0)
+			PutStream("      /DataSource "+PSEncode(Name)+"Bild\n");
+		else
+			PutStream("      /DataSource currentfile /ASCII85Decode filter /FlateDecode filter\n");
+		PutStream("      >>\n");
+		PutStream("   /MaskDict <<\n");
+		PutStream("      /ImageType 1\n");
+		PutStream("      /Width  " + IToStr(w) + "\n");
+		PutStream("      /Height " + IToStr(h) + "\n");
+		PutStream("      /BitsPerComponent 8\n");
+		PutStream("      /Decode [1 0]\n");
+		PutStream("      /ImageMatrix [" + IToStr(w) + " 0 0 " + IToStr(-h) + " 0 " + IToStr(h) + "]\n");
+		PutStream("      >>\n");
+		PutStream("   /InterleaveType 1\n");
+		PutStream(">>\n");
+		PutStream("image\n");
+		if (Name.isEmpty())
 		{
-			scalex *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
-			scaley *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
-		}
-//		PutStream(ToStr(x*scalex) + " " + ToStr(y*scaley) + " tr\n");
-		PutStream(ToStr(qRound(scalex*w)) + " " + ToStr(qRound(scaley*h)) + " sc\n");
-		PutStream(((!DoSep) && (!GraySc)) ? "/DeviceCMYK setcolorspace\n" : "/DeviceGray setcolorspace\n");
-		QByteArray maskArray;
-		ScImage img2;
-		img2.imgInfo.clipPath = "";
-		img2.imgInfo.PDSpathData.clear();
-		img2.imgInfo.layerInfo.clear();
-		img2.imgInfo.RequestProps = c->pixm.imgInfo.RequestProps;
-		img2.imgInfo.isRequest = c->pixm.imgInfo.isRequest;
-		if (c->pixm.imgInfo.type != ImageType7)
-		{
-			bool alphaLoaded = img2.getAlpha(fn, c->pixm.imgInfo.actualPageNumber, maskArray, false, true, resolution);
-			if (!alphaLoaded)
+			if (!PutImageToStream(image, maskArray, plate))
 			{
-				PS_Error_MaskLoadFailure(fn);
+				PS_Error_ImageDataWriteFailure();
 				return false;
-			}
-		}
- 		if ((maskArray.size() > 0) && (c->pixm.imgInfo.type != ImageType7))
- 		{
-			int plate = DoSep ? Plate : (GraySc ? -2 : -1);
-			// JG - Experimental code using Type3 image instead of patterns
-			PutStream("<< /ImageType 3\n");
-			PutStream("   /DataDict <<\n");
-			PutStream("      /ImageType 1\n");
-			PutStream("      /Width  " + IToStr(w) + "\n");
-			PutStream("      /Height " + IToStr(h) + "\n");
-			PutStream("      /BitsPerComponent 8\n");
-			PutStream( (GraySc || DoSep) ? "      /Decode [1 0]\n" : "      /Decode [0 1 0 1 0 1 0 1]\n");
-			PutStream("      /ImageMatrix [" + IToStr(w) + " 0 0 " + IToStr(-h) + " 0 " + IToStr(h) + "]\n");
-			if (Name.length() > 0)
-				PutStream("      /DataSource "+PSEncode(Name)+"Bild\n");
-			else
-			    PutStream("      /DataSource currentfile /ASCII85Decode filter /FlateDecode filter\n");
-			PutStream("      >>\n");
-			PutStream("   /MaskDict <<\n");
-			PutStream("      /ImageType 1\n");
-			PutStream("      /Width  " + IToStr(w) + "\n");
-			PutStream("      /Height " + IToStr(h) + "\n");
-			PutStream("      /BitsPerComponent 8\n");
-			PutStream("      /Decode [1 0]\n");
-			PutStream("      /ImageMatrix [" + IToStr(w) + " 0 0 " + IToStr(-h) + " 0 " + IToStr(h) + "]\n");
-			PutStream("      >>\n");
-			PutStream("   /InterleaveType 1\n");
-			PutStream(">>\n");
-			PutStream("image\n");
-			if (Name.isEmpty())
-			{
-				if (!PutImageToStream(image, maskArray, plate))
-				{
-					PS_Error_ImageDataWriteFailure();
-					return false;
-				}
-			}
-			else
-			{
-				PutStream(PSEncode(Name)+"Bild resetfile\n");
-				//PutStream(PSEncode(Name)+"Mask resetfile\n");
 			}
 		}
 		else
 		{
-			PutStream("<< /ImageType 1\n");
-			PutStream("   /Width " + IToStr(w) + "\n");
-			PutStream("   /Height " + IToStr(h) + "\n");
-			PutStream("   /BitsPerComponent 8\n");
-			if (DoSep)
-				PutStream("   /Decode [1 0]\n");
-			else
-				PutStream( GraySc ? "   /Decode [1 0]\n" : "   /Decode [0 1 0 1 0 1 0 1]\n");
-			PutStream("   /ImageMatrix [" + IToStr(w) + " 0 0 " + IToStr(-h) + " 0 " + IToStr(h) + "]\n");
-			if (!Name.isEmpty())
+			PutStream(PSEncode(Name)+"Bild resetfile\n");
+			//PutStream(PSEncode(Name)+"Mask resetfile\n");
+		}
+	}
+	else
+	{
+		PutStream("<< /ImageType 1\n");
+		PutStream("   /Width " + IToStr(w) + "\n");
+		PutStream("   /Height " + IToStr(h) + "\n");
+		PutStream("   /BitsPerComponent 8\n");
+		if (DoSep)
+			PutStream("   /Decode [1 0]\n");
+		else
+			PutStream( GraySc ? "   /Decode [1 0]\n" : "   /Decode [0 1 0 1 0 1 0 1]\n");
+		PutStream("   /ImageMatrix [" + IToStr(w) + " 0 0 " + IToStr(-h) + " 0 " + IToStr(h) + "]\n");
+		if (!Name.isEmpty())
+		{
+			PutStream("   /DataSource "+PSEncode(Name)+"Bild >>\n");
+			PutStream("image\n");
+			PutStream(PSEncode(Name)+"Bild resetfile\n");
+		}
+		else
+		{
+			int plate = DoSep ? Plate : (GraySc ? -2 : -1);
+			PutStream("   /DataSource currentfile /ASCII85Decode filter /FlateDecode filter >>\n");
+			PutStream("image\n");
+			if (!PutImageToStream(image, plate))
 			{
-				PutStream("   /DataSource "+PSEncode(Name)+"Bild >>\n");
-				PutStream("image\n");
-				PutStream(PSEncode(Name)+"Bild resetfile\n");
-			}
-			else
-			{
-				int plate = DoSep ? Plate : (GraySc ? -2 : -1);
-				PutStream("   /DataSource currentfile /ASCII85Decode filter /FlateDecode filter >>\n");
-				PutStream("image\n");
-				if (!PutImageToStream(image, plate))
-				{
-					PS_Error_ImageDataWriteFailure();
-					return false;
-				}
+				PS_Error_ImageDataWriteFailure();
+				return false;
 			}
 		}
 	}
@@ -1528,15 +1533,13 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 		solidTransform = Doc->colorEngine.createTransform(Doc->DocInputCMYKProf, Format_CMYK_16, Doc->DocPrinterProf, Format_CMYK_16, Doc->IntentColors, 0);
 	else
 		solidTransform = ScColorTransform();
-	if (usingGUI)
+	if (ScCore->usingGUI())
 	{
-		QString title=QObject::tr("Exporting PostScript File");
+		QString title = QObject::tr("Exporting PostScript File");
 		if (psExport)
-			title=QObject::tr("Printing File");
-		progressDialog=new MultiProgressDialog(title, CommonStrings::tr_Cancel, Doc->scMW());
-		if (progressDialog==0)
-			usingGUI=false;
-		else
+			title = QObject::tr("Printing File");
+		progressDialog = new MultiProgressDialog(title, CommonStrings::tr_Cancel, Doc->scMW());
+		if (progressDialog)
 		{
 			QStringList barNames, barTexts;
 			barNames << "EMP" << "EP";
@@ -1615,7 +1618,7 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 	int ap=0;
 	for (; ap < Doc->MasterPages.count() && !abortExport && !errorOccured; ++ap)
 	{
-		if (usingGUI)
+		if (progressDialog)
 		{
 			progressDialog->setOverallProgress(ap);
 			progressDialog->setProgress("EMP", ap);
@@ -1635,7 +1638,7 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 					for (int api = 0; api < Doc->MasterItems.count() && !abortExport; ++api)
 					{
 						PageItem *it = Doc->MasterItems.at(api);
-						if (usingGUI)
+						if (progressDialog)
 							ScQApp->processEvents();
 						if ((it->LayerID != ll.ID) || (!it->printEnabled()))
 							continue;
@@ -1676,7 +1679,7 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 	PutStream("%%EndSetup\n");
 	while (aa < pageNs.size() && !abortExport && !errorOccured)
 	{
-		if (usingGUI)
+		if (progressDialog)
 		{
 			progressDialog->setProgress("EP", aa);
 			progressDialog->setOverallProgress(ap+aa);
@@ -1757,7 +1760,7 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 			aa++;
 	}
 	PS_close();
-	if (usingGUI)
+	if (progressDialog)
 		progressDialog->close();
 	if (errorOccured)
 		return 1;
@@ -1766,269 +1769,218 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 	return 0; 
 }
 
-bool PSLib::ProcessItem(ScribusDoc* Doc, ScPage* a, PageItem* c, uint PNr, bool sep, bool farb, bool master, bool embedded, bool useTemplate)
+bool PSLib::ProcessItem(ScribusDoc* Doc, ScPage* page, PageItem* item, uint PNr, bool sep, bool farb, bool master, bool embedded, bool useTemplate)
 {
 	double h, s, v, k;
 	QVector<double> dum;
-	if (c->printEnabled())
+
+	if (!item->printEnabled())
+		return true;
+
+	fillRule = true;
+	PS_save();
+	if (item->doOverprint)
 	{
-		fillRule = true;
+		PutStream("true setoverprint\n");
+		PutStream("true setoverprintmode\n");
+	}
+	if (item->fillColor() != CommonStrings::None)
+	{
+		SetColor(item->fillColor(), item->fillShade(), &h, &s, &v, &k);
+		PS_setcmykcolor_fill(h, s, v, k);
+	}
+	if (item->lineColor() != CommonStrings::None)
+	{
+		SetColor(item->lineColor(), item->lineShade(), &h, &s, &v, &k);
+		PS_setcmykcolor_stroke(h, s, v, k);
+	}
+	PS_setlinewidth(item->lineWidth());
+	PS_setcapjoin(item->PLineEnd, item->PLineJoin);
+	PS_setdash(item->PLineArt, item->DashOffset, item->DashValues);
+	if (!embedded)
+	{
+		PS_translate(item->xPos() - page->xOffset(), page->height() - (item->yPos() - page->yOffset()));
+	}
+	if (item->rotation() != 0)
+		PS_rotate(-item->rotation());
+	switch (item->itemType())
+	{
+	case PageItem::ImageFrame:
+	case PageItem::LatexFrame:
+		if (master)
+			break;
+		if ((item->fillColor() != CommonStrings::None) || (item->GrType != 0))
+		{
+			SetClipPath(item->PoLine);
+			PS_closepath();
+			if (item->GrType == 14)
+				PS_HatchFill(item);
+			else if ((item->GrType != 0) && (master == false))
+				HandleGradientFillStroke(item, false);
+			else
+				putColor(item->fillColor(), item->fillShade(), true);
+			PS_newpath();
+		}
 		PS_save();
-		if (c->doOverprint)
+		SetPathAndClip(item->PoLine, true);
+		if (item->imageFlippedH())
 		{
-			PutStream("true setoverprint\n");
-			PutStream("true setoverprintmode\n");
+			PS_translate(item->width(), 0);
+			PS_scale(-1, 1);
 		}
-		if (c->fillColor() != CommonStrings::None)
+		if (item->imageFlippedV())
 		{
-			SetColor(c->fillColor(), c->fillShade(), &h, &s, &v, &k);
-			PS_setcmykcolor_fill(h, s, v, k);
+			PS_translate(0, -item->height());
+			PS_scale(1, -1);
 		}
-		if (c->lineColor() != CommonStrings::None)
+		if (item->imageClip.size() != 0)
+			SetPathAndClip(item->imageClip, true);
+		if ((item->imageIsAvailable) && (!item->Pfile.isEmpty()))
 		{
-			SetColor(c->lineColor(), c->lineShade(), &h, &s, &v, &k);
-			PS_setcmykcolor_stroke(h, s, v, k);
+			bool imageOk = false;
+			PS_translate(0, -item->BBoxH*item->imageYScale());
+			if ((optimization == OptimizeSize) && (((!page->pageName().isEmpty()) && !sep && farb) || useTemplate))
+				imageOk = PS_image(item, item->imageXOffset(), -item->imageYOffset(), item->Pfile, item->imageXScale(), item->imageYScale(), item->IProfile, item->UseEmbedded, item->itemName());
+			else
+				imageOk = PS_image(item, item->imageXOffset(), -item->imageYOffset(), item->Pfile, item->imageXScale(), item->imageYScale(), item->IProfile, item->UseEmbedded);
+			if (!imageOk) return false;
 		}
-		PS_setlinewidth(c->lineWidth());
-		PS_setcapjoin(c->PLineEnd, c->PLineJoin);
-		PS_setdash(c->PLineArt, c->DashOffset, c->DashValues);
-		if (!embedded)
+		PS_restore();
+		if (((item->lineColor() != CommonStrings::None) || (!item->NamedLStyle.isEmpty()) || (!item->strokePattern().isEmpty()) || (item->GrTypeStroke > 0)))
 		{
-			PS_translate(c->xPos() - a->xOffset(), a->height() - (c->yPos() - a->yOffset()));
-		}
-		if (c->rotation() != 0)
-			PS_rotate(-c->rotation());
-		switch (c->itemType())
-		{
-		case PageItem::ImageFrame:
-		case PageItem::LatexFrame:
-			if (master)
-				break;
-			if ((c->fillColor() != CommonStrings::None) || (c->GrType != 0))
+			if (item->NamedLStyle.isEmpty()) // && (item->lineWidth() != 0.0))
 			{
-				SetClipPath(&c->PoLine);
-				PS_closepath();
-				if (c->GrType == 14)
-					PS_HatchFill(c);
-				else if ((c->GrType != 0) && (master == false))
-					HandleGradientFillStroke(c, false);
-				else
-					putColor(c->fillColor(), c->fillShade(), true);
-				PS_newpath();
-			}
-			PS_save();
-			SetPathAndClip(c->PoLine, true);
-			if (c->imageFlippedH())
-			{
-				PS_translate(c->width(), 0);
-				PS_scale(-1, 1);
-			}
-			if (c->imageFlippedV())
-			{
-				PS_translate(0, -c->height());
-				PS_scale(1, -1);
-			}
-			if (c->imageClip.size() != 0)
-				SetPathAndClip(c->imageClip, true);
-			if ((c->imageIsAvailable) && (!c->Pfile.isEmpty()))
-			{
-				bool imageOk = false;
-				PS_translate(0, -c->BBoxH*c->imageYScale());
-				if ((optimization == OptimizeSize) && (((!a->pageName().isEmpty()) && !sep && farb) || useTemplate))
-					imageOk = PS_image(c, c->imageXOffset(), -c->imageYOffset(), c->Pfile, c->imageXScale(), c->imageYScale(), c->IProfile, c->UseEmbedded, c->itemName());
-				else
-					imageOk = PS_image(c, c->imageXOffset(), -c->imageYOffset(), c->Pfile, c->imageXScale(), c->imageYScale(), c->IProfile, c->UseEmbedded);
-				if (!imageOk) return false;
-			}
-			PS_restore();
-			if (((c->lineColor() != CommonStrings::None) || (!c->NamedLStyle.isEmpty()) || (!c->strokePattern().isEmpty()) || (c->GrTypeStroke > 0)))
-			{
-				if (c->NamedLStyle.isEmpty()) // && (c->lineWidth() != 0.0))
+				ScPattern* strokePattern = Doc->checkedPattern(item->strokePattern());
+				if ((strokePattern) && (item->patternStrokePath))
 				{
-					ScPattern* strokePattern = Doc->checkedPattern(c->strokePattern());
-					if ((strokePattern) && (c->patternStrokePath))
-					{
-						QPainterPath path = c->PoLine.toQPainterPath(false);
-						HandleBrushPattern(c, path, a, PNr, sep, farb, master);
-					}
-					else
-					{
-						PS_setlinewidth(c->lineWidth());
-						PS_setcapjoin(c->PLineEnd, c->PLineJoin);
-						PS_setdash(c->PLineArt, c->DashOffset, c->DashValues);
-						SetClipPath(&c->PoLine);
-						PS_closepath();
-						if (strokePattern)
-							HandleStrokePattern(c);
-						else if (c->GrTypeStroke > 0)
-							HandleGradientFillStroke(c);
-						else if (c->lineColor() != CommonStrings::None)
-						{
-							SetColor(c->lineColor(), c->lineShade(), &h, &s, &v, &k);
-							PS_setcmykcolor_stroke(h, s, v, k);
-							putColor(c->lineColor(), c->lineShade(), false);
-						}
-					}
+					QPainterPath path = item->PoLine.toQPainterPath(false);
+					HandleBrushPattern(item, path, page, PNr, sep, farb, master);
 				}
 				else
 				{
-					multiLine ml = Doc->MLineStyles[c->NamedLStyle];
-					for (int it = ml.size()-1; it > -1; it--)
+					PS_setlinewidth(item->lineWidth());
+					PS_setcapjoin(item->PLineEnd, item->PLineJoin);
+					PS_setdash(item->PLineArt, item->DashOffset, item->DashValues);
+					SetClipPath(item->PoLine);
+					PS_closepath();
+					if (strokePattern)
+						HandleStrokePattern(item);
+					else if (item->GrTypeStroke > 0)
+						HandleGradientFillStroke(item);
+					else if (item->lineColor() != CommonStrings::None)
 					{
-						if (ml[it].Color != CommonStrings::None) // && (ml[it].Width != 0))
-						{
-							SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
-							PS_setcmykcolor_stroke(h, s, v, k);
-							PS_setlinewidth(ml[it].Width);
-							PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
-							PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-							SetClipPath(&c->PoLine);
-							PS_closepath();
-							putColor(ml[it].Color, ml[it].Shade, false);
-						}
+						SetColor(item->lineColor(), item->lineShade(), &h, &s, &v, &k);
+						PS_setcmykcolor_stroke(h, s, v, k);
+						putColor(item->lineColor(), item->lineShade(), false);
 					}
-				}
-			}
-			break;
-		case PageItem::TextFrame:
-			if (master)
-				break;
-			if ((c->isBookmark || c->isAnnotation()) && (!isPDF))
-				break;
-			if (c->isBookmark)
-			{
-				QString bm = "";
-				QString cc;
-				for (int d = 0; d < c->itemText.length(); ++d)
-				{
-					if ((c->itemText.text(d) == QChar(13)) || (c->itemText.text(d) == QChar(10)) || (c->itemText.text(d) == QChar(28)))
-						break;
-					bm += "\\"+cc.setNum(qMax(c->itemText.text(d).unicode(), (ushort) 32), 8);
-				}
-				PDF_Bookmark(bm, a->pageNr()+1);
-			}
-			if (c->isAnnotation())
-			{
-				if ((c->annotation().Type() == 0) || (c->annotation().Type() == 1) || (c->annotation().Type() == Annotation::Text) || (c->annotation().Type() == Annotation::Link))
-				{
-					QString bm = "";
-					QString cc;
-					for (int d = 0; d < c->itemText.length(); ++d)
-					{
-						bm += "\\"+cc.setNum(qMax(c->itemText.text(d).unicode(), (ushort) 32), 8);
-					}
-					PDF_Annotation(c, bm, 0, 0, c->width(), -c->height());
-				}
-				break;
-			}
-			if ((c->fillColor() != CommonStrings::None) || (c->GrType != 0))
-			{
-				SetClipPath(&c->PoLine);
-				PS_closepath();
-				if (c->GrType == 14)
-					PS_HatchFill(c);
-				else if ((c->GrType != 0) && (master == false))
-					HandleGradientFillStroke(c, false);
-				else
-					putColor(c->fillColor(), c->fillShade(), true);
-			}
-			if (c->imageFlippedH())
-			{
-				PS_translate(c->width(), 0);
-				PS_scale(-1, 1);
-			}
-			if (c->imageFlippedV())
-			{
-				PS_translate(0, -c->height());
-				PS_scale(1, -1);
-			}
-			if (c->itemText.length() != 0)
-				setTextSt(Doc, c, PNr-1, a, sep, farb, master);
-			if (((c->lineColor() != CommonStrings::None) || (!c->NamedLStyle.isEmpty()) || (!c->strokePattern().isEmpty()) || (c->GrTypeStroke > 0)))
-			{
-				PS_setlinewidth(c->lineWidth());
-				PS_setcapjoin(c->PLineEnd, c->PLineJoin);
-				PS_setdash(c->PLineArt, c->DashOffset, c->DashValues);
-				if ((c->NamedLStyle.isEmpty()) && (c->lineWidth() != 0.0))
-				{
-					ScPattern* strokePattern = Doc->checkedPattern(c->strokePattern());
-					if ((strokePattern) && (c->patternStrokePath))
-					{
-						QPainterPath path = c->PoLine.toQPainterPath(false);
-						HandleBrushPattern(c, path, a, PNr, sep, farb, master);
-					}
-					else
-					{
-						SetClipPath(&c->PoLine);
-						PS_closepath();
-						if (strokePattern)
-							HandleStrokePattern(c);
-						else if (c->GrTypeStroke > 0)
-							HandleGradientFillStroke(c);
-						else if (c->lineColor() != CommonStrings::None)
-						{
-							SetColor(c->lineColor(), c->lineShade(), &h, &s, &v, &k);
-							PS_setcmykcolor_stroke(h, s, v, k);
-							putColor(c->lineColor(), c->lineShade(), false);
-						}
-					}
-				}
-				else
-				{
-					multiLine ml = Doc->MLineStyles[c->NamedLStyle];
-					for (int it = ml.size()-1; it > -1; it--)
-					{
-						if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
-						{
-							SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
-							PS_setcmykcolor_stroke(h, s, v, k);
-							PS_setlinewidth(ml[it].Width);
-							PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
-							PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-							SetClipPath(&c->PoLine);
-							PS_closepath();
-							putColor(ml[it].Color, ml[it].Shade, false);
-						}
-					}
-				}
-			}
-			break;
-		case PageItem::Line:
-			if (c->NamedLStyle.isEmpty()) // && (c->lineWidth() != 0.0))
-			{
-				ScPattern* strokePattern = Doc->checkedPattern(c->strokePattern());
-				if (strokePattern)
-				{
-					if (c->patternStrokePath)
-					{
-						QPainterPath guidePath;
-						guidePath.moveTo(0, 0);
-						guidePath.lineTo(c->width(), 0);
-						HandleBrushPattern(c, guidePath, a, PNr, sep, farb, master);
-					}
-					else
-					{
-						PS_moveto(0, 0);
-						PS_lineto(c->width(), 0);
-						HandleStrokePattern(c);
-					}
-				}
-				else if (c->GrTypeStroke > 0)
-				{
-					PS_moveto(0, 0);
-					PS_lineto(c->width(), 0);
-					HandleGradientFillStroke(c);
-				}
-				else if (c->lineColor() != CommonStrings::None)
-				{
-					PS_moveto(0, 0);
-					PS_lineto(c->width(), 0);
-					putColor(c->lineColor(), c->lineShade(), false);
 				}
 			}
 			else
 			{
-				multiLine ml = Doc->MLineStyles[c->NamedLStyle];
+				multiLine ml = Doc->MLineStyles[item->NamedLStyle];
+				for (int it = ml.size()-1; it > -1; it--)
+				{
+					if (ml[it].Color != CommonStrings::None) // && (ml[it].Width != 0))
+					{
+						SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
+						PS_setcmykcolor_stroke(h, s, v, k);
+						PS_setlinewidth(ml[it].Width);
+						PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
+						PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
+						SetClipPath(item->PoLine);
+						PS_closepath();
+						putColor(ml[it].Color, ml[it].Shade, false);
+					}
+				}
+			}
+		}
+		break;
+	case PageItem::TextFrame:
+		if (master)
+			break;
+		if ((item->isBookmark || item->isAnnotation()) && (!isPDF))
+			break;
+		if (item->isBookmark)
+		{
+			QString bm = "";
+			QString cc;
+			for (int d = 0; d < item->itemText.length(); ++d)
+			{
+				if ((item->itemText.text(d) == QChar(13)) || (item->itemText.text(d) == QChar(10)) || (item->itemText.text(d) == QChar(28)))
+					break;
+				bm += "\\"+cc.setNum(qMax(item->itemText.text(d).unicode(), (ushort) 32), 8);
+			}
+			PDF_Bookmark(bm, page->pageNr()+1);
+		}
+		if (item->isAnnotation())
+		{
+			if ((item->annotation().Type() == 0) || (item->annotation().Type() == 1) || (item->annotation().Type() == Annotation::Text) || (item->annotation().Type() == Annotation::Link))
+			{
+				QString bm = "";
+				QString cc;
+				for (int d = 0; d < item->itemText.length(); ++d)
+				{
+					bm += "\\"+cc.setNum(qMax(item->itemText.text(d).unicode(), (ushort) 32), 8);
+				}
+				PDF_Annotation(item, bm, 0, 0, item->width(), -item->height());
+			}
+			break;
+		}
+		if ((item->fillColor() != CommonStrings::None) || (item->GrType != 0))
+		{
+			SetClipPath(item->PoLine);
+			PS_closepath();
+			if (item->GrType == 14)
+				PS_HatchFill(item);
+			else if ((item->GrType != 0) && (master == false))
+				HandleGradientFillStroke(item, false);
+			else
+				putColor(item->fillColor(), item->fillShade(), true);
+		}
+		if (item->imageFlippedH())
+		{
+			PS_translate(item->width(), 0);
+			PS_scale(-1, 1);
+		}
+		if (item->imageFlippedV())
+		{
+			PS_translate(0, -item->height());
+			PS_scale(1, -1);
+		}
+		if (item->itemText.length() != 0)
+			setTextSt(Doc, item, PNr-1, page, sep, farb, master);
+		if (((item->lineColor() != CommonStrings::None) || (!item->NamedLStyle.isEmpty()) || (!item->strokePattern().isEmpty()) || (item->GrTypeStroke > 0)))
+		{
+			PS_setlinewidth(item->lineWidth());
+			PS_setcapjoin(item->PLineEnd, item->PLineJoin);
+			PS_setdash(item->PLineArt, item->DashOffset, item->DashValues);
+			if ((item->NamedLStyle.isEmpty()) && (item->lineWidth() != 0.0))
+			{
+				ScPattern* strokePattern = Doc->checkedPattern(item->strokePattern());
+				if ((strokePattern) && (item->patternStrokePath))
+				{
+					QPainterPath path = item->PoLine.toQPainterPath(false);
+					HandleBrushPattern(item, path, page, PNr, sep, farb, master);
+				}
+				else
+				{
+					SetClipPath(item->PoLine);
+					PS_closepath();
+					if (strokePattern)
+						HandleStrokePattern(item);
+					else if (item->GrTypeStroke > 0)
+						HandleGradientFillStroke(item);
+					else if (item->lineColor() != CommonStrings::None)
+					{
+						SetColor(item->lineColor(), item->lineShade(), &h, &s, &v, &k);
+						PS_setcmykcolor_stroke(h, s, v, k);
+						putColor(item->lineColor(), item->lineShade(), false);
+					}
+				}
+			}
+			else
+			{
+				multiLine ml = Doc->MLineStyles[item->NamedLStyle];
 				for (int it = ml.size()-1; it > -1; it--)
 				{
 					if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
@@ -2038,492 +1990,545 @@ bool PSLib::ProcessItem(ScribusDoc* Doc, ScPage* a, PageItem* c, uint PNr, bool 
 						PS_setlinewidth(ml[it].Width);
 						PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
 						PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-						PS_moveto(0, 0);
-						PS_lineto(c->width(), 0);
+						SetClipPath(item->PoLine);
+						PS_closepath();
 						putColor(ml[it].Color, ml[it].Shade, false);
 					}
 				}
 			}
-			if (c->startArrowIndex() != 0)
+		}
+		break;
+	case PageItem::Line:
+		if (item->NamedLStyle.isEmpty()) // && (item->lineWidth() != 0.0))
+		{
+			ScPattern* strokePattern = Doc->checkedPattern(item->strokePattern());
+			if (strokePattern)
 			{
-				QTransform arrowTrans;
-				arrowTrans.scale(-1,1);
-				arrowTrans.scale(c->startArrowScale() / 100.0, c->startArrowScale() / 100.0);
-				drawArrow(c, arrowTrans, c->startArrowIndex());
-			}
-			if (c->endArrowIndex() != 0)
-			{
-				QTransform arrowTrans;
-				arrowTrans.translate(c->width(), 0);
-				arrowTrans.scale(c->endArrowScale() / 100.0, c->endArrowScale() / 100.0);
-				drawArrow(c, arrowTrans, c->endArrowIndex());
-			}
-			break;
-		/* OBSOLETE CR 2005-02-06
-		case 1:
-		case 3:
-		*/
-		case PageItem::ItemType1:
-		case PageItem::ItemType3:
-		case PageItem::Polygon:
-		case PageItem::RegularPolygon:
-		case PageItem::Arc:
-			if ((c->fillColor() != CommonStrings::None) || (c->GrType != 0))
-			{
-				SetClipPath(&c->PoLine);
-				PS_closepath();
-				fillRule = c->fillRule;
-				if (c->GrType == 14)
-					PS_HatchFill(c);
-				else if (c->GrType != 0)
-					HandleGradientFillStroke(c, false);
-				else
-					putColor(c->fillColor(), c->fillShade(), true);
-			}
-			if ((c->lineColor() != CommonStrings::None) || (!c->NamedLStyle.isEmpty()) || (!c->strokePattern().isEmpty()) || (c->GrTypeStroke > 0))
-			{
-				if (c->NamedLStyle.isEmpty()) //&& (c->lineWidth() != 0.0))
+				if (item->patternStrokePath)
 				{
-					ScPattern* strokePattern = Doc->checkedPattern(c->strokePattern());
-					if (strokePattern && (c->patternStrokePath))
+					QPainterPath guidePath;
+					guidePath.moveTo(0, 0);
+					guidePath.lineTo(item->width(), 0);
+					HandleBrushPattern(item, guidePath, page, PNr, sep, farb, master);
+				}
+				else
+				{
+					PS_moveto(0, 0);
+					PS_lineto(item->width(), 0);
+					HandleStrokePattern(item);
+				}
+			}
+			else if (item->GrTypeStroke > 0)
+			{
+				PS_moveto(0, 0);
+				PS_lineto(item->width(), 0);
+				HandleGradientFillStroke(item);
+			}
+			else if (item->lineColor() != CommonStrings::None)
+			{
+				PS_moveto(0, 0);
+				PS_lineto(item->width(), 0);
+				putColor(item->lineColor(), item->lineShade(), false);
+			}
+		}
+		else
+		{
+			multiLine ml = Doc->MLineStyles[item->NamedLStyle];
+			for (int it = ml.size()-1; it > -1; it--)
+			{
+				if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
+				{
+					SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
+					PS_setcmykcolor_stroke(h, s, v, k);
+					PS_setlinewidth(ml[it].Width);
+					PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
+					PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
+					PS_moveto(0, 0);
+					PS_lineto(item->width(), 0);
+					putColor(ml[it].Color, ml[it].Shade, false);
+				}
+			}
+		}
+		if (item->startArrowIndex() != 0)
+		{
+			QTransform arrowTrans;
+			arrowTrans.scale(-1,1);
+			arrowTrans.scale(item->startArrowScale() / 100.0, item->startArrowScale() / 100.0);
+			drawArrow(item, arrowTrans, item->startArrowIndex());
+		}
+		if (item->endArrowIndex() != 0)
+		{
+			QTransform arrowTrans;
+			arrowTrans.translate(item->width(), 0);
+			arrowTrans.scale(item->endArrowScale() / 100.0, item->endArrowScale() / 100.0);
+			drawArrow(item, arrowTrans, item->endArrowIndex());
+		}
+		break;
+	/* OBSOLETE CR 2005-02-06
+	case 1:
+	case 3:
+	*/
+	case PageItem::ItemType1:
+	case PageItem::ItemType3:
+	case PageItem::Polygon:
+	case PageItem::RegularPolygon:
+	case PageItem::Arc:
+		if ((item->fillColor() != CommonStrings::None) || (item->GrType != 0))
+		{
+			SetClipPath(item->PoLine);
+			PS_closepath();
+			fillRule = item->fillRule;
+			if (item->GrType == 14)
+				PS_HatchFill(item);
+			else if (item->GrType != 0)
+				HandleGradientFillStroke(item, false);
+			else
+				putColor(item->fillColor(), item->fillShade(), true);
+		}
+		if ((item->lineColor() != CommonStrings::None) || (!item->NamedLStyle.isEmpty()) || (!item->strokePattern().isEmpty()) || (item->GrTypeStroke > 0))
+		{
+			if (item->NamedLStyle.isEmpty()) //&& (item->lineWidth() != 0.0))
+			{
+				ScPattern* strokePattern = Doc->checkedPattern(item->strokePattern());
+				if (strokePattern && (item->patternStrokePath))
+				{
+					QPainterPath path = item->PoLine.toQPainterPath(false);
+					HandleBrushPattern(item, path, page, PNr, sep, farb, master);
+				}
+				else
+				{
+					SetClipPath(item->PoLine);
+					PS_closepath();
+					if (strokePattern)
+						HandleStrokePattern(item);
+					else if (item->GrTypeStroke > 0)
+						HandleGradientFillStroke(item);
+					else if (item->lineColor() != CommonStrings::None)
+						putColor(item->lineColor(), item->lineShade(), false);
+				}
+			}
+			else
+			{
+				multiLine ml = Doc->MLineStyles[item->NamedLStyle];
+				for (int it = ml.size()-1; it > -1; it--)
+				{
+					if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
 					{
-						QPainterPath path = c->PoLine.toQPainterPath(false);
-						HandleBrushPattern(c, path, a, PNr, sep, farb, master);
-					}
-					else
-					{
-						SetClipPath(&c->PoLine);
+						SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
+						PS_setcmykcolor_stroke(h, s, v, k);
+						PS_setlinewidth(ml[it].Width);
+						PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
+						PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
+						SetClipPath(item->PoLine);
 						PS_closepath();
-						if (strokePattern)
-							HandleStrokePattern(c);
-						else if (c->GrTypeStroke > 0)
-							HandleGradientFillStroke(c);
-						else if (c->lineColor() != CommonStrings::None)
-							putColor(c->lineColor(), c->lineShade(), false);
+						putColor(ml[it].Color, ml[it].Shade, false);
 					}
+				}
+			}
+		}
+		break;
+	case PageItem::PolyLine:
+	case PageItem::Spiral:
+		if ((item->fillColor() != CommonStrings::None) || (item->GrType != 0))
+		{
+			SetClipPath(item->PoLine);
+			PS_closepath();
+			fillRule = item->fillRule;
+			if (item->GrType == 14)
+				PS_HatchFill(item);
+			else if (item->GrType != 0)
+				HandleGradientFillStroke(item, false);
+			else
+				putColor(item->fillColor(), item->fillShade(), true);
+			PS_newpath();
+		}
+		if ((item->lineColor() != CommonStrings::None) || (!item->NamedLStyle.isEmpty()) || (!item->strokePattern().isEmpty()) || (item->GrTypeStroke > 0))
+		{
+			if (item->NamedLStyle.isEmpty()) //&& (item->lineWidth() != 0.0))
+			{
+				ScPattern* strokePattern = Doc->checkedPattern(item->strokePattern());
+				if (strokePattern && (item->patternStrokePath))
+				{
+					QPainterPath path = item->PoLine.toQPainterPath(false);
+					HandleBrushPattern(item, path, page, PNr, sep, farb, master);
 				}
 				else
 				{
-					multiLine ml = Doc->MLineStyles[c->NamedLStyle];
-					for (int it = ml.size()-1; it > -1; it--)
+					SetClipPath(item->PoLine, false);
+					if (strokePattern)
+						HandleStrokePattern(item);
+					else if (item->GrTypeStroke > 0)
+						HandleGradientFillStroke(item);
+					else if (item->lineColor() != CommonStrings::None)
+						putColor(item->lineColor(), item->lineShade(), false);
+				}
+			}
+			else
+			{
+				multiLine ml = Doc->MLineStyles[item->NamedLStyle];
+				for (int it = ml.size()-1; it > -1; it--)
+				{
+					if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
 					{
-						if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
-						{
-							SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
-							PS_setcmykcolor_stroke(h, s, v, k);
-							PS_setlinewidth(ml[it].Width);
-							PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
-							PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-							SetClipPath(&c->PoLine);
-							PS_closepath();
-							putColor(ml[it].Color, ml[it].Shade, false);
-						}
+						SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
+						PS_setcmykcolor_stroke(h, s, v, k);
+						PS_setlinewidth(ml[it].Width);
+						PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
+						PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
+						SetClipPath(item->PoLine, false);
+						putColor(ml[it].Color, ml[it].Shade, false);
 					}
 				}
 			}
+		}
+		if (item->startArrowIndex() != 0)
+		{
+			FPoint Start = item->PoLine.point(0);
+			for (int xx = 1; xx < item->PoLine.size(); xx += 2)
+			{
+				FPoint Vector = item->PoLine.point(xx);
+				if ((Start.x() != Vector.x()) || (Start.y() != Vector.y()))
+				{
+					double r = atan2(Start.y()-Vector.y(),Start.x()-Vector.x())*(180.0/M_PI);
+					QTransform arrowTrans;
+					arrowTrans.translate(Start.x(), Start.y());
+					arrowTrans.rotate(r);
+					arrowTrans.scale(item->startArrowScale() / 100.0, item->startArrowScale() / 100.0);
+					drawArrow(item, arrowTrans, item->startArrowIndex());
+					break;
+				}
+			}
+		}
+		if (item->endArrowIndex() != 0)
+		{
+			FPoint End = item->PoLine.point(item->PoLine.size()-2);
+			for (uint xx = item->PoLine.size()-1; xx > 0; xx -= 2)
+			{
+				FPoint Vector = item->PoLine.point(xx);
+				if ((End.x() != Vector.x()) || (End.y() != Vector.y()))
+				{
+					double r = atan2(End.y()-Vector.y(),End.x()-Vector.x())*(180.0/M_PI);
+					QTransform arrowTrans;
+					arrowTrans.translate(End.x(), End.y());
+					arrowTrans.rotate(r);
+					arrowTrans.scale(item->endArrowScale() / 100.0, item->endArrowScale() / 100.0);
+					drawArrow(item, arrowTrans, item->endArrowIndex());
+					break;
+				}
+			}
+		}
+		break;
+	case PageItem::PathText:
+		if (master)
 			break;
-		case PageItem::PolyLine:
-		case PageItem::Spiral:
-			if ((c->fillColor() != CommonStrings::None) || (c->GrType != 0))
+		if (item->PoShow)
+		{
+			if (item->PoLine.size() > 3)
 			{
-				SetClipPath(&c->PoLine);
-				PS_closepath();
-				fillRule = c->fillRule;
-				if (c->GrType == 14)
-					PS_HatchFill(c);
-				else if (c->GrType != 0)
-					HandleGradientFillStroke(c, false);
-				else
-					putColor(c->fillColor(), c->fillShade(), true);
-				PS_newpath();
-			}
-			if ((c->lineColor() != CommonStrings::None) || (!c->NamedLStyle.isEmpty()) || (!c->strokePattern().isEmpty()) || (c->GrTypeStroke > 0))
-			{
-				if (c->NamedLStyle.isEmpty()) //&& (c->lineWidth() != 0.0))
-				{
-					ScPattern* strokePattern = Doc->checkedPattern(c->strokePattern());
-					if (strokePattern && (c->patternStrokePath))
-					{
-						QPainterPath path = c->PoLine.toQPainterPath(false);
-						HandleBrushPattern(c, path, a, PNr, sep, farb, master);
-					}
-					else
-					{
-						SetClipPath(&c->PoLine, false);
-						if (strokePattern)
-							HandleStrokePattern(c);
-						else if (c->GrTypeStroke > 0)
-							HandleGradientFillStroke(c);
-						else if (c->lineColor() != CommonStrings::None)
-							putColor(c->lineColor(), c->lineShade(), false);
-					}
-				}
-				else
-				{
-					multiLine ml = Doc->MLineStyles[c->NamedLStyle];
-					for (int it = ml.size()-1; it > -1; it--)
-					{
-						if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
-						{
-							SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
-							PS_setcmykcolor_stroke(h, s, v, k);
-							PS_setlinewidth(ml[it].Width);
-							PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
-							PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-							SetClipPath(&c->PoLine, false);
-							putColor(ml[it].Color, ml[it].Shade, false);
-						}
-					}
-				}
-			}
-			if (c->startArrowIndex() != 0)
-			{
-				FPoint Start = c->PoLine.point(0);
-				for (int xx = 1; xx < c->PoLine.size(); xx += 2)
-				{
-					FPoint Vector = c->PoLine.point(xx);
-					if ((Start.x() != Vector.x()) || (Start.y() != Vector.y()))
-					{
-						double r = atan2(Start.y()-Vector.y(),Start.x()-Vector.x())*(180.0/M_PI);
-						QTransform arrowTrans;
-						arrowTrans.translate(Start.x(), Start.y());
-						arrowTrans.rotate(r);
-						arrowTrans.scale(c->startArrowScale() / 100.0, c->startArrowScale() / 100.0);
-						drawArrow(c, arrowTrans, c->startArrowIndex());
-						break;
-					}
-				}
-			}
-			if (c->endArrowIndex() != 0)
-			{
-				FPoint End = c->PoLine.point(c->PoLine.size()-2);
-				for (uint xx = c->PoLine.size()-1; xx > 0; xx -= 2)
-				{
-					FPoint Vector = c->PoLine.point(xx);
-					if ((End.x() != Vector.x()) || (End.y() != Vector.y()))
-					{
-						double r = atan2(End.y()-Vector.y(),End.x()-Vector.x())*(180.0/M_PI);
-						QTransform arrowTrans;
-						arrowTrans.translate(End.x(), End.y());
-						arrowTrans.rotate(r);
-						arrowTrans.scale(c->endArrowScale() / 100.0, c->endArrowScale() / 100.0);
-						drawArrow(c, arrowTrans, c->endArrowIndex());
-						break;
-					}
-				}
-			}
-			break;
-		case PageItem::PathText:
-			if (master)
-				break;
-			if (c->PoShow)
-			{
-				if (c->PoLine.size() > 3)
-				{
-					PS_save();
-					if (c->NamedLStyle.isEmpty()) //&& (c->lineWidth() != 0.0))
-					{
-						ScPattern* strokePattern = Doc->checkedPattern(c->strokePattern());
-						if (strokePattern && (c->patternStrokePath))
-						{
-							QPainterPath path = c->PoLine.toQPainterPath(false);
-							HandleBrushPattern(c, path, a, PNr, sep, farb, master);
-						}
-						else
-						{
-							SetClipPath(&c->PoLine, false);
-							if (strokePattern)
-								HandleStrokePattern(c);
-							else if (c->GrTypeStroke > 0)
-								HandleGradientFillStroke(c);
-							else if (c->lineColor() != CommonStrings::None)
-								putColor(c->lineColor(), c->lineShade(), false);
-						}
-					}
-					else
-					{
-						multiLine ml = Doc->MLineStyles[c->NamedLStyle];
-						for (int it = ml.size()-1; it > -1; it--)
-						{
-							if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
-							{
-								SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
-								PS_setcmykcolor_stroke(h, s, v, k);
-								PS_setlinewidth(ml[it].Width);
-								PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
-								PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-								SetClipPath(&c->PoLine, false);
-								putColor(ml[it].Color, ml[it].Shade, false);
-							}
-						}
-					}
-					PS_restore();
-				}
-			}
-			if (c->itemText.length() != 0)
-				setTextSt(Doc, c, PNr-1, a, sep, farb, master);
-			break;
-		case PageItem::Symbol:
-			if (m_Doc->docPatterns.contains(c->pattern()))
-			{
-				ScPattern pat = m_Doc->docPatterns[c->pattern()];
 				PS_save();
-				SetPathAndClip(c->PoLine, c->fillRule);
-				if (c->imageFlippedH())
+				if (item->NamedLStyle.isEmpty()) //&& (item->lineWidth() != 0.0))
 				{
-					PS_translate(c->width(), 0);
-					PS_scale(-1, 1);
+					ScPattern* strokePattern = Doc->checkedPattern(item->strokePattern());
+					if (strokePattern && (item->patternStrokePath))
+					{
+						QPainterPath path = item->PoLine.toQPainterPath(false);
+						HandleBrushPattern(item, path, page, PNr, sep, farb, master);
+					}
+					else
+					{
+						SetClipPath(item->PoLine, false);
+						if (strokePattern)
+							HandleStrokePattern(item);
+						else if (item->GrTypeStroke > 0)
+							HandleGradientFillStroke(item);
+						else if (item->lineColor() != CommonStrings::None)
+							putColor(item->lineColor(), item->lineShade(), false);
+					}
 				}
-				if (c->imageFlippedV())
+				else
 				{
-					PS_translate(0, -c->height());
-					PS_scale(1, -1);
-				}
-				PS_scale(c->width() / pat.width, c->height() / pat.height);
-				PS_translate(0, -c->height());
-	//			PS_translate(pat.items.at(0)->gXpos, -pat.items.at(0)->gYpos);
-				for (int em = 0; em < pat.items.count(); ++em)
-				{
-					PageItem* embed = pat.items.at(em);
-					PS_save();
-					PS_translate(embed->gXpos, c->height() - embed->gYpos);
-					ProcessItem(m_Doc, a, embed, PNr, sep, farb, master, true);
-					PS_restore();
+					multiLine ml = Doc->MLineStyles[item->NamedLStyle];
+					for (int it = ml.size()-1; it > -1; it--)
+					{
+						if (ml[it].Color != CommonStrings::None) //&& (ml[it].Width != 0))
+						{
+							SetColor(ml[it].Color, ml[it].Shade, &h, &s, &v, &k);
+							PS_setcmykcolor_stroke(h, s, v, k);
+							PS_setlinewidth(ml[it].Width);
+							PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
+							PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
+							SetClipPath(item->PoLine, false);
+							putColor(ml[it].Color, ml[it].Shade, false);
+						}
+					}
 				}
 				PS_restore();
 			}
-			break;
-		case PageItem::Group:
+		}
+		if (item->itemText.length() != 0)
+			setTextSt(Doc, item, PNr-1, page, sep, farb, master);
+		break;
+	case PageItem::Symbol:
+		if (m_Doc->docPatterns.contains(item->pattern()))
+		{
+			ScPattern pat = m_Doc->docPatterns[item->pattern()];
 			PS_save();
-			if (c->groupClipping())
-				SetPathAndClip(c->PoLine, c->fillRule);
-			if (c->imageFlippedH())
+			SetPathAndClip(item->PoLine, item->fillRule);
+			if (item->imageFlippedH())
 			{
-				PS_translate(c->width(), 0);
+				PS_translate(item->width(), 0);
 				PS_scale(-1, 1);
 			}
-			if (c->imageFlippedV())
+			if (item->imageFlippedV())
 			{
-				PS_translate(0, -c->height());
+				PS_translate(0, -item->height());
 				PS_scale(1, -1);
 			}
-			PS_scale(c->width() / c->groupWidth, c->height() / c->groupHeight);
-			PS_translate(0, -c->height());
-			for (int em = 0; em < c->groupItemList.count(); ++em)
+			PS_scale(item->width() / pat.width, item->height() / pat.height);
+			PS_translate(0, -item->height());
+//			PS_translate(pat.items.at(0)->gXpos, -pat.items.at(0)->gYpos);
+			for (int em = 0; em < pat.items.count(); ++em)
 			{
-				PageItem* embed = c->groupItemList.at(em);
+				PageItem* embed = pat.items.at(em);
 				PS_save();
-				PS_translate(embed->gXpos, c->height() - embed->gYpos);
-				ProcessItem(m_Doc, a, embed, PNr, sep, farb, master, true);
+				PS_translate(embed->gXpos, item->height() - embed->gYpos);
+				ProcessItem(m_Doc, page, embed, PNr, sep, farb, master, true);
 				PS_restore();
 			}
 			PS_restore();
-			break;
-		case PageItem::Table:
-			if (master)
-				break;
+		}
+		break;
+	case PageItem::Group:
+		PS_save();
+		if (item->groupClipping())
+			SetPathAndClip(item->PoLine, item->fillRule);
+		if (item->imageFlippedH())
+		{
+			PS_translate(item->width(), 0);
+			PS_scale(-1, 1);
+		}
+		if (item->imageFlippedV())
+		{
+			PS_translate(0, -item->height());
+			PS_scale(1, -1);
+		}
+		PS_scale(item->width() / item->groupWidth, item->height() / item->groupHeight);
+		PS_translate(0, -item->height());
+		for (int em = 0; em < item->groupItemList.count(); ++em)
+		{
+			PageItem* embed = item->groupItemList.at(em);
 			PS_save();
-			PS_translate(c->asTable()->gridOffset().x(), -c->asTable()->gridOffset().y());
-			// Paint table fill.
-			if (c->asTable()->fillColor() != CommonStrings::None)
+			PS_translate(embed->gXpos, item->height() - embed->gYpos);
+			ProcessItem(m_Doc, page, embed, PNr, sep, farb, master, true);
+			PS_restore();
+		}
+		PS_restore();
+		break;
+	case PageItem::Table:
+		if (master)
+			break;
+		PS_save();
+		PS_translate(item->asTable()->gridOffset().x(), -item->asTable()->gridOffset().y());
+		// Paint table fill.
+		if (item->asTable()->fillColor() != CommonStrings::None)
+		{
+			int lastCol = item->asTable()->columns() - 1;
+			int lastRow = item->asTable()->rows() - 1;
+			double x = item->asTable()->columnPosition(0);
+			double y = item->asTable()->rowPosition(0);
+			double width = item->asTable()->columnPosition(lastCol) + item->asTable()->columnWidth(lastCol) - x;
+			double height = item->asTable()->rowPosition(lastRow) + item->asTable()->rowHeight(lastRow) - y;
+			putColorNoDraw(item->asTable()->fillColor(), item->asTable()->fillShade());
+			PutStream("0 0 "+ToStr(width)+" "+ToStr(-height)+" rectfill\n");
+		}
+		// Pass 1: Paint cell fills.
+		for (int row = 0; row < item->asTable()->rows(); ++row)
+		{
+			int colSpan = 0;
+			for (int col = 0; col < item->asTable()->columns(); col += colSpan)
 			{
-				int lastCol = c->asTable()->columns() - 1;
-				int lastRow = c->asTable()->rows() - 1;
-				double x = c->asTable()->columnPosition(0);
-				double y = c->asTable()->rowPosition(0);
-				double width = c->asTable()->columnPosition(lastCol) + c->asTable()->columnWidth(lastCol) - x;
-				double height = c->asTable()->rowPosition(lastRow) + c->asTable()->rowHeight(lastRow) - y;
-				putColorNoDraw(c->asTable()->fillColor(), c->asTable()->fillShade());
-				PutStream("0 0 "+ToStr(width)+" "+ToStr(-height)+" rectfill\n");
-			}
-			// Pass 1: Paint cell fills.
-			for (int row = 0; row < c->asTable()->rows(); ++row)
-			{
-				int colSpan = 0;
-				for (int col = 0; col < c->asTable()->columns(); col += colSpan)
+				TableCell cell = item->asTable()->cellAt(row, col);
+				if (row == cell.row())
 				{
-					TableCell cell = c->asTable()->cellAt(row, col);
-					if (row == cell.row())
+					QString colorName = cell.fillColor();
+					if (colorName != CommonStrings::None)
 					{
-						QString colorName = cell.fillColor();
-						if (colorName != CommonStrings::None)
-						{
-							PS_save();
-							putColorNoDraw(colorName, cell.fillShade());
-							int row = cell.row();
-							int col = cell.column();
-							int lastRow = row + cell.rowSpan() - 1;
-							int lastCol = col + cell.columnSpan() - 1;
-							double x = c->asTable()->columnPosition(col);
-							double y = c->asTable()->rowPosition(row);
-							double width = c->asTable()->columnPosition(lastCol) + c->asTable()->columnWidth(lastCol) - x;
-							double height = c->asTable()->rowPosition(lastRow) + c->asTable()->rowHeight(lastRow) - y;
-							PutStream(ToStr(x)+" "+ToStr(-y)+" "+ToStr(width)+" "+ToStr(-height)+" rectfill\n");
-							PS_restore();
-						}
+						PS_save();
+						putColorNoDraw(colorName, cell.fillShade());
+						int row = cell.row();
+						int col = cell.column();
+						int lastRow = row + cell.rowSpan() - 1;
+						int lastCol = col + cell.columnSpan() - 1;
+						double x = item->asTable()->columnPosition(col);
+						double y = item->asTable()->rowPosition(row);
+						double width = item->asTable()->columnPosition(lastCol) + item->asTable()->columnWidth(lastCol) - x;
+						double height = item->asTable()->rowPosition(lastRow) + item->asTable()->rowHeight(lastRow) - y;
+						PutStream(ToStr(x)+" "+ToStr(-y)+" "+ToStr(width)+" "+ToStr(-height)+" rectfill\n");
+						PS_restore();
 					}
-					colSpan = cell.columnSpan();
 				}
+				colSpan = cell.columnSpan();
 			}
-			// Pass 2: Paint vertical borders.
-			for (int row = 0; row < c->asTable()->rows(); ++row)
+		}
+		// Pass 2: Paint vertical borders.
+		for (int row = 0; row < item->asTable()->rows(); ++row)
+		{
+			int colSpan = 0;
+			for (int col = 0; col < item->asTable()->columns(); col += colSpan)
 			{
-				int colSpan = 0;
-				for (int col = 0; col < c->asTable()->columns(); col += colSpan)
+				TableCell cell = item->asTable()->cellAt(row, col);
+				if (row == cell.row())
 				{
-					TableCell cell = c->asTable()->cellAt(row, col);
-					if (row == cell.row())
+					const int lastRow = cell.row() + cell.rowSpan() - 1;
+					const int lastCol = cell.column() + cell.columnSpan() - 1;
+					const double borderX = item->asTable()->columnPosition(lastCol) + item->asTable()->columnWidth(lastCol);
+					QPointF start(borderX, 0.0);
+					QPointF end(borderX, 0.0);
+					QPointF startOffsetFactors, endOffsetFactors;
+					int startRow, endRow;
+					for (int row = cell.row(); row <= lastRow; row += endRow - startRow + 1)
+					{
+						TableCell rightCell = item->asTable()->cellAt(row, lastCol + 1);
+						startRow = qMax(cell.row(), rightCell.row());
+						endRow = qMin(lastRow, rightCell.isValid() ? rightCell.row() + rightCell.rowSpan() - 1 : lastRow);
+						TableCell topLeftCell = item->asTable()->cellAt(startRow - 1, lastCol);
+						TableCell topRightCell = item->asTable()->cellAt(startRow - 1, lastCol + 1);
+						TableCell bottomRightCell = item->asTable()->cellAt(endRow + 1, lastCol + 1);
+						TableCell bottomLeftCell = item->asTable()->cellAt(endRow + 1, lastCol);
+						TableBorder topLeft, top, topRight, border, bottomLeft, bottom, bottomRight;
+						resolveBordersVertical(topLeftCell, topRightCell, cell, rightCell, bottomLeftCell, bottomRightCell,
+							&topLeft, &top, &topRight, &border, &bottomLeft, &bottom, &bottomRight, item->asTable());
+						if (border.isNull())
+							continue; // Quit early if the border to paint is null.
+						start.setY(item->asTable()->rowPosition(startRow));
+						end.setY((item->asTable()->rowPosition(endRow) + item->asTable()->rowHeight(endRow)));
+						joinVertical(border, topLeft, top, topRight, bottomLeft, bottom, bottomRight, &start, &end, &startOffsetFactors, &endOffsetFactors);
+						paintBorder(border, start, end, startOffsetFactors, endOffsetFactors);
+					}
+					if (col == 0)
 					{
 						const int lastRow = cell.row() + cell.rowSpan() - 1;
-						const int lastCol = cell.column() + cell.columnSpan() - 1;
-						const double borderX = c->asTable()->columnPosition(lastCol) + c->asTable()->columnWidth(lastCol);
+						const int firstCol = cell.column();
+						const double borderX = item->asTable()->columnPosition(firstCol);
 						QPointF start(borderX, 0.0);
 						QPointF end(borderX, 0.0);
 						QPointF startOffsetFactors, endOffsetFactors;
 						int startRow, endRow;
 						for (int row = cell.row(); row <= lastRow; row += endRow - startRow + 1)
 						{
-							TableCell rightCell = c->asTable()->cellAt(row, lastCol + 1);
-							startRow = qMax(cell.row(), rightCell.row());
-							endRow = qMin(lastRow, rightCell.isValid() ? rightCell.row() + rightCell.rowSpan() - 1 : lastRow);
-							TableCell topLeftCell = c->asTable()->cellAt(startRow - 1, lastCol);
-							TableCell topRightCell = c->asTable()->cellAt(startRow - 1, lastCol + 1);
-							TableCell bottomRightCell = c->asTable()->cellAt(endRow + 1, lastCol + 1);
-							TableCell bottomLeftCell = c->asTable()->cellAt(endRow + 1, lastCol);
+							TableCell leftCell = item->asTable()->cellAt(row, firstCol - 1);
+							startRow = qMax(cell.row(), leftCell.row());
+							endRow = qMin(lastRow, leftCell.isValid() ? leftCell.row() + leftCell.rowSpan() - 1 : lastRow);
+							TableCell topLeftCell = item->asTable()->cellAt(startRow - 1, firstCol - 1);
+							TableCell topRightCell = item->asTable()->cellAt(startRow - 1, firstCol);
+							TableCell bottomRightCell = item->asTable()->cellAt(lastRow + 1, firstCol);
+							TableCell bottomLeftCell = item->asTable()->cellAt(lastRow + 1, firstCol - 1);
 							TableBorder topLeft, top, topRight, border, bottomLeft, bottom, bottomRight;
-							resolveBordersVertical(topLeftCell, topRightCell, cell, rightCell, bottomLeftCell, bottomRightCell,
-								&topLeft, &top, &topRight, &border, &bottomLeft, &bottom, &bottomRight, c->asTable());
+							resolveBordersVertical(topLeftCell, topRightCell, leftCell, cell, bottomLeftCell, bottomRightCell,
+								&topLeft, &top, &topRight, &border, &bottomLeft, &bottom, &bottomRight, item->asTable());
 							if (border.isNull())
 								continue; // Quit early if the border to paint is null.
-							start.setY(c->asTable()->rowPosition(startRow));
-							end.setY((c->asTable()->rowPosition(endRow) + c->asTable()->rowHeight(endRow)));
+							start.setY(item->asTable()->rowPosition(startRow));
+							end.setY((item->asTable()->rowPosition(endRow) + item->asTable()->rowHeight(endRow)));
 							joinVertical(border, topLeft, top, topRight, bottomLeft, bottom, bottomRight, &start, &end, &startOffsetFactors, &endOffsetFactors);
 							paintBorder(border, start, end, startOffsetFactors, endOffsetFactors);
 						}
-						if (col == 0)
-						{
-							const int lastRow = cell.row() + cell.rowSpan() - 1;
-							const int firstCol = cell.column();
-							const double borderX = c->asTable()->columnPosition(firstCol);
-							QPointF start(borderX, 0.0);
-							QPointF end(borderX, 0.0);
-							QPointF startOffsetFactors, endOffsetFactors;
-							int startRow, endRow;
-							for (int row = cell.row(); row <= lastRow; row += endRow - startRow + 1)
-							{
-								TableCell leftCell = c->asTable()->cellAt(row, firstCol - 1);
-								startRow = qMax(cell.row(), leftCell.row());
-								endRow = qMin(lastRow, leftCell.isValid() ? leftCell.row() + leftCell.rowSpan() - 1 : lastRow);
-								TableCell topLeftCell = c->asTable()->cellAt(startRow - 1, firstCol - 1);
-								TableCell topRightCell = c->asTable()->cellAt(startRow - 1, firstCol);
-								TableCell bottomRightCell = c->asTable()->cellAt(lastRow + 1, firstCol);
-								TableCell bottomLeftCell = c->asTable()->cellAt(lastRow + 1, firstCol - 1);
-								TableBorder topLeft, top, topRight, border, bottomLeft, bottom, bottomRight;
-								resolveBordersVertical(topLeftCell, topRightCell, leftCell, cell, bottomLeftCell, bottomRightCell,
-									&topLeft, &top, &topRight, &border, &bottomLeft, &bottom, &bottomRight, c->asTable());
-								if (border.isNull())
-									continue; // Quit early if the border to paint is null.
-								start.setY(c->asTable()->rowPosition(startRow));
-								end.setY((c->asTable()->rowPosition(endRow) + c->asTable()->rowHeight(endRow)));
-								joinVertical(border, topLeft, top, topRight, bottomLeft, bottom, bottomRight, &start, &end, &startOffsetFactors, &endOffsetFactors);
-								paintBorder(border, start, end, startOffsetFactors, endOffsetFactors);
-							}
-						}
 					}
-					colSpan = cell.columnSpan();
 				}
+				colSpan = cell.columnSpan();
 			}
-			// Pass 3: Paint horizontal borders.
-			for (int row = 0; row < c->asTable()->rows(); ++row)
+		}
+		// Pass 3: Paint horizontal borders.
+		for (int row = 0; row < item->asTable()->rows(); ++row)
+		{
+			int colSpan = 0;
+			for (int col = 0; col < item->asTable()->columns(); col += colSpan)
 			{
-				int colSpan = 0;
-				for (int col = 0; col < c->asTable()->columns(); col += colSpan)
+				TableCell cell = item->asTable()->cellAt(row, col);
+				if (row == cell.row())
 				{
-					TableCell cell = c->asTable()->cellAt(row, col);
-					if (row == cell.row())
+					const int lastRow = cell.row() + cell.rowSpan() - 1;
+					const int lastCol = cell.column() + cell.columnSpan() - 1;
+					const double borderY = (item->asTable()->rowPosition(lastRow) + item->asTable()->rowHeight(lastRow));
+					QPointF start(0.0, borderY);
+					QPointF end(0.0, borderY);
+					QPointF startOffsetFactors, endOffsetFactors;
+					int startCol, endCol;
+					for (int col = cell.column(); col <= lastCol; col += endCol - startCol + 1)
 					{
-						const int lastRow = cell.row() + cell.rowSpan() - 1;
+						TableCell bottomCell = item->asTable()->cellAt(lastRow + 1, col);
+						startCol = qMax(cell.column(), bottomCell.column());
+						endCol = qMin(lastCol, bottomCell.isValid() ? bottomCell.column() + bottomCell.columnSpan() - 1 : lastCol);
+						TableCell topLeftCell = item->asTable()->cellAt(lastRow, startCol - 1);
+						TableCell topRightCell = item->asTable()->cellAt(lastRow, endCol + 1);
+						TableCell bottomRightCell = item->asTable()->cellAt(lastRow + 1, endCol + 1);
+						TableCell bottomLeftCell = item->asTable()->cellAt(lastRow + 1, startCol - 1);
+						TableBorder topLeft, left, bottomLeft, border, topRight, right, bottomRight;
+						resolveBordersHorizontal(topLeftCell, cell, topRightCell, bottomLeftCell, bottomCell,
+											bottomRightCell, &topLeft, &left, &bottomLeft, &border, &topRight, &right, &bottomRight, item->asTable());
+						if (border.isNull())
+							continue; // Quit early if the border is null.
+						start.setX(item->asTable()->columnPosition(startCol));
+						end.setX(item->asTable()->columnPosition(endCol) + item->asTable()->columnWidth(endCol));
+						joinHorizontal(border, topLeft, left, bottomLeft, topRight, right, bottomRight, &start, &end, &startOffsetFactors, &endOffsetFactors);
+						paintBorder(border, start, end, startOffsetFactors, endOffsetFactors);
+					}
+					if (row == 0)
+					{
+						const int firstRow = cell.row();
 						const int lastCol = cell.column() + cell.columnSpan() - 1;
-						const double borderY = (c->asTable()->rowPosition(lastRow) + c->asTable()->rowHeight(lastRow));
+						const double borderY = item->asTable()->rowPosition(firstRow);
 						QPointF start(0.0, borderY);
 						QPointF end(0.0, borderY);
 						QPointF startOffsetFactors, endOffsetFactors;
 						int startCol, endCol;
 						for (int col = cell.column(); col <= lastCol; col += endCol - startCol + 1)
 						{
-							TableCell bottomCell = c->asTable()->cellAt(lastRow + 1, col);
-							startCol = qMax(cell.column(), bottomCell.column());
-							endCol = qMin(lastCol, bottomCell.isValid() ? bottomCell.column() + bottomCell.columnSpan() - 1 : lastCol);
-							TableCell topLeftCell = c->asTable()->cellAt(lastRow, startCol - 1);
-							TableCell topRightCell = c->asTable()->cellAt(lastRow, endCol + 1);
-							TableCell bottomRightCell = c->asTable()->cellAt(lastRow + 1, endCol + 1);
-							TableCell bottomLeftCell = c->asTable()->cellAt(lastRow + 1, startCol - 1);
+							TableCell topCell = item->asTable()->cellAt(firstRow - 1, col);
+							startCol = qMax(cell.column(), topCell.column());
+							endCol = qMin(lastCol, topCell.isValid() ? topCell.column() + topCell.columnSpan() - 1 : lastCol);
+							TableCell topLeftCell = item->asTable()->cellAt(firstRow - 1, startCol - 1);
+							TableCell topRightCell = item->asTable()->cellAt(firstRow - 1, endCol + 1);
+							TableCell bottomRightCell = item->asTable()->cellAt(firstRow, endCol + 1);
+							TableCell bottomLeftCell = item->asTable()->cellAt(firstRow, startCol - 1);
 							TableBorder topLeft, left, bottomLeft, border, topRight, right, bottomRight;
-							resolveBordersHorizontal(topLeftCell, cell, topRightCell, bottomLeftCell, bottomCell,
-											  bottomRightCell, &topLeft, &left, &bottomLeft, &border, &topRight, &right, &bottomRight, c->asTable());
+							resolveBordersHorizontal(topLeftCell, topCell, topRightCell, bottomLeftCell, cell,
+														bottomRightCell, &topLeft, &left, &bottomLeft, &border, &topRight, &right, &bottomRight, item->asTable());
 							if (border.isNull())
 								continue; // Quit early if the border is null.
-							start.setX(c->asTable()->columnPosition(startCol));
-							end.setX(c->asTable()->columnPosition(endCol) + c->asTable()->columnWidth(endCol));
+							start.setX(item->asTable()->columnPosition(startCol));
+							end.setX(item->asTable()->columnPosition(endCol) + item->asTable()->columnWidth(endCol));
 							joinHorizontal(border, topLeft, left, bottomLeft, topRight, right, bottomRight, &start, &end, &startOffsetFactors, &endOffsetFactors);
 							paintBorder(border, start, end, startOffsetFactors, endOffsetFactors);
 						}
-						if (row == 0)
-						{
-							const int firstRow = cell.row();
-							const int lastCol = cell.column() + cell.columnSpan() - 1;
-							const double borderY = c->asTable()->rowPosition(firstRow);
-							QPointF start(0.0, borderY);
-							QPointF end(0.0, borderY);
-							QPointF startOffsetFactors, endOffsetFactors;
-							int startCol, endCol;
-							for (int col = cell.column(); col <= lastCol; col += endCol - startCol + 1)
-							{
-								TableCell topCell = c->asTable()->cellAt(firstRow - 1, col);
-								startCol = qMax(cell.column(), topCell.column());
-								endCol = qMin(lastCol, topCell.isValid() ? topCell.column() + topCell.columnSpan() - 1 : lastCol);
-								TableCell topLeftCell = c->asTable()->cellAt(firstRow - 1, startCol - 1);
-								TableCell topRightCell = c->asTable()->cellAt(firstRow - 1, endCol + 1);
-								TableCell bottomRightCell = c->asTable()->cellAt(firstRow, endCol + 1);
-								TableCell bottomLeftCell = c->asTable()->cellAt(firstRow, startCol - 1);
-								TableBorder topLeft, left, bottomLeft, border, topRight, right, bottomRight;
-								resolveBordersHorizontal(topLeftCell, topCell, topRightCell, bottomLeftCell, cell,
-														 bottomRightCell, &topLeft, &left, &bottomLeft, &border, &topRight, &right, &bottomRight, c->asTable());
-								if (border.isNull())
-									continue; // Quit early if the border is null.
-								start.setX(c->asTable()->columnPosition(startCol));
-								end.setX(c->asTable()->columnPosition(endCol) + c->asTable()->columnWidth(endCol));
-								joinHorizontal(border, topLeft, left, bottomLeft, topRight, right, bottomRight, &start, &end, &startOffsetFactors, &endOffsetFactors);
-								paintBorder(border, start, end, startOffsetFactors, endOffsetFactors);
-							}
-						}
 					}
-					colSpan = cell.columnSpan();
 				}
+				colSpan = cell.columnSpan();
 			}
-			// Pass 4: Paint cell content.
-			for (int row = 0; row < c->asTable()->rows(); ++row)
+		}
+		// Pass 4: Paint cell content.
+		for (int row = 0; row < item->asTable()->rows(); ++row)
+		{
+			for (int col = 0; col < item->asTable()->columns(); col ++)
 			{
-				for (int col = 0; col < c->asTable()->columns(); col ++)
+				TableCell cell = item->asTable()->cellAt(row, col);
+				if (cell.row() == row && cell.column() == col)
 				{
-					TableCell cell = c->asTable()->cellAt(row, col);
-					if (cell.row() == row && cell.column() == col)
-					{
-						PageItem* textFrame = cell.textFrame();
-						PS_save();
-						PS_translate(cell.contentRect().x(), -cell.contentRect().y());
-						ProcessItem(m_Doc, a, textFrame, PNr, sep, farb, master, true);
-						PS_restore();
-					}
+					PageItem* textFrame = cell.textFrame();
+					PS_save();
+					PS_translate(cell.contentRect().x(), -cell.contentRect().y());
+					ProcessItem(m_Doc, page, textFrame, PNr, sep, farb, master, true);
+					PS_restore();
 				}
 			}
-			PS_restore();
-			break;
-		default:
-			break;
 		}
 		PS_restore();
+		break;
+	default:
+		break;
 	}
+	PS_restore();
+
 	return true;
 }
 
@@ -2555,15 +2560,15 @@ void PSLib::paintBorder(const TableBorder& border, const QPointF& start, const Q
 	PS_restore();
 }
 
-void PSLib::ProcessPage(ScribusDoc* Doc, ScPage* a, uint PNr, bool sep, bool farb)
+void PSLib::ProcessPage(ScribusDoc* Doc, ScPage* page, uint PNr, bool sep, bool farb)
 {
-	PageItem *c;
+	PageItem *item;
 	QList<PageItem*> PItems;
 	int Lnr = 0;
 	ScLayer ll;
 	ll.isPrintable = false;
 	ll.ID = 0;
-	PItems = (a->pageName().isEmpty()) ? Doc->DocItems : Doc->MasterItems;
+	PItems = (page->pageName().isEmpty()) ? Doc->DocItems : Doc->MasterItems;
 	for (int la = 0; la < Doc->Layers.count(); ++la)
 	{
 		Doc->Layers.levelToLayer(ll, Lnr);
@@ -2571,40 +2576,40 @@ void PSLib::ProcessPage(ScribusDoc* Doc, ScPage* a, uint PNr, bool sep, bool far
 		{
 			for (int b = 0; b < PItems.count() && !abortExport; ++b)
 			{
-				c = PItems.at(b);
-				if (usingGUI)
+				item = PItems.at(b);
+				if (progressDialog)
 					ScQApp->processEvents();
-				if (c->LayerID != ll.ID)
+				if (item->LayerID != ll.ID)
 					continue;
-				if ((!a->pageName().isEmpty()) && (c->asTextFrame()))
+				if ((!page->pageName().isEmpty()) && (item->asTextFrame()))
 					continue;
-				if ((!a->pageName().isEmpty()) && (c->asPathText()))
+				if ((!page->pageName().isEmpty()) && (item->asPathText()))
 					continue;
-				if ((!a->pageName().isEmpty()) && (c->asTable()))
+				if ((!page->pageName().isEmpty()) && (item->asTable()))
 					continue;
-				if ((!a->pageName().isEmpty()) && (c->asImageFrame()) && ((sep) || (!farb)))
+				if ((!page->pageName().isEmpty()) && (item->asImageFrame()) && ((sep) || (!farb)))
 					continue;
-				//if ((!Art) && (view->SelItem.count() != 0) && (!c->Select))
-				if ((!psExport) && (!c->isSelected()) && (Doc->m_Selection->count() != 0))
+				//if ((!Art) && (view->SelItem.count() != 0) && (!item->Select))
+				if ((!psExport) && (!item->isSelected()) && (Doc->m_Selection->count() != 0))
 					continue;
 				double bLeft, bRight, bBottom, bTop;
-				GetBleeds(a, bLeft, bRight, bBottom, bTop);
-				double x1 = a->xOffset() - bLeft;
-				double y1 = a->yOffset() - bTop;
-				double w1 = a->width() + bLeft + bRight;
-				double h1 = a->height() + bBottom + bTop;
-				double lw = c->visualLineWidth();
-				double x2 = c->BoundingX - lw / 2.0;
-				double y2 = c->BoundingY - lw / 2.0;
-				double w2 = qMax(c->BoundingW + lw, 1.0);
-				double h2 = qMax(c->BoundingH + lw, 1.0);
+				GetBleeds(page, bLeft, bRight, bBottom, bTop);
+				double x1 = page->xOffset() - bLeft;
+				double y1 = page->yOffset() - bTop;
+				double w1 = page->width() + bLeft + bRight;
+				double h1 = page->height() + bBottom + bTop;
+				double lw = item->visualLineWidth();
+				double x2 = item->BoundingX - lw / 2.0;
+				double y2 = item->BoundingY - lw / 2.0;
+				double w2 = qMax(item->BoundingW + lw, 1.0);
+				double h2 = qMax(item->BoundingH + lw, 1.0);
 				if (!QRectF(x2, y2, w2, h2).intersects(QRectF(x1, y1, w1, h1)))
 					continue;
-				if (c->ChangedMasterItem)
+				if (item->ChangedMasterItem)
 					continue;
-				if ((!a->pageName().isEmpty()) && (c->OwnPage != static_cast<int>(a->pageNr())) && (c->OwnPage != -1))
+				if ((!page->pageName().isEmpty()) && (item->OwnPage != static_cast<int>(page->pageNr())) && (item->OwnPage != -1))
 					continue;
-				ProcessItem(Doc, a, c, PNr, sep, farb, false);
+				ProcessItem(Doc, page, item, PNr, sep, farb, false);
 			}
 		}
 		Lnr++;
@@ -2622,7 +2627,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 		for (int am = 0; am < page->FromMaster.count() && !abortExport; ++am)
 		{
 			PageItem *ite = page->FromMaster.at(am);
-			if (usingGUI)
+			if (progressDialog)
 				ScQApp->processEvents();
 			if ((ite->LayerID != layer.ID) || (!ite->printEnabled()))
 				continue;
@@ -2856,7 +2861,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 					PS_rotate(-ite->rotation());
 				if ((ite->fillColor() != CommonStrings::None) || (ite->GrType != 0))
 				{
-					SetClipPath(&ite->PoLine);
+					SetClipPath(ite->PoLine);
 					PS_closepath();
 					if (ite->GrType == 14)
 						PS_HatchFill(ite);
@@ -2892,7 +2897,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 							PS_setlinewidth(ite->lineWidth());
 							PS_setcapjoin(ite->PLineEnd, ite->PLineJoin);
 							PS_setdash(ite->PLineArt, ite->DashOffset, ite->DashValues);
-							SetClipPath(&ite->PoLine);
+							SetClipPath(ite->PoLine);
 							PS_closepath();
 							if (strokePattern)
 								HandleStrokePattern(ite);
@@ -2918,7 +2923,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 								PS_setlinewidth(ml[it].Width);
 								PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
 								PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-								SetClipPath(&ite->PoLine);
+								SetClipPath(ite->PoLine);
 								PS_closepath();
 								putColor(ml[it].Color, ml[it].Shade, false);
 							}
@@ -2936,7 +2941,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 					if (ite->PoLine.size() > 3)
 					{
 						PS_save();
-						if (ite->NamedLStyle.isEmpty()) //&& (c->lineWidth() != 0.0))
+						if (ite->NamedLStyle.isEmpty()) //&& (item->lineWidth() != 0.0))
 						{
 							ScPattern* strokePattern = Doc->checkedPattern(ite->strokePattern());
 							if (strokePattern && (ite->patternStrokePath))
@@ -2946,7 +2951,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 							}
 							else
 							{
-								SetClipPath(&ite->PoLine, false);
+								SetClipPath(ite->PoLine, false);
 								if (strokePattern)
 									HandleStrokePattern(ite);
 								else if (ite->GrTypeStroke > 0)
@@ -2967,7 +2972,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 									PS_setlinewidth(ml[it].Width);
 									PS_setcapjoin(static_cast<Qt::PenCapStyle>(ml[it].LineEnd), static_cast<Qt::PenJoinStyle>(ml[it].LineJoin));
 									PS_setdash(static_cast<Qt::PenStyle>(ml[it].Dash), 0, dum);
-									SetClipPath(&ite->PoLine, false);
+									SetClipPath(ite->PoLine, false);
 									putColor(ml[it].Color, ml[it].Shade, false);
 								}
 							}
@@ -2989,62 +2994,61 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 bool PSLib::ProcessPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer, uint PNr, bool sep, bool farb)
 {
 	bool success = true;
-	int b;
-//	int h, s, v, k;
+	if (!layer.isPrintable || abortExport)
+		return true;
+
 	QList<PageItem*> items;
 	items = (page->pageName().isEmpty()) ? Doc->DocItems : Doc->MasterItems;
-	if (layer.isPrintable && !abortExport)
+
+	for (int i = 0; i < items.count() && !abortExport; ++i)
 	{
-		for (b = 0; b < items.count() && !abortExport; ++b)
-		{
-			PageItem *item = items.at(b);
-			if (usingGUI)
-				ScQApp->processEvents();
-			if (item->LayerID != layer.ID)
-				continue;
-			if ((!page->pageName().isEmpty()) && (item->asTextFrame()))
-				continue;
-			if ((!page->pageName().isEmpty()) && (item->asPathText()))
-				continue;
-			if ((!page->pageName().isEmpty()) && (item->asTable()))
-				continue;
-			if ((!page->pageName().isEmpty()) && (item->asImageFrame()) && ((sep) || (!farb)))
-				continue;
-			//if ((!Art) && (view->SelItem.count() != 0) && (!c->Select))
-			if ((!psExport) && (!item->isSelected()) && (Doc->m_Selection->count() != 0))
-				continue;
-			double bLeft, bRight, bBottom, bTop;
-			GetBleeds(page, bLeft, bRight, bBottom, bTop);
-			double x1 = page->xOffset() - bLeft;
-			double y1 = page->yOffset() - bTop;
-			double w1 = page->width() + bLeft + bRight;
-			double h1 = page->height() + bBottom + bTop;
-			double lw = item->visualLineWidth();
-			double x2 = item->BoundingX - lw / 2.0;
-			double y2 = item->BoundingY - lw / 2.0;
-			double w2 = qMax(item->BoundingW + lw, 1.0);
-			double h2 = qMax(item->BoundingH + lw, 1.0);
-			if (!QRectF(x2, y2, w2, h2).intersects(QRectF(x1, y1, w1, h1)))
-				continue;
-			if (item->ChangedMasterItem)
-				continue;
-			if ((!page->pageName().isEmpty()) && (item->OwnPage != static_cast<int>(page->pageNr())) && (item->OwnPage != -1))
-				continue;
-			success &= ProcessItem(Doc, page, item, PNr, sep, farb, false);
-			if (!success)
-				break;
-		}
+		PageItem *item = items.at(i);
+		if (progressDialog)
+			ScQApp->processEvents();
+		if (item->LayerID != layer.ID)
+			continue;
+		if ((!page->pageName().isEmpty()) && (item->asTextFrame()))
+			continue;
+		if ((!page->pageName().isEmpty()) && (item->asPathText()))
+			continue;
+		if ((!page->pageName().isEmpty()) && (item->asTable()))
+			continue;
+		if ((!page->pageName().isEmpty()) && (item->asImageFrame()) && ((sep) || (!farb)))
+			continue;
+		//if ((!Art) && (view->SelItem.count() != 0) && (!item->Select))
+		if ((!psExport) && (!item->isSelected()) && (Doc->m_Selection->count() != 0))
+			continue;
+		double bLeft, bRight, bBottom, bTop;
+		GetBleeds(page, bLeft, bRight, bBottom, bTop);
+		double x1 = page->xOffset() - bLeft;
+		double y1 = page->yOffset() - bTop;
+		double w1 = page->width() + bLeft + bRight;
+		double h1 = page->height() + bBottom + bTop;
+		double lw = item->visualLineWidth();
+		double x2 = item->BoundingX - lw / 2.0;
+		double y2 = item->BoundingY - lw / 2.0;
+		double w2 = qMax(item->BoundingW + lw, 1.0);
+		double h2 = qMax(item->BoundingH + lw, 1.0);
+		if (!QRectF(x2, y2, w2, h2).intersects(QRectF(x1, y1, w1, h1)))
+			continue;
+		if (item->ChangedMasterItem)
+			continue;
+		if ((!page->pageName().isEmpty()) && (item->OwnPage != static_cast<int>(page->pageNr())) && (item->OwnPage != -1))
+			continue;
+		success &= ProcessItem(Doc, page, item, PNr, sep, farb, false);
+		if (!success)
+			break;
 	}
 	return success;
 }
 
 
-void PSLib::HandleBrushPattern(PageItem *c, QPainterPath &path, ScPage* a, uint PNr, bool sep, bool farb, bool master)
+void PSLib::HandleBrushPattern(PageItem *item, QPainterPath &path, ScPage* a, uint PNr, bool sep, bool farb, bool master)
 {
-	ScPattern pat = m_Doc->docPatterns[c->strokePattern()];
-	double pLen = path.length() - ((pat.width / 2.0) * (c->patternStrokeScaleX / 100.0));
-	double adv = pat.width * c->patternStrokeScaleX / 100.0 * c->patternStrokeSpace;
-	double xpos = c->patternStrokeOffsetX * c->patternStrokeScaleX / 100.0;
+	ScPattern pat = m_Doc->docPatterns[item->strokePattern()];
+	double pLen = path.length() - ((pat.width / 2.0) * (item->patternStrokeScaleX / 100.0));
+	double adv = pat.width * item->patternStrokeScaleX / 100.0 * item->patternStrokeSpace;
+	double xpos = item->patternStrokeOffsetX * item->patternStrokeScaleX / 100.0;
 	while (xpos < pLen)
 	{
 		double currPerc = path.percentAtLength(xpos);
@@ -3058,17 +3062,17 @@ void PSLib::HandleBrushPattern(PageItem *c, QPainterPath &path, ScPage* a, uint 
 		PS_translate(currPoint.x(), -currPoint.y());
 		PS_rotate(-currAngle);
 		QTransform trans;
-		trans.translate(0.0, -c->patternStrokeOffsetY);
-		trans.rotate(-c->patternStrokeRotation);
-		trans.shear(c->patternStrokeSkewX, -c->patternStrokeSkewY);
-		trans.scale(c->patternStrokeScaleX / 100.0, c->patternStrokeScaleY / 100.0);
+		trans.translate(0.0, -item->patternStrokeOffsetY);
+		trans.rotate(-item->patternStrokeRotation);
+		trans.shear(item->patternStrokeSkewX, -item->patternStrokeSkewY);
+		trans.scale(item->patternStrokeScaleX / 100.0, item->patternStrokeScaleY / 100.0);
 		trans.translate(-pat.width / 2.0, -pat.height / 2.0);
-		if (c->patternStrokeMirrorX)
+		if (item->patternStrokeMirrorX)
 		{
 			trans.translate(pat.width, 0);
 			trans.scale(-1, 1);
 		}
-		if (c->patternStrokeMirrorY)
+		if (item->patternStrokeMirrorY)
 		{
 			trans.translate(0, pat.height);
 			trans.scale(1, -1);
@@ -3087,22 +3091,22 @@ void PSLib::HandleBrushPattern(PageItem *c, QPainterPath &path, ScPage* a, uint 
 	}
 }
 
-void PSLib::HandleStrokePattern(PageItem *c)
+void PSLib::HandleStrokePattern(PageItem *item)
 {
 	ScPattern *pat;
 	QTransform patternMatrix;
 	double patternScaleX, patternScaleY, patternOffsetX, patternOffsetY, patternRotation, patternSkewX, patternSkewY, patternSpace;
-	pat = &m_Doc->docPatterns[c->strokePattern()];
-	uint patHash = qHash(c->strokePattern());
-	c->strokePatternTransform(patternScaleX, patternScaleY, patternOffsetX, patternOffsetY, patternRotation, patternSkewX, patternSkewY, patternSpace);
-	patternMatrix.translate(-c->lineWidth() / 2.0, c->lineWidth() / 2.0);
+	pat = &m_Doc->docPatterns[item->strokePattern()];
+	uint patHash = qHash(item->strokePattern());
+	item->strokePatternTransform(patternScaleX, patternScaleY, patternOffsetX, patternOffsetY, patternRotation, patternSkewX, patternSkewY, patternSpace);
+	patternMatrix.translate(-item->lineWidth() / 2.0, item->lineWidth() / 2.0);
 	patternMatrix.translate(patternOffsetX, -patternOffsetY);
 	patternMatrix.rotate(-patternRotation);
 	patternMatrix.shear(patternSkewX, -patternSkewY);
 	patternMatrix.scale(pat->scaleX, pat->scaleY);
 	patternMatrix.scale(patternScaleX / 100.0 , patternScaleY / 100.0);
 	bool mirrorX, mirrorY;
-	c->strokePatternFlip(mirrorX, mirrorY);
+	item->strokePatternFlip(mirrorX, mirrorY);
 	if (mirrorX)
 		patternMatrix.scale(-1, 1);
 	if (mirrorY)
@@ -3111,7 +3115,7 @@ void PSLib::HandleStrokePattern(PageItem *c)
 	PutStream("stroke\n");
 }
 
-void PSLib::HandleMeshGradient(PageItem* c)
+void PSLib::HandleMeshGradient(PageItem* item)
 {
 	QString hs,ss,vs,ks;
 	double ch,cs,cv,ck;
@@ -3121,11 +3125,11 @@ void PSLib::HandleMeshGradient(PageItem* c)
 	QStringList tmpAddedColors;
 	tmpAddedColors.clear();
 	QList<int> colsSh;
-	for (int grow = 0; grow < c->meshGradientArray.count(); grow++)
+	for (int grow = 0; grow < item->meshGradientArray.count(); grow++)
 	{
-		for (int gcol = 0; gcol < c->meshGradientArray[grow].count(); gcol++)
+		for (int gcol = 0; gcol < item->meshGradientArray[grow].count(); gcol++)
 		{
-			MeshPoint mp1 = c->meshGradientArray[grow][gcol];
+			MeshPoint mp1 = item->meshGradientArray[grow][gcol];
 			cols.append(mp1.colorName);
 			if (!m_Doc->PageColors.contains(mp1.colorName))
 			{
@@ -3190,7 +3194,7 @@ void PSLib::HandleMeshGradient(PageItem* c)
 			colorValues.append(colorVal);
 		}
 	}
-	for (int grow = 0; grow < c->meshGradientArray.count()-1; grow++)
+	for (int grow = 0; grow < item->meshGradientArray.count()-1; grow++)
 	{
 		PutStream("gs\n");
 		PutStream("<<\n");
@@ -3241,16 +3245,16 @@ void PSLib::HandleMeshGradient(PageItem* c)
 		QString vertStream;
 		QTextStream vst(&vertStream, QIODevice::WriteOnly);
 		quint8 flg = 0;
-		for (int gcol = 0; gcol < c->meshGradientArray[grow].count()-1; gcol++)
+		for (int gcol = 0; gcol < item->meshGradientArray[grow].count()-1; gcol++)
 		{
-			MeshPoint mp1 = c->meshGradientArray[grow][gcol];
-			MeshPoint mp2 = c->meshGradientArray[grow][gcol+1];
-			MeshPoint mp3 = c->meshGradientArray[grow+1][gcol+1];
-			MeshPoint mp4 = c->meshGradientArray[grow+1][gcol];
-			int colInd1 = grow * c->meshGradientArray[grow].count() + gcol;
-			int colInd2 = grow * c->meshGradientArray[grow].count() + gcol + 1;
-			int colInd3 = (grow + 1) * c->meshGradientArray[grow].count() + gcol + 1;
-			int colInd4 = (grow + 1) * c->meshGradientArray[grow].count() + gcol;
+			MeshPoint mp1 = item->meshGradientArray[grow][gcol];
+			MeshPoint mp2 = item->meshGradientArray[grow][gcol+1];
+			MeshPoint mp3 = item->meshGradientArray[grow+1][gcol+1];
+			MeshPoint mp4 = item->meshGradientArray[grow+1][gcol];
+			int colInd1 = grow * item->meshGradientArray[grow].count() + gcol;
+			int colInd2 = grow * item->meshGradientArray[grow].count() + gcol + 1;
+			int colInd3 = (grow + 1) * item->meshGradientArray[grow].count() + gcol + 1;
+			int colInd4 = (grow + 1) * item->meshGradientArray[grow].count() + gcol;
 			vst << flg << "\n";
 			vst << mp4.gridPoint.x() << " " << -mp4.gridPoint.y() << " " << mp4.controlTop.x() << " " << -mp4.controlTop.y() << " " << mp1.controlBottom.x() << " " << -mp1.controlBottom.y() << "\n";
 			vst << mp1.gridPoint.x() << " " << -mp1.gridPoint.y() << " " << mp1.controlRight.x() << " " << -mp1.controlRight.y() << " " << mp2.controlLeft.x() << " " << -mp2.controlLeft.y() << "\n";
@@ -3285,7 +3289,7 @@ void PSLib::HandleMeshGradient(PageItem* c)
 	return;
 }
 
-void PSLib::HandlePatchMeshGradient(PageItem* c)
+void PSLib::HandlePatchMeshGradient(PageItem* item)
 {
 	QString hs,ss,vs,ks;
 	double ch,cs,cv,ck;
@@ -3293,9 +3297,9 @@ void PSLib::HandlePatchMeshGradient(PageItem* c)
 	QStringList colorValues;
 	QStringList spotColorSet;
 	QList<int> colsSh;
-	for (int col = 0; col < c->meshGradientPatches.count(); col++)
+	for (int col = 0; col < item->meshGradientPatches.count(); col++)
 	{
-		meshGradientPatch patch = c->meshGradientPatches[col];
+		meshGradientPatch patch = item->meshGradientPatches[col];
 		MeshPoint mp1 = patch.TL;
 		cols.append(mp1.colorName);
 		colsSh.append(mp1.shade);
@@ -3372,7 +3376,7 @@ void PSLib::HandlePatchMeshGradient(PageItem* c)
 			colorValues.append(colorVal);
 		}
 	}
-	for (int col = 0; col < c->meshGradientPatches.count(); col++)
+	for (int col = 0; col < item->meshGradientPatches.count(); col++)
 	{
 		PutStream("gs\n");
 		PutStream("<<\n");
@@ -3423,10 +3427,10 @@ void PSLib::HandlePatchMeshGradient(PageItem* c)
 		QString vertStream;
 		QTextStream vst(&vertStream, QIODevice::WriteOnly);
 		quint8 flg = 0;
-		for (int col2 = col; col2 < c->meshGradientPatches.count(); col2++)
+		for (int col2 = col; col2 < item->meshGradientPatches.count(); col2++)
 		{
 			col = col2;
-			meshGradientPatch patch = c->meshGradientPatches[col2];
+			meshGradientPatch patch = item->meshGradientPatches[col2];
 			MeshPoint mp1 = patch.TL;
 			MeshPoint mp2 = patch.TR;
 			MeshPoint mp3 = patch.BR;
@@ -3466,7 +3470,7 @@ void PSLib::HandlePatchMeshGradient(PageItem* c)
 	return;
 }
 
-void PSLib::HandleDiamondGradient(PageItem* c)
+void PSLib::HandleDiamondGradient(PageItem* item)
 {
 	QString hs,ss,vs,ks;
 	double ch,cs,cv,ck;
@@ -3475,14 +3479,14 @@ void PSLib::HandleDiamondGradient(PageItem* c)
 	QStringList spotColorSet;
 	QList<int> colsSh;
 	VGradient gradient;
-	if (!(c->gradient().isEmpty()) && (m_Doc->docGradients.contains(c->gradient())))
-		gradient = m_Doc->docGradients[c->gradient()];
+	if (!(item->gradient().isEmpty()) && (m_Doc->docGradients.contains(item->gradient())))
+		gradient = m_Doc->docGradients[item->gradient()];
 	else
-		gradient = c->fill_gradient;
-	gradient.setRepeatMethod(c->getGradientExtend());
+		gradient = item->fill_gradient;
+	gradient.setRepeatMethod(item->getGradientExtend());
 	QList<VColorStop*> colorStops = gradient.colorStops();
 	QList<double> qStopRampPoints;
-	for (uint cst = 0; cst < gradient.Stops(); ++cst)
+	for (int cst = 0; cst < gradient.Stops(); ++cst)
 	{
 		if (cst == 0)
 		{
@@ -3592,11 +3596,11 @@ void PSLib::HandleDiamondGradient(PageItem* c)
 		PutStream("/ColorSpace /DeviceCMYK\n");
 	PutStream("/Background ["+colorValues[colorValues.count()-1]+"]\n");
 	PutStream("/DataSource [\n");
-	QPointF centerP = QPointF(c->GrControl5.x(), -c->GrControl5.y());
-	QLineF edge1 = QLineF(centerP, QPointF(c->GrControl1.x(), -c->GrControl1.y()));
-	QLineF edge2 = QLineF(centerP, QPointF(c->GrControl2.x(), -c->GrControl2.y()));
-	QLineF edge3 = QLineF(centerP, QPointF(c->GrControl3.x(), -c->GrControl3.y()));
-	QLineF edge4 = QLineF(centerP, QPointF(c->GrControl4.x(), -c->GrControl4.y()));
+	QPointF centerP = QPointF(item->GrControl5.x(), -item->GrControl5.y());
+	QLineF edge1 = QLineF(centerP, QPointF(item->GrControl1.x(), -item->GrControl1.y()));
+	QLineF edge2 = QLineF(centerP, QPointF(item->GrControl2.x(), -item->GrControl2.y()));
+	QLineF edge3 = QLineF(centerP, QPointF(item->GrControl3.x(), -item->GrControl3.y()));
+	QLineF edge4 = QLineF(centerP, QPointF(item->GrControl4.x(), -item->GrControl4.y()));
 	for (int offset = 1; offset < qStopRampPoints.count(); ++offset)
 	{
 		QLineF e1 = edge1;
@@ -3681,7 +3685,7 @@ void PSLib::HandleDiamondGradient(PageItem* c)
 	return;
 }
 
-void PSLib::HandleTensorGradient(PageItem* c)
+void PSLib::HandleTensorGradient(PageItem* item)
 {
 	QString GCol;
 	QString hs,ss,vs,ks;
@@ -3689,8 +3693,8 @@ void PSLib::HandleTensorGradient(PageItem* c)
 	QStringList cols;
 	QStringList spotColorSet;
 	QList<int> colsSh;
-	cols << c->GrColorP4 << c->GrColorP1 << c->GrColorP2 << c->GrColorP3;
-	colsSh << c->GrCol4Shade << c->GrCol1Shade << c->GrCol2Shade << c->GrCol3Shade;
+	cols << item->GrColorP4 << item->GrColorP1 << item->GrColorP2 << item->GrColorP3;
+	colsSh << item->GrCol4Shade << item->GrCol1Shade << item->GrCol2Shade << item->GrCol3Shade;
 	for (int cst = 0; cst < cols.count(); ++cst)
 	{
 		if (spotMap.contains(cols.at(cst)))
@@ -3740,13 +3744,13 @@ void PSLib::HandleTensorGradient(PageItem* c)
 	else
 		PutStream("/ColorSpace /DeviceCMYK\n");
 	PutStream("/DataSource [0\n");
-	PutStream("0 "+ToStr(-c->height())+" 0 "+ToStr(-c->height())+" 0 0 0 0 0 0 "+ToStr(c->width())+" 0 "+ToStr(c->width())+" 0 "+ToStr(c->width())+" 0\n");
-	PutStream(ToStr(c->width())+" "+ToStr(-c->height())+" "+ToStr(c->width())+" "+ToStr(-c->height())+" "+ToStr(c->width())+" "+ToStr(-c->height())+"\n");
-	PutStream("0 "+ToStr(-c->height())+"\n");
-	PutStream(ToStr(c->GrControl1.x())+" "+ToStr(-c->GrControl1.y())+"\n");
-	PutStream(ToStr(c->GrControl4.x())+" "+ToStr(-c->GrControl4.y())+"\n");
-	PutStream(ToStr(c->GrControl3.x())+" "+ToStr(-c->GrControl3.y())+"\n");
-	PutStream(ToStr(c->GrControl2.x())+" "+ToStr(-c->GrControl2.y())+"\n");
+	PutStream("0 "+ToStr(-item->height())+" 0 "+ToStr(-item->height())+" 0 0 0 0 0 0 "+ToStr(item->width())+" 0 "+ToStr(item->width())+" 0 "+ToStr(item->width())+" 0\n");
+	PutStream(ToStr(item->width())+" "+ToStr(-item->height())+" "+ToStr(item->width())+" "+ToStr(-item->height())+" "+ToStr(item->width())+" "+ToStr(-item->height())+"\n");
+	PutStream("0 "+ToStr(-item->height())+"\n");
+	PutStream(ToStr(item->GrControl1.x())+" "+ToStr(-item->GrControl1.y())+"\n");
+	PutStream(ToStr(item->GrControl4.x())+" "+ToStr(-item->GrControl4.y())+"\n");
+	PutStream(ToStr(item->GrControl3.x())+" "+ToStr(-item->GrControl3.y())+"\n");
+	PutStream(ToStr(item->GrControl2.x())+" "+ToStr(-item->GrControl2.y())+"\n");
 	for (int ac = 0; ac < cols.count(); ac++)
 	{
 		if ((useSpotColors) && ((spotColorSet.count() > 0) && (spotColorSet.count() < 28)) && (!GraySc))
@@ -3802,7 +3806,7 @@ void PSLib::HandleTensorGradient(PageItem* c)
 	return;
 }
 
-void PSLib::HandleGradientFillStroke(PageItem *c, bool stroke, bool forArrow)
+void PSLib::HandleGradientFillStroke(PageItem *item, bool stroke, bool forArrow)
 {
 	double StartX, StartY, EndX, EndY, FocalX, FocalY, Gscale, Gskew;
 	int GType;
@@ -3813,51 +3817,51 @@ void PSLib::HandleGradientFillStroke(PageItem *c, bool stroke, bool forArrow)
 	QStringList spotColorSet;
 	if (stroke)
 	{
-		GType = c->GrTypeStroke;
-		StartX = c->GrStrokeStartX;
-		StartY = c->GrStrokeStartY;
-		EndX = c->GrStrokeEndX;
-		EndY = c->GrStrokeEndY;
-		FocalX = c->GrStrokeFocalX;
-		FocalY = c->GrStrokeFocalY;
-		Gscale = c->GrStrokeScale;
-		Gskew = c->GrStrokeSkew;
-		if (!(c->strokeGradient().isEmpty()) && (m_Doc->docGradients.contains(c->strokeGradient())))
-			gradient = m_Doc->docGradients[c->strokeGradient()];
+		GType = item->GrTypeStroke;
+		StartX = item->GrStrokeStartX;
+		StartY = item->GrStrokeStartY;
+		EndX = item->GrStrokeEndX;
+		EndY = item->GrStrokeEndY;
+		FocalX = item->GrStrokeFocalX;
+		FocalY = item->GrStrokeFocalY;
+		Gscale = item->GrStrokeScale;
+		Gskew = item->GrStrokeSkew;
+		if (!(item->strokeGradient().isEmpty()) && (m_Doc->docGradients.contains(item->strokeGradient())))
+			gradient = m_Doc->docGradients[item->strokeGradient()];
 		else
-			gradient = c->stroke_gradient;
-		gradient.setRepeatMethod(c->getStrokeGradientExtend());
+			gradient = item->stroke_gradient;
+		gradient.setRepeatMethod(item->getStrokeGradientExtend());
 	}
 	else
 	{
-		GType = c->GrType;
-		StartX = c->GrStartX;
-		StartY = c->GrStartY;
-		EndX = c->GrEndX;
-		EndY = c->GrEndY;
-		FocalX = c->GrFocalX;
-		FocalY = c->GrFocalY;
-		Gscale = c->GrScale;
-		Gskew = c->GrSkew;
-		if (!(c->gradient().isEmpty()) && (m_Doc->docGradients.contains(c->gradient())))
-			gradient = m_Doc->docGradients[c->gradient()];
+		GType = item->GrType;
+		StartX = item->GrStartX;
+		StartY = item->GrStartY;
+		EndX = item->GrEndX;
+		EndY = item->GrEndY;
+		FocalX = item->GrFocalX;
+		FocalY = item->GrFocalY;
+		Gscale = item->GrScale;
+		Gskew = item->GrSkew;
+		if (!(item->gradient().isEmpty()) && (m_Doc->docGradients.contains(item->gradient())))
+			gradient = m_Doc->docGradients[item->gradient()];
 		else
-			gradient = c->fill_gradient;
-		gradient.setRepeatMethod(c->getGradientExtend());
+			gradient = item->fill_gradient;
+		gradient.setRepeatMethod(item->getGradientExtend());
 		if (GType == 8)
 		{
 			QTransform patternMatrix;
 			double patternScaleX, patternScaleY, patternOffsetX, patternOffsetY, patternRotation, patternSkewX, patternSkewY;
-			ScPattern *pat = &m_Doc->docPatterns[c->pattern()];
-			uint patHash = qHash(c->pattern());
-			c->patternTransform(patternScaleX, patternScaleY, patternOffsetX, patternOffsetY, patternRotation, patternSkewX, patternSkewY);
+			ScPattern *pat = &m_Doc->docPatterns[item->pattern()];
+			uint patHash = qHash(item->pattern());
+			item->patternTransform(patternScaleX, patternScaleY, patternOffsetX, patternOffsetY, patternRotation, patternSkewX, patternSkewY);
 			patternMatrix.translate(patternOffsetX, -patternOffsetY);
 			patternMatrix.rotate(-patternRotation);
 			patternMatrix.shear(patternSkewX, -patternSkewY);
 			patternMatrix.scale(pat->scaleX, pat->scaleY);
 			patternMatrix.scale(patternScaleX / 100.0 , patternScaleY / 100.0);
 			bool mirrorX, mirrorY;
-			c->patternFlip(mirrorX, mirrorY);
+			item->patternFlip(mirrorX, mirrorY);
 			if (mirrorX)
 				patternMatrix.scale(-1, 1);
 			if (mirrorY)
@@ -3871,22 +3875,22 @@ void PSLib::HandleGradientFillStroke(PageItem *c, bool stroke, bool forArrow)
 		}
 		else if (GType == 9)
 		{
-			HandleTensorGradient(c);
+			HandleTensorGradient(item);
 			return;
 		}
 		else if (GType == 10)
 		{
-			HandleDiamondGradient(c);
+			HandleDiamondGradient(item);
 			return;
 		}
 		else if ((GType == 11) || (GType == 13))
 		{
-			HandleMeshGradient(c);
+			HandleMeshGradient(item);
 			return;
 		}
 		else if (GType == 12)
 		{
-			HandlePatchMeshGradient(c);
+			HandlePatchMeshGradient(item);
 			return;
 		}
 	}
@@ -3895,7 +3899,7 @@ void PSLib::HandleGradientFillStroke(PageItem *c, bool stroke, bool forArrow)
 	PutStream("/PatternType 2\n");
 	PutStream("/Shading\n");
 	PutStream("<<\n");
-	for (uint cst = 0; cst < gradient.Stops(); ++cst)
+	for (int cst = 0; cst < gradient.Stops(); ++cst)
 	{
 		double actualStop = cstops.at(cst)->rampPoint;
 		if ((cst == 0) && (actualStop != 0.0))
@@ -4237,7 +4241,7 @@ void PSLib::drawArrow(PageItem *ite, QTransform &arrowTrans, int arrowIndex)
 		if (strokePattern)
 		{
 			PS_newpath();
-			SetClipPath(&arrow);
+			SetClipPath(arrow);
 			PS_closepath();
 			QTransform patternMatrix;
 			double patternScaleX, patternScaleY, patternOffsetX, patternOffsetY, patternRotation, patternSkewX, patternSkewY, patternSpace;
@@ -4264,7 +4268,7 @@ void PSLib::drawArrow(PageItem *ite, QTransform &arrowTrans, int arrowIndex)
 		else if (ite->GrTypeStroke > 0)
 		{
 			PS_newpath();
-			SetClipPath(&arrow);
+			SetClipPath(arrow);
 			PS_closepath();
 			HandleGradientFillStroke(ite, true, true);
 		}
@@ -4273,7 +4277,7 @@ void PSLib::drawArrow(PageItem *ite, QTransform &arrowTrans, int arrowIndex)
 			SetColor(ite->lineColor(), ite->lineShade(), &h, &s, &v, &k);
 			PS_setcmykcolor_fill(h, s, v, k);
 			PS_newpath();
-			SetClipPath(&arrow);
+			SetClipPath(arrow);
 			PS_closepath();
 			putColor(ite->lineColor(), ite->lineShade(), true);
 		}
@@ -4286,7 +4290,7 @@ void PSLib::drawArrow(PageItem *ite, QTransform &arrowTrans, int arrowIndex)
 			SetColor(ml[0].Color, ml[0].Shade, &h, &s, &v, &k);
 			PS_setcmykcolor_fill(h, s, v, k);
 			PS_newpath();
-			SetClipPath(&arrow);
+			SetClipPath(arrow);
 			PS_closepath();
 			putColor(ite->lineColor(), ite->lineShade(), true);
 		}
@@ -4299,7 +4303,7 @@ void PSLib::drawArrow(PageItem *ite, QTransform &arrowTrans, int arrowIndex)
 				PS_setlinewidth(ml[it].Width);
 				PS_setcapjoin(Qt::FlatCap, Qt::MiterJoin);
 				PS_setdash(Qt::SolidLine, 0, dum);
-				SetClipPath(&arrow);
+				SetClipPath(arrow);
 				PS_closepath();
 				putColor(ml[it].Color, ml[it].Shade, false);
 			}
@@ -4480,24 +4484,24 @@ void PSLib::GetBleeds(ScPage* page, double& left, double& right, double& bottom,
 	top    = values.top();
 }
 
-void PSLib::SetClipPath(FPointArray *c, bool poly)
+void PSLib::SetClipPath(const FPointArray &points, bool poly)
 {
 	FPoint np, np1, np2, np3, np4, firstP;
 	bool nPath = true;
 	bool first = true;
-	if (c->size() <= 3)
+	if (points.size() <= 3)
 		return;
 
-	for (int poi=0; poi < c->size()-3; poi += 4)
+	for (int poi=0; poi < points.size()-3; poi += 4)
 	{
-		if (c->isMarker(poi))
+		if (points.isMarker(poi))
 		{
 			nPath = true;
 			continue;
 		}
 		if (nPath)
 		{
-			np = c->point(poi);
+			np = points.point(poi);
 			if ((!first) && (poly) && (np4 == firstP))
 				PS_closepath();
 			PS_moveto(np.x(), -np.y());
@@ -4506,10 +4510,10 @@ void PSLib::SetClipPath(FPointArray *c, bool poly)
 			firstP = np;
 			np4 = np;
 		}
-		np = c->point(poi);
-		np1 = c->point(poi+1);
-		np2 = c->point(poi+3);
-		np3 = c->point(poi+2);
+		np = points.point(poi);
+		np1 = points.point(poi+1);
+		np2 = points.point(poi+3);
+		np3 = points.point(poi+2);
 		if ((np == np1) && (np2 == np3))
 			PS_lineto(np3.x(), -np3.y());
 		else
@@ -4518,11 +4522,11 @@ void PSLib::SetClipPath(FPointArray *c, bool poly)
 	}
 }
 
-void PSLib::SetPathAndClip(FPointArray &path, bool clipRule)
+void PSLib::SetPathAndClip(const FPointArray &path, bool clipRule)
 {
 	if (path.size() > 3)
 	{
-		SetClipPath(&path);
+		SetClipPath(path);
 		PS_closepath();
 		PS_clip(clipRule);
 	}

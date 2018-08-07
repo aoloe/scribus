@@ -44,6 +44,9 @@ struct ItemMultipleDuplicateData
 	int gridCols;
 	double gridGapH;
 	double gridGapV;
+    int pageSelection; // 1 = All, 2 = Even, 3 = odd, 4 = Range
+    QString pageRange;
+    bool pageLinkText;
 };
 
 struct CreateRangeData

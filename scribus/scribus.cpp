@@ -61,6 +61,8 @@ for which a new license (GPL+exception) is in place.
 //#include <QQmlProperty>
 //>>
 #include <QRegExp>
+#include <memory>
+#include <QScopedPointer>
 #include <QScopedPointer>
 #include <QStyleFactory>
 #include <QTableWidget>
@@ -6475,7 +6477,7 @@ void ScribusMainWindow::duplicateItemMulti()
 	if (doc->appMode == modeEditClip)
 		view->requestMode(submodeEndNodeEdit);
 	internalCopy = true;
-	QScopedPointer<MultipleDuplicate> dia(new MultipleDuplicate(doc->unitIndex(), this));
+	QScopedPointer<MultipleDuplicate> dia(new MultipleDuplicate(this, doc));
 	if (dia->exec())
 	{
 		ItemMultipleDuplicateData mdData;

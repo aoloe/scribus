@@ -1757,7 +1757,7 @@ void PageItem_TextFrame::layout()
 						realCharHeight = qMax(realCharHeight, gm.ascent + gm.descent);
 						gm = font.glyphBBox(gl.glyph, chsd / 10.0);
 						realAsce = qMax(realAsce, gm.ascent + gm.descent);
-						wide += gm.width;
+						wide += gm.width; // a.l.e: this sets the width of the indent
 					}
 					wide = (wide* scaleH) + (1 - scaleH);
 					realAsce = realAsce  * scaleV + offset;

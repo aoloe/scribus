@@ -13572,6 +13572,11 @@ QRectF ScribusDoc::ApplyGridF(const QRectF& in)
 	return nr;
 }
 
+/**
+ * m_Selection
+ * QList<PageItem*> selectedItems = m_Selection->items()
+ * Selection selection
+ */
 void ScribusDoc::itemSelection_MultipleDuplicate(ItemMultipleDuplicateData& mdData)
 {
 	if ((mdData.type==0 && mdData.copyCount<1) || (mdData.type==1 && (mdData.gridRows==1 && mdData.gridCols==1)))
@@ -13703,6 +13708,10 @@ void ScribusDoc::itemSelection_MultipleDuplicate(ItemMultipleDuplicateData& mdDa
 		QString vString = QString::number(mdData.gridGapV, 'f', unitPrecision) + " " + unitSuffix;
 		tooltip = tr("Number of copies: %1\nHorizontal gap: %2\nVertical gap: %3").arg(copyCount-1).arg(hString).arg(vString).arg(unitSuffix);
 	}
+	else if (mdData.type==2) // duplicate on the following pages
+    {
+        // TODO: only if an item is selected. probably add the conditionn at the beginning of this function
+    }
 	if (activeTransaction)
 	{
 		activeTransaction.commit("", nullptr, "", tooltip, nullptr);

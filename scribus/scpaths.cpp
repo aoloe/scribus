@@ -48,8 +48,7 @@ const ScPaths& ScPaths::instance()
 // Singleton's public destructor
 void ScPaths::destroy()
 {
-	if (ScPaths::m_instance)
-		delete ScPaths::m_instance;
+	delete ScPaths::m_instance;
 }
 
 // Protected "real" constructor
@@ -132,7 +131,7 @@ ScPaths::ScPaths() :
 
 ScPaths::~ScPaths() {};
 
-QString ScPaths::bundleDir(void) const
+QString ScPaths::bundleDir() const
 {
 	// On MacOS/X, override the compile-time settings with a location
 // obtained from the system.
@@ -391,7 +390,7 @@ QStringList ScPaths::hyphDirs() const
 	return hyphDirs;
 }
 
-QStringList ScPaths::systemFontDirs(void)
+QStringList ScPaths::systemFontDirs()
 {
 	QStringList fontDirs;
 #ifdef Q_OS_MAC
@@ -405,7 +404,7 @@ QStringList ScPaths::systemFontDirs(void)
 	return fontDirs;
 }
 
-QStringList ScPaths::systemProfilesDirs(void)
+QStringList ScPaths::systemProfilesDirs()
 {
 	QStringList iccProfDirs;
 #ifdef Q_OS_MAC
@@ -444,7 +443,7 @@ QStringList ScPaths::systemProfilesDirs(void)
 	return iccProfDirs;
 }
 
-QStringList ScPaths::dirsFromEnvVar(const QString envVar, const QString dirToFind)
+QStringList ScPaths::dirsFromEnvVar(const QString& envVar, const QString& dirToFind)
 {
 	QChar sep(':');
 #ifdef _WIN32
@@ -472,7 +471,7 @@ QStringList ScPaths::dirsFromEnvVar(const QString envVar, const QString dirToFin
 
 
 
-QStringList ScPaths::systemCreatePalettesDirs(void)
+QStringList ScPaths::systemCreatePalettesDirs()
 {
 	QStringList createDirs;
 #ifdef Q_OS_MAC
@@ -498,7 +497,7 @@ QStringList ScPaths::systemCreatePalettesDirs(void)
 	return createDirs;
 }
 
-QString ScPaths::oldApplicationDataDir(void)
+QString ScPaths::oldApplicationDataDir()
 {
 #ifdef Q_OS_WIN32
 	QString appData = windowsSpecialDir(CSIDL_APPDATA);
@@ -557,7 +556,7 @@ QString ScPaths::preferencesDir(bool createIfNotExists)
 	return prefsDir;
 }
 
-QString ScPaths::imageCacheDir(void)
+QString ScPaths::imageCacheDir()
 {
 	return applicationDataDir() + "cache/img/";
 }
@@ -620,7 +619,7 @@ QString ScPaths::userTemplateDir(bool createIfNotExists)
 	return useFilesDirectory.absolutePath()+"/";
 }
 
-QString ScPaths::userDocumentDir(void)
+QString ScPaths::userDocumentDir()
 {
 	QString userDocs = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 	if (QDir(userDocs).exists())
@@ -640,7 +639,7 @@ QString ScPaths::scrapbookDir(bool createIfNotExists)
 	return useFilesDirectory.absolutePath()+"/";
 }
 
-QString ScPaths::tempFileDir(void)
+QString ScPaths::tempFileDir()
 {
 #ifdef Q_OS_WIN32
 	QString tempPath;

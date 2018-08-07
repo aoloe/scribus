@@ -72,7 +72,7 @@ for which a new license (GPL+exception) is in place.
 
 using namespace std;
 
-PageItem_TextFrame::PageItem_TextFrame(ScribusDoc *pa, double x, double y, double w, double h, double w2, QString fill, QString outline)
+PageItem_TextFrame::PageItem_TextFrame(ScribusDoc *pa, double x, double y, double w, double h, double w2, const QString& fill, const QString& outline)
 	: PageItem(pa, PageItem::TextFrame, x, y, w, h, w2, fill, outline)
 {
 	init();
@@ -95,7 +95,7 @@ void PageItem_TextFrame::init()
 	verticalAlign = 0;
 	incompleteLines = 0;
 	maxY = 0.0;
-	connect(&itemText,SIGNAL(changed(int, int)), this, SLOT(slotInvalidateLayout(int, int)));
+	connect(&itemText,SIGNAL(changed(int,int)), this, SLOT(slotInvalidateLayout(int,int)));
 }
 
 static QRegion itemShape(PageItem* docItem, double xOffset, double yOffset)
@@ -207,9 +207,9 @@ QRegion PageItem_TextFrame::calcAvailableRegion()
 
 		int LayerLev = m_Doc->layerLevelFromID(LayerID);
 		int docItemsCount = m_Doc->Items->count();
-		ScPage* Mp=0;
-		ScPage* Dp=0;
-		PageItem* docItem=0;
+		ScPage* Mp=nullptr;
+		ScPage* Dp=nullptr;
+		PageItem* docItem=nullptr;
 		int LayerLevItem;
 		QList<PageItem*> thisList;
 		if (!OnMasterPage.isEmpty())
@@ -1351,7 +1351,7 @@ void PageItem_TextFrame::layout()
 	TabControl tabs;
 	tabs.active    = false;     // RTab
 	tabs.status    = TabNONE;   // TabCode
-	tabs.tabGlyph  = 0;         // was int charIndex ~ StartRT
+	tabs.tabGlyph  = nullptr;         // was int charIndex ~ StartRT
 	tabs.xPos      = 0;         // RTabX
 
 	QList<ParagraphStyle::TabRecord> tTabValues;
@@ -1423,7 +1423,7 @@ void PageItem_TextFrame::layout()
 		return;
 	}
 
-	if ((itLen != 0)) // || (NextBox != 0))
+	if ((itLen != 0)) // || (NextBox != nullptr))
 	{
 		// determine layout area
 		m_availableRegion = calcAvailableRegion();
@@ -1644,7 +1644,7 @@ void PageItem_TextFrame::layout()
 				if (current.startOfCol && !current.afterOverflow && current.recalculateY)
 					current.yPos = qMax(current.yPos, m_textDistanceMargins.top());
 				// more about par gap and dropcaps
-				if ((a > firstInFrame() && itemText.isBlockStart(a)) || (a == 0 && BackBox == 0 && current.startOfCol))
+				if ((a > firstInFrame() && itemText.isBlockStart(a)) || (a == 0 && BackBox == nullptr && current.startOfCol))
 				{
 					if (!current.afterOverflow && current.recalculateY && !current.startOfCol)
 						current.yPos += style.gapBefore();
@@ -1752,8 +1752,7 @@ void PageItem_TextFrame::layout()
 					wide = 0.0; realAsce = 0.0;
 					const QList<GlyphLayout>& glyphs = glyphCluster.glyphs();
 					for (const GlyphLayout& gl : glyphs) {
-						GlyphMetrics gm;
-						gm = font.glyphBBox(gl.glyph, charStyle.fontSize() / 10.0);
+						GlyphMetrics gm = font.glyphBBox(gl.glyph, charStyle.fontSize() / 10.0);
 						realCharHeight = qMax(realCharHeight, gm.ascent + gm.descent);
 						gm = font.glyphBBox(gl.glyph, chsd / 10.0);
 						realAsce = qMax(realAsce, gm.ascent + gm.descent);
@@ -1899,7 +1898,7 @@ void PageItem_TextFrame::layout()
 				}
 			}
 			current.recalculateY = true;
-			maxYAsc = 0.0, maxYDesc = 0.0;
+			maxYAsc = maxYDesc = 0.0;
 			double addAsce = 0.0;
 			if (current.startOfCol)
 			{
@@ -3094,13 +3093,13 @@ void PageItem_TextFrame::invalidateLayout(bool wholeChain)
 	if (wholeChain)
 	{
 		PageItem *prevFrame = this->prevInChain();
-		while (prevFrame != 0)
+		while (prevFrame != nullptr)
 		{
 			prevFrame->invalid = true;
 			prevFrame = prevFrame->prevInChain();
 		}
 		PageItem *nextFrame = this->nextInChain();
-		while (nextFrame != 0)
+		while (nextFrame != nullptr)
 		{
 			nextFrame->invalid = true;
 			nextFrame = nextFrame->nextInChain();
@@ -3771,7 +3770,7 @@ void PageItem_TextFrame::DrawObj_Decoration(ScPainter *p)
 			p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameNormColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if ((isBookmark) || (m_isAnnotation))
 				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameAnnotationColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
-			if ((BackBox != 0) || (NextBox != 0))
+			if ((BackBox != nullptr) || (NextBox != nullptr))
 				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameLinkColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if (m_Locked)
 				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameLockColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
@@ -3835,7 +3834,7 @@ void PageItem_TextFrame::clearContents()
 		return;
 
 	PageItem *nextItem = this;
-	while (nextItem->prevInChain() != 0)
+	while (nextItem->prevInChain() != nullptr)
 		nextItem = nextItem->prevInChain();
 
 	ParagraphStyle defaultStyle = nextItem->itemText.defaultStyle();
@@ -3848,7 +3847,7 @@ void PageItem_TextFrame::clearContents()
 		nextItem->itemText.setDefaultStyle(defaultStyle);
 	}
 
-	while (nextItem != 0)
+	while (nextItem != nullptr)
 	{
 		nextItem->invalid = true;
 		nextItem = nextItem->nextInChain();
@@ -4002,7 +4001,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 					conv = 32;
 				if (UndoManager::undoEnabled())
 				{
-					ScItemState<ParagraphStyle> *ip = 0;
+					ScItemState<ParagraphStyle> *ip = nullptr;
 					SimpleState *ss = dynamic_cast<SimpleState*>(undoManager->getLastUndo());
 					UndoObject *undoTarget = this;
 					int cursorPos = itemText.cursorPosition();
@@ -4126,7 +4125,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 					ExpandSel(oldPos);
 				}
 				else
-					if ((textLayout.lines() > 0) && (oldPos >= textLayout.line(textLayout.lines()-1)->firstChar()) && (itemText.cursorPosition() >= lastInFrame()) && (NextBox != 0))
+					if ((textLayout.lines() > 0) && (oldPos >= textLayout.line(textLayout.lines()-1)->firstChar()) && (itemText.cursorPosition() >= lastInFrame()) && (NextBox != nullptr))
 					{
 						if (NextBox->frameDisplays(itemText.cursorPosition()))
 						{
@@ -4139,7 +4138,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			}
 			else
 			{
-				if (NextBox != 0)
+				if (NextBox != nullptr)
 				{
 					if (NextBox->frameDisplays(lastInFrame()+1))
 					{
@@ -4177,7 +4176,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 					ExpandSel(oldPos);
 				}
 				else
-					if ((textLayout.lines() > 0) && (oldPos <= textLayout.line(0)->lastChar()) && (itemText.cursorPosition()  == firstInFrame()) && (BackBox != 0))
+					if ((textLayout.lines() > 0) && (oldPos <= textLayout.line(0)->lastChar()) && (itemText.cursorPosition()  == firstInFrame()) && (BackBox != nullptr))
 					{
 						view->Deselect(true);
 						// TODO position at the right place in previous frame
@@ -4188,7 +4187,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			else
 			{
 				itemText.setCursorPosition( firstInFrame() );
-				if (BackBox != 0)
+				if (BackBox != nullptr)
 				{
 					view->Deselect(true);
 					BackBox->itemText.setCursorPosition( BackBox->lastInFrame() );
@@ -4201,7 +4200,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		m_Doc->scMW()->setTBvals(this);
 		break;
 	case Qt::Key_PageUp:
-		if (itemText.cursorPosition() == firstInFrame() && BackBox != 0)
+		if (itemText.cursorPosition() == firstInFrame() && BackBox != nullptr)
 		{
 			view->Deselect(true);
 			BackBox->itemText.setCursorPosition( BackBox->firstInFrame() );
@@ -4215,7 +4214,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		m_Doc->scMW()->setTBvals(this);
 		break;
 	case Qt::Key_PageDown:
-		if (!frameDisplays(itemText.length()-1) && itemText.cursorPosition() >= lastInFrame() && NextBox != 0)
+		if (!frameDisplays(itemText.length()-1) && itemText.cursorPosition() >= lastInFrame() && NextBox != nullptr)
 		{
 			view->Deselect(true);
 			itemText.setCursorPosition( NextBox->lastInFrame() );
@@ -4246,7 +4245,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			if (itemText.cursorPosition() < firstInFrame())
 			{
 				itemText.setCursorPosition( firstInFrame() );
-				if (BackBox != 0)
+				if (BackBox != nullptr)
 				{
 					view->Deselect(true);
 					BackBox->itemText.setCursorPosition( BackBox->lastInFrame() );
@@ -4286,7 +4285,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			{
 //				--CPos;
 				itemText.setCursorPosition(lastInFrame() + 1);
-				if (NextBox != 0)
+				if (NextBox != nullptr)
 				{
 					if (NextBox->frameDisplays(itemText.cursorPosition()))
 					{
@@ -4347,7 +4346,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		else
 		{
 			layout();
-			if (oldLast != lastInFrame() && NextBox != 0 && NextBox->invalid)
+			if (oldLast != lastInFrame() && NextBox != nullptr && NextBox->invalid)
 				NextBox->updateLayout();
 		}
 //		Tinput = false;
@@ -4404,13 +4403,13 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		else
 		{
 			layout();
-			if (oldLast != lastInFrame() && NextBox != 0 && NextBox->invalid)
+			if (oldLast != lastInFrame() && NextBox != nullptr && NextBox->invalid)
 				NextBox->updateLayout();
 		}
 		if (itemText.cursorPosition() < firstInFrame())
 		{
 			itemText.setCursorPosition( firstInFrame() );
-			if (BackBox != 0)
+			if (BackBox != nullptr)
 			{
 				view->Deselect(true);
 				if (BackBox->invalid)
@@ -4493,7 +4492,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		{
 			if (UndoManager::undoEnabled())
 			{
-				ScItemState<ParagraphStyle> *ip = 0;
+				ScItemState<ParagraphStyle> *ip = nullptr;
 				SimpleState *ss = dynamic_cast<SimpleState*>(undoManager->getLastUndo());
 				UndoObject *undoTarget = this;
 				int cursorPos = itemText.cursorPosition();
@@ -4571,12 +4570,12 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			}
 			else
 				update();
-			if (oldLast != lastInFrame() && NextBox != 0 && NextBox->invalid)
+			if (oldLast != lastInFrame() && NextBox != nullptr && NextBox->invalid)
 				NextBox->updateLayout();
 		}
 		//check if cursor need to jump to next linked frame
 		//but not for notes frames can`t be updated as may disapper during update
-		if ((itemText.cursorPosition() > lastInFrame() + 1) && (lastInFrame() < (itemText.length() - 2)) && NextBox != 0)
+		if ((itemText.cursorPosition() > lastInFrame() + 1) && (lastInFrame() < (itemText.length() - 2)) && NextBox != nullptr)
 		{
 			view->Deselect(true);
 			NextBox->update();
@@ -5004,7 +5003,7 @@ void PageItem_TextFrame::drawOverflowMarker(ScPainter *p)
 	QColor color(PrefsManager::instance()->appPrefs.displayPrefs.frameNormColor);
 	if ((isBookmark) || (m_isAnnotation))
 		color = PrefsManager::instance()->appPrefs.displayPrefs.frameAnnotationColor;
-	if ((BackBox != 0) || (NextBox != 0))
+	if ((BackBox != nullptr) || (NextBox != nullptr))
 		color = PrefsManager::instance()->appPrefs.displayPrefs.frameLinkColor;
 	if (m_Locked)
 		color = PrefsManager::instance()->appPrefs.displayPrefs.frameLockColor;
@@ -5072,7 +5071,7 @@ bool PageItem_TextFrame::createInfoGroup(QFrame *infoGroup, QGridLayout *infoGro
 	QLabel *charCT = new QLabel(infoGroup);
 	QLabel *charT = new QLabel(infoGroup);
 
-	if ((nextInChain() != 0) || (prevInChain() != 0))
+	if ((nextInChain() != nullptr) || (prevInChain() != nullptr))
 		infoCT->setText(tr("Linked Text"));
 	else
 		infoCT->setText(tr("Text Frame"));
@@ -5157,7 +5156,7 @@ void PageItem_TextFrame::applicableActions(QStringList & actionList)
 		else
 			actionList << "itemPDFFieldProps";
 	}
-	if ((prevInChain() == 0) && (nextInChain() == 0))
+	if ((prevInChain() == nullptr) && (nextInChain() == nullptr))
 	{
 		actionList << "itemConvertToImageFrame";
 		actionList << "itemConvertToPolygon";
@@ -5961,7 +5960,7 @@ void PageItem_TextFrame::setTextFrameHeight()
 	if (textLayout.lines() <= 0)
 		return;
 
-	if (NextBox == 0) // Vertical alignment is not used inside a text chain
+	if (NextBox == nullptr) // Vertical alignment is not used inside a text chain
 	{
 		textLayout.box()->moveTo(textLayout.box()->x(), 0);
 		double newHeight = textLayout.box()->naturalHeight();

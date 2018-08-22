@@ -15,7 +15,6 @@ NodeEditContext::NodeEditContext() :
 	m_SegP2(-1),
 	m_EdPoints(true),
 	m_MoveSym(false),
-	m_SelNode(),
 	m_oldItemX(0.0),
 	m_oldItemY(0.0),
 	m_preview(false)
@@ -170,7 +169,7 @@ void NodeEditContext::finishTransaction2(PageItem* currItem, ScItemState<QPair<F
 	
 
 //CB-->Doc
-void NodeEditContext::moveClipPoint(PageItem *currItem, FPoint ip)
+void NodeEditContext::moveClipPoint(PageItem *currItem, const FPoint& ip)
 {
 	ScribusDoc* Doc = currItem->doc();
 	if (((m_EdPoints) && (m_ClRe % 2 != 0)) || ((!m_EdPoints) && (m_ClRe % 2 == 0)))

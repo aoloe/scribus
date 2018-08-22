@@ -41,7 +41,7 @@ MenuManager::~MenuManager()
 	m_redoMenu->deleteLater();
 }
 
-bool MenuManager::createMenu(const QString &menuName, const QString &menuText, const QString parent, bool checkable, bool rememberMenu)
+bool MenuManager::createMenu(const QString &menuName, const QString &menuText, const QString& parent, bool checkable, bool rememberMenu)
 {
 	bool retVal=false;
 	QList<QString> menuEntries;
@@ -86,7 +86,6 @@ QMenu *MenuManager::getLocalPopupMenu(const QString &menuName)
 
 void MenuManager::setMenuEnabled(const QString &menuName, const bool enabled)
 {
-	return;
 	// OSX UI rules don't allow this so let's not do it elsewhere.
 	//if (menuBarMenus.contains(menuName) && menuBarMenus.value(menuName)!=nullptr)
 	//	menuBarMenus.value(menuName)->setEnabled(enabled);

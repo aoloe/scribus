@@ -11,7 +11,7 @@ for which a new license (GPL+exception) is in place.
 #include "scribus.h"
 #include "smtablestylewidget.h"
 
-SMTableStyleWidget::SMTableStyleWidget(QWidget *parent) : QWidget(),
+SMTableStyleWidget::SMTableStyleWidget(QWidget *parent) :
 	m_Doc(nullptr)
 {
 	setupUi(this);
@@ -124,8 +124,7 @@ void SMTableStyleWidget::showColors(const QList<TableStyle*> &tableStyles)
 			d = -30000;
 			break;
 		}
-		else
-			d = tableStyles[i]->fillShade();
+		d = tableStyles[i]->fillShade();
 	}
 	if (d == -30000)
 		fillShade->setText( tr("Shade"));
@@ -140,8 +139,7 @@ void SMTableStyleWidget::showColors(const QList<TableStyle*> &tableStyles)
 			s = emptyString;
 			break;
 		}
-		else
-			s = tableStyles[i]->fillColor();
+		s = tableStyles[i]->fillColor();
 	}
 	if (s.isEmpty())
 	{

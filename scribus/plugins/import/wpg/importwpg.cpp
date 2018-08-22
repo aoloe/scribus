@@ -16,7 +16,7 @@ for which a new license (GPL+exception) is in place.
 #include <QDebug>
 
 #include <cstdlib>
-#include <stdio.h>
+#include <cstdio>
 
 #include "importwpg.h"
 
@@ -50,11 +50,7 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
-ScrPainter::ScrPainter(): libwpg::WPGPaintInterface()
+ScrPainter::ScrPainter()
 {
 }
 
@@ -492,16 +488,15 @@ QImage WpgPlug::readThumbnail(const QString& fName)
 	return QImage();
 }
 
-bool WpgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool WpgPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
 	cancel = false;
 	double b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -587,7 +582,7 @@ bool WpgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -677,7 +672,7 @@ WpgPlug::~WpgPlug()
 	delete tmpSel;
 }
 
-bool WpgPlug::convert(QString fn)
+bool WpgPlug::convert(const QString& fn)
 {
 	importedColors.clear();
 

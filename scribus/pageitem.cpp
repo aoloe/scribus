@@ -2033,7 +2033,7 @@ void PageItem::DrawObj_Post(ScPainter *p)
 				p->strokePath();
 			if (itemType()==ImageFrame)
 			{
-				if (imageClip.size() != 0)
+				if (!imageClip.empty())
 				{
 					p->setupPolygon(&imageClip);
 					p->strokePath();
@@ -2712,7 +2712,7 @@ void PageItem::set4ColorShade(int t1, int t2, int t3, int t4)
 		trans.commit();
 }
 
-void PageItem::set4ColorColors(QString col1, QString col2, QString col3, QString col4)
+void PageItem::set4ColorColors(const QString& col1, const QString& col2, const QString& col3, const QString& col4)
 {
 	QColor tmp;
 	UndoTransaction trans;
@@ -8795,20 +8795,20 @@ void PageItem::getNamedResources(ResourceCollection& lists) const
 }
 
 //Moved from View
-void PageItem::SetFrameShape(int count, double *vals)
+void PageItem::SetFrameShape(int count, const double *vals)
 {
 	PoLine.resize(0);
-	for (int a = 0; a < count-3; a += 4)
+	for (int i = 0; i < count-3; i += 4)
 	{
-		if (vals[a] < 0)
+		if (vals[i] < 0)
 		{
 			PoLine.setMarker();
 			continue;
 		}
-		double x1 = m_width * vals[a] / 100.0;
-		double y1 = m_height * vals[a+1] / 100.0;
-		double x2 = m_width * vals[a+2] / 100.0;
-		double y2 = m_height * vals[a+3] / 100.0;
+		double x1 = m_width * vals[i] / 100.0;
+		double y1 = m_height * vals[i+1] / 100.0;
+		double x2 = m_width * vals[i+2] / 100.0;
+		double y2 = m_height * vals[i+3] / 100.0;
 		PoLine.addPoint(x1, y1);
 		PoLine.addPoint(x2, y2);
 	}
@@ -10208,7 +10208,7 @@ void PageItem::updateClip(bool updateWelded)
 {
 	if (m_Doc->appMode == modeDrawBezierLine)
 		return;
-	if (ContourLine.size() == 0)
+	if (ContourLine.empty())
 		ContourLine = PoLine.copy();
 	int ph = static_cast<int>(qMax(1.0, lineWidth() / 2.0));
 	bool clipBackup = ClipEdited;

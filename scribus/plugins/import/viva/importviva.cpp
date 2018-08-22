@@ -64,8 +64,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 VivaPlug::VivaPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel = new Selection(this, false);
@@ -107,7 +105,7 @@ double VivaPlug::parseUnit(const QString &unit)
 	return value;
 }
 
-QImage VivaPlug::readThumbnail(QString fName)
+QImage VivaPlug::readThumbnail(const QString& fName)
 {
 	QImage tmp;
 	if ( !QFile::exists(fName) )
@@ -195,9 +193,8 @@ bool VivaPlug::readColors(const QString& fNameIn, ColorList & colors)
 	return success;
 }
 
-bool VivaPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool VivaPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -208,7 +205,7 @@ bool VivaPlug::import(QString fNameIn, const TransactionSettings& trSettings, in
 	firstPage = true;
 	pagecount = 1;
 	mpagecount = 0;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -287,7 +284,7 @@ bool VivaPlug::import(QString fNameIn, const TransactionSettings& trSettings, in
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -377,7 +374,7 @@ VivaPlug::~VivaPlug()
 	delete tmpSel;
 }
 
-bool VivaPlug::convert(QString fn)
+bool VivaPlug::convert(const QString& fn)
 {
 	Coords.resize(0);
 	Coords.svgInit();
@@ -641,7 +638,6 @@ void VivaPlug::parseColorsXML(const QDomElement& grNode)
 			gradientTypeMap.insert(grName, grTyp);
 		}
 	}
-	return;
 }
 
 void VivaPlug::parsePreferencesXML(const QDomElement& spNode)
@@ -2300,7 +2296,7 @@ void VivaPlug::applyCharacterAttrs(CharStyle &tmpCStyle, ParagraphStyle &newStyl
 	}
 }
 
-QString VivaPlug::constructFontName(QString fontBaseName, QString fontStyle)
+QString VivaPlug::constructFontName(const QString& fontBaseName, const QString& fontStyle)
 {
 	QString fontName = "";
 	bool found = false;

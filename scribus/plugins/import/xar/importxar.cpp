@@ -58,9 +58,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 XarPlug::XarPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
@@ -73,10 +70,9 @@ XarPlug::XarPlug(ScribusDoc* doc, int flags)
 bool XarPlug::readColors(const QString& fNameIn, ColorList &colors)
 {
 	progressDialog = nullptr;
-	QString fName = fNameIn;
 	bool success = false;
 	importedColors.clear();
-	QFile f(fName);
+	QFile f(fNameIn);
 	if (f.open(QIODevice::ReadOnly))
 	{
 		QDataStream ts(&f);
@@ -155,7 +151,7 @@ bool XarPlug::readColors(const QString& fNameIn, ColorList &colors)
 	return success;
 }
 
-QImage XarPlug::readThumbnail(QString fName)
+QImage XarPlug::readThumbnail(const QString& fName)
 {
 	progressDialog = nullptr;
 	QImage image = QImage();
@@ -433,7 +429,7 @@ XarPlug::~XarPlug()
 	delete tmpSel;
 }
 
-void XarPlug::parseHeader(QString fName, double &x, double &y, double &b, double &h)
+void XarPlug::parseHeader(const QString& fName, double &x, double &y, double &b, double &h)
 {
 	QFile f(fName);
 	if (f.open(QIODevice::ReadOnly))

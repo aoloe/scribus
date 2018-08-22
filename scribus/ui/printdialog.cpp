@@ -36,7 +36,7 @@ for which a new license (GPL+exception) is in place.
 
 extern bool previewDinUse;
 
-PrintDialog::PrintDialog( QWidget* parent, ScribusDoc* doc, const PrintOptions& printOptions, bool gcr, QStringList spots)
+PrintDialog::PrintDialog( QWidget* parent, ScribusDoc* doc, const PrintOptions& printOptions, bool gcr, const QStringList& spots)
 		: QDialog( parent )
 {
 	setupUi(this);
@@ -263,8 +263,7 @@ void PrintDialog::getOptions()
 
 void PrintDialog::SelComm()
 {
-	/* PFJ - 29.02.04 - removed OthText, Command and PrintDest from switch */
-	bool test = OtherCom->isChecked() ? true : false;
+	bool test = OtherCom->isChecked();
 	OthText->setEnabled(test);
 	Command->setEnabled(test);
 	PrintDest->setEnabled(!test);

@@ -513,19 +513,10 @@ PDFLibCore::PDFLibCore(ScribusDoc & docu)
 	Options(doc.pdfOptions()),
 	Bvie(nullptr),
 	ucs2Codec(nullptr),
-//	ObjCounter(7),
 	ResNam("RE"),
 	ResCount(0),
 	NDnam("LI"),
 	NDnum(0),
-//	KeyGen(""),
-//	OwnerKey(""),
-//	UserKey(""),
-//	FileID(""),
-//	EncryKey(""),
-//	Encrypt(0),
-//	KeyLen(5),
-	colorsToUse(),
 	spotNam("Spot"),
 	spotCount(0),
 	progressDialog(nullptr),
@@ -809,10 +800,9 @@ QByteArray PDFLibCore::EncStream(const QByteArray & in, PdfId ObjNum)
 {
 	if (in.length() < 1)
 		return QByteArray();
-	else if (!Options.Encrypt)
+	if (!Options.Encrypt)
 		return in;
-	else
-		return writer.encryptBytes(in, ObjNum);
+	return writer.encryptBytes(in, ObjNum);
 //	rc4_context_t rc4;
 //	QByteArray tmp(in);
 //	QByteArray us(tmp.length(), ' ');
@@ -3800,10 +3790,10 @@ bool PDFLibCore::PDF_ProcessPage(const ScPage* pag, uint PNr, bool clip)
 	// #8773 - incorrect page position if MPageNam.isEmpty()
 	/*if (!pag->MPageNam.isEmpty())
 	{*/
-		getBleeds(ActPageP, bleedLeft, bleedRight, bleedBottom, bleedTop);
-		PutPage("1 0 0 1 "+FToStr(bleedLeft+markOffs)+" "+FToStr(Options.bleeds.bottom()+markOffs)+" cm\n");
-		bleedDisplacementX = bleedLeft+markOffs;
-		bleedDisplacementY = Options.bleeds.bottom()+markOffs;
+	getBleeds(ActPageP, bleedLeft, bleedRight, bleedBottom, bleedTop);
+	PutPage("1 0 0 1 "+FToStr(bleedLeft+markOffs)+" "+FToStr(Options.bleeds.bottom()+markOffs)+" cm\n");
+	bleedDisplacementX = bleedLeft+markOffs;
+	bleedDisplacementY = Options.bleeds.bottom()+markOffs;
 	/*}*/
 	//#9385 : clip to BleedBox
 	if ((Options.cropMarks) || (Options.bleedMarks) || (Options.registrationMarks) || (Options.colorMarks) || (Options.docInfoMarks))
@@ -5561,7 +5551,7 @@ QByteArray PDFLibCore::putColor(const QString& color, double shade, bool fill)
 	QByteArray colString = SetColor(color, shade);
 	ScColor tmpC;
 	tmpC = doc.PageColors[color];
-	if (((tmpC.isSpotColor()) || (tmpC.isRegistrationColor())) && ((Options.isGrayscale == false) && (Options.UseRGB == false))  && (Options.UseSpotColors))
+	if (((tmpC.isSpotColor()) || (tmpC.isRegistrationColor())) && ((!Options.isGrayscale) && (!Options.UseRGB))  && (Options.UseSpotColors))
 	{
 		if ((color != CommonStrings::None) && (spotMap.contains(color)))
 		{
@@ -8757,7 +8747,7 @@ void PDFLibCore::PDF_RadioButtons()
 	}
 }
 
-PdfId PDFLibCore::PDF_RadioButton(PageItem* ite, PdfId parent, QString parentName)
+PdfId PDFLibCore::PDF_RadioButton(PageItem* ite, PdfId parent, const QString& parentName)
 {
 	QMap<int, QByteArray> ind2PDFabr;
 	static const QByteArray bifonts[] = {"/Courier", "/Courier-Bold", "/Courier-Oblique", "/Courier-BoldOblique",
@@ -9747,7 +9737,7 @@ PdfId PDFLibCore::WritePDFString(const QString& cc, PdfId objId)
 	return WritePDFStream(tmp, objId);
 }
 
-void PDFLibCore::PDF_xForm(PdfId objNr, double w, double h, QByteArray im)
+void PDFLibCore::PDF_xForm(PdfId objNr, double w, double h, const QByteArray& im)
 {
 	writer.startObj(objNr);
 	PutDoc("<<\n/Type /XObject\n/Subtype /Form\n");
@@ -9949,7 +9939,7 @@ bool PDFLibCore::PDF_EmbeddedPDF(PageItem* c, const QString& fn, double sx, doub
 
 			return true;
 		}
-		else if (contents && contents->GetDataType() ==  PoDoFo::ePdfDataType_Array)//Page contents might be an array
+		if (contents && contents->GetDataType() ==  PoDoFo::ePdfDataType_Array)//Page contents might be an array
 		{
 			QMap<PoDoFo::PdfReference, PdfId> importedObjects;
 			QList<PoDoFo::PdfReference> referencedObjects;
@@ -10141,7 +10131,7 @@ void PDFLibCore::copyPoDoFoDirect(const PoDoFo::PdfVariant* obj, QList<PoDoFo::P
 		case PoDoFo::ePdfDataType_Dictionary:
 		{
 			const PoDoFo::PdfDictionary& dict(obj->GetDictionary());
-			const PoDoFo::TKeyMap keys = dict.GetKeys();
+			const PoDoFo::TKeyMap& keys = dict.GetKeys();
 			PutDoc("<<");
 			for (PoDoFo::TCIKeyMap k=keys.begin(); k != keys.end(); ++k)
 			{

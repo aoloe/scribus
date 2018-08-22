@@ -424,7 +424,7 @@ void PagePalette_MasterPages::selectMasterPage(QListWidgetItem *item)
 	this->setEnabled(true);
 }
 
-void PagePalette_MasterPages::selectMasterPage(QString name)
+void PagePalette_MasterPages::selectMasterPage(const QString& name)
 {
 	if (!m_doc || !m_view)
 		return;
@@ -495,7 +495,7 @@ void PagePalette_MasterPages::updateMasterPageList(QString masterPageName)
 		mpItem->setData(Qt::UserRole, it.key());
 		masterPageListBox->addItem(mpItem);
 	}
-	deleteButton->setEnabled(m_doc->MasterNames.count() == 1 ? false : true);
+	deleteButton->setEnabled(m_doc->MasterNames.count() != 1);
 	if (masterPageName == CommonStrings::masterPageNormal)
 	{
 		masterPageName = CommonStrings::trMasterPageNormal;

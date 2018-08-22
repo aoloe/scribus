@@ -39,8 +39,8 @@ for which a new license (GPL+exception) is in place.
 #include "util.h"
 
 
-SMParagraphStyle::SMParagraphStyle(SMCharacterStyle* cstyleItem) : StyleItem(),
-m_pwidget(nullptr), m_cstyleItem(cstyleItem), m_doc(nullptr), m_selectionIsDirty(false), m_unitRatio(1.0)
+SMParagraphStyle::SMParagraphStyle(SMCharacterStyle* cstyleItem) :
+	m_pwidget(nullptr), m_cstyleItem(cstyleItem), m_doc(nullptr), m_selectionIsDirty(false), m_unitRatio(1.0)
 {
 	Q_ASSERT(m_cstyleItem);
 	m_cstyles = m_cstyleItem->tmpStyles();
@@ -1930,7 +1930,7 @@ void SMParagraphStyle::slotBaselineOffset()
 	}
 }
 
-void SMParagraphStyle::slotFont(QString s)
+void SMParagraphStyle::slotFont(const QString& s)
 {
 	if (m_pwidget->cpage->fontFace_->useParentFont())
 		for (int i = 0; i < m_selection.count(); ++i)
@@ -2086,7 +2086,7 @@ SMParagraphStyle::~SMParagraphStyle()
 /******************************************************************************/
 /******************************************************************************/
 
-SMCharacterStyle::SMCharacterStyle() : StyleItem(), m_widget(nullptr), m_page(nullptr), m_doc(nullptr), m_selectionIsDirty(false)
+SMCharacterStyle::SMCharacterStyle() : m_widget(nullptr), m_page(nullptr), m_doc(nullptr), m_selectionIsDirty(false)
 {
 	m_widget = new QTabWidget();
 	Q_CHECK_PTR(m_widget);
@@ -3015,7 +3015,7 @@ void SMCharacterStyle::slotSmallestWord()
 	}
 }
 
-void SMCharacterStyle::slotFont(QString s)
+void SMCharacterStyle::slotFont(const QString& s)
 {
 	if (m_page->fontFace_->useParentFont())
 		for (int i = 0; i < m_selection.count(); ++i)

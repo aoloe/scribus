@@ -10,10 +10,9 @@ for which a new license (GPL+exception) is in place.
 #include "units.h"
 
 
-GuidesModel::GuidesModel(QObject * /*parent*/)
-	: QAbstractTableModel(),
-		m_docUnitIndex(0),
-		m_docUnitDecimals(0)
+GuidesModel::GuidesModel(QObject * /*parent*/) :
+	m_docUnitIndex(0),
+	m_docUnitDecimals(0)
 {
 	m_rule = 0.0;
 	// debug
@@ -128,7 +127,7 @@ void GuidesModel::insertRow()
 	endResetModel();
 }
 
-void GuidesModel::setValues(Guides values)
+void GuidesModel::setValues(const Guides& values)
 {
 	beginResetModel();
 	m_values = values;

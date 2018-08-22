@@ -108,7 +108,7 @@ PropertiesPalette_Text::PropertiesPalette_Text( QWidget* parent) : QWidget(paren
 	languageChange();
 
 	connect(lineSpacing   , SIGNAL(valueChanged(double)), this, SLOT(handleLineSpacing()));
-	connect(fonts         , SIGNAL(fontSelected(QString )), this, SLOT(handleTextFont(QString)));
+	connect(fonts         , SIGNAL(fontSelected(QString)), this, SLOT(handleTextFont(QString)));
 	connect(fontSize      , SIGNAL(valueChanged(double)), this, SLOT(handleFontSize()));
 	connect(textAlignment , SIGNAL(State(int))   , this, SLOT(handleAlignment(int)));
 	connect(textDirection , SIGNAL(State(int))   , this, SLOT(handleDirection(int)));
@@ -440,7 +440,7 @@ void PropertiesPalette_Text::showFontSize(double s)
 	fontSize->showValue(s / 10.0);
 }
 
-void PropertiesPalette_Text::showLanguage(QString w)
+void PropertiesPalette_Text::showLanguage(const QString& w)
 {
 	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;

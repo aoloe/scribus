@@ -50,7 +50,7 @@ void uniconvertorplugin_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-UniconvImportPlugin::UniconvImportPlugin() : LoadSavePlugin()
+UniconvImportPlugin::UniconvImportPlugin()
 {
 	// Set action info in languageChange, so we only have to do
 	// it in one place. This includes registering file format
@@ -124,7 +124,7 @@ bool UniconvImportPlugin::loadFile(const QString & fileName,
 	return import(fileName, flags);
 }
 
-bool UniconvImportPlugin::import(QString fileName, int flags)
+bool UniconvImportPlugin::import(const QString& fileName, int flags)
 {
 	if (!checkFlags(flags))
 		return false;

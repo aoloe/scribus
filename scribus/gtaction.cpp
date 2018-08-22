@@ -104,7 +104,7 @@ void gtAction::setProgressInfoDone()
 	m_ScMW->mainWindowProgressBar->setMaximum(1);
 }
 
-void gtAction::setInfo(QString infoText)
+void gtAction::setInfo(const QString& infoText)
 {
 	m_ScMW->setStatusBarInfoText(infoText);
 }
@@ -356,8 +356,7 @@ void gtAction::write(const QString& text, gtStyle *style, bool isNote)
 			m_noteStory = nullptr;
 			return;
 		}
-		else
-			story->insertChars(pos, QString(ch));
+		story->insertChars(pos, QString(ch));
 		if (ch == SpecialChars::PARSEP) 
 		{
 			if (paraStyle.hasName())

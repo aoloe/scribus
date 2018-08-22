@@ -202,7 +202,7 @@ void ScripterCore::runScriptDialog()
 	FinishScriptRun();
 }
 
-void ScripterCore::StdScript(QString basefilename)
+void ScripterCore::StdScript(const QString& basefilename)
 {
 	QString pfad = ScPaths::instance().scriptDir();
 	QString pfad2;
@@ -215,7 +215,7 @@ void ScripterCore::StdScript(QString basefilename)
 	FinishScriptRun();
 }
 
-void ScripterCore::RecentScript(QString fn)
+void ScripterCore::RecentScript(const QString& fn)
 {
 	QFileInfo fd(fn);
 	if (!fd.exists())
@@ -228,12 +228,12 @@ void ScripterCore::RecentScript(QString fn)
 	FinishScriptRun();
 }
 
-void ScripterCore::slotRunScriptFile(QString fileName, bool inMainInterpreter)
+void ScripterCore::slotRunScriptFile(const QString& fileName, bool inMainInterpreter)
 {
 	slotRunScriptFile(fileName, QStringList(), inMainInterpreter);
 }
 
-void ScripterCore::slotRunScriptFile(QString fileName, QStringList arguments, bool inMainInterpreter)
+void ScripterCore::slotRunScriptFile(const QString& fileName, QStringList arguments, bool inMainInterpreter)
 /** run "filename" python script with the additional arguments provided in "arguments" */
 {
 	// Prevent two scripts to be run concurrently or face crash!
@@ -386,7 +386,7 @@ void ScripterCore::slotRunPythonScript()
 	}
 }
 
-void ScripterCore::slotRunScript(const QString Script)
+void ScripterCore::slotRunScript(const QString& Script)
 {
 	// Prevent two scripts to be run concurrently or face crash!
 	if (ScCore->primaryMainWindow()->scriptIsRunning())
@@ -547,12 +547,12 @@ void ScripterCore::aboutScript()
 	QString docstring = content.section("\"\"\"", 1, 1);
 	if (!docstring.isEmpty())
 	{
-		html += QString("<h1>%1 %2</h1>").arg( tr("Documentation for:")).arg(fi.fileName());
+		html += QString("<h1>%1 %2</h1>").arg( tr("Documentation for:"), fi.fileName());
 		html += QString("<p>%1</p>").arg(docstring.replace("\n\n", "<br><br>"));
 	}
 	else
 	{
-		html += QString("<p><b>%1 %2 %3</b></p>").arg( tr("Script")).arg(fi.fileName()).arg( tr(" doesn't contain any docstring!"));
+		html += QString("<p><b>%1 %2 %3</b></p>").arg( tr("Script")).arg(fi.fileName(), tr(" doesn't contain any docstring!"));
 		html += QString("<pre>%4</pre>").arg(content);
 	}
 	html += "</body></html>";
@@ -617,8 +617,7 @@ bool ScripterCore::setupMainInterpreter()
 				   "Error details were printed to stderr. "));
 		return false;
 	}
-	else
-		return true;
+	return true;
 }
 
 void ScripterCore::setStartupScript(const QString& newScript)

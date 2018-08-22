@@ -64,9 +64,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_math.h"
 #include "xpsimportoptions.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 XpsPlug::XpsPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel = new Selection(this, false);
@@ -77,7 +74,7 @@ XpsPlug::XpsPlug(ScribusDoc* doc, int flags)
 	uz = nullptr;
 }
 
-QImage XpsPlug::readThumbnail(QString fName)
+QImage XpsPlug::readThumbnail(const QString& fName)
 {
 	QImage tmp;
 	if (!QFile::exists(fName))
@@ -190,9 +187,8 @@ QImage XpsPlug::readThumbnail(QString fName)
 	return tmp;
 }
 
-bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool XpsPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -200,7 +196,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	bool ret = false;
 	firstPage = true;
 	pagecount = 1;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	m_FileName = fi.fileName();
 	if ( !ScCore->usingGUI() )
 	{
@@ -282,7 +278,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -392,7 +388,7 @@ XpsPlug::~XpsPlug()
 	}
 }
 
-bool XpsPlug::convert(QString fn)
+bool XpsPlug::convert(const QString& fn)
 {
 	bool retVal = true;
 	importedColors.clear();
@@ -433,7 +429,7 @@ bool XpsPlug::convert(QString fn)
 	return retVal;
 }
 
-bool XpsPlug::parseDocSequence(QString designMap)
+bool XpsPlug::parseDocSequence(const QString& designMap)
 {
 	QByteArray f;
 	QDomDocument designMapDom;
@@ -463,7 +459,7 @@ bool XpsPlug::parseDocSequence(QString designMap)
 	return parsed;
 }
 
-bool XpsPlug::parseDocReference(QString designMap)
+bool XpsPlug::parseDocReference(const QString& designMap)
 {
 	QByteArray f;
 	QFileInfo fi(designMap);
@@ -571,7 +567,7 @@ bool XpsPlug::parseDocReference(QString designMap)
 	return true;
 }
 
-void XpsPlug::parsePageReference(QString designMap)
+void XpsPlug::parsePageReference(const QString& designMap)
 {
 	QByteArray f;
 	QFileInfo fi(designMap);
@@ -698,7 +694,7 @@ void XpsPlug::parsePageReference(QString designMap)
 	}
 }
 
-PageItem* XpsPlug::parseObjectXML(QDomElement &dpg, QString path)
+PageItem* XpsPlug::parseObjectXML(QDomElement &dpg, const QString& path)
 {
 	PageItem *retObj = nullptr;
 	ObjState obState;
@@ -1282,7 +1278,7 @@ PageItem* XpsPlug::parseObjectXML(QDomElement &dpg, QString path)
 	return retObj;
 }
 
-void XpsPlug::parseOpacityXML(QDomElement &spe, QString path, ObjState &obState)
+void XpsPlug::parseOpacityXML(QDomElement &spe, const QString& path, ObjState &obState)
 {
 	ObjState opaState;
 	opaState.CurrColorFill = CommonStrings::None;
@@ -1308,7 +1304,7 @@ void XpsPlug::parseOpacityXML(QDomElement &spe, QString path, ObjState &obState)
 	}
 }
 
-void XpsPlug::parseStrokeXML(QDomElement &spe, QString path, ObjState &obState)
+void XpsPlug::parseStrokeXML(QDomElement &spe, const QString& path, ObjState &obState)
 {
 	ObjState opaState;
 	opaState.CurrColorFill = CommonStrings::None;
@@ -1331,7 +1327,7 @@ void XpsPlug::parseStrokeXML(QDomElement &spe, QString path, ObjState &obState)
 		obState.patternStroke = opaState.patternName;
 }
 
-void XpsPlug::parseFillXML(QDomElement &spe, QString path, ObjState &obState)
+void XpsPlug::parseFillXML(QDomElement &spe, const QString& path, ObjState &obState)
 {
 	for(QDomNode obg = spe.firstChild(); !obg.isNull(); obg = obg.nextSibling() )
 	{
@@ -1584,7 +1580,7 @@ QString XpsPlug::parsePathGeometryXML(QDomElement &spe)
 	return svgString;
 }
 
-void XpsPlug::parseResourceFile(QString resFile)
+void XpsPlug::parseResourceFile(const QString& resFile)
 {
 	QByteArray f;
 	if (uz->read(resFile, f))

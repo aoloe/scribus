@@ -285,7 +285,7 @@ void Prefs_ExternalTools::changeLatexPath()
 	}
 }
 
-void Prefs_ExternalTools::insertConfigItem(QString config, int row)
+void Prefs_ExternalTools::insertConfigItem(const QString& config, int row)
 {
 	QListWidgetItem *item = new QListWidgetItem();
 	item->setData(Qt::UserRole, config);
@@ -306,9 +306,7 @@ void Prefs_ExternalTools::setConfigItemText(QListWidgetItem *item)
 		item->setText(description);
 	else
 	{
-		item->setText(QString("%1 (" + tr("Command: ") + "%2)" ).
-			arg(description).
-			arg(QDir::toNativeSeparators(QDir::cleanPath(command))));
+		item->setText(QString("%1 (" + tr("Command: ") + "%2)" ).arg(description, QDir::toNativeSeparators(QDir::cleanPath(command))));
 	}
 }
 

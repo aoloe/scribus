@@ -279,7 +279,7 @@ FPointArray WMFImport::pointsToPolyline( const FPointArray& points, bool closePa
 	polyline.svgInit();
 	for (int i = 0; i < points.size(); ++i )
 	{
-		FPoint point = points.point(i);
+		const FPoint& point = points.point(i);
 		x = point.x();
 		y = point.y();
 		if (bFirst)
@@ -307,7 +307,7 @@ void WMFImport::pointsToAngle( double xStart, double yStart, double xEnd, double
 	if ( angleLength < 0 ) angleLength = 360.0 + angleLength;
 }
 
-QImage WMFImport::readThumbnail(QString fname)
+QImage WMFImport::readThumbnail(const QString& fname)
 {
 	if (!loadWMF(fname))
 	{
@@ -357,7 +357,7 @@ QImage WMFImport::readThumbnail(QString fname)
 	return tmpImage;
 }
 
-bool WMFImport::import(QString fname, const TransactionSettings& trSettings, int flags)
+bool WMFImport::import(const QString& fname, const TransactionSettings& trSettings, int flags)
 {
 	if (!loadWMF(fname))
 	{
@@ -1112,7 +1112,7 @@ void WMFImport::setBkColor( QList<PageItem*>& /*items*/, long, short* params )
 	m_context.setBackgroundColor( colorFromParam( params ) );
 }
 
-void WMFImport::setBkMode( QList<PageItem*>& /*items*/, long, short* params )
+void WMFImport::setBkMode(QList<PageItem*>& /*items*/, long, short* params )
 {
 	if ( params[ 0 ]==1 ) 
 		m_context.setBackgroundMode( Qt::TransparentMode );
@@ -1284,7 +1284,7 @@ void WMFImport::extTextOut( QList<PageItem*>& items, long num, short* params )
 	m_context.restore();
 }
 
-void WMFImport::selectObject( QList<PageItem*>& items, long num, short* params )
+void WMFImport::selectObject(QList<PageItem*>& items, long num, short* params )
 {
 	int idx = params[ 0 ];
 	if ( idx >= 0 && idx < MAX_OBJHANDLE && m_ObjHandleTab[ idx ] )
@@ -1453,7 +1453,7 @@ int WMFImport::findFunc( unsigned short aFunc ) const
 	return i;
 }
 
-unsigned int WMFImport::toDWord( short* params )
+unsigned int WMFImport::toDWord( const short* params )
 {
 	unsigned int l;
 #if !defined( WORDS_BIGENDIAN )

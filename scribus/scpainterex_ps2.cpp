@@ -60,7 +60,7 @@ ScPs2OutputParams::ScPs2OutputParams(ScribusDoc* doc)
 	cmykToOutputImageTransform = nullptr;
 }
 
-ScPainterEx_Ps2::ScPainterEx_Ps2(QIODevice* iodev, QRect& rect, ScPs2OutputParams& options ) : ScPainterExBase()
+ScPainterEx_Ps2::ScPainterEx_Ps2(QIODevice* iodev, QRect& rect, ScPs2OutputParams& options )
 {
 	m_stream.setDevice( iodev );
 	m_colorMode = options.colorMode;
@@ -470,7 +470,7 @@ void ScPainterEx_Ps2::putColor(ScColorShade& colorShade, bool doFill)
 			m_stream << QString("%1 setgray stroke\n").arg(gray);
 		return;
 	}
-	else if (m_options.hProfile && m_options.rgbToOutputColorTransform && m_options.cmykToOutputColorTransform)
+	if (m_options.hProfile && m_options.rgbToOutputColorTransform && m_options.cmykToOutputColorTransform)
 	{
 		unsigned long colorIn[4];
 		unsigned long colorOut[4];

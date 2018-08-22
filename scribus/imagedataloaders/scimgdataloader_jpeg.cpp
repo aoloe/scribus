@@ -7,7 +7,7 @@ for which a new license (GPL+exception) is in place.
 #include <QFile>
 #include <QFileInfo>
 #include <QObject>
-#include <setjmp.h>
+#include <csetjmp>
 #include "scconfig.h"
 #include "colormgmt/sccolormgmtengine.h"
 #include "scimgdataloader_jpeg.h"
@@ -34,12 +34,12 @@ static void my_error_exit (j_common_ptr cinfo)
 #define MAX_DATA_BYTES_IN_MARKER  (MAX_BYTES_IN_MARKER - ICC_OVERHEAD_LEN)
 
 
-ScImgDataLoader_JPEG::ScImgDataLoader_JPEG(void)
+ScImgDataLoader_JPEG::ScImgDataLoader_JPEG()
 {
 	initSupportedFormatList();
 }
 
-void ScImgDataLoader_JPEG::initSupportedFormatList(void)
+void ScImgDataLoader_JPEG::initSupportedFormatList()
 {
 	m_supportedFormats.clear();
 	m_supportedFormats.append( "jpg" );

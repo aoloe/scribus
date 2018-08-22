@@ -63,7 +63,7 @@ for which a new license (GPL+exception) is in place.
 
 extern QString DocDir;
 
-ImIconProvider::ImIconProvider() : QFileIconProvider()
+ImIconProvider::ImIconProvider()
 {
 	fmts.clear();
 	QString tmp[] = {"eps", "epsi", "gif", "png", "jpg", "jpeg", "xpm", "tif", "tiff", "bmp", "pbm", "pgm", "ppm", "xbm", "xpm", "psd", "pat"};
@@ -89,29 +89,24 @@ QIcon ImIconProvider::icon(const QFileInfo &fi) const
 		return QFileIconProvider::icon(fi);
 	if (fmts.contains(ext, Qt::CaseInsensitive))
 		return imagepm;
-	else
-	{
-		ext = fi.completeSuffix().toLower();
-		if (ext.endsWith("ps", Qt::CaseInsensitive))
-			return pspm;
-		else if (ext.endsWith("txt", Qt::CaseInsensitive))
-			return txtpm;
-		else if (ext.endsWith("scd", Qt::CaseInsensitive) || ext.endsWith("scd.gz", Qt::CaseInsensitive))
-			return docpm;
-		else if (ext.endsWith("sla", Qt::CaseInsensitive) || ext.endsWith("sla.gz", Qt::CaseInsensitive))
-			return docpm;
-		else if (ext.endsWith("pdf", Qt::CaseInsensitive))
-			return pdfpm;
-		else if (ext.endsWith("sxd", Qt::CaseInsensitive))
-			return oosxdpm;
-		else if (ext.endsWith("sxw", Qt::CaseInsensitive))
-			return oosxwpm;
-		else if (allFormatsV.contains(ext) || ext.endsWith("sce", Qt::CaseInsensitive) || ext.endsWith("shape", Qt::CaseInsensitive))
-			return vectorpm;
-		else
-			return QFileIconProvider::icon(fi);
-	}
-	return QIcon();
+	ext = fi.completeSuffix().toLower();
+	if (ext.endsWith("ps", Qt::CaseInsensitive))
+		return pspm;
+	if (ext.endsWith("txt", Qt::CaseInsensitive))
+		return txtpm;
+	if (ext.endsWith("scd", Qt::CaseInsensitive) || ext.endsWith("scd.gz", Qt::CaseInsensitive))
+		return docpm;
+	if (ext.endsWith("sla", Qt::CaseInsensitive) || ext.endsWith("sla.gz", Qt::CaseInsensitive))
+		return docpm;
+	if (ext.endsWith("pdf", Qt::CaseInsensitive))
+		return pdfpm;
+	if (ext.endsWith("sxd", Qt::CaseInsensitive))
+		return oosxdpm;
+	if (ext.endsWith("sxw", Qt::CaseInsensitive))
+		return oosxwpm;
+	if (allFormatsV.contains(ext) || ext.endsWith("sce", Qt::CaseInsensitive) || ext.endsWith("shape", Qt::CaseInsensitive))
+		return vectorpm;
+	return QFileIconProvider::icon(fi);
 }
 
 FDialogPreview::FDialogPreview(QWidget *pa) : QLabel(pa)
@@ -133,7 +128,7 @@ void FDialogPreview::updtPix()
 	setPixmap(pm);
 }
 
-void FDialogPreview::GenPreview(QString name)
+void FDialogPreview::GenPreview(const QString& name)
 {
 	QPixmap pm;
 	QString Buffer = "";
@@ -292,7 +287,7 @@ void FDialogPreview::GenPreview(QString name)
 	}
 }
 
-CustomFDialog::CustomFDialog(QWidget *parent, QString wDir, QString caption, QString filter, int flags)
+CustomFDialog::CustomFDialog(QWidget *parent, const QString& wDir, const QString& caption, const QString& filter, int flags)
 			: QDialog(parent), optionFlags(flags)
 {
 	setModal(true);
@@ -545,7 +540,7 @@ void CustomFDialog::togglePreview()
 	repaint();
 }
 
-void CustomFDialog::setSelection(QString sel)
+void CustomFDialog::setSelection(const QString& sel)
 {
 	fileDialog->selectFile( QFileInfo(sel).fileName() );
 	if (previewIsShown)
@@ -596,7 +591,7 @@ void CustomFDialog::handleCompress()
 	setSelection(tmp.fileName());
 }
 
-void CustomFDialog::setExtension(QString e)
+void CustomFDialog::setExtension(const QString& e)
 {
 	ext = e;
 }
@@ -606,7 +601,7 @@ QString CustomFDialog::extension()
 	return ext;
 }
 
-void CustomFDialog::setZipExtension(QString e)
+void CustomFDialog::setZipExtension(const QString& e)
 {
 	extZip = e;
 }

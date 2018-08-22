@@ -537,7 +537,7 @@ QString PSLib::MatrixToStr(double m11, double m12, double m21, double m22, doubl
 	return  cc.arg(m11).arg(m12).arg(m21).arg(m22).arg(x).arg(y);
 }
 
-void PSLib::PS_set_Info(QString art, QString was)
+void PSLib::PS_set_Info(const QString& art, const QString& was)
 {
 	if (art == "Author")
 		User = was;
@@ -547,7 +547,7 @@ void PSLib::PS_set_Info(QString art, QString was)
 		Titel = was;
 }
 
-bool PSLib::PS_set_file(QString fn)
+bool PSLib::PS_set_file(const QString& fn)
 {
 	Spool.setFileName(fn);
 	if (Spool.exists())
@@ -657,20 +657,19 @@ bool PSLib::PS_begin_doc(ScribusDoc *doc, double x, double y, double width, doub
 	return true;
 }
 
-QString PSLib::PSEncode(QString in)
+QString PSLib::PSEncode(const QString& in)
 {
 	static QRegExp badchars("[\\s\\/\\{\\[\\]\\}\\<\\>\\(\\)\\%]");
-	QString tmp = "";
-	tmp = in.simplified().replace( badchars, "_" );
+	QString tmp(in.simplified().replace( badchars, "_" ));
 	return tmp;
 }
 
-void PSLib::PS_TemplateStart(QString Name)
+void PSLib::PS_TemplateStart(const QString& Name)
 {
 	PutStream("/"+PSEncode(Name)+"\n{\n");
 }
 
-void PSLib::PS_UseTemplate(QString Name)
+void PSLib::PS_UseTemplate(const QString& Name)
 {
 	PutStream(PSEncode(Name)+"\n");
 }
@@ -1052,7 +1051,7 @@ void PSLib::PS_setcapjoin(Qt::PenCapStyle ca, Qt::PenJoinStyle jo)
 		}
 }
 
-void PSLib::PS_selectfont(QString f, double s)
+void PSLib::PS_selectfont(const QString& f, double s)
 {
 	PutStream(UsedFonts[f] + " " + ToStr(s) + " se\n");
 }
@@ -1065,7 +1064,7 @@ void PSLib::PS_fill()
 		PutStream(FillColor + " cmyk fill\n");
 }
 
-void PSLib::PS_fillspot(QString color, double shade)
+void PSLib::PS_fillspot(const QString& color, double shade)
 {
 	if (fillRule)
 		PutStream(ToStr(shade / 100.0)+" "+spotMap[color]+" eofill\n");
@@ -1073,7 +1072,7 @@ void PSLib::PS_fillspot(QString color, double shade)
 		PutStream(ToStr(shade / 100.0)+" "+spotMap[color]+" fill\n");
 }
 
-void PSLib::PS_strokespot(QString color, double shade)
+void PSLib::PS_strokespot(const QString& color, double shade)
 {
 	PutStream(ToStr(shade / 100.0)+" "+spotMap[color]+" st\n");
 }
@@ -1102,13 +1101,13 @@ void PSLib::PS_show(double x, double y)
 	PutStream("/hyphen glyphshow\n");
 }
 
-void PSLib::PS_showSub(uint chr, QString font, double size, bool stroke)
+void PSLib::PS_showSub(uint chr, const QString& font, double size, bool stroke)
 {
 	PutStream(" (G"+IToStr(chr)+") "+font+" "+ToStr(size / 10.0)+" ");
 	PutStream(stroke ? "shgs\n" : "shgf\n");
 }
 
-bool PSLib::PS_ImageData(PageItem *item, QString fn, QString Name, QString Prof, bool UseEmbedded)
+bool PSLib::PS_ImageData(PageItem *item, const QString& fn, const QString& Name, const QString& Prof, bool UseEmbedded)
 {
 	bool dummy;
 	QByteArray tmp;
@@ -1189,7 +1188,7 @@ bool PSLib::PS_ImageData(PageItem *item, QString fn, QString Name, QString Prof,
 	return true;
 }
 
-bool PSLib::PS_image(PageItem *item, double x, double y, QString fn, double scalex, double scaley, QString Prof, bool UseEmbedded, QString Name)
+bool PSLib::PS_image(PageItem *item, double x, double y, const QString& fn, double scalex, double scaley, const QString& Prof, bool UseEmbedded, const QString& Name)
 {
 	bool dummy;
 	QByteArray tmp;
@@ -1216,17 +1215,17 @@ bool PSLib::PS_image(PageItem *item, double x, double y, QString fn, double scal
 			}
 			else
 			{
-      				PutStream("%%BeginDocument: " + fi.fileName() + "\n");
-					if (getDouble(tmp.mid(0, 4), true) == 0xC5D0D3C6)
-					{
-						char* data = tmp.data();
-						uint startPos = getDouble(tmp.mid(4, 4), false);
-						uint length = getDouble(tmp.mid(8, 4), false);
-						PutStream(data+startPos, length, false);
-					}
-					else
-						PutStream(tmp);
-					PutStream("\n%%EndDocument\n");
+				PutStream("%%BeginDocument: " + fi.fileName() + "\n");
+				if (getDouble(tmp.mid(0, 4), true) == 0xC5D0D3C6)
+				{
+					char* data = tmp.data();
+					uint startPos = getDouble(tmp.mid(4, 4), false);
+					uint length = getDouble(tmp.mid(8, 4), false);
+					PutStream(data+startPos, length, false);
+				}
+				else
+					PutStream(tmp);
+				PutStream("\n%%EndDocument\n");
 			}
 			PutStream("eEPS\n");
 			return true;
@@ -1249,7 +1248,7 @@ bool PSLib::PS_image(PageItem *item, double x, double y, QString fn, double scal
 		resolution = item->asLatexFrame()->realDpi();
 	else if (item->pixm.imgInfo.type == ImageType7)
 		resolution = 72;
-//	int resolution = (item->pixm.imgInfo.type == ImageType7) ? 72 : 300;
+	//	int resolution = (item->pixm.imgInfo.type == ImageType7) ? 72 : 300;
 	if ( !image.loadPicture(fn, item->pixm.imgInfo.actualPageNumber, cms, ScImage::CMYKData, resolution, &dummy) )
 	{
 		PS_Error_ImageLoadFailure(fn);
@@ -1267,7 +1266,7 @@ bool PSLib::PS_image(PageItem *item, double x, double y, QString fn, double scal
 		scalex *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
 		scaley *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
 	}
-//	PutStream(ToStr(x*scalex) + " " + ToStr(y*scaley) + " tr\n");
+	//	PutStream(ToStr(x*scalex) + " " + ToStr(y*scaley) + " tr\n");
 	PutStream(ToStr(qRound(scalex*w)) + " " + ToStr(qRound(scaley*h)) + " sc\n");
 	PutStream(((!DoSep) && (!GraySc)) ? "/DeviceCMYK setcolorspace\n" : "/DeviceGray setcolorspace\n");
 	QByteArray maskArray;
@@ -1286,8 +1285,8 @@ bool PSLib::PS_image(PageItem *item, double x, double y, QString fn, double scal
 			return false;
 		}
 	}
- 	if ((maskArray.size() > 0) && (item->pixm.imgInfo.type != ImageType7))
- 	{
+	if ((maskArray.size() > 0) && (item->pixm.imgInfo.type != ImageType7))
+	{
 		int plate = DoSep ? Plate : (GraySc ? -2 : -1);
 		// JG - Experimental code using Type3 image instead of patterns
 		PutStream("<< /ImageType 3\n");
@@ -1361,7 +1360,7 @@ bool PSLib::PS_image(PageItem *item, double x, double y, QString fn, double scal
 }
 
 
-void PSLib::PS_plate(int nr, QString name)
+void PSLib::PS_plate(int nr, const QString& name)
 {
 	switch (nr)
 	{
@@ -1401,13 +1400,13 @@ void PSLib::PS_setGray()
 	GraySc = true;
 }
 
-void PSLib::PDF_Bookmark(QString text, uint Seite)
+void PSLib::PDF_Bookmark(const QString& text, uint Seite)
 {
 	PutStream("[/Title ("+text+") /Page "+IToStr(Seite)+" /View [/Fit]\n");
 	PutStream("/OUT pdfmark\n");
 }
 
-void PSLib::PDF_Annotation(PageItem *item, QString text, double x, double y, double b, double h)
+void PSLib::PDF_Annotation(PageItem *item, const QString& text, double x, double y, double b, double h)
 {
 	PutStream("[\n/Rect [ "+ToStr(x)+" "+ToStr(y) +" "+ToStr(b)+" "+ToStr(h)+" ]\n");
 	switch (item->annotation().Type())
@@ -1469,7 +1468,7 @@ void PSLib::PS_close()
 	Spool.close();
 }
 
-void PSLib::PS_insert(QString i)
+void PSLib::PS_insert(const QString& i)
 {
 	PutStream(i);
 }
@@ -1481,7 +1480,7 @@ void PSLib::PS_Error(const QString& message)
 		qDebug("%s", message.toLocal8Bit().data());
 }
 
-void PSLib::PS_Error_ImageDataWriteFailure(void)
+void PSLib::PS_Error_ImageDataWriteFailure()
 {
 	PS_Error( tr("Failed to write data for an image"));
 }
@@ -1496,7 +1495,7 @@ void PSLib::PS_Error_MaskLoadFailure(const QString& fileName)
 	PS_Error( tr("Failed to load an image mask : %1").arg(fileName) );
 }
 
-void PSLib::PS_Error_InsufficientMemory(void)
+void PSLib::PS_Error_InsufficientMemory()
 {
 	PS_Error( tr("Insufficient memory for processing an image"));
 }
@@ -1764,7 +1763,7 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 		progressDialog->close();
 	if (errorOccured)
 		return 1;
-	else if (abortExport)
+	if (abortExport)
 		return 2; //CB Lets leave 1 for general error condition
 	return 0; 
 }
@@ -1815,7 +1814,7 @@ bool PSLib::ProcessItem(ScribusDoc* Doc, ScPage* page, PageItem* item, uint PNr,
 			PS_closepath();
 			if (item->GrType == 14)
 				PS_HatchFill(item);
-			else if ((item->GrType != 0) && (master == false))
+			else if ((item->GrType != 0) && (!master))
 				HandleGradientFillStroke(item, false);
 			else
 				putColor(item->fillColor(), item->fillShade(), true);
@@ -1833,7 +1832,7 @@ bool PSLib::ProcessItem(ScribusDoc* Doc, ScPage* page, PageItem* item, uint PNr,
 			PS_translate(0, -item->height());
 			PS_scale(1, -1);
 		}
-		if (item->imageClip.size() != 0)
+		if (!item->imageClip.empty())
 			SetPathAndClip(item->imageClip, true);
 		if ((item->imageIsAvailable) && (!item->Pfile.isEmpty()))
 		{
@@ -1932,7 +1931,7 @@ bool PSLib::ProcessItem(ScribusDoc* Doc, ScPage* page, PageItem* item, uint PNr,
 			PS_closepath();
 			if (item->GrType == 14)
 				PS_HatchFill(item);
-			else if ((item->GrType != 0) && (master == false))
+			else if ((item->GrType != 0) && (!master))
 				HandleGradientFillStroke(item, false);
 			else
 				putColor(item->fillColor(), item->fillShade(), true);
@@ -3286,7 +3285,6 @@ void PSLib::HandleMeshGradient(PageItem* item)
 			m_Doc->PageColors.remove(tmpAddedColors[cd]);
 		}
 	}
-	return;
 }
 
 void PSLib::HandlePatchMeshGradient(PageItem* item)
@@ -3467,7 +3465,6 @@ void PSLib::HandlePatchMeshGradient(PageItem* item)
 		PutStream("gr\n");
 	}
 	PS_newpath();
-	return;
 }
 
 void PSLib::HandleDiamondGradient(PageItem* item)
@@ -3682,7 +3679,6 @@ void PSLib::HandleDiamondGradient(PageItem* item)
 		PutStream("eofill\n");
 	else
 		PutStream("fill\n");
-	return;
 }
 
 void PSLib::HandleTensorGradient(PageItem* item)
@@ -3803,7 +3799,6 @@ void PSLib::HandleTensorGradient(PageItem* item)
 		PutStream("eofill\n");
 	else
 		PutStream("fill\n");
-	return;
 }
 
 void PSLib::HandleGradientFillStroke(PageItem *item, bool stroke, bool forArrow)
@@ -3873,22 +3868,22 @@ void PSLib::HandleGradientFillStroke(PageItem *item, bool stroke, bool forArrow)
 				PutStream("fill\n");
 			return;
 		}
-		else if (GType == 9)
+		if (GType == 9)
 		{
 			HandleTensorGradient(item);
 			return;
 		}
-		else if (GType == 10)
+		if (GType == 10)
 		{
 			HandleDiamondGradient(item);
 			return;
 		}
-		else if ((GType == 11) || (GType == 13))
+		if ((GType == 11) || (GType == 13))
 		{
 			HandleMeshGradient(item);
 			return;
 		}
-		else if (GType == 12)
+		if (GType == 12)
 		{
 			HandlePatchMeshGradient(item);
 			return;
@@ -4532,7 +4527,7 @@ void PSLib::SetPathAndClip(const FPointArray &path, bool clipRule)
 	}
 }
 
-const QString& PSLib::errorMessage(void)
+const QString& PSLib::errorMessage()
 {
 	return ErrorMessage;
 }

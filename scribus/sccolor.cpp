@@ -31,7 +31,7 @@ for which a new license (GPL+exception) is in place.
 #include "scribusdoc.h"
 #include "scribusstructs.h"
 
-ScColor::ScColor(void)
+ScColor::ScColor()
 {
 //	Model = colorModelCMYK;
 //	CR = MG = YB = K = 0;
@@ -426,7 +426,7 @@ void ScColor::setSpotColor(bool s)
 	m_Spot = s;
 }
 
-ColorList::ColorList(ScribusDoc* doc, bool retainDoc) : QMap<QString,ScColor>()
+ColorList::ColorList(ScribusDoc* doc, bool retainDoc)
 {
 	m_doc = doc;
 	m_retainDoc = retainDoc;

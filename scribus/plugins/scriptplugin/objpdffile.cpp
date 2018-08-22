@@ -29,18 +29,18 @@ static int minmaxi(int val, int min, int max)
 {
 	if (val < min)
 		return min;
-	else if (val > max)
+	if (val > max)
 		return max;
-	else return val;
+	return val;
 }
 
 static double minmaxd(double val, double min, double max)
 {
 	if (val < min)
 		return min;
-	else if (val > max)
+	if (val > max)
 		return max;
-	else return val;
+	return val;
 }
 
 typedef struct
@@ -373,7 +373,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	QList<QString> tmpEm = ReallyUsed.keys();
 	for (int i = 0; i < tmpEm.count(); ++i) 
 	{
-		QString fontName = tmpEm.at(i);
+		const QString& fontName = tmpEm.at(i);
 		PyObject *tmp= nullptr;
 		tmp = PyString_FromString(fontName.toLatin1());
 		if (tmp) {
@@ -1303,7 +1303,7 @@ static PyObject *PDFfile_save(PDFfile *self)
 		QStringList docFonts = currentDoc->UsedFonts.keys();
 		for (int i = 0; i < docFonts.count(); ++i)
 		{
-			QString fontName = docFonts.at(i);
+			const QString& fontName = docFonts.at(i);
 			if (pdfOptions.SubsetList.contains(fontName))
 				continue;
 			if (pdfOptions.EmbedList.contains(fontName))

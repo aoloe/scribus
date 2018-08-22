@@ -42,7 +42,7 @@ void scribusexportpixmap_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-PixmapExportPlugin::PixmapExportPlugin() : ScActionPlugin()
+PixmapExportPlugin::PixmapExportPlugin()
 {
 	// Set action info in languageChange, so we only have to do
 	// it in one place. This includes registering file formats.
@@ -94,7 +94,7 @@ void PixmapExportPlugin::deleteAboutData(const AboutData* about) const
 	delete about;
 }
 
-bool PixmapExportPlugin::run(ScribusDoc* doc, QString target)
+bool PixmapExportPlugin::run(ScribusDoc* doc, const QString& target)
 {
 	Q_ASSERT(target.isEmpty());
 	Q_ASSERT(!doc->masterPageMode());

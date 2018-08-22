@@ -47,9 +47,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 CvgPlug::CvgPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
@@ -120,9 +117,8 @@ QImage CvgPlug::readThumbnail(const QString& fName)
 	return QImage();
 }
 
-bool CvgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool CvgPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -130,7 +126,7 @@ bool CvgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	double b, h;
 	bool ret = false;
 	CustColors.clear();
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -164,7 +160,7 @@ bool CvgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		progressDialog->setOverallProgress(1);
 		qApp->processEvents();
 	}
-	parseHeader(fName, b, h);
+	parseHeader(fNameIn, b, h);
 	if (b == 0.0)
 		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
@@ -218,7 +214,7 @@ bool CvgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);

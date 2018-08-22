@@ -281,8 +281,6 @@ for which a new license (GPL+exception) is in place.
 #define   U_RNDT_Empty                  0x10000002
 #define   U_RNDT_Infinite               0x10000003
 
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 SvmPlug::SvmPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
@@ -292,7 +290,7 @@ SvmPlug::SvmPlug(ScribusDoc* doc, int flags)
 	progressDialog = nullptr;
 }
 
-QImage SvmPlug::readThumbnail(QString fName)
+QImage SvmPlug::readThumbnail(const QString& fName)
 {
 	QFileInfo fi = QFileInfo(fName);
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
@@ -389,16 +387,15 @@ QImage SvmPlug::readThumbnail(QString fName)
 	return QImage();
 }
 
-bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool SvmPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
 	cancel = false;
 	double x, y, b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -434,7 +431,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		progressDialog->setOverallProgress(1);
 		qApp->processEvents();
 	}
-	parseHeader(fName, x, y, b, h);
+	parseHeader(fNameIn, x, y, b, h);
 	if (b == 0.0)
 		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
@@ -501,7 +498,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -644,7 +641,7 @@ void SvmPlug::parseHeader(const QString& fName, double &x, double &y, double &b,
 	}
 }
 
-bool SvmPlug::convert(QString fn)
+bool SvmPlug::convert(const QString& fn)
 {
 	importedColors.clear();
 	importedPatterns.clear();
@@ -1296,10 +1293,10 @@ void SvmPlug::finishItem(PageItem* ite, bool fill)
 							points.setMarker();
 							continue;
 						}
-						FPoint base = gpath.point(a);
-						FPoint c1 = gpath.point(a+1);
-						FPoint base2 =  gpath.point(a+2);
-						FPoint c2 = gpath.point(a+3);
+						const FPoint& base = gpath.point(a);
+						const FPoint& c1 = gpath.point(a+1);
+						const FPoint& base2 =  gpath.point(a+2);
+						const FPoint& c2 = gpath.point(a+3);
 						FPoint cn1 = (1.0 - nearT) * base + nearT * c1;
 						FPoint cn2 = (1.0 - nearT) * cn1 + nearT * ((1.0 - nearT) * c1 + nearT * c2);
 						FPoint cn3 = (1.0 - nearT) * ((1.0 - nearT) * c1 + nearT * c2) + nearT * ((1.0 - nearT) * c2 + nearT * base2);
@@ -2397,7 +2394,7 @@ void SvmPlug::commonGradient(QDataStream &ds, PageItem* ite)
 	}
 }
 
-QString SvmPlug::handleColor(QColor col)
+QString SvmPlug::handleColor(const QColor& col)
 {
 	ScColor tmp;
 	tmp.setRgbColor(col.red(), col.green(), col.blue());

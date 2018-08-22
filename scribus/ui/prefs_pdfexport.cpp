@@ -148,7 +148,7 @@ QStringList Prefs_PDFExport::fontsToOutline()
 	return QStringList();
 }
 
-QListWidgetItem* Prefs_PDFExport::addFontItem(QString fontName, QListWidget* fontList)
+QListWidgetItem* Prefs_PDFExport::addFontItem(const QString& fontName, QListWidget* fontList)
 {
 	QListWidgetItem* item = nullptr;
 	if (!AllFonts.contains(fontName))
@@ -969,7 +969,7 @@ void Prefs_PDFExport::enablePGI()
 {
 	bool setter=false;
 	if (useImageProfileCheckBox->isChecked())
-		setter = doNotUseEmbeddedImageProfileCheckBox->isChecked() ? true : false;
+		setter = doNotUseEmbeddedImageProfileCheckBox->isChecked();
 	imageProfileComboBox->setEnabled(setter);
 	imageRenderingIntentComboBox->setEnabled(setter);
 	doNotUseEmbeddedImageProfileCheckBox->setEnabled(useImageProfileCheckBox->isChecked());

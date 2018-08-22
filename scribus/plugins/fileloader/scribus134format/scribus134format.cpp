@@ -48,8 +48,7 @@ for which a new license (GPL+exception) is in place.
 // Please don't implement the functionality of your plugin here; do that
 // in scribus134formatimpl.h and scribus134formatimpl.cpp .
 
-Scribus134Format::Scribus134Format() :
-	LoadSavePlugin()
+Scribus134Format::Scribus134Format()
 {
 	itemCount = itemCountM = 0;
 	legacyStyleCount = 0;
@@ -3130,7 +3129,7 @@ bool Scribus134Format::readLatexInfo(PageItem_LatexFrame* latexitem, ScXmlStream
 	return !reader.hasError();
 }
 
-bool Scribus134Format::loadPage(const QString & fileName, int pageNumber, bool Mpage, QString renamedPageName)
+bool Scribus134Format::loadPage(const QString & fileName, int pageNumber, bool Mpage, const QString& renamedPageName)
 {
 // 	qDebug() << QString("loading page %2 from file '%1' from 1.3.x plugin").arg(fileName).arg(pageNumber);
 	if (m_Doc==nullptr || m_AvailableFonts==nullptr)

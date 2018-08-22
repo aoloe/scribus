@@ -54,9 +54,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 PubPlug::PubPlug(ScribusDoc* doc, int flags)
 {
 	baseX = baseY = 0;
@@ -127,16 +124,15 @@ QImage PubPlug::readThumbnail(const QString& fName)
 	return QImage();
 }
 
-bool PubPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool PubPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
 	cancel = false;
 	double b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -222,7 +218,7 @@ bool PubPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -326,7 +322,7 @@ PubPlug::~PubPlug()
 	delete tmpSel;
 }
 
-bool PubPlug::convert(QString fn)
+bool PubPlug::convert(const QString& fn)
 {
 	importedColors.clear();
 	importedPatterns.clear();

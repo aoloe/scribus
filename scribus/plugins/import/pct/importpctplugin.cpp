@@ -39,7 +39,7 @@ void importpct_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ImportPctPlugin::ImportPctPlugin() : LoadSavePlugin(),
+ImportPctPlugin::ImportPctPlugin() :
 	importAction(new ScrAction(ScrAction::DLL, "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do it in one
@@ -128,7 +128,7 @@ bool ImportPctPlugin::import(QString fileName, int flags)
 		else
 			return true;
 	}
-	if (m_Doc == 0)
+	if (m_Doc == nullptr)
 		m_Doc=ScCore->primaryMainWindow()->doc;
 	UndoTransaction activeTransaction;
 	bool emptyDoc = (m_Doc == nullptr);

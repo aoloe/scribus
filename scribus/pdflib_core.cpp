@@ -124,7 +124,7 @@ class PdfPainter: public TextLayoutPainter
 	QByteArray m_prevFontName;
 	int        m_prevFontSize;
 
-	QByteArray transformToStr(QTransform tr)
+	QByteArray transformToStr(const QTransform& tr)
 	{
 		return FToStr(tr.m11()) + " " + FToStr(-tr.m12()) + " " + FToStr(-tr.m21()) + " " + FToStr(tr.m22()) + " " + FToStr(tr.dx()) + " " + FToStr(-tr.dy());
 	}
@@ -509,26 +509,17 @@ public:
 PDFLibCore::PDFLibCore(ScribusDoc & docu)
 	: QObject(&docu),
 	doc(docu),
-	ActPageP(0),
+	ActPageP(nullptr),
 	Options(doc.pdfOptions()),
-	Bvie(0),
-	ucs2Codec(0),
-//	ObjCounter(7),
+	Bvie(nullptr),
+	ucs2Codec(nullptr),
 	ResNam("RE"),
 	ResCount(0),
 	NDnam("LI"),
 	NDnum(0),
-//	KeyGen(""),
-//	OwnerKey(""),
-//	UserKey(""),
-//	FileID(""),
-//	EncryKey(""),
-//	Encrypt(0),
-//	KeyLen(5),
-	colorsToUse(),
 	spotNam("Spot"),
 	spotCount(0),
-	progressDialog(0),
+	progressDialog(nullptr),
 	abortExport(false),
 	usingGUI(ScCore->usingGUI()),
 	bleedDisplacementX(0),
@@ -688,12 +679,12 @@ bool PDFLibCore::doExport(const QString& fn, const QString& nam, int Components,
 	return (ret && !error);
 }
 
-const QString& PDFLibCore::errorMessage(void) const
+const QString& PDFLibCore::errorMessage() const
 {
 	return ErrorMessage;
 }
 
-bool PDFLibCore::exportAborted(void) const
+bool PDFLibCore::exportAborted() const
 {
 	return abortExport;
 }
@@ -809,10 +800,9 @@ QByteArray PDFLibCore::EncStream(const QByteArray & in, PdfId ObjNum)
 {
 	if (in.length() < 1)
 		return QByteArray();
-	else if (!Options.Encrypt)
+	if (!Options.Encrypt)
 		return in;
-	else
-		return writer.encryptBytes(in, ObjNum);
+	return writer.encryptBytes(in, ObjNum);
 //	rc4_context_t rc4;
 //	QByteArray tmp(in);
 //	QByteArray us(tmp.length(), ' ');
@@ -1749,7 +1739,7 @@ PdfId PDFLibCore::PDF_EmbedFontObject(const QByteArray& font, const QByteArray& 
 	return embeddedFontObject;
 }
 
-QByteArray PDFLibCore::PDF_GenerateSubsetTag(const QByteArray& fontName, QList<uint> usedGlyphs)
+QByteArray PDFLibCore::PDF_GenerateSubsetTag(const QByteArray& fontName, const QList<uint>& usedGlyphs)
 {
 	uint hash, mod;
 	QVector<uint> glyphVec = usedGlyphs.toVector();
@@ -1816,7 +1806,7 @@ PdfId PDFLibCore::PDF_WriteFontDescriptor(const QByteArray& fontName, ScFace& fa
 	return fontDescriptor;
 }
 
-PdfFont PDFLibCore::PDF_EncodeCidFont(const QByteArray& fontName, ScFace& face, const QByteArray& baseFont, PdfId fontDes, const ScFace::FaceEncoding& gl, const QMap<uint,uint> glyphmap  )
+PdfFont PDFLibCore::PDF_EncodeCidFont(const QByteArray& fontName, ScFace& face, const QByteArray& baseFont, PdfId fontDes, const ScFace::FaceEncoding& gl, const QMap<uint,uint>& glyphmap  )
 {
 	PdfFont result;
 	result.name = Pdf::toName(fontName);
@@ -2528,46 +2518,42 @@ void PDFLibCore::PDF_Begin_Colors()
 		writer.endObj(iccColorspace);
 		ResCount++;
 	}
-	if (((Options.isGrayscale == false) && (Options.UseRGB == false)) && (Options.UseSpotColors))
+	if (((!Options.isGrayscale) && (!Options.UseRGB)) && (Options.UseSpotColors))
 	{
 		doc.getUsedColors(colorsToUse);
-		ColorList::Iterator itf;
-		for (itf = colorsToUse.begin(); itf != colorsToUse.end(); ++itf)
+		for (auto itf = colorsToUse.begin(); itf != colorsToUse.end(); ++itf)
 		{
 			const ScColor& colorToUse = itf.value();
-			if ((colorToUse.isSpotColor()) || (colorToUse.isRegistrationColor()))
-			{
-				CMYKColor cmykValues;
-				int cc, cm, cy, ck;
-				PdfSpotC spotD;
-				ScColorEngine::getCMYKValues(colorToUse, &doc, cmykValues);
-				cmykValues.getValues(cc, cm, cy, ck);
-				QByteArray colorDesc = "{\ndup "+FToStr(static_cast<double>(cc) / 255)+"\nmul exch dup ";
-				colorDesc += FToStr(static_cast<double>(cm) / 255)+"\nmul exch dup ";
-				colorDesc += FToStr(static_cast<double>(cy) / 255)+"\nmul exch ";
-				colorDesc += FToStr(static_cast<double>(ck) / 255)+" mul }";
-				PdfId separationFunction = writer.newObject();
-				writer.startObj(separationFunction);
-				PutDoc("<<\n/FunctionType 4\n");
-				PutDoc("/Domain [0.0 1.0]\n");
-				PutDoc("/Range [0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0]\n");
-				PutDoc("/Length "+Pdf::toPdf(colorDesc.length()+1)+"\n");
-				PutDoc(">>\nstream\n"+EncStream(colorDesc, separationFunction)+"\nendstream");
-				writer.endObj(separationFunction);
-				PdfId separationColorspace= writer.newObject();
-				writer.startObj(separationColorspace);
-				PutDoc("[ /Separation ");
-				if (colorsToUse[itf.key()].isRegistrationColor())
-					PutDoc("/All");
-				else
-					PutDoc(Pdf::toName(itf.key().simplified()));
-				PutDoc(" /DeviceCMYK "+Pdf::toObjRef(separationFunction)+" ]");
-				writer.endObj(separationColorspace);
-				spotD.ResName = spotNam+Pdf::toPdf(spotCount);
-				spotD.ResNum = separationColorspace;
-				spotMap.insert(itf.key(), spotD);
-				spotCount++;
-			}
+			if (colorToUse.isProcessColor())
+				continue;
+			CMYKColorF cmykValues;
+			PdfSpotC spotD;
+			ScColorEngine::getCMYKValues(colorToUse, &doc, cmykValues);
+			QByteArray colorDesc = "{\ndup " + FToStr(cmykValues.c) + "\nmul exch dup ";
+			colorDesc += FToStr(cmykValues.m) + "\nmul exch dup ";
+			colorDesc += FToStr(cmykValues.y) + "\nmul exch ";
+			colorDesc += FToStr(cmykValues.k) + " mul }";
+			PdfId separationFunction = writer.newObject();
+			writer.startObj(separationFunction);
+			PutDoc("<<\n/FunctionType 4\n");
+			PutDoc("/Domain [0.0 1.0]\n");
+			PutDoc("/Range [0.0 1.0 0.0 1.0 0.0 1.0 0.0 1.0]\n");
+			PutDoc("/Length "+Pdf::toPdf(colorDesc.length()+1)+"\n");
+			PutDoc(">>\nstream\n"+EncStream(colorDesc, separationFunction)+"\nendstream");
+			writer.endObj(separationFunction);
+			PdfId separationColorspace= writer.newObject();
+			writer.startObj(separationColorspace);
+			PutDoc("[ /Separation ");
+			if (colorsToUse[itf.key()].isRegistrationColor())
+				PutDoc("/All");
+			else
+				PutDoc(Pdf::toName(itf.key().simplified()));
+			PutDoc(" /DeviceCMYK "+Pdf::toObjRef(separationFunction)+" ]");
+			writer.endObj(separationColorspace);
+			spotD.ResName = spotNam+Pdf::toPdf(spotCount);
+			spotD.ResNum = separationColorspace;
+			spotMap.insert(itf.key(), spotD);
+			spotCount++;
 		}
 	}
 	if ((Options.cropMarks) || (Options.bleedMarks) || (Options.registrationMarks) || (Options.colorMarks) || (Options.docInfoMarks))
@@ -2820,7 +2806,7 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 							PutPage("-1 0 0 1 "+FToStr(ite->width())+" 0 cm\n");
 						if (ite->imageFlippedV())
 							PutPage("1 0 0 -1 0 "+FToStr(-ite->height())+" cm\n");
-						if (ite->imageClip.size() != 0)
+						if (!ite->imageClip.empty())
 							PutPage(SetImagePathAndClip(ite));
 						if ((ite->imageIsAvailable) && (!ite->Pfile.isEmpty()))
 						{
@@ -3756,7 +3742,7 @@ void PDFLibCore::PDF_End_Page()
 }
 
 
-void PDFLibCore::writeXObject(uint objNr, QByteArray dictionary, QByteArray stream)
+void PDFLibCore::writeXObject(uint objNr, const QByteArray& dictionary, const QByteArray& stream)
 {
 	writer.startObj(objNr);
 	PutDoc("<<");
@@ -3768,7 +3754,7 @@ void PDFLibCore::writeXObject(uint objNr, QByteArray dictionary, QByteArray stre
 }
 
 
-PdfId PDFLibCore::writeObject(QByteArray type, QByteArray dictionary)
+PdfId PDFLibCore::writeObject(const QByteArray& type, const QByteArray& dictionary)
 {
 	PdfId result = writer.newObject();
 	writer.startObj(result);
@@ -3804,10 +3790,10 @@ bool PDFLibCore::PDF_ProcessPage(const ScPage* pag, uint PNr, bool clip)
 	// #8773 - incorrect page position if MPageNam.isEmpty()
 	/*if (!pag->MPageNam.isEmpty())
 	{*/
-		getBleeds(ActPageP, bleedLeft, bleedRight, bleedBottom, bleedTop);
-		PutPage("1 0 0 1 "+FToStr(bleedLeft+markOffs)+" "+FToStr(Options.bleeds.bottom()+markOffs)+" cm\n");
-		bleedDisplacementX = bleedLeft+markOffs;
-		bleedDisplacementY = Options.bleeds.bottom()+markOffs;
+	getBleeds(ActPageP, bleedLeft, bleedRight, bleedBottom, bleedTop);
+	PutPage("1 0 0 1 "+FToStr(bleedLeft+markOffs)+" "+FToStr(Options.bleeds.bottom()+markOffs)+" cm\n");
+	bleedDisplacementX = bleedLeft+markOffs;
+	bleedDisplacementY = Options.bleeds.bottom()+markOffs;
 	/*}*/
 	//#9385 : clip to BleedBox
 	if ((Options.cropMarks) || (Options.bleedMarks) || (Options.registrationMarks) || (Options.colorMarks) || (Options.docInfoMarks))
@@ -4529,7 +4515,7 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 				tmp += "-1 0 0 1 "+FToStr(ite->width())+" 0 cm\n";
 			if (ite->imageFlippedV())
 				tmp += "1 0 0 -1 0 "+FToStr(-ite->height())+" cm\n";
-			if (ite->imageClip.size() != 0)
+			if (!ite->imageClip.empty())
 				tmp += SetImagePathAndClip(ite);
 			if ((ite->imageIsAvailable) && (!ite->Pfile.isEmpty()))
 			{
@@ -5565,7 +5551,7 @@ QByteArray PDFLibCore::putColor(const QString& color, double shade, bool fill)
 	QByteArray colString = SetColor(color, shade);
 	ScColor tmpC;
 	tmpC = doc.PageColors[color];
-	if (((tmpC.isSpotColor()) || (tmpC.isRegistrationColor())) && ((Options.isGrayscale == false) && (Options.UseRGB == false))  && (Options.UseSpotColors))
+	if (((tmpC.isSpotColor()) || (tmpC.isRegistrationColor())) && ((!Options.isGrayscale) && (!Options.UseRGB))  && (Options.UseSpotColors))
 	{
 		if ((color != CommonStrings::None) && (spotMap.contains(color)))
 		{
@@ -5684,7 +5670,7 @@ QByteArray PDFLibCore::putColor(const QString & colorName, int shade, bool fill)
 QByteArray PDFLibCore::putColorUncached(const QString& color, int shade, bool fill)
 {
 	ScColor tmpC(doc.PageColors[color]);
-	if (((tmpC.isSpotColor()) || (tmpC.isRegistrationColor())) && ((Options.isGrayscale == false) && (Options.UseRGB == false))  && (Options.UseSpotColors))
+	if (((tmpC.isSpotColor()) || (tmpC.isRegistrationColor())) && ((!Options.isGrayscale) && (!Options.UseRGB))  && (Options.UseSpotColors))
 	{
 		QByteArray tmpSpot("");
 		if ((color != CommonStrings::None) && (spotMap.contains(color)))
@@ -5905,9 +5891,8 @@ QByteArray PDFLibCore::SetColor(const ScColor& farbe, double Shade)
 QByteArray PDFLibCore::SetGradientColor(const QString& farbe, double Shade)
 {
 	QByteArray tmp;
-	RGBColor rgb;
-	CMYKColor cmyk;
-	int h, s, v, k;
+	RGBColorF rgb;
+	CMYKColorF cmyk;
 	if (farbe == CommonStrings::None)
 	{
 		if (Options.isGrayscale)
@@ -5929,31 +5914,27 @@ QByteArray PDFLibCore::SetGradientColor(const QString& farbe, double Shade)
 		return tmp;
 	}
 	ScColor tmpC(doc.PageColors[farbe]);
-	QColor tmpR;
 	if (Options.isGrayscale)
 	{
 		bool kToGray = false;
 		if (tmpC.getColorModel() == colorModelCMYK)
 		{
 			ScColorEngine::getShadeColorCMYK(tmpC, &doc, cmyk, Shade);
-			cmyk.getValues(h, s, v, k);
-			kToGray = (h == 0 && s == 0 && v == 0);
+			kToGray = (cmyk.c == 0.0 && cmyk.m == 0.0 && cmyk.y == 0.0);
 		}
 		if (kToGray)
-			tmp = FToStr(1.0 - k / 255.0);
+			tmp = FToStr(1.0 - cmyk.k);
 		else
 		{
-			tmpR = ScColorEngine::getShadeColor(tmpC, &doc, Shade);
-			tmpR.getRgb(&h, &s, &v);
-			tmp = FToStr((0.3 * h + 0.59 * s + 0.11 * v) / 255.0);
+			ScColorEngine::getShadeColorRGB(tmpC, &doc, rgb, Shade);
+			tmp = FToStr(0.3 * rgb.r + 0.59 * rgb.g + 0.11 * rgb.b);
 		}
 		return tmp;
 	}
 	if (Options.UseRGB)
 	{
-		tmpR = ScColorEngine::getShadeColor(tmpC, &doc, Shade);
-		tmpR.getRgb(&h, &s, &v);
-		tmp = FToStr(h / 255.0)+" "+FToStr(s / 255.0)+" "+FToStr(v / 255.0);
+		ScColorEngine::getShadeColorRGB(tmpC, &doc, rgb, Shade);
+		tmp = FToStr(rgb.r) + " " + FToStr(rgb.g) + " " + FToStr(rgb.b);
 	}
 	else
 	{
@@ -5962,21 +5943,18 @@ QByteArray PDFLibCore::SetGradientColor(const QString& farbe, double Shade)
 			if (Options.SComp == 3)
 			{
 				ScColorEngine::getShadeColorRGB(tmpC, &doc, rgb, Shade);
-				rgb.getValues(h, s, v);
-				tmp = FToStr(h / 255.0)+" "+FToStr(s / 255.0)+" "+FToStr(v / 255.0);
+				tmp = FToStr(rgb.r) + " " + FToStr(rgb.g) + " " + FToStr(rgb.b);
 			}
 			else
 			{
 				ScColorEngine::getShadeColorCMYK(tmpC, &doc, cmyk, Shade);
-				cmyk.getValues(h, s, v, k);
-				tmp = FToStr(h / 255.0)+" "+FToStr(s / 255.0)+" "+FToStr(v / 255.0)+" "+FToStr(k / 255.0);
+				tmp = FToStr(cmyk.c) + " " + FToStr(cmyk.m) + " " + FToStr(cmyk.y) + " " + FToStr(cmyk.k);
 			}
 		}
 		else
 		{
 			ScColorEngine::getShadeColorCMYK(tmpC, &doc, cmyk, Shade);
-			cmyk.getValues(h, s, v, k);
-			tmp = FToStr(h / 255.0)+" "+FToStr(s / 255.0)+" "+FToStr(v / 255.0)+" "+FToStr(k / 255.0);
+			tmp = FToStr(cmyk.c) + " " + FToStr(cmyk.m) + " " + FToStr(cmyk.y) + " " + FToStr(cmyk.k);
 		}
 	}
 	return tmp;
@@ -6719,7 +6697,7 @@ quint16 PDFLibCore::encode16dVal(double val)
 	return m;
 }
 
-void PDFLibCore::encodeColor(QDataStream &vs, QString colName, int colShade, QStringList &spotColorSet, bool spotMode)
+void PDFLibCore::encodeColor(QDataStream &vs, const QString& colName, int colShade, QStringList &spotColorSet, bool spotMode)
 {
 	if (spotMode)
 	{
@@ -8176,11 +8154,11 @@ bool PDFLibCore::PDF_GradientFillStroke(QByteArray& output, PageItem *currItem, 
 		GType = currItem->GrType;
 		if (GType == 9)
 			return PDF_TensorGradientFill(output, currItem);
-		else if (GType == 10)
+		if (GType == 10)
 			return PDF_DiamondGradientFill(output, currItem);
-		else if ((GType == 11) || (GType == 13))
+		if ((GType == 11) || (GType == 13))
 			return PDF_MeshGradientFill(output, currItem);
-		else if (GType == 12)
+		if (GType == 12)
 			return PDF_PatchMeshGradientFill(output, currItem);
 		StartX = currItem->GrStartX;
 		StartY = currItem->GrStartY;
@@ -8769,7 +8747,7 @@ void PDFLibCore::PDF_RadioButtons()
 	}
 }
 
-PdfId PDFLibCore::PDF_RadioButton(PageItem* ite, PdfId parent, QString parentName)
+PdfId PDFLibCore::PDF_RadioButton(PageItem* ite, PdfId parent, const QString& parentName)
 {
 	QMap<int, QByteArray> ind2PDFabr;
 	static const QByteArray bifonts[] = {"/Courier", "/Courier-Bold", "/Courier-Oblique", "/Courier-BoldOblique",
@@ -9759,7 +9737,7 @@ PdfId PDFLibCore::WritePDFString(const QString& cc, PdfId objId)
 	return WritePDFStream(tmp, objId);
 }
 
-void PDFLibCore::PDF_xForm(PdfId objNr, double w, double h, QByteArray im)
+void PDFLibCore::PDF_xForm(PdfId objNr, double w, double h, const QByteArray& im)
 {
 	writer.startObj(objNr);
 	PutDoc("<<\n/Type /XObject\n/Subtype /Form\n");
@@ -9961,7 +9939,7 @@ bool PDFLibCore::PDF_EmbeddedPDF(PageItem* c, const QString& fn, double sx, doub
 
 			return true;
 		}
-		else if (contents && contents->GetDataType() ==  PoDoFo::ePdfDataType_Array)//Page contents might be an array
+		if (contents && contents->GetDataType() ==  PoDoFo::ePdfDataType_Array)//Page contents might be an array
 		{
 			QMap<PoDoFo::PdfReference, PdfId> importedObjects;
 			QList<PoDoFo::PdfReference> referencedObjects;
@@ -10126,7 +10104,7 @@ void PDFLibCore::copyPoDoFoDirect(const PoDoFo::PdfVariant* obj, QList<PoDoFo::P
 	{
 		case PoDoFo::ePdfDataType_Reference:
 		{
-			const PoDoFo::PdfReference reference(obj->GetReference());
+			const PoDoFo::PdfReference& reference(obj->GetReference());
 			PdfId objNr;
 			if (!importedObjects.contains(reference))
 			{
@@ -10153,7 +10131,7 @@ void PDFLibCore::copyPoDoFoDirect(const PoDoFo::PdfVariant* obj, QList<PoDoFo::P
 		case PoDoFo::ePdfDataType_Dictionary:
 		{
 			const PoDoFo::PdfDictionary& dict(obj->GetDictionary());
-			const PoDoFo::TKeyMap keys = dict.GetKeys();
+			const PoDoFo::TKeyMap& keys = dict.GetKeys();
 			PutDoc("<<");
 			for (PoDoFo::TCIKeyMap k=keys.begin(); k != keys.end(); ++k)
 			{
@@ -10642,12 +10620,7 @@ bool PDFLibCore::PDF_Image(PageItem* c, const QString& fn, double sx, double sy,
 			if ((Options.UseRGB) || (Options.isGrayscale))
 				imgE = false;
 			else
-			{
-				if ((Options.UseProfiles2) && (img.imgInfo.colorspace != ColorSpaceCMYK))
-					imgE = false;
-				else
-					imgE = true;
-			}
+				imgE = !((Options.UseProfiles2) && (img.imgInfo.colorspace != ColorSpaceCMYK));
 			origWidth = img.width();
 			origHeight = img.height();
 			img.applyEffect(c->effectsInUse, c->doc()->PageColors, imgE);
@@ -11179,8 +11152,7 @@ void PDFLibCore::PDF_End_Articles()
 	for (int ele = 0; ele < doc.Items->count(); ++ele)
 	{
 		PageItem* tel = doc.Items->at(ele);
-		if ((tel->asTextFrame()) && (tel->prevInChain() == 0) && (tel->nextInChain() != 0) &&
-				(!tel->inPdfArticle))
+		if ((tel->asTextFrame()) && (tel->prevInChain() == nullptr) && (tel->nextInChain() != nullptr) && (!tel->inPdfArticle))
 		{
 			Beads.clear();
 			PdfBead bd;
@@ -11190,7 +11162,7 @@ void PDFLibCore::PDF_End_Articles()
 			PdfId fir = currentThreadObj + 1;
 			PdfId ccb = currentThreadObj + 1;
 			bd.Parent = currentThreadObj;
-			while (tel->nextInChain() != 0)
+			while (tel->nextInChain() != nullptr)
 			{
 				if ((tel->OwnPage != -1) && PageTree.KidsMap.contains(tel->OwnPage))
 				{

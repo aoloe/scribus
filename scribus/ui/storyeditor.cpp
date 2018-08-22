@@ -98,8 +98,8 @@ protected:
 	ScGuardedPtr<ScribusDoc> m_styledTextDoc;
 
 public:
-	const StoryText&  styledText(void) const { return m_styledText; }
-	const ScribusDoc* document(void)   const { return m_styledTextDoc; }
+	const StoryText&  styledText() const { return m_styledText; }
+	const ScribusDoc* document()   const { return m_styledTextDoc; }
 
 	void  setStyledText(const StoryText& text, ScribusDoc* doc)
 	{
@@ -121,7 +121,7 @@ SideBar::SideBar(QWidget *pa) : QLabel(pa)
 	setPalette(pal);
 	offs = 0;
 	currentPar = 0;
-	editor = 0;
+	editor = nullptr;
 	noUpdt = true;
 	inRep = false;
 	pmen = new QMenu(this);
@@ -717,7 +717,7 @@ void SEditor::loadItemText(PageItem *currItem)
 	//SelParaStart = 0;
 }
 
-void SEditor::loadText(QString tx, PageItem *currItem)
+void SEditor::loadText(const QString& tx, PageItem *currItem)
 {
 	setTextColor(Qt::black);
 	setUpdatesEnabled(false);
@@ -1087,9 +1087,8 @@ void SEditor::paste()
 
 bool SEditor::canInsertFromMimeData( const QMimeData * source ) const
 {
-	if (source->hasText() || source->hasFormat("application/x-scribus-styledtext"))
-		return true;
-	return false;
+	return (source->hasText() || source->hasFormat("application/x-scribus-styledtext"));
+
 }
 
 QMimeData* SEditor::createMimeDataFromSelection () const
@@ -1160,7 +1159,7 @@ void SToolBColorF::changeEvent(QEvent *e)
 		languageChange();
 	}
 	else
-		QWidget::changeEvent(e);
+		QToolBar::changeEvent(e);
 }
 
 
@@ -1226,7 +1225,7 @@ void SToolBColorS::changeEvent(QEvent *e)
 		languageChange();
 	}
 	else
-		QWidget::changeEvent(e);
+		QToolBar::changeEvent(e);
 }
 
 void SToolBColorS::languageChange()
@@ -1298,7 +1297,7 @@ void SToolBStyle::changeEvent(QEvent *e)
 		languageChange();
 	}
 	else
-		QWidget::changeEvent(e);
+		QToolBar::changeEvent(e);
 }
 
 void SToolBStyle::languageChange()
@@ -1408,7 +1407,7 @@ void SToolBAlign::changeEvent(QEvent *e)
 		languageChange();
 	}
 	else
-		QWidget::changeEvent(e);
+		QToolBar::changeEvent(e);
 }
 
 void SToolBAlign::languageChange()
@@ -1430,7 +1429,7 @@ void SToolBAlign::SetDirection(int s)
 	QSignalBlocker sigBlocker(GroupDirection);
 }
 
-void SToolBAlign::SetParaStyle(QString s)
+void SToolBAlign::SetParaStyle(const QString& s)
 {
 	QSignalBlocker sigBlocker(paraStyleCombo);
 	paraStyleCombo->setFormat(s);
@@ -1483,7 +1482,7 @@ void SToolBFont::changeEvent(QEvent *e)
 		languageChange();
 	}
 	else
-		QWidget::changeEvent(e);
+		QToolBar::changeEvent(e);
 }
 
 void SToolBFont::languageChange()
@@ -1494,7 +1493,7 @@ void SToolBFont::languageChange()
 	charScaleV->setToolTip( tr("Scaling height of characters"));
 }
 
-void SToolBFont::SetFont(QString f)
+void SToolBFont::SetFont(const QString& f)
 {
 	QSignalBlocker sigBlocker(Fonts);
 	setCurrentComboItem(Fonts, f);
@@ -1588,7 +1587,7 @@ void StoryEditor::showEvent(QShowEvent *)
 	charSelect = new CharSelect(this);
 	charSelect->userTableModel()->setCharactersAndFonts(ScCore->primaryMainWindow()->charPalette->userTableModel()->characters(), ScCore->primaryMainWindow()->charPalette->userTableModel()->fonts());
 	connect(charSelect, SIGNAL(insertSpecialChar()), this, SLOT(slot_insertSpecialChar()));
-	connect(charSelect, SIGNAL(insertUserSpecialChar(QChar, QString)), this, SLOT(slot_insertUserSpecialChar(QChar, QString)));
+	connect(charSelect, SIGNAL(insertUserSpecialChar(QChar,QString)), this, SLOT(slot_insertUserSpecialChar(QChar,QString)));
 
 	m_smartSelection = prefsManager->appPrefs.storyEditorPrefs.smartTextSelection;
 	seActions["settingsSmartTextSelection"]->setChecked(m_smartSelection);
@@ -2100,18 +2099,18 @@ void StoryEditor::connectSignals()
 	connect(AlignTools, SIGNAL(newParaStyle(const QString&)), this, SLOT(newStyle(const QString&)));
 	connect(AlignTools, SIGNAL(newAlign(int)), this, SLOT(newAlign(int)));
 	connect(AlignTools, SIGNAL(newDirection(int)), this, SLOT(newDirection(int)));
-	connect(FillTools, SIGNAL(NewColor(int, int)), this, SLOT(newTxFill(int, int)));
-	connect(StrokeTools, SIGNAL(NewColor(int, int)), this, SLOT(newTxStroke(int, int)));
+	connect(FillTools, SIGNAL(NewColor(int,int)), this, SLOT(newTxFill(int,int)));
+	connect(StrokeTools, SIGNAL(NewColor(int,int)), this, SLOT(newTxStroke(int,int)));
 	connect(FontTools, SIGNAL(newSize(double)), this, SLOT(newTxSize(double)));
 	connect(FontTools, SIGNAL(newFont(const QString&)), this, SLOT(newTxFont(const QString&)));
 	connect(FontTools, SIGNAL(newScaleH(double)), this, SLOT(newTxScale()));
 	connect(FontTools, SIGNAL(newScaleV(double)), this, SLOT(newTxScaleV()));
 	connect(StyleTools, SIGNAL(NewKern(double)), this, SLOT(newTxKern(double)));
 	connect(StyleTools, SIGNAL(newStyle(int)), this, SLOT(newTxStyle(int)));
-	connect(StyleTools, SIGNAL(NewShadow(double, double)), this, SLOT(newShadowOffs(double, double)));
+	connect(StyleTools, SIGNAL(NewShadow(double,double)), this, SLOT(newShadowOffs(double,double)));
 	connect(StyleTools, SIGNAL(newOutline(double)), this, SLOT(newTxtOutline(double)));
-	connect(StyleTools, SIGNAL(newUnderline(double, double)), this, SLOT(newTxtUnderline(double, double)));
-	connect(StyleTools, SIGNAL(newStrike(double, double)), this, SLOT(newTxtStrike(double, double)));
+	connect(StyleTools, SIGNAL(newUnderline(double,double)), this, SLOT(newTxtUnderline(double,double)));
+	connect(StyleTools, SIGNAL(newStrike(double,double)), this, SLOT(newTxtStrike(double,double)));
 }
 
 void StoryEditor::setCurrentDocumentAndItem(ScribusDoc *doc, PageItem *item)
@@ -2298,7 +2297,7 @@ void StoryEditor::setBackPref()
 void StoryEditor::setFontPref()
 {
 	m_blockUpdate = true;
-	Editor->setFont( QFontDialog::getFont( 0, Editor->font(), this ) );
+	Editor->setFont( QFontDialog::getFont( nullptr, Editor->font(), this ) );
 	prefsManager->appPrefs.storyEditorPrefs.guiFont = Editor->font().toString();
 	EditorBar->doRepaint();
 	m_blockUpdate = false;
@@ -2748,7 +2747,7 @@ void StoryEditor::slot_insertSpecialChar()
 	m_blockUpdate = false;
 }
 
-void StoryEditor::slot_insertUserSpecialChar(QChar c, QString)
+void StoryEditor::slot_insertUserSpecialChar(QChar c, const QString&)
 {
 	m_blockUpdate = true;
 	Editor->insertPlainText(c);
@@ -2934,9 +2933,9 @@ void StoryEditor::updateTextFrame()
 //#if 0
 	if (m_item->asTextFrame())
 	{
-		while (nextItem != 0)
+		while (nextItem != nullptr)
 		{
-			if (nextItem->prevInChain() != 0)
+			if (nextItem->prevInChain() != nullptr)
 				nextItem = nextItem->prevInChain();
 			else
 				break;

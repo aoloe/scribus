@@ -34,7 +34,7 @@ bool compareStopsEx( const VColorStopEx* item1, const VColorStopEx* item2 )
 {
 	double r1 = item1->rampPoint;
 	double r2 = item2->rampPoint;
-	return ( r1 < r2 ? true : false );
+	return ( r1 < r2 );
 }
 
 int VGradientEx::compareItems( const VColorStopEx* item1, const VColorStopEx* item2 ) const
@@ -152,7 +152,7 @@ VGradientEx::addStop( const VColorStopEx& colorStop )
 } // VGradientEx::addStop
 
 void
-VGradientEx::addStop( const ScColor &color, double rampPoint, double midPoint, double opa, QString name, int shade )
+VGradientEx::addStop( const ScColor &color, double rampPoint, double midPoint, double opa, const QString& name, int shade )
 {
 	// Clamping between 0.0 and 1.0
 	rampPoint = qMax( 0.0, rampPoint );

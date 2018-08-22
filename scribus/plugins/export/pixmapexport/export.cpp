@@ -42,7 +42,7 @@ void scribusexportpixmap_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-PixmapExportPlugin::PixmapExportPlugin() : ScActionPlugin()
+PixmapExportPlugin::PixmapExportPlugin()
 {
 	// Set action info in languageChange, so we only have to do
 	// it in one place. This includes registering file formats.
@@ -94,12 +94,12 @@ void PixmapExportPlugin::deleteAboutData(const AboutData* about) const
 	delete about;
 }
 
-bool PixmapExportPlugin::run(ScribusDoc* doc, QString target)
+bool PixmapExportPlugin::run(ScribusDoc* doc, const QString& target)
 {
 	Q_ASSERT(target.isEmpty());
 	Q_ASSERT(!doc->masterPageMode());
 	QSharedPointer<ExportBitmap> ex( new ExportBitmap() );
-	QSharedPointer<ExportForm>  dia( new ExportForm(0, doc, ex->pageDPI, ex->quality, ex->bitmapType) );
+	QSharedPointer<ExportForm>  dia( new ExportForm(nullptr, doc, ex->pageDPI, ex->quality, ex->bitmapType) );
 
 	// interval widgets handling
 	QString tmp;
@@ -210,7 +210,7 @@ bool ExportBitmap::exportPage(ScribusDoc* doc, uint pageNr, bool background, boo
 		over = ScMessageBox::question(doc->scMW(), tr("File exists. Overwrite?"),
 				fn +"\n"+ tr("exists already. Overwrite?"),
 				// hack for multiple overwriting (petr) 
-				(single == true) ? QMessageBox::Yes | QMessageBox::No : QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
+				(single) ? QMessageBox::Yes | QMessageBox::No : QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll,
 				QMessageBox::NoButton,	// GUI default
 				QMessageBox::YesToAll);	// batch default
 		QApplication::changeOverrideCursor(QCursor(Qt::WaitCursor));

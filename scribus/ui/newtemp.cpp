@@ -21,7 +21,7 @@ for which a new license (GPL+exception) is in place.
 #include "scpage.h"
 #include "scribusdoc.h"
 
-NewTm::NewTm( QWidget* parent, QString text, QString titel, ScribusDoc *doc, const QString& answerText)
+NewTm::NewTm( QWidget* parent, const QString& text, const QString& titel, ScribusDoc *doc, const QString& answerText)
 		: QDialog( parent )
 {
 	setModal(true);
@@ -43,8 +43,8 @@ NewTm::NewTm( QWidget* parent, QString text, QString titel, ScribusDoc *doc, con
 	Layout2->addWidget( Answer );
 	QueryLayout->addLayout( Layout2 );
 
-	Layout3 = 0;
-	Links = 0;
+	Layout3 = nullptr;
+	Links = nullptr;
 	if (doc->pagePositioning() != singlePage)
 	{
 		Layout3 = new QHBoxLayout;

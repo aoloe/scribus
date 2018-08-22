@@ -75,7 +75,6 @@
 #include <QPointF>
 
 CanvasMode::CanvasMode (ScribusView* view) :
-	QObject(),
 	m_view(view),
 	m_canvas(view->m_canvas),
 	m_doc(view->Doc),
@@ -108,8 +107,7 @@ CanvasMode::CanvasMode (ScribusView* view) :
 
 CanvasMode::~CanvasMode()
 {
-	if (m_panGesture)
-		delete m_panGesture;
+	delete m_panGesture;
 }
 
 CanvasMode* CanvasMode::createForAppMode(ScribusView* view, int appMode)
@@ -592,7 +590,7 @@ void CanvasMode::drawOutline(QPainter* p, double scalex, double scaley, double d
 							p->scale(1, -1);
 						}
 						p->scale(gItem->width() / gItem->groupWidth, gItem->height() / gItem->groupHeight);
-						for (uint cg = 0; cg < itemCountG; cg++)
+						for (int cg = 0; cg < itemCountG; cg++)
 						{
 							p->save();
 							currItem = gItem->groupItemList.at(cg);

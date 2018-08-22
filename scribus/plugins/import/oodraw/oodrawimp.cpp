@@ -73,7 +73,6 @@ void oodrawimp_freePlugin(ScPlugin* plugin)
 }
 
 OODrawImportPlugin::OODrawImportPlugin() :
-	LoadSavePlugin(),
 	importAction(new ScrAction(ScrAction::DLL, "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do
@@ -283,11 +282,8 @@ QImage OODPlug::readThumbnail(const QString& fileName )
 		drawPage = offDraw.namedItem( "draw:page" );
 		if (drawPage.isNull())
 			return QImage();
-		else
-		{
-			isOODraw2 = true;
-			drawPagePNode = body.namedItem( "office:drawing" );
-		}
+		isOODraw2 = true;
+		drawPagePNode = body.namedItem( "office:drawing" );
 	}
 	else
 		drawPagePNode = body;
@@ -315,7 +311,7 @@ QImage OODPlug::readThumbnail(const QString& fileName )
 	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_Doc->setPage(width, height, 0, 0, 0, 0, 0, 0, false, false);
 	m_Doc->addPage(0);
-	m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), nullptr);
 	Elements.clear();
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
@@ -356,7 +352,7 @@ QImage OODPlug::readThumbnail(const QString& fileName )
 	return tmpImage;
 }
 
-bool OODPlug::import(QString fileName, const TransactionSettings& trSettings, int flags )
+bool OODPlug::import(const QString& fileName, const TransactionSettings& trSettings, int flags )
 {
 	bool importDone = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
@@ -418,11 +414,8 @@ bool OODPlug::convert(const TransactionSettings& trSettings, int flags)
 			ScMessageBox::warning( m_Doc->scMW(), CommonStrings::trWarning, tr("This document does not seem to be an OpenOffice Draw file.") );
 			return false;
 		}
-		else
-		{
-			isOODraw2 = true;
-			drawPagePNode = body.namedItem( "office:drawing" );
-		}
+		isOODraw2 = true;
+		drawPagePNode = body.namedItem( "office:drawing" );
 	}
 	else
 		drawPagePNode = body;
@@ -569,7 +562,7 @@ bool OODPlug::convert(const TransactionSettings& trSettings, int flags)
 		else
 		{
 			m_Doc->DragP = true;
-			m_Doc->DraggedElem = 0;
+			m_Doc->DraggedElem = nullptr;
 			m_Doc->DragElements.clear();
 			m_Doc->m_Selection->delaySignalsOn();
 			for (int dre=0; dre<Elements.count(); ++dre)
@@ -586,7 +579,7 @@ bool OODPlug::convert(const TransactionSettings& trSettings, int flags)
 			TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 			m_Doc->view()->handleObjectImport(md, transacSettings);
 			m_Doc->DragP = false;
-			m_Doc->DraggedElem = 0;
+			m_Doc->DraggedElem = nullptr;
 			m_Doc->DragElements.clear();
 		}
 	}
@@ -1928,10 +1921,10 @@ void OODPlug::svgLineTo(FPointArray *i, double x1, double y1)
 	WasM = false;
 	if (i->size() > 3)
 	{
-		FPoint b1 = i->point(i->size()-4);
-		FPoint b2 = i->point(i->size()-3);
-		FPoint b3 = i->point(i->size()-2);
-		FPoint b4 = i->point(i->size()-1);
+		const FPoint& b1 = i->point(i->size()-4);
+		const FPoint& b2 = i->point(i->size()-3);
+		const FPoint& b3 = i->point(i->size()-2);
+		const FPoint& b4 = i->point(i->size()-1);
 		FPoint n1 = FPoint(CurrX, CurrY);
 		FPoint n2 = FPoint(x1, y1);
 		if ((b1 == n1) && (b2 == n1) && (b3 == n2) && (b4 == n2))
@@ -1957,10 +1950,10 @@ void OODPlug::svgCurveToCubic(FPointArray *i, double x1, double y1, double x2, d
 	WasM = false;
 	if (PathLen > 3)
 	{
-		FPoint b1 = i->point(i->size()-4);
-		FPoint b2 = i->point(i->size()-3);
-		FPoint b3 = i->point(i->size()-2);
-		FPoint b4 = i->point(i->size()-1);
+		const FPoint& b1 = i->point(i->size()-4);
+		const FPoint& b2 = i->point(i->size()-3);
+		const FPoint& b3 = i->point(i->size()-2);
+		const FPoint& b4 = i->point(i->size()-1);
 		FPoint n1 = FPoint(CurrX, CurrY);
 		FPoint n2 = FPoint(x1, y1);
 		FPoint n3 = FPoint(x3, y3);

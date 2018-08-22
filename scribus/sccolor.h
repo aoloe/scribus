@@ -31,8 +31,8 @@ for which a new license (GPL+exception) is in place.
 
 #include "scribusapi.h"
 
-class ScribusDoc;
-
+class  ScribusDoc;
+struct RGBColorF;
 
 /**
   *@author Franz Schmid
@@ -55,7 +55,7 @@ public:
 	friend class ScColorEngine;
 
 	/** \brief Constructs a ScColor with 4 Components set to 0 */
-	ScColor(void);
+	ScColor();
 	/** \brief Constructs a ScColor with 4 Components in the range from 0 - 255 */
 	ScColor(int c, int m, int y, int k);
 	/** \brief Constructs a RGB color with 3 Components in the range from 0 - 255 */
@@ -94,6 +94,7 @@ public:
 
 	/** \brief Returns the RGB color  
 	* Must not be called if color is the None Color. */
+	void getRawRGBColor(RGBColorF* rgb) const;
 	void getRawRGBColor(int *r, int *g, int *b) const;
 	QColor getRawRGBColor() const;
 
@@ -135,6 +136,8 @@ public:
 	/** \brief Sets the Values of a color from an Hex-String in the Form #CCMMYYKK or #RRGGBB */
 	void setNamedColor(QString nam);
 
+	/** \brief If the color is a process color (ie neither spot, nor registration) */
+	bool isProcessColor() const;
 	/** \brief If the color is a spot color */
 	bool isSpotColor() const;
 	/** \brief Set a color to be a spot color or not. No effect if color is the None color. */

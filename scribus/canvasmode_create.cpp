@@ -69,7 +69,7 @@ CreateMode::CreateMode(ScribusView* view) : CanvasMode(view)
 	inItemCreation = false;
 	createObjectMode     = 0;
 	createObjectSubMode  = 0;
-	modifiers            = 0;
+	modifiers            = Qt::NoModifier;
 	m_MouseButtonPressed = false;
 	m_createTransaction  = nullptr;
 }
@@ -796,13 +796,13 @@ PageItem* CreateMode::doCreateNewObject(void)
 			{
 				m_view->requestMode(submodePaintingDone);
 				delete dia;
-				dia = 0;
+				dia = nullptr;
 				break;
 			}
 			int numRows = dia->Rows->value();
 			int numColumns = dia->Cols->value();
 			delete dia;
-			dia = 0;
+			dia = nullptr;
 			// Add the table item.
 			// TODO: This should be done in an undo transaction.
 			m_doc->dontResize = true;

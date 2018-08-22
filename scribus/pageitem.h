@@ -230,7 +230,7 @@ public:	// Start enumerator definitions
 
 public: // Start public functions
 
-	PageItem(ScribusDoc *pa, ItemType newType, double x, double y, double w, double h, double w2, QString fill, QString outline);
+	PageItem(ScribusDoc *pa, ItemType newType, double x, double y, double w, double h, double w2, const QString& fill, const QString& outline);
 	virtual ~PageItem();
 
 	/* these do essentially the same as a dynamic cast but might be more readable */
@@ -373,16 +373,16 @@ public: // Start public functions
 	/*!
 	 * brief Returns a list of attributes with specified name
 	 */
-	QList<ObjectAttribute> getObjectAttributes(QString attributeName) const;
+	QList<ObjectAttribute> getObjectAttributes(const QString& attributeName) const;
 	/*!
 	 * brief Returns a complete ObjectAttribute struct if 1 is found, or ObjectAttribute.name will be QString::null if 0 or >1 are found
 	 */
-	ObjectAttribute getObjectAttribute(QString) const;
+	ObjectAttribute getObjectAttribute(const QString&) const;
 	void setObjectAttributes(ObjAttrVector*);
 
 
 
-	void SetFrameShape(int count, double *vals);
+	void SetFrameShape(int count, const double *vals);
 	void SetRectFrame();
 	void SetOvalFrame();
 	void SetFrameRound();
@@ -437,15 +437,15 @@ public: // Start public functions
 	void setEmbeddedImageProfile(const QString& val) { EmProfile = val; }
 	bool drawFrame() { return ((m_ItemType == TextFrame && !m_sampleItem) || (m_ItemType == ImageFrame) || (m_ItemType == PathText)); }
 	QString externalFile() const { return Pfile; }
-	void setExternalFile(QString val);
+	void setExternalFile(const QString& filename);
 	void setImagePagenumber(int num) { pixm.imgInfo.actualPageNumber = num; }
 	void setResolution(int);
 
 	//FIXME: maybe these should go into annotation?
 	QString fileIconPressed() const { return Pfile2; }
-	void setFileIconPressed(const QString& val);
+	void setFileIconPressed(const QString& filename);
 	QString fileIconRollover() const { return Pfile3; }
-	void setFileIconRollover(const QString& val);
+	void setFileIconRollover(const QString& filename);
 	int  cmsRenderingIntent() const { return IRender; }
 	void setCmsRenderingIntent(eRenderIntent val) { IRender = val; }
 	QString cmsProfile() const { return IProfile; }
@@ -643,7 +643,7 @@ public: // Start public functions
 	void set4ColorGeometry(FPoint c1, FPoint c2, FPoint c3, FPoint c4);
 	void set4ColorTransparency(double t1, double t2, double t3, double t4);
 	void set4ColorShade(int t1, int t2, int t3, int t4);
-	void set4ColorColors(QString col1, QString col2, QString col3, QString col4);
+	void set4ColorColors(const QString& col1, const QString& col2, const QString& col3, const QString& col4);
 	void get4ColorGeometry(FPoint& c1, FPoint& c2, FPoint& c3, FPoint& c4);
 	void setDiamondGeometry(const FPoint& c1, const FPoint& c2, const FPoint& c3, const FPoint& c4, const FPoint& c5);
 	void get4ColorTransparency(double &t1, double &t2, double &t3, double &t4);
@@ -901,7 +901,7 @@ public: // Start public functions
 	 */
 	void setLineTransparency(double newTransparency);
 
-	void setHatchParameters(int mode, double distance, double angle, bool useBackground, QString background, QString foreground);
+	void setHatchParameters(int mode, double distance, double angle, bool useBackground, const QString& background, const QString& foreground);
 
 	/** @brief Get the name of the stroke pattern of the object */
 	QString strokePattern() const { return patternStrokeVal; }
@@ -1162,7 +1162,7 @@ public: // Start public functions
 	 * Usually of the form 'Copy of [name]' or 'Copy of [name] (n)'
 	 * cezaryece: if prependCopy is false then form '[name] (n)' is generated
 	 */
-	QString generateUniqueCopyName(const QString originalName, bool prependCopy = true) const;
+	QString generateUniqueCopyName(const QString& originalName, bool prependCopy = true) const;
 	/**
 	 * @brief Is this item printed?
 	 * @sa setPrintEnabled()

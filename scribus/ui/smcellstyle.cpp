@@ -15,10 +15,10 @@ for which a new license (GPL+exception) is in place.
 #include "smcellstylewidget.h"
 #include "ui/scmessagebox.h"
 
-SMCellStyle::SMCellStyle() : StyleItem(),
-	m_widget(0),
-	m_page(0),
-	m_doc(0),
+SMCellStyle::SMCellStyle() :
+	m_widget(nullptr),
+	m_page(nullptr),
+	m_doc(nullptr),
 	m_selectionIsDirty(false)
 {
 	m_widget = new QTabWidget();
@@ -35,8 +35,8 @@ SMCellStyle::~SMCellStyle()
 {
 	delete m_page;
 	delete m_widget;
-	m_page = 0;
-	m_widget = 0;
+	m_page = nullptr;
+	m_widget = nullptr;
 }
 
 QTabWidget* SMCellStyle::widget()

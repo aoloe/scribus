@@ -57,7 +57,7 @@ void ResizeGesture::prepare(Canvas::FrameHandle framehandle)
 		m_handle = Canvas::OUTSIDE;
 		return;
 	}
-	else if (m_doc->m_Selection->isMultipleSelection())
+	if (m_doc->m_Selection->isMultipleSelection())
 	{
 		double ex, ey, eh, ew;
 		m_doc->m_Selection->getGroupRect(&ex, &ey, &ew, &eh);
@@ -351,8 +351,8 @@ void ResizeGesture::doResize(bool scaleContent)
 		// We do not want to scale the text of a linked frame
 		// as it would alter text in other frames of the string
 		else if((currItem->itemType() == PageItem::TextFrame) 
-				       && (currItem->nextInChain() == 0) 
-				       && (currItem->prevInChain() == 0) 
+					   && (currItem->nextInChain() == nullptr)
+					   && (currItem->prevInChain() == nullptr)
 				       && scaleContent)
 		{
 			double divX = (currItem->width() != 0) ? currItem->width() : 1.0;

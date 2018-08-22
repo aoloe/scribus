@@ -76,7 +76,7 @@ PdfPlug::PdfPlug(ScribusDoc* doc, int flags)
 	m_pdfDoc = nullptr;
 }
 
-QImage PdfPlug::readThumbnail(QString fName)
+QImage PdfPlug::readThumbnail(const QString& fName)
 {
 	QString pdfFile = QDir::toNativeSeparators(fName);
 	globalParams = new GlobalParams();
@@ -141,15 +141,9 @@ QImage PdfPlug::readThumbnail(QString fName)
 				delete globalParams;
 				return image;
 			}
-			else
-			{
-				delete pdfDoc;
-				delete globalParams;
-				return QImage();
-			}
+			delete pdfDoc;
+			delete globalParams;
 		}
-		else
-			return QImage();
 	}
 	return QImage();
 }
@@ -178,21 +172,20 @@ QImage PdfPlug::readThumbnail(QString fName)
 	return QImage();
 */
 
-bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool PdfPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
 #ifdef Q_OS_OSX
 	#if QT_VERSION >= 0x050300
 		showProgress = false;
 	#endif
 #endif
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
 	cancel = false;
 	double b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -201,7 +194,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw = (m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw = (m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -279,7 +272,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSele->clear();
 		QDir::setCurrent(CurDirP);
@@ -322,7 +315,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -339,7 +332,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -376,8 +369,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 
 PdfPlug::~PdfPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSele;
 }
 
@@ -983,7 +975,7 @@ bool PdfPlug::convert(const QString& fn)
 		delete pdfDoc;
 	}
 	delete globalParams;
-	globalParams = 0;
+	globalParams = nullptr;
 
 //	qDebug() << "converting finished";
 //	qDebug() << "Imported" << Elements.count() << "Elements";

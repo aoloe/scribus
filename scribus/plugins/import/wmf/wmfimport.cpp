@@ -159,7 +159,7 @@ WMFImport::~WMFImport()
 {
 	qDeleteAll(m_commands);
 	m_commands.clear();
-	if ( m_tmpSel) delete m_tmpSel;
+	delete m_tmpSel;
 	if ( m_ObjHandleTab ) 
 	{
 		for (int i = 0; i < MAX_OBJHANDLE; ++i)
@@ -279,7 +279,7 @@ FPointArray WMFImport::pointsToPolyline( const FPointArray& points, bool closePa
 	polyline.svgInit();
 	for (int i = 0; i < points.size(); ++i )
 	{
-		FPoint point = points.point(i);
+		const FPoint& point = points.point(i);
 		x = point.x();
 		y = point.y();
 		if (bFirst)
@@ -307,7 +307,7 @@ void WMFImport::pointsToAngle( double xStart, double yStart, double xEnd, double
 	if ( angleLength < 0 ) angleLength = 360.0 + angleLength;
 }
 
-QImage WMFImport::readThumbnail(QString fname)
+QImage WMFImport::readThumbnail(const QString& fname)
 {
 	if (!loadWMF(fname))
 	{
@@ -324,7 +324,7 @@ QImage WMFImport::readThumbnail(QString fname)
 	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_Doc->setPage(width, height, 0, 0, 0, 0, 0, 0, false, false);
 	m_Doc->addPage(0);
-	m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), nullptr);
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
 	m_Doc->scMW()->setScriptRunning(true);
@@ -357,7 +357,7 @@ QImage WMFImport::readThumbnail(QString fname)
 	return tmpImage;
 }
 
-bool WMFImport::import(QString fname, const TransactionSettings& trSettings, int flags)
+bool WMFImport::import(const QString& fname, const TransactionSettings& trSettings, int flags)
 {
 	if (!loadWMF(fname))
 	{
@@ -661,7 +661,7 @@ bool WMFImport::importWMF(const TransactionSettings& trSettings, int flags)
 		else
 		{
 			m_Doc->DragP = true;
-			m_Doc->DraggedElem = 0;
+			m_Doc->DraggedElem = nullptr;
 			m_Doc->DragElements.clear();
 			m_Doc->m_Selection->delaySignalsOn();
 			for (int dre=0; dre<Elements.count(); ++dre)
@@ -681,7 +681,7 @@ bool WMFImport::importWMF(const TransactionSettings& trSettings, int flags)
 			TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 			m_Doc->view()->handleObjectImport(md, transacSettings);
 			m_Doc->DragP = false;
-			m_Doc->DraggedElem = 0;
+			m_Doc->DraggedElem = nullptr;
 			m_Doc->DragElements.clear();
 		}
 	}
@@ -698,7 +698,7 @@ bool WMFImport::importWMF(const TransactionSettings& trSettings, int flags)
 	return true;
 }
 
-QList<PageItem*> WMFImport::parseWmfCommands(void)
+QList<PageItem*> WMFImport::parseWmfCommands()
 {
 	int idx, i;
 	const WmfCmd* cmd;
@@ -708,7 +708,7 @@ QList<PageItem*> WMFImport::parseWmfCommands(void)
 
 	if ( !m_Valid )  return elements;
 
-	if ( m_ObjHandleTab ) delete[] m_ObjHandleTab;
+	delete[] m_ObjHandleTab;
 	m_ObjHandleTab = new WmfObjHandle* [ MAX_OBJHANDLE ];
 	for ( i = MAX_OBJHANDLE-1; i >= 0; i-- )
 		m_ObjHandleTab[ i ] = nullptr;
@@ -864,7 +864,7 @@ void WMFImport::polygon( QList<PageItem*>& items, long, short* params )
 		lineWidth = 1.0;
 	FPointArray paramPoints = pointsFromParam( params[0], &params[1] );
 	FPointArray points      = pointsToPolyline( paramPoints, true );
-	if( paramPoints.size() > 0 )
+	if( !paramPoints.empty() )
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, fillColor, strokeColor);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -904,7 +904,7 @@ void WMFImport::polyPolygon( QList<PageItem*>& items, long num, short* params )
 	double  lineWidth   = m_context.pen().width();
 	if (doStroke && lineWidth <= 0.0 )
 		lineWidth = 1.0;
-	if( pointsPoly.size() > 0 )
+	if( !pointsPoly.empty() )
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, fillColor, strokeColor);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -928,7 +928,7 @@ void WMFImport::polyline( QList<PageItem*>& items, long, short* params )
 		lineWidth = 1.0;
 	FPointArray paramPoints = pointsFromParam( params[0], &params[1] );
 	FPointArray points      = pointsToPolyline( paramPoints, false );
-	if( paramPoints.size() > 0 )
+	if( !paramPoints.empty() )
 	{
 		int z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, fillColor, strokeColor);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -1017,7 +1017,7 @@ void WMFImport::arc( QList<PageItem*>& items, long, short* params )
 	painterPath.arcMoveTo(x, y, xWidth, yHeight, angleStart);
 	painterPath.arcTo(x, y, xWidth, yHeight, angleStart, angleLength);
 	pointArray.fromQPainterPath(painterPath);
-	if( pointArray.size() > 0 )
+	if( !pointArray.empty() )
 	{
 		int z = m_Doc->itemAdd(PageItem::PolyLine, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, fillColor, strokeColor);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -1054,7 +1054,7 @@ void WMFImport::chord( QList<PageItem*>& items, long, short* params )
 	painterPath.arcTo (x, y, xWidth, yHeight, angleStart, angleLength);
 	painterPath.lineTo(firstPoint);
 	pointArray.fromQPainterPath(painterPath);
-	if( pointArray.size() > 0 )
+	if( !pointArray.empty() )
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, fillColor, strokeColor);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -1092,7 +1092,7 @@ void WMFImport::pie( QList<PageItem*>& items, long, short* params )
 	painterPath.lineTo(xCenter, yCenter);
 	painterPath.lineTo(firstPoint);
 	pointArray.fromQPainterPath(painterPath);
-	if( pointArray.size() > 0 )
+	if( !pointArray.empty() )
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, fillColor, strokeColor);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -1112,7 +1112,7 @@ void WMFImport::setBkColor( QList<PageItem*>& /*items*/, long, short* params )
 	m_context.setBackgroundColor( colorFromParam( params ) );
 }
 
-void WMFImport::setBkMode( QList<PageItem*>& /*items*/, long, short* params )
+void WMFImport::setBkMode(QList<PageItem*>& /*items*/, long, short* params )
 {
 	if ( params[ 0 ]==1 ) 
 		m_context.setBackgroundMode( Qt::TransparentMode );
@@ -1254,7 +1254,7 @@ void WMFImport::extTextOut( QList<PageItem*>& items, long num, short* params )
 				xpos += params[idxOffset + index - 1];
 			painterPath.addText(xpos, ypos, m_context.font(), textString.at(index));
 			textPath.fromQPainterPath(painterPath);
-			if (textPath.size() > 0)
+			if (!textPath.empty())
 			{
 				int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, textColor, CommonStrings::None);
 				PageItem* ite = m_Doc->Items->at(z);
@@ -1271,7 +1271,7 @@ void WMFImport::extTextOut( QList<PageItem*>& items, long num, short* params )
 		QPainterPath painterPath;
 		painterPath.addText( startX, startY, m_context.font(), textString );
 		textPath.fromQPainterPath(painterPath);
-		if (textPath.size() > 0)
+		if (!textPath.empty())
 		{
 			double  lineWidth = 0.0;
 			int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, BaseX, BaseY, 10, 10, lineWidth, textColor, CommonStrings::None);
@@ -1284,7 +1284,7 @@ void WMFImport::extTextOut( QList<PageItem*>& items, long num, short* params )
 	m_context.restore();
 }
 
-void WMFImport::selectObject( QList<PageItem*>& /*items*/, long, short* params )
+void WMFImport::selectObject(QList<PageItem*>& items, long num, short* params )
 {
 	int idx = params[ 0 ];
 	if ( idx >= 0 && idx < MAX_OBJHANDLE && m_ObjHandleTab[ idx ] )
@@ -1453,7 +1453,7 @@ int WMFImport::findFunc( unsigned short aFunc ) const
 	return i;
 }
 
-unsigned int WMFImport::toDWord( short* params )
+unsigned int WMFImport::toDWord( const short* params )
 {
 	unsigned int l;
 #if !defined( WORDS_BIGENDIAN )

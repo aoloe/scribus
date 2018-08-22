@@ -143,17 +143,17 @@ void Tpalette::setCurrentItem(PageItem* item)
 
 void Tpalette::setDocument(ScribusDoc* doc)
 {
-	disconnect(this, SIGNAL(NewTrans(double)), 0, 0);
-	disconnect(this, SIGNAL(NewTransS(double)), 0, 0);
-	disconnect(this, SIGNAL(NewGradient(int)), 0, 0);
-	disconnect(this, SIGNAL(NewBlend(int)), 0, 0);
-	disconnect(this, SIGNAL(NewBlendS(int)), 0, 0);
-	disconnect(this, SIGNAL(NewPattern(QString)), 0, 0);
-	disconnect(this, SIGNAL(NewPatternProps(double, double, double, double, double, double, double, bool, bool)), 0, 0);
+	this->disconnect(SIGNAL(NewTrans(double)));
+	this->disconnect(SIGNAL(NewTransS(double)));
+	this->disconnect(SIGNAL(NewGradient(int)));
+	this->disconnect(SIGNAL(NewBlend(int)));
+	this->disconnect(SIGNAL(NewBlendS(int)));
+	this->disconnect(SIGNAL(NewPattern(QString)));
+	this->disconnect(SIGNAL(NewPatternProps(double, double, double, double, double, double, double, bool, bool)));
 	
 	if (currentDoc)
 	{
-		disconnect(currentDoc->scMW(), SIGNAL(UpdateRequest(int)), this, 0);
+		disconnect(currentDoc->scMW(), SIGNAL(UpdateRequest(int)), this, nullptr);
 	}
 
 	currentDoc = doc;
@@ -245,7 +245,7 @@ void Tpalette::updateGradientList()
 		pm = QPixmap::fromImage(pixm);
 		namedGradient->addItem(pm, patK[a]);
 	}
-	connect(namedGradient, SIGNAL(activated(const QString &)), this, SLOT(setNamedGradient(const QString &)));
+	connect(namedGradient, SIGNAL(activated(const QString&)), this, SLOT(setNamedGradient(const QString&)));
 }
 
 void Tpalette::setGradients(QHash<QString, VGradient> *docGradients)
@@ -254,7 +254,7 @@ void Tpalette::setGradients(QHash<QString, VGradient> *docGradients)
 	updateGradientList();
 }
 
-void Tpalette::setColors(ColorList newColorList)
+void Tpalette::setColors(const ColorList& newColorList)
 {
 	colorList.clear();
 	colorList = newColorList;
@@ -484,7 +484,7 @@ void Tpalette::selectPattern(QListWidgetItem *c)
 	emit NewPattern(c->text());
 }
 
-void Tpalette::setActPattern(QString pattern, double scaleX, double scaleY, double offsetX, double offsetY, double rotation, double skewX, double skewY, bool mirrorX, bool mirrorY)
+void Tpalette::setActPattern(const QString& pattern, double scaleX, double scaleY, double offsetX, double offsetY, double rotation, double skewX, double skewY, bool mirrorX, bool mirrorY)
 {
 	disconnect(patternBox, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(selectPattern(QListWidgetItem*)));
 	QList<QListWidgetItem*> itl = patternBox->findItems(pattern, Qt::MatchExactly);

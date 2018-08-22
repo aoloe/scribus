@@ -64,7 +64,7 @@ void CanvasMode_ImageImport::setImageList(QStringList l)
 		newToolTip(l.first());
 }
 
-void CanvasMode_ImageImport::newToolTip(QString name)
+void CanvasMode_ImageImport::newToolTip(const QString& name)
 {
 	QPainter p;
 	QImage pm = QImage(80, 80, QImage::Format_ARGB32_Premultiplied);
@@ -191,7 +191,7 @@ void CanvasMode_ImageImport::mousePressEvent(QMouseEvent *m)
 	m->accept();
 	m_view->registerMousePress(m->globalPos());
 	PageItem *item;
-	if(m_imageList.size()>0)
+	if(!m_imageList.empty())
 	{
 		if((item = m_canvas->itemUnderCursor(m->globalPos())) != nullptr)
 		{

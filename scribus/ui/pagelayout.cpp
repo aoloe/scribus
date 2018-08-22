@@ -89,7 +89,7 @@ PageLayouts::PageLayouts(QWidget* parent)  : QGroupBox( parent )
 	connect(firstPage, SIGNAL(activated(int)), this, SIGNAL(selectedFirstPage(int)));
 }
 
-PageLayouts::PageLayouts(QWidget* parent, QList<PageSet> pSets, bool mode)  : QGroupBox( parent )
+PageLayouts::PageLayouts(QWidget* parent, const QList<PageSet>& pSets, bool mode)  : QGroupBox( parent )
 {
 	pageSets = pSets;
 	modus = mode;
@@ -120,7 +120,7 @@ PageLayouts::PageLayouts(QWidget* parent, QList<PageSet> pSets, bool mode)  : QG
 	connect(firstPage, SIGNAL(activated(int)), this, SIGNAL(selectedFirstPage(int)));
 }
 
-void PageLayouts::updateLayoutSelector(QList<PageSet> pSets)
+void PageLayouts::updateLayoutSelector(const QList<PageSet>& pSets)
 {
 	disconnect(layoutsCombo, SIGNAL(activated(int)), this, SLOT(itemSelected(int)));
 	pageSets = pSets;
@@ -216,7 +216,7 @@ void PageLayouts::itemSelected(int ic)
 
 void PageLayouts::itemSelected(QListWidgetItem* ic)
 {
-	if (ic == 0)
+	if (ic == nullptr)
 		return;
 	itemSelectedPost(layoutsView->row(ic));
 	emit selectedLayout(layoutsView->row(ic));

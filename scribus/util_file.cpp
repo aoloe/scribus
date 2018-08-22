@@ -114,8 +114,7 @@ bool copyFileAtomic(const QString& source, const QString& target)
 			success = QFile::rename(tempFileName, target);
 		}
 	}
-	if (tempFile)
-		delete tempFile;
+	delete tempFile;
 	return success;
 }
 
@@ -241,7 +240,7 @@ bool fileInPath(const QString& filename)
 	return false;
 }
 
-PageItem*  getVectorFileFromData(ScribusDoc *doc, QByteArray &data, QString ext, double x, double y, double w, double h)
+PageItem*  getVectorFileFromData(ScribusDoc *doc, QByteArray &data, const QString& ext, double x, double y, double w, double h)
 {
 	PageItem* retObj = nullptr;
 	QTemporaryFile *tempFile = new QTemporaryFile(QDir::tempPath() + "/scribus_temp_XXXXXX." + ext);
@@ -262,9 +261,9 @@ PageItem*  getVectorFileFromData(ScribusDoc *doc, QByteArray &data, QString ext,
 				{
 					doc->m_Selection->clear();
 					doc->m_Selection->delaySignalsOn();
-					fmt->setupTargets(doc, 0, 0, 0, &(PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts));
+					fmt->setupTargets(doc, nullptr, nullptr, nullptr, &(PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts));
 					fmt->loadFile(fileName, LoadSavePlugin::lfUseCurrentPage|LoadSavePlugin::lfInteractive|LoadSavePlugin::lfScripted);
-					if (doc->m_Selection->count() > 0)
+					if (!doc->m_Selection->isEmpty())
 					{
 						retObj = doc->groupObjectsSelection();
 						retObj->setTextFlowMode(PageItem::TextFlowUsesBoundingBox);

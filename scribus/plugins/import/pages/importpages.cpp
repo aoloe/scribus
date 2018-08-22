@@ -464,9 +464,6 @@ bool PagesPlug::convert(QString fn)
 #include "util_formats.h"
 #include "util_math.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 PagesPlug::PagesPlug(ScribusDoc* doc, int flags)
 	: baseX(0.0),
 	  baseY(0.0),
@@ -491,7 +488,7 @@ PagesPlug::PagesPlug(ScribusDoc* doc, int flags)
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 }
 
-QImage PagesPlug::readThumbnail(QString fName)
+QImage PagesPlug::readThumbnail(const QString& fName)
 {
 	QImage tmp;
 	if (!QFile::exists(fName))
@@ -604,9 +601,8 @@ QImage PagesPlug::readThumbnail(QString fName)
 	return tmp;
 }
 
-bool PagesPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool PagesPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -615,7 +611,7 @@ bool PagesPlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 	firstPage = true;
 	pagecount = 1;
 	mpagecount = 0;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -623,7 +619,7 @@ bool PagesPlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 	}
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -695,7 +691,7 @@ bool PagesPlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -729,7 +725,7 @@ bool PagesPlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -760,7 +756,7 @@ bool PagesPlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -797,12 +793,11 @@ bool PagesPlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 
 PagesPlug::~PagesPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSel;
 }
 
-bool PagesPlug::convert(QString fn)
+bool PagesPlug::convert(const QString& fn)
 {
 	bool retVal = true;
 	importedColors.clear();
@@ -836,7 +831,7 @@ bool PagesPlug::convert(QString fn)
 	return retVal;
 }
 
-bool PagesPlug::parseDocReference(QString designMap, bool compressed)
+bool PagesPlug::parseDocReference(const QString& designMap, bool compressed)
 {
 	QByteArray f;
 	QDomDocument designMapDom;
@@ -1975,7 +1970,7 @@ PageItem* PagesPlug::addClip(PageItem* retObj, ObjState &obState)
 	return retObj;
 }
 
-void PagesPlug::applyParagraphAttrs(ParagraphStyle &newStyle, CharStyle &tmpCStyle, QString pAttrs)
+void PagesPlug::applyParagraphAttrs(ParagraphStyle &newStyle, CharStyle &tmpCStyle, const QString& pAttrs)
 {
 	if (!m_StyleSheets.contains(m_currentStyleSheet))
 		return;
@@ -2034,7 +2029,7 @@ void PagesPlug::applyParagraphAttrs(ParagraphStyle &newStyle, CharStyle &tmpCSty
 	}
 }
 
-void PagesPlug::applyCharAttrs(CharStyle &tmpCStyle, QString pAttrs)
+void PagesPlug::applyCharAttrs(CharStyle &tmpCStyle, const QString& pAttrs)
 {
 	if (!m_StyleSheets.contains(m_currentStyleSheet))
 		return;

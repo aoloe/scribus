@@ -50,8 +50,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 ShapePlug::ShapePlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
@@ -61,7 +59,7 @@ ShapePlug::ShapePlug(ScribusDoc* doc, int flags)
 	progressDialog = nullptr;
 }
 
-QImage ShapePlug::readThumbnail(QString fName)
+QImage ShapePlug::readThumbnail(const QString& fName)
 {
 	QFileInfo fi = QFileInfo(fName);
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
@@ -78,7 +76,7 @@ QImage ShapePlug::readThumbnail(QString fName)
 	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_Doc->setPage(docWidth, docHeight, 0, 0, 0, 0, 0, 0, false, false);
 	m_Doc->addPage(0);
-	m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), nullptr);
 	baseX = m_Doc->currentPage()->xOffset();
 	baseY = m_Doc->currentPage()->yOffset();
 	Elements.clear();
@@ -115,19 +113,15 @@ QImage ShapePlug::readThumbnail(QString fName)
 		delete m_Doc;
 		return tmpImage;
 	}
-	else
-	{
-		QDir::setCurrent(CurDirP);
-		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->setScriptRunning(false);
-		delete m_Doc;
-	}
+	QDir::setCurrent(CurDirP);
+	m_Doc->DoDrawing = true;
+	m_Doc->scMW()->setScriptRunning(false);
+	delete m_Doc;
 	return QImage();
 }
 
-bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool ShapePlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -135,7 +129,7 @@ bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 //	double x, y, b, h;
 	double b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -144,7 +138,7 @@ bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -171,7 +165,7 @@ bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 		progressDialog->setOverallProgress(1);
 		qApp->processEvents();
 	}
-	parseHeader(fName, b, h);
+	parseHeader(fNameIn, b, h);
 	if (b == 0.0)
 		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
@@ -225,7 +219,7 @@ bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -259,7 +253,7 @@ bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -276,7 +270,7 @@ bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -312,12 +306,11 @@ bool ShapePlug::import(QString fNameIn, const TransactionSettings& trSettings, i
 
 ShapePlug::~ShapePlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSel;
 }
 
-void ShapePlug::parseHeader(QString fName, double &b, double &h)
+void ShapePlug::parseHeader(const QString& fName, double &b, double &h)
 {
 	QFile f(fName);
 	if (f.open(QIODevice::ReadOnly))
@@ -346,7 +339,7 @@ void ShapePlug::parseHeader(QString fName, double &b, double &h)
 	}
 }
 
-bool ShapePlug::convert(QString fn)
+bool ShapePlug::convert(const QString& fn)
 {
 	importedColors.clear();
 	QList<PageItem*> gElements;
@@ -1176,10 +1169,10 @@ void ShapePlug::svgLineTo(FPointArray *i, double x1, double y1)
 	WasM = false;
 	if (i->size() > 3)
 	{
-		FPoint b1 = i->point(i->size()-4);
-		FPoint b2 = i->point(i->size()-3);
-		FPoint b3 = i->point(i->size()-2);
-		FPoint b4 = i->point(i->size()-1);
+		const FPoint& b1 = i->point(i->size()-4);
+		const FPoint& b2 = i->point(i->size()-3);
+		const FPoint& b3 = i->point(i->size()-2);
+		const FPoint& b4 = i->point(i->size()-1);
 		FPoint n1 = FPoint(CurrX, CurrY);
 		FPoint n2 = FPoint(x1, y1);
 		if ((b1 == n1) && (b2 == n1) && (b3 == n2) && (b4 == n2))
@@ -1205,10 +1198,10 @@ void ShapePlug::svgCurveToCubic(FPointArray *i, double x1, double y1, double x2,
 	WasM = false;
 	if (PathLen > 3)
 	{
-		FPoint b1 = i->point(i->size()-4);
-		FPoint b2 = i->point(i->size()-3);
-		FPoint b3 = i->point(i->size()-2);
-		FPoint b4 = i->point(i->size()-1);
+		const FPoint& b1 = i->point(i->size()-4);
+		const FPoint& b2 = i->point(i->size()-3);
+		const FPoint& b3 = i->point(i->size()-2);
+		const FPoint& b4 = i->point(i->size()-1);
 		FPoint n1 = FPoint(CurrX, CurrY);
 		FPoint n2 = FPoint(x1, y1);
 		FPoint n3 = FPoint(x3, y3);

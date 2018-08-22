@@ -45,7 +45,7 @@ class SCRIBUS_API PageItem_LatexFrame : public PageItem_ImageFrame
 	Q_OBJECT
 
 	public:
-		PageItem_LatexFrame(ScribusDoc *pa, double x, double y, double w, double h, double w2, QString fill, QString outline);
+		PageItem_LatexFrame(ScribusDoc *pa, double x, double y, double w, double h, double w2, const QString& fill, const QString& outline);
 		~PageItem_LatexFrame();
 		
 		virtual PageItem_LatexFrame * asLatexFrame() { return this; }
@@ -69,7 +69,7 @@ class SCRIBUS_API PageItem_LatexFrame : public PageItem_ImageFrame
 			Emits formulaAutoUpdate() when undoable is false.
 			@return Returns true if the frame has to be updated, false if nothing changed.
 		*/
-		bool setFormula(QString formula, bool undoable=true);
+		bool setFormula(const QString& formula, bool undoable=true);
 		/** @brief Get current source. */
 		QString formula() const { return formulaText; }
 		

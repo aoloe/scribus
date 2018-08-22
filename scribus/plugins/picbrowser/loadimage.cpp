@@ -64,7 +64,7 @@ loadImagesThreadInstance::loadImagesThreadInstance()
 {
 }
 */
-void loadImagesThread::processLoadImageJob ( int row, QString path, int size, int tpId )
+void loadImagesThread::processLoadImageJob ( int row, const QString& path, int size, int tpId )
 {
 	ScImageCacheManager &icm = ScImageCacheManager::instance();
 	bool cacheEnabled = icm.enabled();
@@ -129,7 +129,7 @@ void loadImagesThread::processLoadImageJob ( int row, QString path, int size, in
 //no realCMYK
 	bool mode=false;
 //no document needs to be assigned to this
-	CMSettings cms ( 0, "", Intent_Perceptual);
+	CMSettings cms ( nullptr, "", Intent_Perceptual);
 	cms.allowColorManagement(false);
 	cms.setUseEmbeddedProfile(true);
 

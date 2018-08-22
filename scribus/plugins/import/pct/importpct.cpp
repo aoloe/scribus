@@ -50,9 +50,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 PctPlug::PctPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
@@ -62,7 +59,7 @@ PctPlug::PctPlug(ScribusDoc* doc, int flags)
 	progressDialog = nullptr;
 }
 
-QImage PctPlug::readThumbnail(QString fName)
+QImage PctPlug::readThumbnail(const QString& fName)
 {
 	QFileInfo fi = QFileInfo(fName);
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
@@ -79,7 +76,7 @@ QImage PctPlug::readThumbnail(QString fName)
 	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_Doc->setPage(docWidth, docHeight, 0, 0, 0, 0, 0, 0, false, false);
 	m_Doc->addPage(0);
-	m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), nullptr);
 	baseX = m_Doc->currentPage()->xOffset() - x;
 	baseY = m_Doc->currentPage()->yOffset() - y;
 	Elements.clear();
@@ -116,19 +113,15 @@ QImage PctPlug::readThumbnail(QString fName)
 		delete m_Doc;
 		return tmpImage;
 	}
-	else
-	{
-		QDir::setCurrent(CurDirP);
-		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->setScriptRunning(false);
-		delete m_Doc;
-	}
+	QDir::setCurrent(CurDirP);
+	m_Doc->DoDrawing = true;
+	m_Doc->scMW()->setScriptRunning(false);
+	delete m_Doc;
 	return QImage();
 }
 
-bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool PctPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -136,7 +129,7 @@ bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	double x, y, b, h;
 	bool ret = false;
 	CustColors.clear();
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -145,7 +138,7 @@ bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -172,7 +165,7 @@ bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		progressDialog->setOverallProgress(1);
 		qApp->processEvents();
 	}
-	parseHeader(fName, x, y, b, h);
+	parseHeader(fNameIn, x, y, b, h);
 	if (b == 0.0)
 		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
@@ -241,7 +234,7 @@ bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -275,7 +268,7 @@ bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -306,7 +299,7 @@ bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -341,12 +334,11 @@ bool PctPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 
 PctPlug::~PctPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSel;
 }
 
-void PctPlug::parseHeader(QString fName, double &x, double &y, double &b, double &h)
+void PctPlug::parseHeader(const QString& fName, double &x, double &y, double &b, double &h)
 {
 	QFile f(fName);
 	if (f.open(QIODevice::ReadOnly))
@@ -420,7 +412,7 @@ void PctPlug::parseHeader(QString fName, double &x, double &y, double &b, double
 	}
 }
 
-bool PctPlug::convert(QString fn)
+bool PctPlug::convert(const QString& fn)
 {
 	CurrColorFill = "White";
 	CurrFillShade = 100.0;
@@ -1219,7 +1211,7 @@ void PctPlug::handlePolygon(QDataStream &ts, quint16 opCode)
 		ts >> y >> x;
 		Coords.svgLineTo(x * resX, y * resX);
 	}
-	if (Coords.size() > 0)
+	if (!Coords.empty())
 	{
 		int z;
 		if (opCode == 0x0070)
@@ -1535,7 +1527,7 @@ void PctPlug::handleDHVText(QDataStream &ts)
 	alignStreamToWord(ts, 0);
 }
 
-void PctPlug::createTextPath(QByteArray textString)
+void PctPlug::createTextPath(const QByteArray& textString)
 {
 	QTextCodec *codec = QTextCodec::codecForName("Apple Roman");
 	if (!codec)
@@ -1561,7 +1553,7 @@ void PctPlug::createTextPath(QByteArray textString)
 	QPainterPath painterPath;
 	painterPath.addText( currentPointT.x(), currentPointT.y(), textFont, string);
 	textPath.fromQPainterPath(painterPath);
-	if (textPath.size() > 0)
+	if (!textPath.empty())
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, baseX, baseY, 10, 10, 0, CurrColorStroke, CommonStrings::None);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -1624,7 +1616,7 @@ void PctPlug::handleShortLineFrom(QDataStream &ts)
 	if ((dh == 0) && (dv == 0))
 		return;
 	QPoint s = currentPoint;
-	if (Coords.size() == 0)
+	if (Coords.empty())
 		Coords.svgMoveTo(s.x(), s.y());
 	Coords.svgLineTo(s.x()+dh * resX, s.y()+dv * resY);
 	currentPoint = QPoint(s.x()+dh * resX, s.y()+dv * resY);
@@ -1656,7 +1648,7 @@ void PctPlug::handleLineFrom(QDataStream &ts)
 	if ((x == 0) && (y == 0))
 		return;
 	QPoint s = currentPoint;
-	if (Coords.size() == 0)
+	if (Coords.empty())
 		Coords.svgMoveTo(s.x(), s.y());
 	Coords.svgLineTo(x * resX, y * resY);
 	currentPoint = QPoint(x * resX, y * resY);

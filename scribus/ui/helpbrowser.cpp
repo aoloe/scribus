@@ -393,7 +393,7 @@ void HelpBrowser::searchingInDirectory(const QString& aDir)
 
 void HelpBrowser::find()
 {
-	findText = QInputDialog::getText( this, tr("Find"), tr("Search Term:"), QLineEdit::Normal, findText, 0);
+	findText = QInputDialog::getText( this, tr("Find"), tr("Search Term:"), QLineEdit::Normal, findText, nullptr);
 	if (findText.isNull())
 		return;
 	findNext();
@@ -610,8 +610,7 @@ void HelpBrowser::loadMenu()
 	textBrowser->setSearchPaths(QStringList(finalBaseDir));
 	if (baseFi.exists())
 	{
-		if (menuModel!=nullptr)
-			delete menuModel;
+		delete menuModel;
 		menuModel=new ScHelpTreeModel(toLoad, "Topic", "Location", &quickHelpIndex);
 	
 		helpNav->listView->setModel(menuModel);

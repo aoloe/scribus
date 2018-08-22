@@ -234,9 +234,9 @@ public:
 	 */
 	SVGPlug(ScribusDoc* doc, int flags);
 	~SVGPlug();
-	bool import(QString fname, const TransactionSettings& trSettings, int flags);
-	QImage readThumbnail(QString fn);
-	bool loadData(QString fname);
+	bool import(const QString& fname, const TransactionSettings& trSettings, int flags);
+	QImage readThumbnail(const QString& fn);
+	bool loadData(const QString& fname);
 	void convert(const TransactionSettings& trSettings, int flags);
 	void addGraphicContext();
 	void setupNode( const QDomElement &e );

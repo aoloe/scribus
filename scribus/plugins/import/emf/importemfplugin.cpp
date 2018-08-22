@@ -45,7 +45,7 @@ void importemf_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ImportEmfPlugin::ImportEmfPlugin() : LoadSavePlugin(), importAction(new ScrAction(ScrAction::DLL, "", QKeySequence(), this))
+ImportEmfPlugin::ImportEmfPlugin() : importAction(new ScrAction(ScrAction::DLL, "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do it in one
 	// place. This includes registering file format support.
@@ -133,7 +133,7 @@ bool ImportEmfPlugin::import(QString fileName, int flags)
 		else
 			return true;
 	}
-	if (m_Doc == 0)
+	if (m_Doc == nullptr)
 		m_Doc=ScCore->primaryMainWindow()->doc;
 	UndoTransaction* activeTransaction = nullptr;
 	bool emptyDoc = (m_Doc == nullptr);

@@ -72,7 +72,7 @@ for which a new license (GPL+exception) is in place.
 
 extern bool printDinUse;
 
-PPreview::PPreview( QWidget* parent, ScribusView *vin, ScribusDoc *docu, QString printer, PrintEngine engine ) : QDialog( parent )
+PPreview::PPreview( QWidget* parent, ScribusView *vin, ScribusDoc *docu, const QString& printer, PrintEngine engine ) : QDialog( parent )
 {
 	setModal(true);
 	setWindowIcon(IconManager::instance()->loadIcon("AppIcon.png"));
@@ -549,7 +549,7 @@ int PPreview::RenderPreview(int pageIndex, int res)
 	args.append( "-dNOPAUSE" );
 	args.append( "-dPARANOIDSAFER" );
 	args.append( QString("-r%1").arg(tmp.setNum(res)) );
-	args.append( QString("-g%1x%2").arg(tmp2.setNum(qRound(b))).arg(tmp3.setNum(qRound(h))) );
+	args.append( QString("-g%1x%2").arg(tmp2.setNum(qRound(b)), tmp3.setNum(qRound(h))) );
 	if (EnableCMYK->isChecked())
 	{
 		if (HaveTiffSep)
@@ -663,7 +663,7 @@ int PPreview::RenderPreviewSep(int pageIndex, int res)
 	args1.append( "-dNOPAUSE" );
 	args1.append( "-dPARANOIDSAFER" );
 	args1.append( QString("-r%1").arg(tmp.setNum(res)) );
-	args1.append( QString("-g%1x%2").arg(tmp2.setNum(qRound(b))).arg(tmp3.setNum(qRound(h))) ); 
+	args1.append( QString("-g%1x%2").arg(tmp2.setNum(qRound(b)), tmp3.setNum(qRound(h))) );
 	if (AntiAlias->isChecked())
 	{
 		args1.append("-dTextAlphaBits=4");
@@ -1155,7 +1155,7 @@ QPixmap PPreview::CreatePreview(int pageIndex, int res)
 
 //-------------------------------------------------------------------------------------------------
 
-bool PPreview::usePostscriptPreview(QString printerName, PrintEngine engine)
+bool PPreview::usePostscriptPreview(const QString& printerName, PrintEngine engine)
 {
 #ifdef _WIN32
 	if (printerName == tr("File"))

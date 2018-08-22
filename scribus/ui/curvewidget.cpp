@@ -238,7 +238,7 @@ void KCurve::mouseMoveEvent ( QMouseEvent * e )
 	double x = e->pos().x() / (float)width();
 	double y = 1.0 - e->pos().y() / (float)height();
 
-	if (m_dragging == false)   // If no point is selected set the the cursor shape if on top
+	if (!m_dragging)   // If no point is selected set the the cursor shape if on top
 	{
 		double distance = 1000;
 		double ydistance = 1000;
@@ -288,7 +288,7 @@ FPointArray KCurve::getCurve()
 	return m_points.copy();
 }
 
-void KCurve::setCurve(FPointArray inlist)
+void KCurve::setCurve(const FPointArray& inlist)
 {
 	m_points_back = m_points.copy();
 	m_points.resize(0);
@@ -465,7 +465,7 @@ void CurveWidget::doSave()
 			efval += tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (cDisplay->isLinear())

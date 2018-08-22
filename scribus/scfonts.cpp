@@ -74,7 +74,7 @@ for which a new license (GPL+exception) is in place.
 
 /***************************************************************************/
 
-SCFonts::SCFonts() : QMap<QString,ScFace>(), FontPath()
+SCFonts::SCFonts()
 {
 //	insert("", ScFace::none()); // Wtf why inserting an empty entry here ????
 	showFontInformation=false;
@@ -123,7 +123,7 @@ void SCFonts::AddPath(QString p)
 		FontPath.insert(FontPath.count(),p);
 }
 
-void SCFonts::AddScalableFonts(const QString &path, QString DocName)
+void SCFonts::AddScalableFonts(const QString &path, const QString& DocName)
 {
 	//Make sure this is not empty or we will scan the whole drive on *nix
 	//QString::null+/ is / of course.
@@ -320,7 +320,7 @@ static bool nameComp(const FT_SfntName a, const FT_SfntName b)
 	{
 		if (a.name_id == TT_NAME_ID_PREFERRED_FAMILY)
 			return true;
-		else if (b.name_id == TT_NAME_ID_PREFERRED_FAMILY)
+		if (b.name_id == TT_NAME_ID_PREFERRED_FAMILY)
 			return false;
 	}
 
@@ -331,11 +331,11 @@ static bool nameComp(const FT_SfntName a, const FT_SfntName b)
 	{
 		if (a.platform_id == TT_PLATFORM_MICROSOFT)
 			return true;
-		else if (b.platform_id == TT_PLATFORM_MICROSOFT)
+		if (b.platform_id == TT_PLATFORM_MICROSOFT)
 			return false;
-		else if (a.platform_id == TT_PLATFORM_APPLE_UNICODE)
+		if (a.platform_id == TT_PLATFORM_APPLE_UNICODE)
 			return true;
-		else if (b.platform_id == TT_PLATFORM_APPLE_UNICODE)
+		if (b.platform_id == TT_PLATFORM_APPLE_UNICODE)
 			return false;
 	}
 
@@ -346,11 +346,11 @@ static bool nameComp(const FT_SfntName a, const FT_SfntName b)
 		{
 			if (a.encoding_id == TT_MS_ID_UCS_4)
 				return true;
-			else if (b.encoding_id == TT_MS_ID_UCS_4)
+			if (b.encoding_id == TT_MS_ID_UCS_4)
 				return false;
-			else if (a.encoding_id == TT_MS_ID_UNICODE_CS)
+			if (a.encoding_id == TT_MS_ID_UNICODE_CS)
 				return true;
-			else if (b.encoding_id == TT_MS_ID_UNICODE_CS)
+			if (b.encoding_id == TT_MS_ID_UNICODE_CS)
 				return false;
 		}
 	}
@@ -362,7 +362,7 @@ static bool nameComp(const FT_SfntName a, const FT_SfntName b)
 		{
 			if (a.language_id == TT_MS_LANGID_ENGLISH_UNITED_STATES)
 				return true;
-			else if (b.language_id == TT_MS_LANGID_ENGLISH_UNITED_STATES)
+			if (b.language_id == TT_MS_LANGID_ENGLISH_UNITED_STATES)
 				return false;
 		}
 	}
@@ -628,7 +628,7 @@ static QString getFtError(int code)
 }
 
 // Load a single font into the library from the passed filename. Returns true on error.
-bool SCFonts::AddScalableFont(QString filename, FT_Library &library, QString DocName)
+bool SCFonts::AddScalableFont(const QString& filename, FT_Library &library, const QString& DocName)
 {
 	static bool firstRun;
 	bool Subset = false;
@@ -661,9 +661,7 @@ bool SCFonts::AddScalableFont(QString filename, FT_Library &library, QString Doc
 			FT_Done_Face(face);
 		checkedFonts.insert(filename, foCache);
 		if (showFontInformation)
-			sDebug(QObject::tr("Font %1 is broken, discarding it. Error message: \"%2\"")
-					   .arg(filename)
-					   .arg(getFtError(error)));
+			sDebug(QObject::tr("Font %1 is broken, discarding it. Error message: \"%2\"").arg(filename, getFtError(error)));
 		return true;
 	}
 	getFontFormat(face, format, type);
@@ -878,7 +876,7 @@ bool SCFonts::AddScalableFont(QString filename, FT_Library &library, QString Doc
 //debug
 			QByteArray bb;
 			t->rawData(bb);
-			QFile dump(QString("/tmp/fonts/%1-%2").arg(ts).arg(psName));
+			QFile dump(QString("/tmp/fonts/%1-%2").arg(ts, psName));
 			dump.open(IO_WriteOnly);
 			QDataStream os(&dump);
 			os.writeRawBytes(bb.data(), bb.size());
@@ -901,12 +899,12 @@ bool SCFonts::AddScalableFont(QString filename, FT_Library &library, QString Doc
 		error = FT_New_Face(library, QFile::encodeName(filename), faceIndex, &face);
 	} //while
 	
-	if (face != 0)
+	if (face != nullptr)
 		FT_Done_Face(face);
 	return error && faceIndex == 0;
 }
 
-void SCFonts::removeFont(QString name)
+void SCFonts::removeFont(const QString& name)
 {
 	remove(name);
 	updateFontMap();
@@ -946,7 +944,7 @@ const ScFace& SCFonts::findFont(const QString& fontFamily, const QString& fontSt
 	return findFont(fontFamily + " " + fontStyle, doc);
 }
 
-QMap<QString,QString> SCFonts::getSubstitutions(const QList<QString> skip) const
+QMap<QString,QString> SCFonts::getSubstitutions(const QList<QString>& skip) const
 {
 	QMap<QString,QString> result;
 	QMap<QString,ScFace>::ConstIterator it;
@@ -990,7 +988,7 @@ void SCFonts::AddFontconfigFonts()
 	// The ObjectSet tells FontConfig what information about each match to return.
 	// We currently just need FC_FILE, but other info like font family and style
 	// is available - see "man fontconfig".
-	FcObjectSet* os = FcObjectSetBuild (FC_FILE, (char *) 0);
+	FcObjectSet* os = FcObjectSetBuild (FC_FILE, (char *) nullptr);
 	if (!os)
 	{
 		qFatal("SCFonts::AddFontconfigFonts() FcObjectSet* os failed to build object set");
@@ -1100,7 +1098,7 @@ void SCFonts::AddXFontServerPath()
  * allowing a user to have extra fonts installed
  * only for this user. Can also be used also as an emergency
  * fallback if no suitable fonts are found elsewere */
-void SCFonts::AddUserPath(QString )
+void SCFonts::AddUserPath(const QString& pf)
 {
 	PrefsContext *pc = PrefsManager::instance()->prefsFile->getContext("Fonts");
 	PrefsTable *extraDirs = pc->getTable("ExtraFontDirs");
@@ -1108,7 +1106,7 @@ void SCFonts::AddUserPath(QString )
 		AddPath(extraDirs->get(i, 0));
 }
 
-void SCFonts::ReadCacheList(QString pf)
+void SCFonts::ReadCacheList(const QString& pf)
 {
 	QFile fr(pf + "/cfonts.xml");
 	QFileInfo fir(fr);
@@ -1155,7 +1153,7 @@ void SCFonts::WriteCacheList()
 	WriteCacheList(prefsLocation);
 }
 
-void SCFonts::WriteCacheList(QString pf)
+void SCFonts::WriteCacheList(const QString& pf)
 {
 	QDomDocument docu("fontcacherc");
 	QString st="<CachedFonts></CachedFonts>";
@@ -1184,7 +1182,7 @@ void SCFonts::WriteCacheList(QString pf)
 	}
 }
 
-void SCFonts::GetFonts(QString pf, bool showFontInfo)
+void SCFonts::GetFonts(const QString& pf, bool showFontInfo)
 {
 	showFontInformation=showFontInfo;
 	FontPath.clear();

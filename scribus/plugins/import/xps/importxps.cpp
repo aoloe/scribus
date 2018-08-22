@@ -64,9 +64,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_math.h"
 #include "xpsimportoptions.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 XpsPlug::XpsPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel = new Selection(this, false);
@@ -77,7 +74,7 @@ XpsPlug::XpsPlug(ScribusDoc* doc, int flags)
 	uz = nullptr;
 }
 
-QImage XpsPlug::readThumbnail(QString fName)
+QImage XpsPlug::readThumbnail(const QString& fName)
 {
 	QImage tmp;
 	if (!QFile::exists(fName))
@@ -132,7 +129,7 @@ QImage XpsPlug::readThumbnail(QString fName)
 		m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 		m_Doc->setPage(docWidth, docHeight, 0, 0, 0, 0, 0, 0, false, false);
 		m_Doc->addPage(0);
-		m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
+		m_Doc->setGUI(false, ScCore->primaryMainWindow(), nullptr);
 		baseX = m_Doc->currentPage()->xOffset();
 		baseY = m_Doc->currentPage()->yOffset() + m_Doc->currentPage()->height() / 2.0;
 		Elements.clear();
@@ -190,9 +187,8 @@ QImage XpsPlug::readThumbnail(QString fName)
 	return tmp;
 }
 
-bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool XpsPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -200,7 +196,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	bool ret = false;
 	firstPage = true;
 	pagecount = 1;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	m_FileName = fi.fileName();
 	if ( !ScCore->usingGUI() )
 	{
@@ -210,7 +206,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -282,7 +278,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -316,7 +312,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -347,7 +343,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -384,8 +380,7 @@ bool XpsPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 
 XpsPlug::~XpsPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSel;
 	for (int a = 0; a < tempFontFiles.count(); a++)
 	{
@@ -393,7 +388,7 @@ XpsPlug::~XpsPlug()
 	}
 }
 
-bool XpsPlug::convert(QString fn)
+bool XpsPlug::convert(const QString& fn)
 {
 	bool retVal = true;
 	importedColors.clear();
@@ -434,7 +429,7 @@ bool XpsPlug::convert(QString fn)
 	return retVal;
 }
 
-bool XpsPlug::parseDocSequence(QString designMap)
+bool XpsPlug::parseDocSequence(const QString& designMap)
 {
 	QByteArray f;
 	QDomDocument designMapDom;
@@ -464,7 +459,7 @@ bool XpsPlug::parseDocSequence(QString designMap)
 	return parsed;
 }
 
-bool XpsPlug::parseDocReference(QString designMap)
+bool XpsPlug::parseDocReference(const QString& designMap)
 {
 	QByteArray f;
 	QFileInfo fi(designMap);
@@ -572,7 +567,7 @@ bool XpsPlug::parseDocReference(QString designMap)
 	return true;
 }
 
-void XpsPlug::parsePageReference(QString designMap)
+void XpsPlug::parsePageReference(const QString& designMap)
 {
 	QByteArray f;
 	QFileInfo fi(designMap);
@@ -699,7 +694,7 @@ void XpsPlug::parsePageReference(QString designMap)
 	}
 }
 
-PageItem* XpsPlug::parseObjectXML(QDomElement &dpg, QString path)
+PageItem* XpsPlug::parseObjectXML(QDomElement &dpg, const QString& path)
 {
 	PageItem *retObj = nullptr;
 	ObjState obState;
@@ -1283,7 +1278,7 @@ PageItem* XpsPlug::parseObjectXML(QDomElement &dpg, QString path)
 	return retObj;
 }
 
-void XpsPlug::parseOpacityXML(QDomElement &spe, QString path, ObjState &obState)
+void XpsPlug::parseOpacityXML(QDomElement &spe, const QString& path, ObjState &obState)
 {
 	ObjState opaState;
 	opaState.CurrColorFill = CommonStrings::None;
@@ -1309,7 +1304,7 @@ void XpsPlug::parseOpacityXML(QDomElement &spe, QString path, ObjState &obState)
 	}
 }
 
-void XpsPlug::parseStrokeXML(QDomElement &spe, QString path, ObjState &obState)
+void XpsPlug::parseStrokeXML(QDomElement &spe, const QString& path, ObjState &obState)
 {
 	ObjState opaState;
 	opaState.CurrColorFill = CommonStrings::None;
@@ -1332,7 +1327,7 @@ void XpsPlug::parseStrokeXML(QDomElement &spe, QString path, ObjState &obState)
 		obState.patternStroke = opaState.patternName;
 }
 
-void XpsPlug::parseFillXML(QDomElement &spe, QString path, ObjState &obState)
+void XpsPlug::parseFillXML(QDomElement &spe, const QString& path, ObjState &obState)
 {
 	for(QDomNode obg = spe.firstChild(); !obg.isNull(); obg = obg.nextSibling() )
 	{
@@ -1585,7 +1580,7 @@ QString XpsPlug::parsePathGeometryXML(QDomElement &spe)
 	return svgString;
 }
 
-void XpsPlug::parseResourceFile(QString resFile)
+void XpsPlug::parseResourceFile(const QString& resFile)
 {
 	QByteArray f;
 	if (uz->read(resFile, f))
@@ -1929,23 +1924,17 @@ ScFace XpsPlug::loadFontByName(const QString &fileName)
 		unsigned short guid[16];
 		if (!parseGUID(baseName, guid))
 			return t;
-		else
+		if (fontData.length() < 32)
 		{
-			if (fontData.length() < 32)
-			{
-				qDebug() << "Font file is too small";
-				return t;
-			}
-			else
-			{
-				// Obfuscation - xor bytes in font binary with bytes from guid (font's filename)
-				const static int mapping[] = {15, 14, 13, 12, 11, 10, 9, 8, 6, 7, 4, 5, 0, 1, 2, 3};
-				for (int i = 0; i < 16; i++)
-				{
-					fontData[i] = fontData[i] ^ guid[mapping[i]];
-					fontData[i+16] = fontData[i+16] ^ guid[mapping[i]];
-				}
-			}
+			qDebug() << "Font file is too small";
+			return t;
+		}
+		// Obfuscation - xor bytes in font binary with bytes from guid (font's filename)
+		const static int mapping[] = {15, 14, 13, 12, 11, 10, 9, 8, 6, 7, 4, 5, 0, 1, 2, 3};
+		for (int i = 0; i < 16; i++)
+		{
+			fontData[i] = fontData[i] ^ guid[mapping[i]];
+			fontData[i+16] = fontData[i+16] ^ guid[mapping[i]];
 		}
 	}
 	QFile ft(fname);

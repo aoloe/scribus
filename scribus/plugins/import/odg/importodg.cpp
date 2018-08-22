@@ -69,9 +69,6 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 OdgPlug::OdgPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel = new Selection(this, false);
@@ -82,7 +79,7 @@ OdgPlug::OdgPlug(ScribusDoc* doc, int flags)
 	uz = nullptr;
 }
 
-QImage OdgPlug::readThumbnail(QString fName)
+QImage OdgPlug::readThumbnail(const QString& fName)
 {
 	QImage tmp;
 	if (!QFile::exists(fName))
@@ -135,9 +132,8 @@ QImage OdgPlug::readThumbnail(QString fName)
 	return tmp;
 }
 
-bool OdgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool OdgPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
@@ -146,7 +142,7 @@ bool OdgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	firstPage = true;
 	pagecount = 1;
 	mpagecount = 0;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -154,7 +150,7 @@ bool OdgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	}
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -226,7 +222,7 @@ bool OdgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -260,7 +256,7 @@ bool OdgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -291,7 +287,7 @@ bool OdgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -328,12 +324,11 @@ bool OdgPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 
 OdgPlug::~OdgPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSel;
 }
 
-bool OdgPlug::convert(QString fn)
+bool OdgPlug::convert(const QString& fn)
 {
 	bool retVal = true;
 	importedColors.clear();
@@ -405,7 +400,7 @@ bool OdgPlug::convert(QString fn)
 	return retVal;
 }
 
-bool OdgPlug::parseStyleSheets(QString designMap)
+bool OdgPlug::parseStyleSheets(const QString& designMap)
 {
 	QByteArray f;
 	QDomDocument designMapDom;
@@ -532,7 +527,7 @@ bool OdgPlug::parseStyleSheetsXML(QDomDocument &designMapDom)
 	return true;
 }
 
-bool OdgPlug::parseDocReference(QString designMap)
+bool OdgPlug::parseDocReference(const QString& designMap)
 {
 	QByteArray f;
 	QDomDocument designMapDom;
@@ -2278,7 +2273,7 @@ QString OdgPlug::getStyleName(QDomElement &e)
 	return styleName;
 }
 
-void OdgPlug::resovleStyle(ObjStyle &tmpOStyle, QString pAttrs)
+void OdgPlug::resovleStyle(ObjStyle &tmpOStyle, const QString& pAttrs)
 {
 	if (m_Styles.contains(pAttrs))
 	{
@@ -3116,7 +3111,6 @@ void OdgPlug::arcTo(QPainterPath &path, QPointF startpoint, double rx, double ry
 	{
 		path.cubicTo(curvePoints[i], curvePoints[i+1], curvePoints[i+2]);
 	}
-	return;
 }
 
 int OdgPlug::arcToCurve(double rx, double ry, double startAngle, double sweepAngle, const QPointF & offset, QPointF * curvePoints)
@@ -3214,7 +3208,7 @@ PageItem* OdgPlug::groupObjects(QList<PageItem *> &GElements)
 	return retObj;
 }
 
-QString OdgPlug::modifyColor(QString name, bool darker, int amount)
+QString OdgPlug::modifyColor(const QString& name, bool darker, int amount)
 {
 	const ScColor& col = m_Doc->PageColors[name];
 	QColor c = ScColorEngine::getShadeColorProof(col, m_Doc, 100);
@@ -3289,9 +3283,9 @@ QString OdgPlug::parseColor( const QString &s )
 	return ret;
 }
 
-QString OdgPlug::constructFontName(QString fontBaseName, QString fontStyle)
+QString OdgPlug::constructFontName(const QString& fontBaseName, const QString& fontStyle)
 {
-	QString fontName = "";
+	QString fontName;
 	bool found = false;
 	SCFontsIterator it(PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts);
 	for ( ; it.hasNext(); it.next())
@@ -3342,7 +3336,7 @@ QString OdgPlug::constructFontName(QString fontBaseName, QString fontStyle)
 			if (!PrefsManager::instance()->appPrefs.fontPrefs.GFontSub.contains(family))
 			{
 				qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
-				MissingFont *dia = new MissingFont(0, family, m_Doc);
+				MissingFont *dia = new MissingFont(nullptr, family, m_Doc);
 				dia->exec();
 				fontName = dia->getReplacementFont();
 				delete dia;

@@ -42,7 +42,7 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-ScImgDataLoader_PICT::ScImgDataLoader_PICT(void) : ScImgDataLoader(),
+ScImgDataLoader_PICT::ScImgDataLoader_PICT() :
 	m_baseX(0),
 	m_baseY(0),
 	m_docWidth(0),
@@ -62,7 +62,7 @@ ScImgDataLoader_PICT::ScImgDataLoader_PICT(void) : ScImgDataLoader(),
 	initSupportedFormatList();
 }
 
-void ScImgDataLoader_PICT::initSupportedFormatList(void)
+void ScImgDataLoader_PICT::initSupportedFormatList()
 {
 	m_supportedFormats.clear();
 	m_supportedFormats.append( "pct" );
@@ -83,7 +83,7 @@ void ScImgDataLoader_PICT::loadEmbeddedProfile(const QString& fn, int /*page*/)
 	m_profileComponents = 0;
 }
 
-void ScImgDataLoader_PICT::parseHeader(QString fName, double &x, double &y, double &w, double &h)
+void ScImgDataLoader_PICT::parseHeader(const QString& fName, double &x, double &y, double &w, double &h)
 {
 	QFile f(fName);
 	if (f.open(QIODevice::ReadOnly))
@@ -1165,7 +1165,7 @@ void ScImgDataLoader_PICT::handleDHVText(QDataStream &ts)
 	alignStreamToWord(ts, 0);
 }
 
-void ScImgDataLoader_PICT::createTextPath(QByteArray textString)
+void ScImgDataLoader_PICT::createTextPath(const QByteArray& textString)
 {
 	QTextCodec *codec = QTextCodec::codecForName("Apple Roman");
 	QString string = codec->toUnicode(textString);
@@ -1174,7 +1174,7 @@ void ScImgDataLoader_PICT::createTextPath(QByteArray textString)
 		textFont = QFont();
 	else
 	{
-		QString fontName = m_fontMap[m_currentFontID];
+		QString fontName(m_fontMap[m_currentFontID]);
 		textFont = QFont(fontName, m_currentTextSize);
 //		QFontInfo inf(textFont);
 //		qDebug() << "Using Font" << inf.family() << "for" << fontName;

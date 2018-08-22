@@ -68,8 +68,7 @@ PyObject *scribus_getfontsize(PyObject* /* self */, PyObject* args)
 				return PyFloat_FromDouble(static_cast<double>(it->itemText.charStyle(b).fontSize() / 10.0));
 		return nullptr;
 	}
-	else
-		return PyFloat_FromDouble(static_cast<double>(it->currentCharStyle().fontSize() / 10.0));
+	return PyFloat_FromDouble(static_cast<double>(it->currentCharStyle().fontSize() / 10.0));
 }
 
 PyObject *scribus_getfont(PyObject* /* self */, PyObject* args)
@@ -94,8 +93,7 @@ PyObject *scribus_getfont(PyObject* /* self */, PyObject* args)
 				return PyString_FromString(it->itemText.charStyle(b).font().scName().toUtf8());
 		return nullptr;
 	}
-	else
-		return PyString_FromString(it->currentCharStyle().font().scName().toUtf8());
+	return PyString_FromString(it->currentCharStyle().font().scName().toUtf8());
 }
 
 PyObject *scribus_gettextsize(PyObject* /* self */, PyObject* args)
@@ -174,8 +172,7 @@ PyObject *scribus_getfontfeatures(PyObject* /* self */, PyObject* args)
 				return PyString_FromString(it->itemText.charStyle(b).fontFeatures().toUtf8());
 		return nullptr;
 	}
-	else
-		return PyString_FromString(it->currentCharStyle().fontFeatures().toUtf8());
+	return PyString_FromString(it->currentCharStyle().fontFeatures().toUtf8());
 }
 
 PyObject *scribus_getlinespace(PyObject* /* self */, PyObject* args)
@@ -822,9 +819,7 @@ PyObject *scribus_settextfill(PyObject* /* self */, PyObject* args)
 		PyErr_SetString(WrongFrameTypeError, QObject::tr("Cannot set text fill on a non-text frame.","python error").toLocal8Bit().constData());
 		return nullptr;
 	}
-	else
-	{
-		ApplyCharstyleHelper<QString>(it, QString::fromUtf8(Color)).apply(&CharStyle::setFillColor, 0, it->itemText.length());
+	ApplyCharstyleHelper<QString>(it, QString::fromUtf8(Color)).apply(&CharStyle::setFillColor, 0, it->itemText.length());
 //		for (int b = 0; b < it->itemText.length(); b++)
 //		{
 //			//FIXME: doc method
@@ -837,7 +832,6 @@ PyObject *scribus_settextfill(PyObject* /* self */, PyObject* args)
 //				it->itemText.item(b)->setFillColor(QString::fromUtf8(Color));
 //		}
 //		it->TxtFill = QString::fromUtf8(Color);
-	}
 //	Py_INCREF(Py_None);
 //	return Py_None;
 	Py_RETURN_NONE;
@@ -859,9 +853,7 @@ PyObject *scribus_settextstroke(PyObject* /* self */, PyObject* args)
 		PyErr_SetString(WrongFrameTypeError, QObject::tr("Cannot set text stroke on a non-text frame.","python error").toLocal8Bit().constData());
 		return nullptr;
 	}
-	else
-	{
-		ApplyCharstyleHelper<QString>(it, QString::fromUtf8(Color)).apply(&CharStyle::setStrokeColor, 0, it->itemText.length());
+	ApplyCharstyleHelper<QString>(it, QString::fromUtf8(Color)).apply(&CharStyle::setStrokeColor, 0, it->itemText.length());
 //		for (int b = 0; b < it->itemText.length(); b++)
 //		{
 //			//FIXME:NLS use document method for this
@@ -874,7 +866,6 @@ PyObject *scribus_settextstroke(PyObject* /* self */, PyObject* args)
 //				it->itemText.item(b)->setStrokeColor(QString::fromUtf8(Color));
 //		}
 //		it->TxtStroke = QString::fromUtf8(Color);
-	}
 //	Py_INCREF(Py_None);
 //	return Py_None;
 	Py_RETURN_NONE;
@@ -973,9 +964,7 @@ PyObject *scribus_settextshade(PyObject* /* self */, PyObject* args)
 		PyErr_SetString(WrongFrameTypeError, QObject::tr("Cannot set text shade on a non-text frame.","python error").toLocal8Bit().constData());
 		return nullptr;
 	}
-	else
-	{
-		ApplyCharstyleHelper<double>(it, w).apply(&CharStyle::setFillShade, 0, it->itemText.length());
+	ApplyCharstyleHelper<double>(it, w).apply(&CharStyle::setFillShade, 0, it->itemText.length());
 //		//FIXME:NLS use document method for that
 //		for (int b = 0; b < it->itemText.length(); ++b)
 //		{
@@ -988,7 +977,6 @@ PyObject *scribus_settextshade(PyObject* /* self */, PyObject* args)
 //				it->itemText.item(b)->setFillShade(w);
 //		}
 //	it->ShTxtFill = w;
-	}
 //	Py_INCREF(Py_None);
 //	return Py_None;
 	Py_RETURN_NONE;
@@ -1019,12 +1007,12 @@ PyObject *scribus_linktextframes(PyObject* /* self */, PyObject* args)
 		PyErr_SetString(ScribusException, QObject::tr("Target frame must be empty.","python error").toLocal8Bit().constData());
 		return nullptr;
 	}*/
-	if (toitem->nextInChain() != 0)
+	if (toitem->nextInChain() != nullptr)
 	{
 		PyErr_SetString(ScribusException, QObject::tr("Target frame links to another frame.","python error").toLocal8Bit().constData());
 		return nullptr;
 	}
-	if (toitem->prevInChain() != 0)
+	if (toitem->prevInChain() != nullptr)
 	{
 		PyErr_SetString(ScribusException, QObject::tr("Target frame is linked to by another frame.","python error").toLocal8Bit().constData());
 		return nullptr;
@@ -1060,7 +1048,7 @@ PyObject *scribus_unlinktextframes(PyObject* /* self */, PyObject* args)
 		return nullptr;
 	}
 	// only linked
-	if (item->prevInChain() == 0)
+	if (item->prevInChain() == nullptr)
 	{
 		PyErr_SetString(ScribusException, QObject::tr("Object is not a linked text frame, can't unlink.","python error").toLocal8Bit().constData());
 		return nullptr;

@@ -13,17 +13,17 @@ for which a new license (GPL+exception) is in place.
 #include <cmath>
 #include <cstdlib>
 
-#include <stdio.h>
+#include <cstdio>
 #include "scimgdataloader_wpg.h"
 #include "third_party/wpg/WPGStreamImplementation.h"
 
-ScrPainterIm::ScrPainterIm(): libwpg::WPGPaintInterface(),
+ScrPainterIm::ScrPainterIm() :
 	fillrule(false),
 	gradientAngle(0.0),
 	isGradient(false),
 	fillSet(false),
 	strokeSet(false),
-	image(NULL)
+	image(nullptr)
 {
 }
 
@@ -259,9 +259,9 @@ void ScrPainterIm::drawPath(const libwpg::WPGPath& path)
 			imagePainter.setBrush(currentBrush);
 	}
 	if (!path.framed)
-			imagePainter.setPen(Qt::NoPen);
-		else
-			imagePainter.setPen(currentPen);
+		imagePainter.setPen(Qt::NoPen);
+	else
+		imagePainter.setPen(currentPen);
 	if(path.closed)
 		Coords.closeSubpath();
 	imagePainter.drawPath(Coords);
@@ -291,12 +291,12 @@ void ScrPainterIm::drawImageObject(const libwpg::WPGBinaryData& /*binaryData*/)
 }
 
 
-ScImgDataLoader_WPG::ScImgDataLoader_WPG(void) : ScImgDataLoader()
+ScImgDataLoader_WPG::ScImgDataLoader_WPG()
 {
 	initSupportedFormatList();
 }
 
-void ScImgDataLoader_WPG::initSupportedFormatList(void)
+void ScImgDataLoader_WPG::initSupportedFormatList()
 {
 	m_supportedFormats.clear();
 	m_supportedFormats.append( "wpg" );

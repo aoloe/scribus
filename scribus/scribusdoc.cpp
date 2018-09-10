@@ -38,6 +38,7 @@ for which a new license (GPL+exception) is in place.
 #include <QProgressBar>
 #include <QtAlgorithms>
 #include <QTime>
+#include <QStringList>
 //#include <qtconcurrentmap.h>
 
 #include "actionmanager.h"
@@ -13500,15 +13501,14 @@ QRectF ScribusDoc::ApplyGridF(const QRectF& in)
 	return nr;
 }
 
-/**
- * m_Selection
- * QList<PageItem*> selectedItems = m_Selection->items()
- * Selection selection
- */
-void ScribusDoc::itemSelection_MultipleDuplicate(ItemMultipleDuplicateData& mdData)
+void ScribusDoc::itemSelection_MultipleDuplicate(const ItemMultipleDuplicateData& mdData)
 {
 	if ((mdData.type==0 && mdData.copyCount<1) || (mdData.type==1 && (mdData.gridRows==1 && mdData.gridCols==1)))
 		return;
+	if ((mdData.type == 2) && (mdData.pageSelection != 4) && (currentPageNumber() == Pages->count() - 1))
+		// cannot copy on following pages, while being on the last page
+		return;
+
 	QString tooltip;
 	UndoTransaction activeTransaction;
 
@@ -13636,10 +13636,10 @@ void ScribusDoc::itemSelection_MultipleDuplicate(ItemMultipleDuplicateData& mdDa
 		QString vString = QString::number(mdData.gridGapV, 'f', unitPrecision) + " " + unitSuffix;
 		tooltip = tr("Number of copies: %1\nHorizontal gap: %2\nVertical gap: %3").arg(copyCount-1).arg(hString).arg(vString).arg(unitSuffix);
 	}
-	else if (mdData.type==2) // duplicate on the following pages
-    {
-        // TODO: only if an item is selected. probably add the conditionn at the beginning of this function
-    }
+	else if (mdData.type==2)
+	{
+		multipleDuplicateByPage(mdData, selection, tooltip);
+	}
 	if (activeTransaction)
 	{
 		activeTransaction.commit("", nullptr, "", tooltip, nullptr);
@@ -13650,6 +13650,76 @@ void ScribusDoc::itemSelection_MultipleDuplicate(ItemMultipleDuplicateData& mdDa
 	m_View->Deselect(true);
 	view()->DrawNew();
 	changed();
+}
+
+void ScribusDoc::multipleDuplicateByPage(const ItemMultipleDuplicateData& dialogData, Selection& selection, QString& tooltip)
+{
+	std::vector<int> pages;
+	QString pageRange;
+	if (dialogData.pageSelection == 1) {
+		pageRange = QString("%1-%2").arg(currentPageNumber() + 2).arg(Pages->count());
+	} else if ((dialogData.pageSelection == 2) || dialogData.pageSelection == 3) {
+		int start = currentPageNumber() + 2;
+		// round to the next odd / even number
+		if (dialogData.pageSelection == 2) {
+			start += start % 2;
+		} else {
+			start += 1 - (start % 2);
+		}
+		QStringList pageList{};
+		for (int i = start; i <= Pages->count(); i += 2) {
+			pageList << QString::number(i);
+		}
+		pageRange = pageList.join(',');
+	} else if (dialogData.pageSelection == 4) {
+		pageRange = dialogData.pageRange;
+	}
+	parsePagesString(pageRange, &pages, Pages->count());
+
+	PageItem* lastInChain = nullptr;
+	if (dialogData.pageLinkText) {
+		for (auto item: selection.items()) {
+			// get the first text frame in the selection, the first frame in the chain
+			if (item->itemType() == PageItem::TextFrame) {
+				if (item->isInChain() && item->isAllNextInChainSamePage()) {
+					lastInChain = item->lastInChain();
+					assert( !lastInChain->nextInChain() );
+				} else {
+					lastInChain = item;
+				}
+				break;
+			}
+		}
+	}
+
+	ScPage* oldCurrentPage = currentPage();
+	ScriXmlDoc xmlStream;
+	QString buffer = xmlStream.WriteElem(this, &selection);
+	for (const auto page: pages) {
+		ScPage* targetPage = Pages->at(page - 1);
+		setCurrentPage(targetPage);
+		auto countBeforeInsert = Items->count();
+		xmlStream.ReadElem(buffer, m_appPrefsData.fontPrefs.AvailFonts, this, currentPage()->xOffset(), currentPage()->yOffset(), false, true, m_appPrefsData.fontPrefs.GFontSub);
+		if (lastInChain) {
+			for (auto i = countBeforeInsert; i < Items->count(); ++i) {
+				auto item = Items->at(i);
+				if (item->itemType() == PageItem::TextFrame) {
+					if (item->isInChain()) {
+						lastInChain->link(item->firstInChain());
+						lastInChain = item->lastInChain();
+					} else {
+						lastInChain->link(item);
+						lastInChain = item;
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	setCurrentPage(oldCurrentPage);
+
+	tooltip = tr("Copied %1 items on %2 pages").arg(selection.count()).arg(pages.size());
 }
 
 

@@ -465,6 +465,9 @@ public: // Start public functions
 	//you can change all code for search first or last item in chain
 	PageItem* firstInChain();
 	PageItem* lastInChain();
+	PageItem* lastInChainSamePage();
+	bool isAllNextInChainSamePage();
+
 	bool testLinkCandidate(PageItem* nextFrame);
 	void unlink(bool createUndo = true);
 	void link(PageItem* nextFrame, bool addPARSEP = true);

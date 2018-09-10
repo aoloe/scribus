@@ -9881,6 +9881,30 @@ PageItem* PageItem::lastInChain()
 	return last;
 }
 
+bool PageItem::isAllNextInChainSamePage()
+{
+    PageItem* next = this;
+	while (next->nextInChain() != nullptr) {
+        next = next->nextInChain();
+        if (next->OwnPage != this->OwnPage) {
+            return false;
+        }
+    }
+	return true;
+}
+
+PageItem* PageItem::lastInChainSamePage()
+{
+	assert(isInChain());
+	PageItem* last = this;
+	auto page = last->OwnPage;
+	while (last->nextInChain() != nullptr && last->OwnPage == page) {
+		last = last->nextInChain();
+	}
+	return last;
+}
+
+
 QRect PageItem::getRedrawBounding(const double viewScale)
 {
 	int x = qRound(floor(BoundingX - Oldm_lineWidth / 2.0 - 5) * viewScale);

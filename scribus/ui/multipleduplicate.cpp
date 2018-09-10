@@ -48,13 +48,13 @@ MultipleDuplicate::MultipleDuplicate(QWidget* parent, ScribusDoc *doc) : QDialog
 	setCopiesGap();
 
 	toolButtonPageRange->setIcon(IconManager::instance()->loadIcon("ellipsis.png"));
+	radioButtonPageAll->setChecked(true);
 
 	// signals and slots connections
 	connect(createGapRadioButton, SIGNAL(clicked()), this, SLOT(setCopiesGap()));
 	connect(shiftCreatedItemsRadioButton, SIGNAL(clicked()), this, SLOT(setCopiesShift()));
 
-    // TODO: move the other signals/slots in this file to the new way.
-    connect(lineEditPageRange, &QLineEdit::textChanged, this, &MultipleDuplicate::selectRangeOfPages);
+	connect(lineEditPageRange, &QLineEdit::textChanged, this, &MultipleDuplicate::selectRangeOfPages);
 	connect(toolButtonPageRange, &QToolButton::clicked, this, &MultipleDuplicate::createPageNumberRange);
 }
 
@@ -86,21 +86,22 @@ void MultipleDuplicate::getMultiplyData(ItemMultipleDuplicateData& mdData)
 	mdData.gridCols = gridColsSpinBox->value();
 	mdData.gridGapH = horizRCGapSpinBox->value();
 	mdData.gridGapV = vertRCGapSpinBox->value();
-    if (radioButtonPageAll->isChecked())
-        mdData.pageSelection = 1;
-    else if (radioButtonPageEven->isChecked())
-        mdData.pageSelection = 2;
-    else if (radioButtonPageOdd->isChecked())
-        mdData.pageSelection = 3;
-    else if (radioButtonPageRange->isChecked())
-        mdData.pageSelection = 4;
-    mdData.pageRange = lineEditPageRange->text();
-    mdData.pageLinkText = checkBoxPageLinkText->isChecked();
+	if (radioButtonPageAll->isChecked()) {
+		mdData.pageSelection = 1;
+	} else if (radioButtonPageEven->isChecked()) {
+		mdData.pageSelection = 2;
+	} else if (radioButtonPageOdd->isChecked()) {
+		mdData.pageSelection = 3;
+	} else if (radioButtonPageRange->isChecked()) {
+		mdData.pageSelection = 4;
+	}
+	mdData.pageRange = lineEditPageRange->text();
+	mdData.pageLinkText = checkBoxPageLinkText->isChecked();
 }
 
 void MultipleDuplicate::selectRangeOfPages()
 {
-    radioButtonPageRange->setChecked(true);
+	radioButtonPageRange->setChecked(true);
 }
 
 void MultipleDuplicate::createPageNumberRange()

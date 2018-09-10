@@ -358,22 +358,9 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_7">
          <item>
-          <widget class="QRadioButton" name="radioButtonPageNone">
-           <property name="text">
-            <string>None</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">buttonGroup</string>
-           </attribute>
-          </widget>
-         </item>
-         <item>
           <widget class="QRadioButton" name="radioButtonPageAll">
            <property name="text">
-            <string>All Following Pages</string>
+            <string>&amp;All Following Pages</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup</string>
@@ -383,7 +370,7 @@
          <item>
           <widget class="QRadioButton" name="radioButtonPageEven">
            <property name="text">
-            <string>All Follwing Even Pages</string>
+            <string>All Follwing &amp;Even Pages</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup</string>
@@ -393,7 +380,7 @@
          <item>
           <widget class="QRadioButton" name="radioButtonPageOdd">
            <property name="text">
-            <string>All Following Odd Pages</string>
+            <string>All Following &amp;Odd Pages</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup</string>
@@ -403,7 +390,7 @@
          <item>
           <widget class="QRadioButton" name="radioButtonPageRange">
            <property name="text">
-            <string>Range of Pages:</string>
+            <string>Ran&amp;ge of Pages:</string>
            </property>
            <attribute name="buttonGroup">
             <string notr="true">buttonGroup</string>
@@ -431,7 +418,7 @@
          <item>
           <widget class="QCheckBox" name="checkBoxPageLinkText">
            <property name="text">
-            <string>Link Text Frames</string>
+            <string>&amp;Link Text Frames</string>
            </property>
           </widget>
          </item>

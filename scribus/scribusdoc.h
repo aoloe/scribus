@@ -1512,7 +1512,7 @@ public slots:
 	void itemSelection_DistributeTop();
 	void itemSelection_SwapLeft();
 	void itemSelection_SwapRight();
-	void itemSelection_MultipleDuplicate(ItemMultipleDuplicateData&);
+	void itemSelection_MultipleDuplicate(const ItemMultipleDuplicateData&);
 	void itemSelection_UniteItems(Selection* customSelection = nullptr);
 	void itemSelection_SplitItems(Selection* customSelection = nullptr);
 	/**
@@ -1692,6 +1692,8 @@ private:
 	QList<TextNote*> m_docNotesList;
 	//flags used for indicating needs of updates
 	bool m_flag_notesChanged;
+
+	void multipleDuplicateByPage(const ItemMultipleDuplicateData& mdData, Selection& selection, QString& tooltip);
 
 public:
 	const QList<Mark*> marksList() { return m_docMarksList; }

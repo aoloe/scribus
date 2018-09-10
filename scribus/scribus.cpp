@@ -261,6 +261,7 @@ for which a new license (GPL+exception) is in place.
 #include "undostate.h"
 #include "units.h"
 #include "urllauncher.h"
+#include "usertaskstructs.h"
 #include "util.h"
 #include "util_file.h"
 #include "util_formats.h"
@@ -6434,8 +6435,7 @@ void ScribusMainWindow::duplicateItem()
 	if (UndoManager::undoEnabled())
 		trans = m_undoManager->beginTransaction(Um::Selection, Um::IPolygon, Um::Duplicate, "", Um::IMultipleDuplicate);
 
-	ItemMultipleDuplicateData mdData;
-	memset(&mdData, 0, sizeof(mdData));
+	ItemMultipleDuplicateData mdData{};
 	mdData.type = 0;
 	mdData.copyCount = 1;
 	mdData.copyShiftOrGap = 0;

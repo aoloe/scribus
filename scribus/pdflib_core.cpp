@@ -2747,7 +2747,7 @@ bool PDFLibCore::PDF_TemplatePage(const ScPage* pag, bool )
 						sr = 0;
 					PutPage(FToStr(cr)+" "+FToStr(sr)+" "+FToStr(-sr)+" "+FToStr(cr)+" 0 0 cm\n");
 				}
-				PutPage(PDF_PutSoftShadow(ite,pag));
+				PutPage(PDF_PutSoftShadow(ite));
 				switch (ite->itemType())
 				{
 					case PageItem::ImageFrame:
@@ -4157,7 +4157,7 @@ QByteArray PDFLibCore::Write_TransparencyGroup(double trans, int blend, QByteArr
 	return retString;
 }
 
-QByteArray PDFLibCore::PDF_PutSoftShadow(PageItem* ite, const ScPage *pag)
+QByteArray PDFLibCore::PDF_PutSoftShadow(PageItem* ite)
 {
 	if ((Options.Version < PDFOptions::PDFVersion_14 && Options.Version != PDFOptions::PDFVersion_X4) || !ite->hasSoftShadow() || ite->softShadowColor() == CommonStrings::None || !ite->printEnabled())
 		return "";
@@ -4444,7 +4444,7 @@ bool PDFLibCore::PDF_ProcessItem(QByteArray& output, PageItem* ite, const ScPage
 			sr = 0;
 		tmp += FToStr(cr)+" "+FToStr(sr)+" "+FToStr(-sr)+" "+FToStr(cr)+" 0 0 cm\n";
 	}
-	tmp += PDF_PutSoftShadow(ite,pag);
+	tmp += PDF_PutSoftShadow(ite);
 	switch (ite->itemType())
 	{
 		case PageItem::ImageFrame:
@@ -8711,7 +8711,7 @@ void PDFLibCore::PDF_RadioButtons()
 		QList<PageItem*> bList = it.value();
 		QList<PdfId> kidsList;
 		PdfId parentObject = writer.newObject();
-		QByteArray onState = "";
+		QByteArray onState;
 		QByteArray anTitle;
 		if (it.key() == 0)
 			anTitle = "Page" + Pdf::toPdf(ActPageP->pageNr() + 1);
@@ -8938,7 +8938,6 @@ bool PDFLibCore::PDF_Annotation(PageItem *ite, uint PNr)
 	PdfId AActionObj = writeActions(ite->annotation(), annotationObj);
 	writer.startObj(annotationObj);
 	pageData.AObjects.append(annotationObj);
-	QByteArray onState = Pdf::toName(ite->itemName().replace(".", "_" ));
 	PutDoc("<<\n/Type /Annot\n");
 	switch (ite->annotation().Type())
 	{
@@ -9068,24 +9067,24 @@ bool PDFLibCore::PDF_Annotation(PageItem *ite, uint PNr)
 				case Annotation::Textfield:
 					PutDoc("/FT /Tx\n");
 					PutDoc("/V " + EncStringUTF16(bmUtf16, annotationObj) + "\n");
-					PutDoc("/DV "+ EncStringUTF16(bmUtf16, annotationObj) + "\n");
-					PutDoc("/Q "+Pdf::toPdf(qMin(ite->itemText.defaultStyle().alignment(), ParagraphStyle::Rightaligned))+"\n");
+					PutDoc("/DV " + EncStringUTF16(bmUtf16, annotationObj) + "\n");
+					PutDoc("/Q " + Pdf::toPdf(qMin(ite->itemText.defaultStyle().alignment(), ParagraphStyle::Rightaligned)) + "\n");
 					appearanceObj = writer.newObject();
 					PutDoc("/AP << /N "+Pdf::toPdf(appearanceObj)+" 0 R >>\n");
 					if (ite->annotation().MaxChar() != -1)
-						PutDoc("/MaxLen "+Pdf::toPdf(ite->annotation().MaxChar())+"\n");
+						PutDoc("/MaxLen " + Pdf::toPdf(ite->annotation().MaxChar()) + "\n");
 					break;
 				case Annotation::Checkbox:
 					PutDoc("/FT /Btn\n");
 					if (ite->annotation().IsChk())
-						PutDoc("/V "+onState+"\n/DV "+onState+"\n/AS "+onState+"\n");
+						PutDoc("/V /Yes\n/DV /Yes\n/AS /Yes\n");
 					else
 						PutDoc("/V /Off\n/DV /Off\n/AS /Off\n");
 					appearanceObj1 = writer.newObject();
 					appearanceObj2 = writer.newObject();
 					PutDoc("/AP << /N <<\n");
-					PutDoc(onState + " " + Pdf::toPdf(appearanceObj1)+" 0 R\n");
-					PutDoc("/Off " + Pdf::toPdf(appearanceObj2)+" 0 R\n");
+					PutDoc("/Yes " + Pdf::toPdf(appearanceObj1) + " 0 R\n");
+					PutDoc("/Off " + Pdf::toPdf(appearanceObj2) + " 0 R\n");
 					PutDoc(">> >>\n");
 					break;
 				case Annotation::Combobox:

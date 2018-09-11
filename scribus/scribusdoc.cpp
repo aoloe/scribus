@@ -139,14 +139,14 @@ public:
 		return m_updateEnabled > 0;
 	}
 
-	void beginUpdate(void)
+	void beginUpdate()
 	{ 
 		if (m_updateEnabled == 0)
 			m_docChangeNeeded = false;
 		++m_updateEnabled;
 	}
 
-	void endUpdate(void)
+	void endUpdate()
 	{
 		--m_updateEnabled;
 		if (m_updateEnabled <= 0)
@@ -5606,7 +5606,7 @@ void ScribusDoc::itemAddDetails(const PageItem::ItemType itemType, const PageIte
 {
 	ParagraphStyle defaultParagraphStyle;
 	Q_ASSERT(newItem->realItemType()==itemType);
-	switch( itemType )
+	switch (itemType)
 	{
 		case PageItem::ImageFrame:
 			newItem->setImageXYScale(m_docPrefsData.itemToolPrefs.imageScaleX, m_docPrefsData.itemToolPrefs.imageScaleY);
@@ -5618,9 +5618,7 @@ void ScribusDoc::itemAddDetails(const PageItem::ItemType itemType, const PageIte
 			newItem->setLineShade(m_docPrefsData.itemToolPrefs.imageStrokeColorShade);
 			break;
 		case PageItem::LatexFrame:
-#ifdef HAVE_OSG
 		case PageItem::OSGFrame:
-#endif
 			newItem->setFillShade(m_docPrefsData.itemToolPrefs.imageFillColorShade);
 			newItem->setLineShade(m_docPrefsData.itemToolPrefs.imageStrokeColorShade);
 			break;
@@ -10470,11 +10468,7 @@ void ScribusDoc::updatePic()
 			latexframe->rerunApplication();
 			toUpdate = true;
 		}
-#ifdef HAVE_OSG
 		else if ((currItem->asImageFrame()) || (currItem->asOSGFrame()))
-#else
-		else if (currItem->asImageFrame())
-#endif
 		{
 			if (currItem->imageIsAvailable)
 			{
@@ -13629,7 +13623,7 @@ void ScribusDoc::itemSelection_MultipleDuplicate(ItemMultipleDuplicateData& mdDa
 		int unitPrecision = unitGetPrecisionFromIndex(this->unitIndex());
 		QString hString = QString::number(mdData.gridGapH, 'f', unitPrecision) + " " + unitSuffix;
 		QString vString = QString::number(mdData.gridGapV, 'f', unitPrecision) + " " + unitSuffix;
-		tooltip = tr("Number of copies: %1\nHorizontal gap: %2\nVertical gap: %3").arg(copyCount-1).arg(hString).arg(vString).arg(unitSuffix);
+		tooltip = tr("Number of rows: %1\nNumber of columns: %2\nHorizontal gap: %3\nVertical gap: %4").arg(mdData.gridRows).arg(mdData.gridCols).arg(hString).arg(vString).arg(unitSuffix);
 	}
 	if (activeTransaction)
 	{

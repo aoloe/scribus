@@ -90,7 +90,7 @@ for which a new license (GPL+exception) is in place.
 
 #include <iostream>
 #include <sstream>
-#include <signal.h>
+#include <csignal>
 #include <string>
 
 
@@ -2474,11 +2474,7 @@ void ScribusMainWindow::extrasMenuAboutToShow()
 			for (int ii = 0; ii < allItems.count(); ii++)
 			{
 				PageItem* item = allItems.at(ii);
-#ifdef HAVE_OSG
-				if ((item->itemType() == PageItem::ImageFrame) && (!((item->asLatexFrame()) || (item->asOSGFrame()))))
-#else
-				if ((item->itemType() == PageItem::ImageFrame) && (!(item->asLatexFrame())))
-#endif
+				if ((item->itemType() == PageItem::ImageFrame) && (!item->asLatexFrame()) && (!item->asOSGFrame()))
 				{
 					enablePicManager = true;
 					break;
@@ -2755,7 +2751,7 @@ void ScribusMainWindow::HaveNewDoc()
 	connect(view, SIGNAL(StatusPic()), this, SLOT(StatusPic()), Qt::UniqueConnection);
 	connect(view, SIGNAL(AppendText()), this, SLOT(slotFileAppend()), Qt::UniqueConnection);
 	connect(view, SIGNAL(AnnotProps()), this, SLOT(ModifyAnnot()), Qt::UniqueConnection);
-	connect(view, SIGNAL(LoadElem(QString, double ,double, bool, bool, ScribusDoc *, ScribusView*)), this, SLOT(slotElemRead(QString, double, double, bool, bool, ScribusDoc *, ScribusView*)), Qt::UniqueConnection);
+	connect(view, SIGNAL(LoadElem(QString,double,double,bool,bool,ScribusDoc*,ScribusView*)), this, SLOT(slotElemRead(QString,double,double,bool,bool,ScribusDoc*,ScribusView*)), Qt::UniqueConnection);
 	connect(view, SIGNAL(AddBM(PageItem*)), this, SLOT(AddBookMark(PageItem*)), Qt::UniqueConnection);
 	connect(view, SIGNAL(DelBM(PageItem*)), this, SLOT(DelBookMark(PageItem*)), Qt::UniqueConnection);
 	connect(view, SIGNAL(DoGroup()), this, SLOT(GroupObj()), Qt::UniqueConnection);
@@ -4620,7 +4616,6 @@ void ScribusMainWindow::slotEditCut()
 		}
 		ScElemMimeData* mimeData = new ScElemMimeData();
 		mimeData->setScribusElem(BufferS);
-		mimeData->setText(BufferS);
 		QApplication::clipboard()->setMimeData(mimeData, QClipboard::Clipboard);
 		for (int i=0; i < doc->m_Selection->count(); ++i)
 		{
@@ -4698,7 +4693,6 @@ void ScribusMainWindow::slotEditCopy()
 			}
 			ScElemMimeData* mimeData = new ScElemMimeData();
 			mimeData->setScribusElem(BufferS);
-			mimeData->setText(BufferS);
 			QApplication::clipboard()->setMimeData(mimeData, QClipboard::Clipboard);
 		}
 		else
@@ -6493,10 +6487,8 @@ void ScribusMainWindow::editItemsFromOutlines(PageItem *ite)
 		if (ite->imageVisible())
 			view->requestMode(modeEdit);
 	}
-#ifdef HAVE_OSG
 	else if (ite->asOSGFrame())
 		view->requestMode(submodeEditExternal);
-#endif
 	else if ((ite->itemType() == PageItem::Polygon) || (ite->itemType() == PageItem::PolyLine) || (ite->itemType() == PageItem::Group) || (ite->itemType() == PageItem::ImageFrame) || (ite->itemType() == PageItem::PathText))
 	{
 		if (ite->itemType() == PageItem::ImageFrame)

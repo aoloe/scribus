@@ -253,11 +253,7 @@ void DocumentChecker::checkItems(ScribusDoc *currDoc, struct CheckerPrefs checke
 				itemError.insert(Transparency, 0);
 			if ((currItem->OwnPage == -1) && (checkerSettings.checkOrphans))
 				itemError.insert(ObjectNotOnPage, 0);
-	#ifdef HAVE_OSG
 			if (currItem->asImageFrame() && !currItem->asOSGFrame())
-	#else
-			if (currItem->asImageFrame())
-	#endif
 			{
 
 				// check image vs. frame sizes
@@ -370,8 +366,11 @@ void DocumentChecker::checkItems(ScribusDoc *currDoc, struct CheckerPrefs checke
 
 				if (checkerSettings.checkEmptyTextFrames && (currItem->itemText.length() == 0 || currItem->frameUnderflows()))
 				{
-					bool isLinkAnnotation = (currItem->isAnnotation() && (currItem->annotation().Type() == Annotation::Link));
-					if (!isLinkAnnotation)
+					bool isEmptyAnnotation = (currItem->isAnnotation() && 
+					                         ((currItem->annotation().Type() == Annotation::Link) ||
+					                          (currItem->annotation().Type() == Annotation::Checkbox) ||
+					                          (currItem->annotation().Type() == Annotation::RadioButton)));
+					if (!isEmptyAnnotation)
 						itemError.insert(EmptyTextFrame, 0);
 				}
 				
@@ -502,11 +501,7 @@ void DocumentChecker::checkItems(ScribusDoc *currDoc, struct CheckerPrefs checke
 				itemError.insert(PDFAnnotField, 0);
 			if ((currItem->OwnPage == -1) && (checkerSettings.checkOrphans))
 				itemError.insert(ObjectNotOnPage, 0);
-	#ifdef HAVE_OSG
 			if (currItem->asImageFrame() && !currItem->asOSGFrame())
-	#else
-			if (currItem->asImageFrame())
-	#endif
 			{
 
 				// check image vs. frame sizes
@@ -619,8 +614,11 @@ void DocumentChecker::checkItems(ScribusDoc *currDoc, struct CheckerPrefs checke
 
 				if (checkerSettings.checkEmptyTextFrames && (currItem->itemText.length()==0 || currItem->frameUnderflows()))
 				{
-					bool isLinkAnnotation = (currItem->isAnnotation() && (currItem->annotation().Type() == Annotation::Link));
-					if (!isLinkAnnotation)
+					bool isEmptyAnnotation = (currItem->isAnnotation() && 
+					                         ((currItem->annotation().Type() == Annotation::Link) ||
+					                          (currItem->annotation().Type() == Annotation::Checkbox) ||
+					                          (currItem->annotation().Type() == Annotation::RadioButton)));
+					if (!isEmptyAnnotation)
 						itemError.insert(EmptyTextFrame, 0);
 				}
 

@@ -571,16 +571,14 @@ void CreateMode::getFrameItemTypes(int& itemType, int& frameType)
 		itemType  = (int) PageItem::Table;
 		frameType = (int) PageItem::Unspecified;
 		break;
-#ifdef HAVE_OSG
 	case modeInsertPDF3DAnnotation:
 		itemType  = (int) PageItem::OSGFrame;
 		frameType = (int) PageItem::Unspecified;
 		break;
-#endif
 	}
 }
 
-PageItem* CreateMode::doCreateNewObject(void)
+PageItem* CreateMode::doCreateNewObject()
 {
 	int z = -1;
 	double rot, len;

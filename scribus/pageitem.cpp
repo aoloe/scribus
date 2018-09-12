@@ -9896,9 +9896,8 @@ bool PageItem::isAllNextInChainSamePage()
 PageItem* PageItem::lastInChainSamePage()
 {
 	assert(isInChain());
-	PageItem* last = this;
-	auto page = last->OwnPage;
-	while (last->nextInChain() != nullptr && last->OwnPage == page) {
+	auto last = lastInChain();
+	while (last->OwnPage != OwnPage && last->prevInChain() != nullptr) {
 		last = last->nextInChain();
 	}
 	return last;

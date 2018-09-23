@@ -74,7 +74,9 @@ QString ScFileWidget::selectedFile()
    // hack removed to get the dialog to work correctly on all other systems (ale)
 void ScFileWidget::accept()
 {
+#ifndef Q_OS_LINUX
 	QFileDialog::accept();
+#endif
 }
 
 void ScFileWidget::locationDropped(const QString& fileUrl)

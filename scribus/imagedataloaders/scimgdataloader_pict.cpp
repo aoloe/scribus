@@ -822,7 +822,7 @@ void ScImgDataLoader_PICT::handlePolygon(QDataStream &ts, quint16 opCode)
 		fillBrush = setFillPattern();
 	else
 		fillBrush = QBrush(m_foreColor);
-	for(unsigned i = 0; i < polySize; i += 4)
+	for (unsigned i = 0; i < polySize; i += 4)
 	{
 		ts >> y >> x;
 		m_Coords.lineTo(x, y);
@@ -1705,17 +1705,17 @@ QByteArray ScImgDataLoader_PICT::decodeRLE(QByteArray &in, quint16 bytesPerLine,
 	quint16 count = 0;
 	uchar c, c2;
 	quint16 len;
-	while( count < in.size() )
+	while (count < in.size())
 	{
 		c = *ptrIn++;
 		count++;
 		len = c;
-		if( len < 128 )
+		if (len < 128)
 		{
 			// Copy next len+1 bytes literally.
 			len++;
 			len *= multByte;
-			while( len != 0 )
+			while (len != 0)
 			{
 				*ptrOut++ = *ptrIn++;
 				len--;
@@ -1728,7 +1728,7 @@ QByteArray ScImgDataLoader_PICT::decodeRLE(QByteArray &in, quint16 bytesPerLine,
 				}
 			}
 		}
-		else if( len > 128 )
+		else if (len > 128)
 		{
 			// Next -len+1 bytes in the dest are replicated from next source byte.
 			// (Interpret len as a negative 8-bit int.)
@@ -1741,7 +1741,7 @@ QByteArray ScImgDataLoader_PICT::decodeRLE(QByteArray &in, quint16 bytesPerLine,
 				count++;
 				c2 = *ptrIn++;
 				count++;
-				while( len != 0 )
+				while (len != 0)
 				{
 					*ptrOut++ = c;
 					*ptrOut++ = c2;
@@ -1753,14 +1753,14 @@ QByteArray ScImgDataLoader_PICT::decodeRLE(QByteArray &in, quint16 bytesPerLine,
 			{
 				c = *ptrIn++;
 				count++;
-				while( len != 0 )
+				while (len != 0)
 				{
 					*ptrOut++ = c;
 					len--;
 				}
 			}
 		}
-		else if( len == 128 )
+		else if (len == 128)
 		{
 			// No-op.
 		}

@@ -376,7 +376,7 @@ void XPSExPlug::writePageLayer(QDomElement &doc_root, QDomElement &rel_root, ScP
 	QDomElement layerGroup = p_docu.createElement("Canvas");
 	if (layer.transparency != 1.0)
 		layerGroup.setAttribute("Opacity", layer.transparency);
-	for(int j = 0; j < Items.count(); ++j)
+	for (int j = 0; j < Items.count(); ++j)
 	{
 		Item = Items.at(j);
 		if (Item->LayerID != layer.ID)
@@ -814,7 +814,7 @@ public:
 
 	void drawGlyph(const GlyphCluster& gc)
 	{
-		if (gc.isControlGlyphs())
+		if (gc.isControlGlyphs() || gc.isEmpty())
 			return;
 
 		if (!m_fontMap.contains(font().replacementName()))
@@ -834,7 +834,14 @@ public:
 		QString gcMap = QString("(%1:%2)").arg(gc.getText().size()).arg(gc.glyphs().size());
 		QString indices;
 		double current_x = 0.0;
-		for (const GlyphLayout& gl : gc.glyphs()) {
+		for (const GlyphLayout& gl : gc.glyphs()) 
+		{
+			if (gl.glyph >= ScFace::CONTROL_GLYPHS)
+			{
+				current_x += gl.xadvance;
+				continue;
+			}
+
 			indices += QString("%1,%2,%3,%4;").arg(gl.glyph)
 					.arg(((gl.xadvance + current_x) * m_xps->conversionFactor) / size * 100)
 					.arg((-gl.xoffset * m_xps->conversionFactor) / size * 100)
@@ -850,8 +857,16 @@ public:
 	{
 		if (gc.isControlGlyphs())
 			return;
+
 		double current_x = 0.0;
-		for (const GlyphLayout& gl : gc.glyphs()) {
+		for (const GlyphLayout& gl : gc.glyphs())
+		{
+			if (gl.glyph >= ScFace::CONTROL_GLYPHS)
+			{
+				current_x += gl.xadvance;
+				continue;
+			}
+
 			FPointArray outline = font().glyphOutline(gl.glyph);
 			if (outline.size() >= 4)
 			{
@@ -1064,7 +1079,7 @@ void XPSExPlug::processTextItem(double xOffset, double yOffset, PageItem *Item, 
 		QString Indices = "";
 		QString UnicodeString = "";
 		QDomElement glyph;
-		for(QDomElement txtGrp = grp.firstChildElement(); !txtGrp.isNull(); txtGrp = txtGrp.nextSiblingElement() )
+		for (QDomElement txtGrp = grp.firstChildElement(); !txtGrp.isNull(); txtGrp = txtGrp.nextSiblingElement())
 		{
 			if (txtGrp.tagName() != "Glyphs")
 			{
@@ -2104,7 +2119,7 @@ void XPSExPlug::getStrokeStyle(PageItem *Item, QDomElement &parentElem, QDomElem
 			bool   isFirst = true;
 			double actualStop = 0.0, lastStop = 0.0;
 			QList<VColorStop*> cstops = Item->stroke_gradient.colorStops();
-			for (int cst = 0; cst < Item->stroke_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < Item->stroke_gradient.stops(); ++cst)
 			{
 				actualStop = cstops.at(cst)->rampPoint;
 				if ((actualStop != lastStop) || (isFirst))
@@ -2204,7 +2219,7 @@ void XPSExPlug::getFillStyle(PageItem *Item, QDomElement &parentElem, QDomElemen
 		bool   isFirst = true;
 		double actualStop = 0.0, lastStop = 0.0;
 		QList<VColorStop*> cstops = Item->fill_gradient.colorStops();
-		for (int cst = 0; cst < Item->fill_gradient.Stops(); ++cst)
+		for (int cst = 0; cst < Item->fill_gradient.stops(); ++cst)
 		{
 			actualStop = cstops.at(cst)->rampPoint;
 			if ((actualStop != lastStop) || (isFirst))
@@ -2336,7 +2351,7 @@ void XPSExPlug::handleMask(int type, PageItem *Item, QDomElement &parentElem, QD
 		bool   isFirst = true;
 		double actualStop = 0.0, lastStop = 0.0;
 		QList<VColorStop*> cstops = Item->mask_gradient.colorStops();
-		for (int cst = 0; cst < Item->mask_gradient.Stops(); ++cst)
+		for (int cst = 0; cst < Item->mask_gradient.stops(); ++cst)
 		{
 			actualStop = cstops.at(cst)->rampPoint;
 			if ((actualStop != lastStop) || (isFirst))

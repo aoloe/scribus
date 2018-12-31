@@ -314,7 +314,7 @@ void SmlPlug::parseHeader(const QString& fName, double &b, double &h)
 		docu.setContent(&f);
 		QDomElement elem = docu.documentElement();
 		QDomNode node = elem.firstChild();
-		while(!node.isNull())
+		while (!node.isNull())
 		{
 			QDomElement pg = node.toElement();
 			if (pg.tagName() == "Dimensions")
@@ -346,7 +346,7 @@ bool SmlPlug::convert(const QString& fn)
 	QList<PageItem*> gElements;
 	groupStack.push(gElements);
 	currentItemNr = 0;
-	if(progressDialog)
+	if (progressDialog)
 	{
 		progressDialog->setOverallProgress(2);
 		progressDialog->setLabel("GI", tr("Generating Items"));
@@ -361,7 +361,7 @@ bool SmlPlug::convert(const QString& fn)
 		if (elem.tagName() != "KivioShapeStencil")
 			return false;
 		QDomNode node = elem.firstChild();
-		while(!node.isNull())
+		while (!node.isNull())
 		{
 			QDomElement pg = node.toElement();
 			if (pg.tagName() == "KivioShape")
@@ -419,7 +419,7 @@ void SmlPlug::processShapeNode(QDomElement &elem)
 	if (elem.hasChildNodes())
 	{
 		QDomNode node = elem.firstChild();
-		while(!node.isNull())
+		while (!node.isNull())
 		{
 			QDomElement pg = node.toElement();
 			if (pg.tagName() == "KivioLineStyle")

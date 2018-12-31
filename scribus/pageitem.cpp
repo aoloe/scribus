@@ -861,7 +861,7 @@ PageItem::PageItem(ScribusDoc *pa, ItemType newType, double x, double y, double 
 	effectsInUse.clear();
 	//Page Item Attributes
 	pageItemAttributes.clear();
-	for(ObjAttrVector::Iterator objAttrIt = m_Doc->itemAttributes().begin() ; objAttrIt != m_Doc->itemAttributes().end(); ++objAttrIt )
+	for (ObjAttrVector::Iterator objAttrIt = m_Doc->itemAttributes().begin() ; objAttrIt != m_Doc->itemAttributes().end(); ++objAttrIt )
 	{
 		if (((*objAttrIt).autoaddto=="textframes" && m_ItemType==TextFrame) ||
 			((*objAttrIt).autoaddto=="imageframes" && m_ItemType==ImageFrame)
@@ -1295,15 +1295,16 @@ int PageItem::lastInFrame() const
 	return qMin(signed(MaxChars), itemText.length()) - 1;
 }
 
-bool PageItem::testLinkCandidate(PageItem* nxt)
+bool PageItem::canBeLinkedTo(const PageItem* nxt) const
 {
 	if (this->nextInChain() )
 		return false;
 	if (!nxt || nxt->prevInChain() )
 		return false;
-	for (PageItem* ff=nxt; ff; ff=ff->nextInChain())
+	for (const PageItem* ff = nxt; ff; ff = ff->nextInChain())
 	{
-		if (ff == this) return false;
+		if (ff == this)
+			return false;
 	}
 	return true;
 }
@@ -1486,14 +1487,9 @@ void PageItem::dropLinks()
 	BackBox = NextBox = nullptr;
 }
 
-bool PageItem::hasLinks() const
-{
-	return (BackBox != nullptr || NextBox != nullptr);
-}
-
 //unlink selected frame from text chain
 //but copy or cut its content from itemText
-void PageItem::unlinkWithText(bool cutText)
+void PageItem::unlinkWithText()
 {
 	PageItem * Next = NextBox;
 	PageItem * Prev = BackBox;
@@ -1511,7 +1507,7 @@ void PageItem::unlinkWithText(bool cutText)
 		{
 			StoryText content(m_Doc);
 			itemText.select(lastInFrame() +1, length - (lastInFrame() +1));
-			content.insert(0, itemText, cutText);
+			content.insert(0, itemText, true);
 			itemText.removeSelection();
 			unlink(false);
 			Next->itemText.insert(0, content);
@@ -1520,11 +1516,6 @@ void PageItem::unlinkWithText(bool cutText)
 		else
 		{
 			unlink(false);
-			if (!cutText)
-			{
-				Next->itemText.insert(0, itemText);
-				Next->update();
-			}
 		}
 	}
 	else
@@ -1534,8 +1525,7 @@ void PageItem::unlinkWithText(bool cutText)
 		itemText.select(firstInFrame(), length - firstInFrame());
 		StoryText content(m_Doc);
 		content.insert(0, itemText, true);
-		if (cutText)
-			itemText.removeSelection();
+		itemText.removeSelection();
 		Prev->unlink(false);
 		itemText.insert(0, content);
 		update();
@@ -1544,7 +1534,6 @@ void PageItem::unlinkWithText(bool cutText)
 	{
 		ScItemState<QPair<PageItem*, PageItem*> > *is = new ScItemState<QPair<PageItem*, PageItem*> >(Um::UnlinkTextFrame);
 		is->set("UNLINK_TEXT_FRAME");
-		is->set("CUT_TEXT", cutText);
 		is->setItem(qMakePair(Prev, Next));
 		undoManager->action(this, is);
 	}
@@ -1889,7 +1878,7 @@ void PageItem::DrawObj_Pre(ScPainter *p)
 					gradientVal = "";
 				if (!(gradientVal.isEmpty()) && (m_Doc->docGradients.contains(gradientVal)))
 					fill_gradient = m_Doc->docGradients[gradientVal];
-				if ((fill_gradient.Stops() < 2) && (GrType < 9)) // fall back to solid filling if there are not enough colorstops in the gradient.
+				if ((fill_gradient.stops() < 2) && (GrType < 9)) // fall back to solid filling if there are not enough colorstops in the gradient.
 				{
 					if (fillColor() != CommonStrings::None)
 					{
@@ -2087,7 +2076,7 @@ void PageItem::DrawObj_Post(ScPainter *p)
 							gradientStrokeVal = "";
 						if (!(gradientStrokeVal.isEmpty()) && (m_Doc->docGradients.contains(gradientStrokeVal)))
 							stroke_gradient = m_Doc->docGradients[gradientStrokeVal];
-						if (stroke_gradient.Stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
+						if (stroke_gradient.stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
 						{
 							if (lineColor() != CommonStrings::None)
 							{
@@ -2291,7 +2280,7 @@ void PageItem::DrawObj_Embedded(ScPainter *p, QRectF cullingArea, const CharStyl
 		embedded->invalid = true;
 		double pws = embedded->m_lineWidth;
 		embedded->DrawObj_Pre(p);
-		switch(embedded->itemType())
+		switch (embedded->itemType())
 		{
 			case ImageFrame:
 			case TextFrame:
@@ -2723,7 +2712,7 @@ void PageItem::set4ColorColors(const QString& col1, const QString& col2, const Q
 	{
 		if (!m_Doc->PageColors.contains(GrColorP1))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -2763,7 +2752,7 @@ void PageItem::set4ColorColors(const QString& col1, const QString& col2, const Q
 	{
 		if (!m_Doc->PageColors.contains(GrColorP2))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -2803,7 +2792,7 @@ void PageItem::set4ColorColors(const QString& col1, const QString& col2, const Q
 	{
 		if (!m_Doc->PageColors.contains(GrColorP3))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -2843,7 +2832,7 @@ void PageItem::set4ColorColors(const QString& col1, const QString& col2, const Q
 	{
 		if (!m_Doc->PageColors.contains(GrColorP4))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -2914,7 +2903,7 @@ void PageItem::setMeshPointColor(int x, int y, const QString& color, int shade, 
 	{
 		if (!m_Doc->PageColors.contains(MColor))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -3133,7 +3122,7 @@ void PageItem::createGradientMesh(int rows, int cols)
 	{
 		if (!m_Doc->PageColors.contains(fillColorVal))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -3298,7 +3287,7 @@ void PageItem::createConicalMesh()
 {
 	VGradient gradient;
 	gradient.clearStops();
-	if (fill_gradient.Stops() < 2)
+	if (fill_gradient.stops() < 2)
 	{
 		fill_gradient.clearStops();
 		const ScColor& col = m_Doc->PageColors["Black"];
@@ -3312,7 +3301,7 @@ void PageItem::createConicalMesh()
 	double lastStop = -1.0;
 	double actualStop = 0.0;
 	bool   isFirst = true;
-	for (int cst = 0; cst < fill_gradient.Stops(); ++cst)
+	for (int cst = 0; cst < fill_gradient.stops(); ++cst)
 	{
 		actualStop = cstops.at(cst)->rampPoint;
 		if ((actualStop == lastStop) && (!isFirst))
@@ -3356,7 +3345,7 @@ void PageItem::createConicalMesh()
 			while (actualStop > actDist);
 			gradient.addStop(cstops.at(cst)->color, cstops.at(cst)->rampPoint, cstops.at(cst)->midPoint, cstops.at(cst)->opacity, cstops.at(cst)->name, cstops.at(cst)->shade);
 		}
-		if ((cst == fill_gradient.Stops()-1) && (actualStop < 1.0))
+		if ((cst == fill_gradient.stops()-1) && (actualStop < 1.0))
 		{
 			double distToGo = 1.0 - actualStop;
 			if (distToGo <= 0.25)
@@ -3455,7 +3444,7 @@ void PageItem::createConicalMesh()
 	mgP3.color.setAlphaF(mgP3.transparency);
 	mgList2.append(mgP3);
 	startAngle -= stepAngle;
-	for (int rst = 2; rst < gradient.Stops(); ++rst)
+	for (int rst = 2; rst < gradient.stops(); ++rst)
 	{
 		stepAngle = 360 * (rstops.at(rst)->rampPoint - rstops.at(rst-1)->rampPoint);
 		if (stepAngle <= 0)
@@ -3691,7 +3680,7 @@ void PageItem::setFillColor(const QString &newColor)
 	{
 		if (!m_Doc->PageColors.contains(newColor))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -3793,7 +3782,7 @@ void PageItem::setLineColor(const QString &newColor)
 	{
 		if (!m_Doc->PageColors.contains(newColor))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case TextFrame:
 				case PathText:
@@ -3915,7 +3904,7 @@ void PageItem::setLineQColor()
 	{
 		if (!m_Doc->PageColors.contains(lineColorVal))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case TextFrame:
 				case PathText:
@@ -3956,7 +3945,7 @@ void PageItem::setFillQColor()
 	{
 		if (!m_Doc->PageColors.contains(fillColorVal))
 		{
-			switch(itemType())
+			switch (itemType())
 			{
 				case ImageFrame:
 				case LatexFrame:
@@ -4558,7 +4547,7 @@ void PageItem::checkTextFlowInteractions(bool allItems)
 		if (!allItems)
 		{
 			int ids = items->indexOf(this) - 1;
-			for(int idx = ids; idx >= 0 ; --idx)
+			for (int idx = ids; idx >= 0 ; --idx)
 			{
 				if (items->at(idx)->asTextFrame()) // do not bother with no text frames
 				{
@@ -4572,7 +4561,7 @@ void PageItem::checkTextFlowInteractions(bool allItems)
 		}
 		else
 		{
-			for(int idx = items->count() - 1; idx >= 0 ; --idx)
+			for (int idx = items->count() - 1; idx >= 0 ; --idx)
 			{
 				if (items->at(idx) != this) // avoids itself
 				{
@@ -6119,7 +6108,8 @@ void PageItem::restoreMoveMeshPatch(SimpleState *state, bool isUndo)
 		if (is->getBool("ARRAY"))
 			meshGradientArray[x][y] = is->getItem().first;
 		else
-			switch(y){
+			switch (y)
+			{
 				case 1:
 					meshGradientPatches[x].TL = is->getItem().first;
 					break;
@@ -6139,7 +6129,8 @@ void PageItem::restoreMoveMeshPatch(SimpleState *state, bool isUndo)
 		if (is->getBool("ARRAY"))
 			meshGradientArray[x][y] = is->getItem().second;
 		else
-			switch(y){
+			switch (y)
+			{
 				case 1:
 					meshGradientPatches[x].TL = is->getItem().second;
 					break;
@@ -7090,11 +7081,11 @@ void PageItem::restoreTextFlowing(SimpleState *state, bool isUndo)
 	
 	QList<PageItem*> pList;
 	int id = m_Doc->Items->indexOf(this) - 1;
-	for(int i = id; i >= 0 ; --i)
+	for (int i = id; i >= 0 ; --i)
 		pList << m_Doc->Items->at(i);
 		
 	QRectF baseRect(getBoundingRect());
-	for(int i = 0; i < pList.count(); ++i)
+	for (int i = 0; i < pList.count(); ++i)
 	{
 		QRectF uRect(pList.at(i)->getBoundingRect());
 		if (baseRect.intersects(uRect))
@@ -7321,28 +7312,19 @@ void PageItem::restoreUnlinkTextFrame(UndoState *state, bool isUndo)
 		qFatal("PageItem::restoreUnlinkTextFrame: dynamic cast failed");
 	if (is->contains("CUT_TEXT"))
 	{
-		bool cutText = is->getBool("CUT_TEXT");
 		if (isUndo)
 		{
 			PageItem* prev = is->getItem().first;
 			PageItem* next  = is->getItem().second;
 			if (prev != nullptr)
-			{
-				if (!cutText)
-					itemText = StoryText(m_Doc);
 				prev->link(this, false);
-			}
 			else if (next != nullptr)
-			{
-				if (!cutText)
-					this->itemText = StoryText(m_Doc);
 				this->link(next, false);
-			}
 			else
 				Q_ASSERT(prev || next);
 		}
 		else
-			unlinkWithText(cutText);
+			unlinkWithText();
 	}
 	else
 	{
@@ -7626,7 +7608,7 @@ ObjAttrVector* PageItem::getObjectAttributes()
 QList<ObjectAttribute> PageItem::getObjectAttributes(const QString& attributeName) const
 {
 	QList<ObjectAttribute> attributes;
-	for(ObjAttrVector::const_iterator objAttrIt = pageItemAttributes.begin() ; objAttrIt != pageItemAttributes.end(); ++objAttrIt )
+	for (ObjAttrVector::const_iterator objAttrIt = pageItemAttributes.begin() ; objAttrIt != pageItemAttributes.end(); ++objAttrIt)
 	{
 		if (objAttrIt->name == attributeName)
 		{
@@ -7640,7 +7622,7 @@ ObjectAttribute PageItem::getObjectAttribute(const QString& attributeName) const
 {
 	int countFound=0;
 	ObjAttrVector::const_iterator foundIt = pageItemAttributes.begin();
-	for(ObjAttrVector::const_iterator objAttrIt = pageItemAttributes.begin(); objAttrIt != pageItemAttributes.end(); ++objAttrIt )
+	for (ObjAttrVector::const_iterator objAttrIt = pageItemAttributes.begin(); objAttrIt != pageItemAttributes.end(); ++objAttrIt)
 	{
 		if (objAttrIt->name==attributeName)
 		{
@@ -7743,7 +7725,7 @@ void PageItem::replaceNamedResources(ResourceCollection& newNames)
 		GrColorP4 = *it;
 
 	QList<VColorStop*> cstops = fill_gradient.colorStops();
-	for (int cst = 0; cst < fill_gradient.Stops(); ++cst)
+	for (int cst = 0; cst < fill_gradient.stops(); ++cst)
 	{
 		it = newNames.colors().find(cstops.at(cst)->name);
 		if (it != newNames.colors().end())
@@ -7778,7 +7760,7 @@ void PageItem::replaceNamedResources(ResourceCollection& newNames)
 			meshGradientPatches[col].BR.colorName = *it;
 	}
 	cstops = stroke_gradient.colorStops();
-	for (int cst = 0; cst < stroke_gradient.Stops(); ++cst)
+	for (int cst = 0; cst < stroke_gradient.stops(); ++cst)
 	{
 		it = newNames.colors().find(cstops.at(cst)->name);
 		if (it != newNames.colors().end())
@@ -7788,7 +7770,7 @@ void PageItem::replaceNamedResources(ResourceCollection& newNames)
 		}
 	}
 	cstops = mask_gradient.colorStops();
-	for (int cst = 0; cst < mask_gradient.Stops(); ++cst)
+	for (int cst = 0; cst < mask_gradient.stops(); ++cst)
 	{
 		it = newNames.colors().find(cstops.at(cst)->name);
 		if (it != newNames.colors().end())
@@ -8712,7 +8694,7 @@ void PageItem::getNamedResources(ResourceCollection& lists) const
 		if ((!gradientVal.isEmpty()) && (m_Doc->docGradients.contains(gradientVal)))
 			lists.collectGradient(gradientVal);
 		QList<VColorStop*> cstops = fill_gradient.colorStops();
-		for (int cst = 0; cst < fill_gradient.Stops(); ++cst)
+		for (int cst = 0; cst < fill_gradient.stops(); ++cst)
 		{
 			lists.collectColor(cstops.at(cst)->name);
 		}
@@ -8752,7 +8734,7 @@ void PageItem::getNamedResources(ResourceCollection& lists) const
 		if ((!gradientStrokeVal.isEmpty()) && (m_Doc->docGradients.contains(gradientStrokeVal)))
 			lists.collectGradient(gradientStrokeVal);
 		QList<VColorStop*> cstops = stroke_gradient.colorStops();
-		for (int cst = 0; cst < stroke_gradient.Stops(); ++cst)
+		for (int cst = 0; cst < stroke_gradient.stops(); ++cst)
 		{
 			lists.collectColor(cstops.at(cst)->name);
 		}
@@ -8760,7 +8742,7 @@ void PageItem::getNamedResources(ResourceCollection& lists) const
 	if ((GrMask == 1) || (GrMask == 2) || (GrMask == 4) || (GrMask == 5))
 	{
 		QList<VColorStop*> cstops = mask_gradient.colorStops();
-		for (int cst = 0; cst < mask_gradient.Stops(); ++cst)
+		for (int cst = 0; cst < mask_gradient.stops(); ++cst)
 		{
 			lists.collectColor(cstops.at(cst)->name);
 		}
@@ -9607,10 +9589,10 @@ bool PageItem::loadImage(const QString& filename, const bool reload, const int g
 		int r, g, b, a;
 		QRgb *s;
 		QRgb rgb;
-		for( int yi=0; yi < h; ++yi )
+		for (int yi=0; yi < h; ++yi)
 		{
 			s = (QRgb*)(pixm.qImagePtr()->scanLine( yi ));
-			for( int xi = 0; xi < w; ++xi )
+			for (int xi = 0; xi < w; ++xi)
 			{
 				rgb = *s;
 				tmpC.setRgb(rgb);
@@ -9687,7 +9669,7 @@ void PageItem::drawArrow(ScPainter *p, QTransform &arrowTrans, int arrowIndex)
 					gradientStrokeVal = "";
 				if (!(gradientStrokeVal.isEmpty()) && (m_Doc->docGradients.contains(gradientStrokeVal)))
 					stroke_gradient = m_Doc->docGradients[gradientStrokeVal];
-				if (stroke_gradient.Stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
+				if (stroke_gradient.stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
 				{
 					if (lineColor() != CommonStrings::None)
 					{
@@ -9827,40 +9809,61 @@ void PageItem::AdjustPictScale()
 	}
 }
 
-void PageItem::setExternalFile(const QString& filename)
+void PageItem::setExternalFile(const QString& filename, const QString& baseDir)
 {
 	Pfile = filename;
-	if (!Pfile.isEmpty())
+	if (Pfile.isEmpty())
+		return;
+
+	QString test = Pfile;
+	if (QDir::isRelativePath(test))
 	{
-		QString test = Pfile;
-		if (QDir::isRelativePath(test))
-			test = QDir::homePath()+"/"+Pfile;
-		test = QDir::cleanPath(QDir::toNativeSeparators(test));
-		QFileInfo pfi2(test);
-		Pfile = pfi2.absoluteFilePath();
+		if (baseDir.isEmpty())
+			test = QDir::homePath() + "/" + Pfile;
+		else
+			test = baseDir + "/" + Pfile;
 	}
+	test = QDir::cleanPath(QDir::toNativeSeparators(test));
+	QFileInfo pfi2(test);
+	Pfile = pfi2.absoluteFilePath();
 }
 
-void PageItem::setFileIconPressed(const QString& filename)
+void PageItem::setFileIconPressed(const QString& filename, const QString& baseDir)
 {
 	Pfile2 = filename;
-	if (!Pfile2.isEmpty())
+	if (Pfile2.isEmpty())
+		return;
+
+	QString test = Pfile2;
+	if (QDir::isRelativePath(test))
 	{
-		QString test = QDir::cleanPath(QDir::toNativeSeparators(QDir::homePath()+"/"+Pfile2));
-		QFileInfo pfi2(test);
-		Pfile2 = pfi2.absoluteFilePath();
+		if (baseDir.isEmpty())
+			test = QDir::homePath() + "/" + Pfile2;
+		else
+			test = baseDir + "/" + Pfile2;
 	}
+	test = QDir::cleanPath(QDir::toNativeSeparators(test));
+	QFileInfo pfi2(test);
+	Pfile2 = pfi2.absoluteFilePath();
 }
 
-void PageItem::setFileIconRollover(const QString& filename)
+void PageItem::setFileIconRollover(const QString& filename, const QString& baseDir)
 {
 	Pfile3 = filename;
-	if (!Pfile3.isEmpty())
+	if (Pfile3.isEmpty())
+		return;
+
+	QString test = Pfile3;
+	if (QDir::isRelativePath(test))
 	{
-		QString test = QDir::cleanPath(QDir::toNativeSeparators(QDir::homePath()+"/"+Pfile3));
-		QFileInfo pfi2(test);
-		Pfile3 = pfi2.absoluteFilePath();
+		if (baseDir.isEmpty())
+			test = QDir::homePath() + "/" + Pfile3;
+		else
+			test = baseDir + "/" + Pfile3;
 	}
+	test = QDir::cleanPath(QDir::toNativeSeparators(test));
+	QFileInfo pfi2(test);
+	Pfile3 = pfi2.absoluteFilePath();
 }
 
 PageItem* PageItem::firstInChain()
@@ -9881,7 +9884,7 @@ PageItem* PageItem::lastInChain()
 	return last;
 }
 
-QRect PageItem::getRedrawBounding(const double viewScale)
+QRect PageItem::getRedrawBounding(const double viewScale) const
 {
 	int x = qRound(floor(BoundingX - Oldm_lineWidth / 2.0 - 5) * viewScale);
 	int y = qRound(floor(BoundingY - Oldm_lineWidth / 2.0 - 5) * viewScale);
@@ -10491,7 +10494,7 @@ void PageItem::updateClip(bool updateWelded)
 	updateGradientVectors();
 }
 
-QString PageItem::infoDescription()
+QString PageItem::infoDescription() const
 {
 	QString htmlText;
 	htmlText.append(ScribusView::tr("Print: "));

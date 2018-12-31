@@ -91,7 +91,7 @@ void KCurve::paintEvent(QPaintEvent *)
 	for (int dh = 0; dh < m_points.size(); dh++)
 	{
 		FPoint p = m_points.point(dh);
-		if(p == m_grab_point)
+		if (p == m_grab_point)
 		{
 			p1.setPen(QPen(Qt::red, 3, Qt::SolidLine));
 			p1.drawEllipse( int(p.x() * wWidth) - 2, wHeight - 2 - int(p.y() * wHeight), 4, 4 );
@@ -107,7 +107,7 @@ void KCurve::paintEvent(QPaintEvent *)
 
 void KCurve::keyPressEvent(QKeyEvent *e)
 {
-	if(e->key() == Qt::Key_Delete || e->key() == Qt::Key_Backspace)
+	if (e->key() == Qt::Key_Delete || e->key() == Qt::Key_Backspace)
 	{
 		if (m_points.size() > 2)
 		{
@@ -116,7 +116,7 @@ void KCurve::keyPressEvent(QKeyEvent *e)
 			int pos = 0;
 			int cc = 0;
 			double distance = 1000; // just a big number
-			while(cc < m_points.size())
+			while (cc < m_points.size())
 			{
 				p = m_points.point(cc);
 				if (fabs (m_grab_point.x() - p.x()) < distance)
@@ -154,7 +154,7 @@ void KCurve::mousePressEvent ( QMouseEvent * e )
 	int insert_pos =0;
 	int pos = 0;
 	int cc = 0;
-	while(cc < m_points.size())
+	while (cc < m_points.size())
 	{
 		p = m_points.point(cc);
 		if (fabs (x - p.x()) < distance)
@@ -172,10 +172,10 @@ void KCurve::mousePressEvent ( QMouseEvent * e )
 	m_grabOffsetY = m_grab_point.y() - y;
 	m_grab_point = FPoint(x + m_grabOffsetX, y + m_grabOffsetY);
 	double curveVal = getCurveValue(x);
-	if(distance * width() > 5)
+	if (distance * width() > 5)
 	{
 		m_dragging = false;
-		if(fabs(y - curveVal) * width() > 5)
+		if (fabs(y - curveVal) * width() > 5)
 			return;
 		if (m_points.size() < 14)
 		{
@@ -198,7 +198,7 @@ void KCurve::mousePressEvent ( QMouseEvent * e )
 	}
 	else
 	{
-		if(fabs(y - closest_point.y()) * width() > 5)
+		if (fabs(y - closest_point.y()) * width() > 5)
 			return;
 		m_dragging = true;
 		setCursor(QCursor(Qt::CrossCursor));
@@ -207,14 +207,14 @@ void KCurve::mousePressEvent ( QMouseEvent * e )
 	m_leftmost = 0;
 	m_rightmost = 1;
 	cc = 0;
-	while(cc < m_points.size())
+	while (cc < m_points.size())
 	{
 		p = m_points.point(cc);
 		if (p != m_grab_point)
 		{
-			if(p.x() > m_leftmost && p.x() < x)
+			if (p.x() > m_leftmost && p.x() < x)
 				m_leftmost = p.x();
-			if(p.x() < m_rightmost && p.x() > x)
+			if (p.x() < m_rightmost && p.x() > x)
 				m_rightmost = p.x();
 		}
 		cc++;
@@ -243,7 +243,7 @@ void KCurve::mouseMoveEvent ( QMouseEvent * e )
 		double distance = 1000;
 		double ydistance = 1000;
 		int cc = 0;
-		while(cc < m_points.size())
+		while (cc < m_points.size())
 		{
 			FPoint p = m_points.point(cc);
 			if (fabs (x - p.x()) < distance)
@@ -265,11 +265,11 @@ void KCurve::mouseMoveEvent ( QMouseEvent * e )
 		y += m_grabOffsetY;
 		if (x <= m_leftmost)
 			x = m_leftmost + 1E-4; // the addition so we can grab the dot later.
-		if(x >= m_rightmost)
+		if (x >= m_rightmost)
 			x = m_rightmost - 1E-4;
-		if(y > 1.0)
+		if (y > 1.0)
 			y = 1.0;
-		if(y < 0.0)
+		if (y < 0.0)
 			y = 0.0;
 		m_grab_point = FPoint(x, y);
 		m_points.setPoint( m_pos, m_grab_point);

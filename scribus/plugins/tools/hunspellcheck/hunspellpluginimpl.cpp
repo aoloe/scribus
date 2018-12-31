@@ -93,7 +93,7 @@ bool HunspellPluginImpl::checkWithHunspell()
 {
 	PageItem *frameToCheck;
 
-	for( int i = 0; i < m_doc->m_Selection->count(); ++i )
+	for (int i = 0; i < m_doc->m_Selection->count(); ++i)
 	{
 		frameToCheck = m_doc->m_Selection->itemAt(i);
 		StoryText *iText=&frameToCheck->itemText;
@@ -137,7 +137,7 @@ bool HunspellPluginImpl::parseTextFrame(StoryText *iText)
 		{
 			const StyleSet<CharStyle> &tmp(m_doc->charStyles());
 			for (int i = 0; i < tmp.count(); ++i)
-				if(tmp[i].isDefaultStyle())
+				if (tmp[i].isDefaultStyle())
 				{
 					//check out why we are getting "German" back here next
 					wordLang=tmp[i].language();

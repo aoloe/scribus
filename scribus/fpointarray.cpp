@@ -148,7 +148,7 @@ bool FPointArray::putPoints( int index, int nPoints, const FPointArray & from, i
 	p += index;
 	ConstIterator q = from.begin();
 	q += fromIndex;
-	while( --nPoints >= 0 )
+	while (--nPoints >= 0)
 	{
 		*p++ = *q++;
     }
@@ -437,9 +437,9 @@ void FPointArray::pointDerivativesAt( int seg, double t, FPoint* p, FPoint* d1, 
 	q[ 3 ] = point(seg+2);
 	q[ 2 ] = point(seg+3);
 	// The De Casteljau algorithm.
-	for( unsigned short j = 1; j <= 3; j++ )
+	for (unsigned short j = 1; j <= 3; j++)
 	{
-		for( unsigned short i = 0; i <= 3 - j; i++ )
+		for (unsigned short i = 0; i <= 3 - j; i++)
 		{
 			q[ i ] = ( 1.0 - t ) * q[ i ] + t * q[ i + 1 ];
 		}
@@ -784,7 +784,7 @@ void FPointArray::calculateArc(bool relative, double &curx, double &cury, double
 	else if(th_arc > 0 && !sweepFlag)
 		th_arc -= 2 * M_PI;
 	n_segs = static_cast<int>(ceil(fabs(th_arc / (M_PI * 0.5 + 0.001))));
-	for(i = 0; i < n_segs; i++)
+	for (i = 0; i < n_segs; i++)
 	{
 	{
 		double sin_th, cos_th;
@@ -846,12 +846,12 @@ static const char * getCoord( const char *ptr, double &number )
 	}
 	
 	// read the integer part
-	while(*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
+	while (*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
 		integer = (integer * 10) + *(ptr++) - '0';
 	if(*ptr == '.') // read the decimals
 	{
 		ptr++;
-		while(*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
+		while (*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
 			decimal += (*(ptr++) - '0') * (frac *= 0.1);
 	}
 	
@@ -869,7 +869,7 @@ static const char * getCoord( const char *ptr, double &number )
 		}
 		
 		exponent = 0;
-		while(*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
+		while (*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
 		{
 			exponent *= 10;
 			exponent += *ptr - '0';

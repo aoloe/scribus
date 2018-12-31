@@ -929,7 +929,7 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 					IT=IT.nextSibling();
 				}
 				delete last;
-				if (Neu->fill_gradient.Stops() == 0)
+				if (Neu->fill_gradient.stops() == 0)
 				{
 					const ScColor& col1 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeFillColor];
 					const ScColor& col2 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeLineColor];
@@ -1102,7 +1102,7 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 					Its = m_Doc->Items->at(lc.key());
 				if (itemRemap[lc.value()] < m_Doc->Items->count())
 					Itn = m_Doc->Items->at(itemRemap[lc.value()]);
-				if (!Its || !Itn || !Its->testLinkCandidate(Itn))
+				if (!Its || !Itn || !Its->canBeLinkedTo(Itn))
 				{
 					qDebug("scribus13format: corruption in linked textframes detected");
 					continue;
@@ -1791,8 +1791,8 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 	currItem->annotation().setToolTip(obj->attribute("ANTOOLTIP",""));
 	currItem->annotation().setRollOver(obj->attribute("ANROLL",""));
 	currItem->annotation().setDown(obj->attribute("ANDOWN",""));
-	currItem->annotation().setBwid(obj->attribute("ANBWID", "1").toInt());
-	currItem->annotation().setBsty(obj->attribute("ANBSTY", "0").toInt());
+	currItem->annotation().setBorderWidth(obj->attribute("ANBWID", "1").toInt());
+	currItem->annotation().setBorderStyle(obj->attribute("ANBSTY", "0").toInt());
 	currItem->annotation().setFeed(obj->attribute("ANFEED", "1").toInt());
 	currItem->annotation().setFlag(obj->attribute("ANFLAG", "0").toInt());
 	currItem->annotation().setFont(obj->attribute("ANFONT", "4").toInt());
@@ -2334,7 +2334,7 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 						IT=IT.nextSibling();
 					}
 					delete last;
-					if (Neu->fill_gradient.Stops() == 0)
+					if (Neu->fill_gradient.stops() == 0)
 					{
 						const ScColor& col1 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeFillColor];
 						const ScColor& col2 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeLineColor];
@@ -2428,7 +2428,7 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 					Its = m_Doc->Items->at(lc.key());
 				if (itemRemap[lc.value()] < m_Doc->Items->count())
 					Itn = m_Doc->Items->at(itemRemap[lc.value()]);
-				if (!Its || !Itn || !Its->testLinkCandidate(Itn))
+				if (!Its || !Itn || !Its->canBeLinkedTo(Itn))
 				{
 					qDebug("scribus13format: corruption in linked textframes detected");
 					continue;

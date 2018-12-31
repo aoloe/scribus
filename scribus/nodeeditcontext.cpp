@@ -73,7 +73,14 @@ FPointArray NodeEditContext::beginTransaction(PageItem* currItem)
 		//					m_isContourLine = false;
 		uAction = Um::EditShape;
 	}
+
+	if (nodeTransaction)
+		return (oldClip ? FPointArray(*oldClip) : Clip);
+
+	if (oldClip)
+		delete oldClip;
 	oldClip = new FPointArray(Clip);
+
 	m_oldItemX = currItem->xPos();
 	m_oldItemY = currItem->yPos();
 	if (UndoManager::undoEnabled())
@@ -88,32 +95,32 @@ void NodeEditContext::finishTransaction(PageItem* currItem)
 {
 	ScribusDoc* Doc = currItem->doc();
 	UndoManager* undoManager = UndoManager::instance();
+	ScItemState<QPair<FPointArray, FPointArray> >* state = nullptr;
+
+	if (nodeTransaction.isNull()) // is there the old clip stored for the undo action
+		return;
 	
-	if (nodeTransaction) // is there the old clip stored for the undo action
+	FPointArray newClip(Doc->nodeEdit.m_isContourLine ? currItem->ContourLine : currItem->PoLine);
+	if (UndoManager::undoEnabled() && oldClip && (*oldClip != newClip))
 	{
-		FPointArray newClip(Doc->nodeEdit.m_isContourLine ? currItem->ContourLine : currItem->PoLine);
-		if (*oldClip != newClip && UndoManager::undoEnabled())
-		{
-			QString name = Doc->nodeEdit.m_isContourLine ? Um::EditContour : Um::EditShape;
-			ScItemState<QPair<FPointArray, FPointArray> > *state =
-				new ScItemState<QPair<FPointArray, FPointArray> >(name);
-			state->set("EDIT_SHAPE_OR_CONTOUR");
-			state->set("IS_CONTOUR", Doc->nodeEdit.m_isContourLine);
-			state->setItem(qMakePair(*oldClip, newClip));
-			state->set("OLD_X", m_oldItemX);
-			state->set("OLD_Y", m_oldItemY);
-			state->set("NEW_X", currItem->xPos());
-			state->set("NEW_Y", currItem->yPos());
-			undoManager->action(currItem, state);
-			nodeTransaction.commit();
-		}
-		else
-			nodeTransaction.cancel();
-		
-		nodeTransaction.reset();
-		delete oldClip;
-		oldClip = nullptr;
+		QString name = Doc->nodeEdit.m_isContourLine ? Um::EditContour : Um::EditShape;
+		state = new ScItemState<QPair<FPointArray, FPointArray> >(name);
+		state->set("EDIT_SHAPE_OR_CONTOUR");
+		state->set("IS_CONTOUR", Doc->nodeEdit.m_isContourLine);
+		state->setItem(qMakePair(*oldClip, newClip));
+		state->set("OLD_X", m_oldItemX);
+		state->set("OLD_Y", m_oldItemY);
+		state->set("NEW_X", currItem->xPos());
+		state->set("NEW_Y", currItem->yPos());
+		undoManager->action(currItem, state);
+		nodeTransaction.commit();
 	}
+	else
+		nodeTransaction.cancel();
+		
+	nodeTransaction.reset();
+	delete oldClip;
+	oldClip = nullptr;
 }
 
 
@@ -126,24 +133,25 @@ ScItemState<QPair<FPointArray, FPointArray> >* NodeEditContext::finishTransactio
 	UndoManager* undoManager = UndoManager::instance();
 	ScItemState<QPair<FPointArray, FPointArray> >* state = nullptr;
 	
-	if (nodeTransaction) // is there the old clip stored for the undo action
+	if (nodeTransaction.isNull()) // is there the old clip stored for the undo action
+		return nullptr;
+
+	FPointArray newClip(Doc->nodeEdit.m_isContourLine ? currItem->ContourLine : currItem->PoLine);
+	if (UndoManager::undoEnabled() && oldClip && (*oldClip != newClip))
 	{
-		FPointArray newClip(Doc->nodeEdit.m_isContourLine ? currItem->ContourLine : currItem->PoLine);
-		if (*oldClip != newClip && UndoManager::undoEnabled())
-		{
-			QString name = Doc->nodeEdit.m_isContourLine ? Um::EditContour : Um::EditShape;
-			state = new ScItemState<QPair<FPointArray, FPointArray> >(name);
-			state->set("EDIT_SHAPE_OR_CONTOUR");
-			state->set("IS_CONTOUR", Doc->nodeEdit.m_isContourLine);
-			state->setItem(qMakePair(*oldClip, newClip));
-			undoManager->setUndoEnabled(false);
-		}
-		else
-		{
-			delete oldClip;
-			oldClip = nullptr;
-			nodeTransaction.cancel();
-		}
+		QString name = Doc->nodeEdit.m_isContourLine ? Um::EditContour : Um::EditShape;
+		state = new ScItemState<QPair<FPointArray, FPointArray> >(name);
+		state->set("EDIT_SHAPE_OR_CONTOUR");
+		state->set("IS_CONTOUR", Doc->nodeEdit.m_isContourLine);
+		state->setItem(qMakePair(*oldClip, newClip));
+		undoManager->setUndoEnabled(false);
+	}
+	else
+	{
+		delete oldClip;
+		oldClip = nullptr;
+		nodeTransaction.cancel();
+		nodeTransaction.reset();
 	}
 	return state;
 }
@@ -493,6 +501,5 @@ void NodeEditContext::resetControl(PageItem* currItem)
 	}
 	delete oldClip;
 	oldClip = nullptr;
-	
 }
 

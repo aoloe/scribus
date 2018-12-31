@@ -98,7 +98,7 @@ void CanvasMode_FrameLinks::activate(bool fromGesture)
 				PageItem* item2 = m_doc->m_Selection->itemAt(i+1);
 				if ((item1 != nullptr && item1->asTextFrame()) &&
 					(item2 != nullptr && item2->asTextFrame()) &&
-				     item1->testLinkCandidate(item2))
+				     item1->canBeLinkedTo(item2))
 				{
 					item1->link(item2);
 				}
@@ -513,7 +513,7 @@ void CanvasMode_FrameLinks::createContextMenu(PageItem* currItem, double mx, dou
 	m_view->setObjectUndoMode();
 	m_Mxp = mx;
 	m_Myp = my;
-	if(currItem!=nullptr)
+	if (currItem!=nullptr)
 	{
 		cmen = new ContextMenu(*(m_doc->m_Selection), m_ScMW, m_doc);
 		cmen->exec(QCursor::pos());

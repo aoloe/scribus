@@ -1387,9 +1387,9 @@ void ActionManager::restoreActionShortcutsPostEditMode()
 
 void ActionManager::enableActionStringList(QMap<QString, QPointer<ScrAction> > *actionMap, QStringList *list, bool enabled, bool checkingUnicode, const QString& fontName)
 {
-	for ( QStringList::Iterator it = list->begin(); it != list->end(); ++it )
+	for (QStringList::Iterator it = list->begin(); it != list->end(); ++it)
 	{
-		if(!checkingUnicode)
+		if (!checkingUnicode)
 			(*actionMap)[*it]->setEnabled(enabled);
 		else
 		{
@@ -1397,7 +1397,7 @@ void ActionManager::enableActionStringList(QMap<QString, QPointer<ScrAction> > *
 			if (mainWindow->HaveDoc && (*actionMap)[*it]->actionType()==ScrAction::UnicodeChar)
 			{
 				int charCode=(*actionMap)[*it]->actionInt();
-				if(charCode==-1 ||
+				if (charCode==-1 ||
 					charCode==23 ||
 					charCode==24 ||
 					charCode==26 ||
@@ -1830,7 +1830,7 @@ void ActionManager::languageChangeUnicodeActions(QMap<QString, QPointer<ScrActio
 	(*actionMap)["unicodeZWNJ"]->setText( tr("Zero Width Non-Joiner"));
 	(*actionMap)["unicodeZWJ"]->setText( tr("Zero Width Joiner"));
 	(*actionMap)["unicodeSoftHyphen"]->setText( tr("Soft &Hyphen"));
-	(*actionMap)["unicodeNonBreakingHyphen"]->setText( tr("Non Breaking Dash"));
+	(*actionMap)["unicodeNonBreakingHyphen"]->setText( tr("Non Breaking Hyphen"));
 	(*actionMap)["unicodeNonBreakingSpace"]->setText( tr("Non Breaking &Space"));
 	(*actionMap)["unicodePageNumber"]->setText( tr("Page &Number"));
 	(*actionMap)["unicodePageCount"]->setText( tr("Number of Pages"));

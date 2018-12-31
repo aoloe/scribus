@@ -344,7 +344,7 @@ bool ShapePlug::convert(const QString& fn)
 	importedColors.clear();
 	QList<PageItem*> gElements;
 	groupStack.push(gElements);
-	if(progressDialog)
+	if (progressDialog)
 	{
 		progressDialog->setOverallProgress(2);
 		progressDialog->setLabel("GI", tr("Generating Items"));
@@ -412,7 +412,7 @@ void ShapePlug::parseGroup(QDomNode &DOC)
 //	int fillStyle = 1;
 	double strokewidth = 0.1;
 //	bool poly = false;
-	while(!DOC.isNull())
+	while (!DOC.isNull())
 	{
 		double x1, y1, x2, y2;
 		StrokeCol = defStrokeCol;
@@ -432,7 +432,7 @@ void ShapePlug::parseGroup(QDomNode &DOC)
 		if (style.isEmpty())
 			style = pg.attribute( "svg:style", "" ).simplified();
 		QStringList substyles = style.split(';', QString::SkipEmptyParts);
-		for( QStringList::Iterator it = substyles.begin(); it != substyles.end(); ++it )
+		for (QStringList::Iterator it = substyles.begin(); it != substyles.end(); ++it)
 		{
 			QStringList substyle = (*it).split(':', QString::SkipEmptyParts);
 			QString command(substyle[0].trimmed());
@@ -476,22 +476,22 @@ void ShapePlug::parseGroup(QDomNode &DOC)
 			}
 			else if (command == "stroke-width")
 				strokewidth = ScCLocale::toDoubleC(params);
-			else if( command == "stroke-linejoin" )
+			else if (command == "stroke-linejoin")
 			{
-				if( params == "miter" )
+				if (params == "miter")
 					LineJoin = Qt::MiterJoin;
-				else if( params == "round" )
+				else if (params == "round")
 					LineJoin = Qt::RoundJoin;
-				else if( params == "bevel" )
+				else if (params == "bevel")
 					LineJoin = Qt::BevelJoin;
 			}
-			else if( command == "stroke-linecap" )
+			else if (command == "stroke-linecap")
 			{
-				if( params == "butt" )
+				if (params == "butt")
 					LineEnd = Qt::FlatCap;
-				else if( params == "round" )
+				else if (params == "round")
 					LineEnd = Qt::RoundCap;
-				else if( params == "square" )
+				else if (params == "square")
 					LineEnd = Qt::SquareCap;
 			}
 		}
@@ -528,11 +528,11 @@ void ShapePlug::parseGroup(QDomNode &DOC)
 			QString points = pg.attribute( "points" ).simplified().replace(',', " ");
 			QStringList pointList = points.split(' ', QString::SkipEmptyParts);
 			FirstM = true;
-			for( QStringList::Iterator it = pointList.begin(); it != pointList.end(); it++ )
+			for (QStringList::Iterator it = pointList.begin(); it != pointList.end(); it++)
 			{
 				x = ScCLocale::toDoubleC(*(it++));
 				y = ScCLocale::toDoubleC(*it);
-				if( bFirst )
+				if (bFirst)
 				{
 					svgMoveTo(x * Conversion, y * Conversion);
 					bFirst = false;
@@ -658,7 +658,7 @@ void ShapePlug::parseGroup(QDomNode &DOC)
 
 void ShapePlug::parseGroupProperties(QDomNode &DOC, double &minXCoor, double &minYCoor, double &maxXCoor, double &maxYCoor, bool &firstCheck)
 {
-	while(!DOC.isNull())
+	while (!DOC.isNull())
 	{
 		double x1, y1, x2, y2;
 		FPointArray PoLine;
@@ -703,11 +703,11 @@ void ShapePlug::parseGroupProperties(QDomNode &DOC, double &minXCoor, double &mi
 			QString points = pg.attribute( "points" ).simplified().replace(',', " ");
 			QStringList pointList = points.split(' ', QString::SkipEmptyParts);
 			FirstM = true;
-			for( QStringList::Iterator it1 = pointList.begin(); it1 != pointList.end(); it1++ )
+			for (QStringList::Iterator it1 = pointList.begin(); it1 != pointList.end(); it1++)
 			{
 				x = ScCLocale::toDoubleC(*(it1++));
 				y = ScCLocale::toDoubleC(*it1);
-				if( bFirst )
+				if (bFirst)
 				{
 					svgMoveTo(x * Conversion, y * Conversion);
 					bFirst = false;
@@ -821,42 +821,42 @@ double ShapePlug::parseUnit(const QString &unit)
 	
 	bool noUnit = false;
 	QString unitval(unit);
-	if( unit.right( 2 ) == sPT )
+	if (unit.right( 2 ) == sPT)
 		unitval.replace( sPT, "" );
-	else if( unit.right( 2 ) == sCM )
+	else if (unit.right( 2 ) == sCM)
 		unitval.replace( sCM, "" );
-	else if( unit.right( 2 ) == sMM )
+	else if (unit.right( 2 ) == sMM)
 		unitval.replace( sMM , "" );
-	else if( unit.right( 2 ) == sIN )
+	else if (unit.right( 2 ) == sIN)
 		unitval.replace( sIN, "" );
-	else if( unit.right( 2 ) == sPX )
+	else if (unit.right( 2 ) == sPX)
 		unitval.replace( sPX, "" );
 	if (unitval == unit)
 		noUnit = true;
 	double value = ScCLocale::toDoubleC(unitval);
-	if( unit.right( 2 ) == sPT )
+	if (unit.right( 2 ) == sPT)
 		{}/* value = value; */ //no change
-	else if( unit.right( 2 ) == sCM )
+	else if (unit.right( 2 ) == sCM)
 	{
 		value = cm2pts(value);
 		Conversion = 1/unitGetRatioFromIndex(SC_CM);
 	}
-	else if( unit.right( 2 ) == sMM )
+	else if (unit.right( 2 ) == sMM)
 	{
 		value = mm2pts(value);
 		Conversion = 1/unitGetRatioFromIndex(SC_MM);
 	}
-	else if( unit.right( 2 ) == sIN )
+	else if (unit.right( 2 ) == sIN)
 	{
 		value = in2pts(value);
 		Conversion = 1/unitGetRatioFromIndex(SC_IN);
 	}
-	else if( unit.right( 2 ) == sPX )
+	else if (unit.right( 2 ) == sPX)
 	{
 		value = value * 0.8;
 		Conversion = 0.8;
 	}
-	else if(noUnit)
+	else if (noUnit)
 		{}/* value = value; */ //no change
 	return value;
 }
@@ -875,39 +875,39 @@ const char * ShapePlug::getCoord( const char *ptr, double &number )
 	expsign = 1;
 
 	// read the sign
-	if(*ptr == '+')
+	if (*ptr == '+')
 		ptr++;
-	else if(*ptr == '-')
+	else if (*ptr == '-')
 	{
 		ptr++;
 		sign = -1;
 	}
 
 	// read the integer part
-	while(*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
+	while (*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
 		integer = (integer * 10) + *(ptr++) - '0';
-	if(*ptr == '.') // read the decimals
+	if (*ptr == '.') // read the decimals
 	{
 		ptr++;
-		while(*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
+		while (*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
 			decimal += (*(ptr++) - '0') * (frac *= 0.1);
 	}
 
-	if(*ptr == 'e' || *ptr == 'E') // read the exponent part
+	if (*ptr == 'e' || *ptr == 'E') // read the exponent part
 	{
 		ptr++;
 
 		// read the sign of the exponent
-		if(*ptr == '+')
+		if (*ptr == '+')
 			ptr++;
-		else if(*ptr == '-')
+		else if (*ptr == '-')
 		{
 			ptr++;
 			expsign = -1;
 		}
 
 		exponent = 0;
-		while(*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
+		while (*ptr != '\0' && *ptr >= '0' && *ptr <= '9')
 		{
 			exponent *= 10;
 			exponent += *ptr - '0';
@@ -917,7 +917,7 @@ const char * ShapePlug::getCoord( const char *ptr, double &number )
 	number = integer + decimal;
 	number *= sign * pow( static_cast<double>(10), static_cast<double>( expsign * exponent ) );
 	// skip the following space
-	if(*ptr == ' ')
+	if (*ptr == ' ')
 		ptr++;
 
 	return ptr;
@@ -928,7 +928,7 @@ bool ShapePlug::parseSVG( const QString &s, FPointArray *ite )
 	QString d = s;
 	d = d.replace( QRegExp( "," ), " ");
 	bool ret = false;
-	if( !d.isEmpty() )
+	if (!d.isEmpty())
 	{
 		d = d.simplified();
 		QByteArray pathData = d.toLatin1();
@@ -940,12 +940,12 @@ bool ShapePlug::parseSVG( const QString &s, FPointArray *ite )
 		FirstM = true;
 		char command = *(ptr++), lastCommand = ' ';
 		subpathx = subpathy = curx = cury = contrlx = contrly = 0.0;
-		while( ptr < end )
+		while (ptr < end)
 		{
-			if( *ptr == ' ' )
+			if (*ptr == ' ')
 				ptr++;
 			relative = false;
-			switch( command )
+			switch (command)
 			{
 			case 'm':
 				relative = true;
@@ -1118,18 +1118,18 @@ bool ShapePlug::parseSVG( const QString &s, FPointArray *ite )
 				}
 			}
 			lastCommand = command;
-			if(*ptr == '+' || *ptr == '-' || (*ptr >= '0' && *ptr <= '9'))
+			if (*ptr == '+' || *ptr == '-' || (*ptr >= '0' && *ptr <= '9'))
 			{
 				// there are still coords in this command
-				if(command == 'M')
+				if (command == 'M')
 					command = 'L';
-				else if(command == 'm')
+				else if (command == 'm')
 					command = 'l';
 			}
 			else
 				command = *(ptr++);
 
-			if( lastCommand != 'C' && lastCommand != 'c' &&
+			if (lastCommand != 'C' && lastCommand != 'c' &&
 			        lastCommand != 'S' && lastCommand != 's' &&
 			        lastCommand != 'Q' && lastCommand != 'q' &&
 			        lastCommand != 'T' && lastCommand != 't')

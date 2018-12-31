@@ -127,10 +127,10 @@ void ScrPainter::setPen(const libwpg::WPGPen& pen)
 		importedColors.append(newColorName);
 	CurrColorStroke = fNam;
 	CurrStrokeTrans = pen.foreColor.alpha / 255.0;
-	if(!pen.solid)
+	if (!pen.solid)
 	{
 		dashArray.clear();
-		for(unsigned i = 0; i < pen.dashArray.count(); i++)
+		for (unsigned i = 0; i < pen.dashArray.count(); i++)
 		{
 			dashArray.append(pen.dashArray.at(i)*LineW);
 		}
@@ -175,7 +175,7 @@ void ScrPainter::setBrush(const libwpg::WPGBrush& brush)
 	CurrColorFill = "Black";
 	CurrFillShade = 100.0;
 	int Rc, Gc, Bc;
-	if(brush.style == libwpg::WPGBrush::Solid)
+	if (brush.style == libwpg::WPGBrush::Solid)
 	{
 		Rc = brush.foreColor.red;
 		Gc = brush.foreColor.green;
@@ -196,7 +196,7 @@ void ScrPainter::setBrush(const libwpg::WPGBrush& brush)
 		isGradient = true;
 		currentGradient = VGradient(VGradient::linear);
 		currentGradient.clearStops();
-		for(unsigned c = 0; c < brush.gradient.count(); c++)
+		for (unsigned c = 0; c < brush.gradient.count(); c++)
 		{
 			QString currStopColor = CommonStrings::None;
 			Rc = brush.gradient.stopColor(c).red;
@@ -222,7 +222,7 @@ void ScrPainter::setBrush(const libwpg::WPGBrush& brush)
 
 void ScrPainter::setFillRule(FillRule rule)
 {
-	if(rule == libwpg::WPGPaintInterface::WindingFill)
+	if (rule == libwpg::WPGPaintInterface::WindingFill)
 		fillrule = false;
 	else
 		fillrule = true;
@@ -261,13 +261,13 @@ void ScrPainter::drawEllipse(const libwpg::WPGPoint& center, double rx, double r
 
 void ScrPainter::drawPolygon(const libwpg::WPGPointArray& vertices, bool closed)
 {
-	if(vertices.count() < 2)
+	if (vertices.count() < 2)
 		return;
 	Coords.resize(0);
 	Coords.svgInit();
 	PageItem *ite;
 	Coords.svgMoveTo(72 * vertices[0].x, 72 * vertices[0].y);
-	for(unsigned i = 1; i < vertices.count(); i++)
+	for (unsigned i = 1; i < vertices.count(); i++)
 	{
 		Coords.svgLineTo(72 * vertices[i].x, 72 * vertices[i].y);
 	}
@@ -293,7 +293,7 @@ void ScrPainter::drawPath(const libwpg::WPGPath& path)
 	Coords.resize(0);
 	Coords.svgInit();
 	PageItem *ite;
-	for(unsigned i = 0; i < path.count(); i++)
+	for (unsigned i = 0; i < path.count(); i++)
 	{
 		libwpg::WPGPathElement element = path.element(i);
 		libwpg::WPGPoint point = element.point;
@@ -325,7 +325,7 @@ void ScrPainter::drawPath(const libwpg::WPGPath& path)
 			if (!path.framed)
 				CurrColorStroke = CommonStrings::None;
 		}
-		if(path.closed)
+		if (path.closed)
 		{
 			Coords.svgClosePath();
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, baseX, baseY, 10, 10, LineW, CurrColorFill, CurrColorStroke);
@@ -382,9 +382,9 @@ void ScrPainter::finishItem(PageItem* ite)
 void ScrPainter::drawBitmap(const libwpg::WPGBitmap& bitmap, double hres, double vres)
 {
 	QImage image = QImage(bitmap.width(), bitmap.height(), QImage::Format_RGB32);
-	for(int x = 0; x < bitmap.width(); x++)
+	for (int x = 0; x < bitmap.width(); x++)
 	{
-		for(int y = 0; y < bitmap.height(); y++)
+		for (int y = 0; y < bitmap.height(); y++)
 		{
 			libwpg::WPGColor color = bitmap.pixel(x, y);
 			image.setPixel(x, y, qRgb(color.red, color.green, color.blue));

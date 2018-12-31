@@ -477,6 +477,9 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				     ch == SpecialChars::FRAMEBREAK || ch == SpecialChars::COLBREAK))
 				{
 					gl.glyph = scFace.emulateGlyph(ch.unicode());
+
+					GlyphMetrics metrics = scFace.glyphBBox(gl.glyph, style.fontSize());
+					positions[i].x_advance = metrics.width;
 				}
 
 				if (gl.glyph < ScFace::CONTROL_GLYPHS)
@@ -565,25 +568,29 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				if (currStat != 0)
 				{
 					// current char is CJK
-					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar + 1).unicode())) {
-						switch(currStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_KANJI:
-						case SpecialChars::CJK_KANA:
-						case SpecialChars::CJK_NOTOP:
-							run.extraWidth += quarterEM;
+					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar + 1).unicode()))
+					{
+						switch (currStat & SpecialChars::CJK_CHAR_MASK)
+						{
+							case SpecialChars::CJK_KANJI:
+							case SpecialChars::CJK_KANA:
+							case SpecialChars::CJK_NOTOP:
+								run.extraWidth += quarterEM;
 						}
 					}
 				}
 				else
 				{
 					// current char is not CJK
-					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar).unicode())) {
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_KANJI:
-						case SpecialChars::CJK_KANA:
-						case SpecialChars::CJK_NOTOP:
-							// use the size of the current char instead of the next one
-							run.extraWidth += quarterEM;
+					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar).unicode()))
+					{
+						switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+						{
+							case SpecialChars::CJK_KANJI:
+							case SpecialChars::CJK_KANA:
+							case SpecialChars::CJK_NOTOP:
+								// use the size of the current char instead of the next one
+								run.extraWidth += quarterEM;
 						}
 					}
 				}
@@ -591,43 +598,50 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				// 2. remove spaces from glyphs with the following CJK attributes
 				if (currStat != 0)
 				{	// current char is CJK
-					switch(currStat & SpecialChars::CJK_CHAR_MASK) {
-					case SpecialChars::CJK_FENCE_END:
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_FENCE_BEGIN:
+					switch (currStat & SpecialChars::CJK_CHAR_MASK)
+					{
 						case SpecialChars::CJK_FENCE_END:
+							switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+							{
+								case SpecialChars::CJK_FENCE_BEGIN:
+								case SpecialChars::CJK_FENCE_END:
+								case SpecialChars::CJK_COMMA:
+								case SpecialChars::CJK_PERIOD:
+								case SpecialChars::CJK_MIDPOINT:
+									run.extraWidth -= halfEM;
+							}
+							break;
+
 						case SpecialChars::CJK_COMMA:
 						case SpecialChars::CJK_PERIOD:
+							switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+							{
+								case SpecialChars::CJK_FENCE_BEGIN:
+								case SpecialChars::CJK_FENCE_END:
+									run.extraWidth -= halfEM;
+							}
+							break;
+
 						case SpecialChars::CJK_MIDPOINT:
-							run.extraWidth -= halfEM;
-						}
-						break;
-					case SpecialChars::CJK_COMMA:
-					case SpecialChars::CJK_PERIOD:
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
+							switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+							{
+								case SpecialChars::CJK_FENCE_BEGIN:
+									run.extraWidth -= halfEM;
+							}
+							break;
+
 						case SpecialChars::CJK_FENCE_BEGIN:
-						case SpecialChars::CJK_FENCE_END:
-							run.extraWidth -= halfEM;;
-						}
-						break;
-					case SpecialChars::CJK_MIDPOINT:
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_FENCE_BEGIN:
-							run.extraWidth -= halfEM;
-						}
-						break;
-					case SpecialChars::CJK_FENCE_BEGIN:
-						int prevStat = SpecialChars::getCJKAttr(m_story.text(lastChar - 1));
-						if ((prevStat & SpecialChars::CJK_CHAR_MASK) == SpecialChars::CJK_FENCE_BEGIN)
-						{
-							run.extraWidth -= halfEM;
-							run.xoffset -= halfEM;
-						}
-						else
-						{
-							run.setFlag(ScLayout_CJKFence);
-						}
-						break;
+							int prevStat = SpecialChars::getCJKAttr(m_story.text(lastChar - 1));
+							if ((prevStat & SpecialChars::CJK_CHAR_MASK) == SpecialChars::CJK_FENCE_BEGIN)
+							{
+								run.extraWidth -= halfEM;
+								run.xoffset -= halfEM;
+							}
+							else
+							{
+								run.setFlag(ScLayout_CJKFence);
+							}
+							break;
 					}
 				}
 			}

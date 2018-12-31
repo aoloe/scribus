@@ -47,9 +47,14 @@ for which a new license (GPL+exception) is in place.
 
 QString Scribus150Format::saveElements(double xp, double yp, double wp, double hp, Selection* selection, QByteArray &prevData)
 {
+	ResourceCollection lists;
+	QList<PageItem*> emG;
+	QList<PageItem*> emF;
+
 	QString fileDir = ScPaths::applicationDataDir();
 	QString documentStr;
 	documentStr.reserve(524288);
+
 	ScXmlStreamWriter writer(&documentStr);
 	writer.setAutoFormatting(true);
 //	writer.writeStartDocument();
@@ -63,73 +68,53 @@ QString Scribus150Format::saveElements(double xp, double yp, double wp, double h
 	writer.writeAttribute("previewData", QString(prevData));
 	writeColors(writer, true);
 	writeGradients(writer, true);
-	ResourceCollection lists;
-	QList<PageItem*> emG;
-	QList<PageItem*> emF;
-	emG.clear();
-	emF.clear();
-	for (int cor = 0; cor < selection->count(); ++cor)
+
+	for (int i = 0; i < selection->count(); ++i)
 	{
-		PageItem *currItem = selection->itemAt(cor);
+		PageItem *currItem = selection->itemAt(i);
 		currItem->getNamedResources(lists);
 		emG.append(currItem);
-		if ((currItem->asTextFrame()) || (currItem->asPathText()))
+		if ((!currItem->asTextFrame()) && (!currItem->asPathText()))
+			continue;
+		//for notes frames text should not be saved
+		if (currItem->isNoteFrame())
+			continue;
+		for (int j = currItem->firstInFrame(); j <= currItem->lastInFrame(); ++j)
 		{
-			//for notes frames text should not be saved
-			if (currItem->isNoteFrame())
+			QChar chr = currItem->itemText.text(j);
+			if (chr != SpecialChars::OBJECT)
 				continue;
-			for (int e = currItem->firstInFrame(); e <= currItem->lastInFrame(); ++e)
-			{
-				uint chr = currItem->itemText.text(e).unicode();
-				if (chr == 25)
-				{
-					if ((currItem->itemText.hasObject(e)))
-					{
-						PageItem* pi = currItem->itemText.object(e).getPageItem(currItem->doc());
-						if (!emF.contains(pi))
-						{
-							emF.append(pi);
-						}
-					}
-				}
-			}
+			if (!currItem->itemText.hasObject(j))
+				continue;
+			PageItem* pi = currItem->itemText.object(j).getPageItem(currItem->doc());
+			if (!emF.contains(pi))
+				emF.append(pi);
 		}
 	}
+
 	QList<QString>::Iterator it;
 	QList<QString> names = lists.styleNames();
 	QList<int> styleList = m_Doc->getSortedStyleList();
-	for (int a = 0; a < styleList.count(); ++a)
+	for (int i = 0; i < styleList.count(); ++i)
 	{
-		if (names.contains(m_Doc->paragraphStyles()[styleList[a]].name()))
-			putPStyle(writer, m_Doc->paragraphStyles()[styleList[a]], "STYLE");
+		const ParagraphStyle& paragraphStyle = m_Doc->paragraphStyles()[styleList[i]];
+		if (names.contains(paragraphStyle.name()))
+			putPStyle(writer, paragraphStyle, "STYLE");
 	}
-//	for (it = names.begin(); it != names.end(); ++it)
-//	{
-//		putPStyle(writer, m_Doc->paragraphStyles().get(*it), "STYLE");
-//	}
+
 	names = lists.charStyleNames();
 	styleList = m_Doc->getSortedCharStyleList();
-	for (int a = 0; a < styleList.count(); ++a)
+	for (int i = 0; i < styleList.count(); ++i)
 	{
-		if (names.contains(m_Doc->charStyles()[styleList[a]].name()))
-		{
-			writer.writeStartElement("CHARSTYLE");
-			putNamedCStyle(writer, m_Doc->charStyles()[styleList[a]]);
-			writer.writeEndElement();
-		}
+		const CharStyle& charStyle = m_Doc->charStyles()[styleList[i]];
+		if (!names.contains(charStyle.name()))
+			continue;
+		writer.writeStartElement("CHARSTYLE");
+		putNamedCStyle(writer, charStyle);
+		writer.writeEndElement();
 	}
-//	for (it = names.begin(); it != names.end(); ++it)
-//	{
-//		writer.writeStartElement("CHARSTYLE");
-//		putNamedCStyle(writer, m_Doc->charStyles().get(*it));
-//		writer.writeEndElement();
-//	}
-/*	names = lists.lineStyleNames();
-	for (it = names.begin(); it != names.end(); ++it)
-	{
-		writeLinestyles(writer, true, *it);
-	} */
-	writeLinestyles(writer);
+
+	writeLineStyles(writer);
 	writePatterns(writer, fileDir, true, selection);
 	if (!emF.isEmpty())
 		WriteObjects(m_Doc, writer, fileDir, nullptr, 0, ItemSelectionFrame, &emF);
@@ -418,7 +403,7 @@ bool Scribus150Format::saveFile(const QString & fileName, const FileFormat & /* 
 	writeCStyles(docu);
 	writeTableStyles(docu);
 	writeCellStyles(docu);
-	writeLinestyles(docu);
+	writeLineStyles(docu);
 	writeLayers(docu);
 	writePrintOptions(docu);
 	writePdfOptions(docu);
@@ -495,7 +480,7 @@ void Scribus150Format::writeCheckerProfiles(ScXmlStreamWriter & docu)
 	}
 }
 
-void Scribus150Format::writeLinestyles(ScXmlStreamWriter& docu) 
+void Scribus150Format::writeLineStyles(ScXmlStreamWriter& docu) 
 {
 	QHash<QString,multiLine>::Iterator itMU;
 	for (itMU = m_Doc->MLineStyles.begin(); itMU != m_Doc->MLineStyles.end(); ++itMU)
@@ -635,7 +620,7 @@ void Scribus150Format::writeGradients(ScXmlStreamWriter& docu, bool part)
 		VGradient gra = itGrad.value();
 		docu.writeAttribute("Ext", gra.repeatMethod());
 		const QList<VColorStop*>& cstops = gra.colorStops();
-		for (int cst = 0; cst < gra.Stops(); ++cst)
+		for (int cst = 0; cst < gra.stops(); ++cst)
 		{
 			docu.writeEmptyElement("CSTOP");
 			docu.writeAttribute("RAMP", cstops.at(cst)->rampPoint);
@@ -2016,8 +2001,12 @@ void Scribus150Format::WriteObjects(ScribusDoc *doc, ScXmlStreamWriter& docu, co
 				docu.writeAttribute("NEXTITEM", qHash(item->nextInChain()) & 0x7FFFFFFF);
 			else
 				docu.writeAttribute("NEXTITEM", -1);
+
+			PageItem* prevTopParent = item->prevInChain();
+			while (prevTopParent && prevTopParent->Parent)
+				prevTopParent = prevTopParent->Parent;
 			
-			if (item->prevInChain() != nullptr && items->contains(item->prevInChain()))
+			if (item->prevInChain() != nullptr && items->contains(prevTopParent))
 				docu.writeAttribute("BACKITEM", qHash(item->prevInChain()) & 0x7FFFFFFF);
 			else
 			{
@@ -2073,7 +2062,7 @@ void Scribus150Format::WriteObjects(ScribusDoc *doc, ScXmlStreamWriter& docu, co
 		if (((item->GrType > 0) && (item->GrType != 8) && (item->GrType != 9) && (item->GrType != 11) && (item->GrType != 14)) && (item->gradient().isEmpty()))
 		{
 			QList<VColorStop*> cstops = item->fill_gradient.colorStops();
-			for (int cst = 0; cst < item->fill_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < item->fill_gradient.stops(); ++cst)
 			{
 				docu.writeEmptyElement("CSTOP");
 				docu.writeAttribute("RAMP", cstops.at(cst)->rampPoint);
@@ -2085,7 +2074,7 @@ void Scribus150Format::WriteObjects(ScribusDoc *doc, ScXmlStreamWriter& docu, co
 		if ((item->GrTypeStroke > 0) && (item->strokeGradient().isEmpty()))
 		{
 			QList<VColorStop*> cstops = item->stroke_gradient.colorStops();
-			for (int cst = 0; cst < item->stroke_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < item->stroke_gradient.stops(); ++cst)
 			{
 				docu.writeEmptyElement("S_CSTOP");
 				docu.writeAttribute("RAMP", cstops.at(cst)->rampPoint);
@@ -2097,7 +2086,7 @@ void Scribus150Format::WriteObjects(ScribusDoc *doc, ScXmlStreamWriter& docu, co
 		if ((item->GrMask > 0) && (item->gradientMask().isEmpty()))
 		{
 			QList<VColorStop*> cstops = item->mask_gradient.colorStops();
-			for (int cst = 0; cst < item->mask_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < item->mask_gradient.stops(); ++cst)
 			{
 				docu.writeEmptyElement("M_CSTOP");
 				docu.writeAttribute("RAMP", cstops.at(cst)->rampPoint);
@@ -2580,8 +2569,8 @@ void Scribus150Format::SetItemProps(ScXmlStreamWriter& docu, PageItem* item, con
 		docu.writeAttribute("ANZIEL", item->annotation().Ziel());
 		docu.writeAttribute("ANACTYP", item->annotation().ActionType());
 		docu.writeAttribute("ANTOOLTIP", item->annotation().ToolTip());
-		docu.writeAttribute("ANBWID", item->annotation().Bwid());
-		docu.writeAttribute("ANBSTY", item->annotation().Bsty());
+		docu.writeAttribute("ANBWID", item->annotation().borderWidth());
+		docu.writeAttribute("ANBSTY", item->annotation().borderStyle());
 		docu.writeAttribute("ANFEED", item->annotation().Feed());
 		docu.writeAttribute("ANFLAG", item->annotation().Flag());
 		docu.writeAttribute("ANFONT", item->annotation().Font());

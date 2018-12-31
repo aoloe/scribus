@@ -160,7 +160,7 @@ void ScPainter::endLayer()
 		cairo_pop_group_to_source (m_cr);
 		if (!la.groupClip.empty())
 		{
-			if( m_fillRule )
+			if( m_fillRule)
 				cairo_set_fill_rule (m_cr, CAIRO_FILL_RULE_EVEN_ODD);
 			else
 				cairo_set_fill_rule (m_cr, CAIRO_FILL_RULE_WINDING);
@@ -450,7 +450,7 @@ void ScPainter::fillPath()
 
 void ScPainter::strokePath()
 {
-//	if( LineWidth == 0 )
+//	if (LineWidth == 0)
 //		return;
 	if (m_strokeMode != 0)
 		strokePathHelper();
@@ -631,7 +631,7 @@ cairo_pattern_t * ScPainter::getMaskPattern()
 			pat = cairo_pattern_create_radial (fx, fy, 0, x1, y1, sqrt(pow(x2 - x1, 2) + pow(y2 - y1,2)));
 		QList<VColorStop*> colorStops = mask_gradient.colorStops();
 		QColor qStopColor;
-		for( int offset = 0 ; offset < colorStops.count() ; offset++ )
+		for (int offset = 0 ; offset < colorStops.count() ; offset++)
 		{
 			qStopColor = colorStops[ offset ]->color;
 			double a = colorStops[offset]->opacity;
@@ -675,10 +675,10 @@ cairo_pattern_t * ScPainter::getMaskPattern()
 			int k;
 			QRgb *s;
 			QRgb r;
-			for( int yi=0; yi < h; ++yi )
+			for (int yi=0; yi < h; ++yi)
 			{
 				s = (QRgb*)(m_imageQ.scanLine( yi ));
-				for( int xi=0; xi < w; ++xi )
+				for (int xi=0; xi < w; ++xi)
 				{
 					r = *s;
 					if (qAlpha(r) == 0)
@@ -724,7 +724,7 @@ void ScPainter::fillPathHelper()
 {
 	cairo_save( m_cr );
 	cairo_set_operator(m_cr, CAIRO_OPERATOR_OVER);
-	if( m_fillRule )
+	if (m_fillRule)
 		cairo_set_fill_rule (m_cr, CAIRO_FILL_RULE_EVEN_ODD);
 	else
 		cairo_set_fill_rule (m_cr, CAIRO_FILL_RULE_WINDING);
@@ -819,7 +819,7 @@ void ScPainter::fillPathHelper()
 			QList<QColor> qStopColors;
 			QList<double> qStopRampPoints;
 			QColor qStopColor;
-			for( int offset = 0 ; offset < colorStops.count() ; offset++ )
+			for (int offset = 0 ; offset < colorStops.count() ; offset++)
 			{
 				qStopColor = colorStops[ offset ]->color;
 				qStopColor.setAlphaF(colorStops[offset]->opacity);
@@ -857,7 +857,7 @@ void ScPainter::fillPathHelper()
 			cairo_fill(cr);
 			cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
 			mpat = cairo_pattern_create_mesh();
-			for( int offset = 1 ; offset < qStopRampPoints.count() ; offset++ )
+			for (int offset = 1 ; offset < qStopRampPoints.count() ; offset++)
 			{
 				QLineF e1 = edge1;
 				QLineF e1s = edge1;
@@ -1093,7 +1093,7 @@ void ScPainter::fillPathHelper()
 				cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
 			cairo_pattern_set_filter(pat, CAIRO_FILTER_GOOD);
 			QList<VColorStop*> colorStops = fill_gradient.colorStops();
-			for( int offset = 0 ; offset < colorStops.count() ; offset++ )
+			for (int offset = 0 ; offset < colorStops.count() ; offset++)
 			{
 				rampPoint  = colorStops[ offset ]->rampPoint;
 				if ((lastPoint == rampPoint) && (!isFirst))
@@ -1290,26 +1290,26 @@ void ScPainter::strokePathHelper()
 {
 	cairo_save( m_cr );
 	cairo_set_operator(m_cr, CAIRO_OPERATOR_OVER);
-	if( m_LineWidth == 0 )
+	if (m_LineWidth == 0)
 		cairo_set_line_width( m_cr, 1.0 / m_zoomFactor );
 	else
 		cairo_set_line_width( m_cr, m_LineWidth );
-	if( m_array.count() > 0 )
+	if (m_array.count() > 0)
 		cairo_set_dash( m_cr, m_array.data(), m_array.count(), m_offset);
 	else
 		cairo_set_dash( m_cr, nullptr, 0, 0 );
 	cairo_set_operator(m_cr, CAIRO_OPERATOR_OVER);
-	if( PLineEnd == Qt::RoundCap )
+	if (PLineEnd == Qt::RoundCap)
 		cairo_set_line_cap (m_cr, CAIRO_LINE_CAP_ROUND);
-	else if( PLineEnd == Qt::SquareCap )
+	else if (PLineEnd == Qt::SquareCap)
 		cairo_set_line_cap (m_cr, CAIRO_LINE_CAP_SQUARE);
-	else if( PLineEnd == Qt::FlatCap )
+	else if (PLineEnd == Qt::FlatCap )
 		cairo_set_line_cap (m_cr, CAIRO_LINE_CAP_BUTT);
-	if( PLineJoin == Qt::RoundJoin )
+	if (PLineJoin == Qt::RoundJoin)
 		cairo_set_line_join( m_cr, CAIRO_LINE_JOIN_ROUND );
-	else if( PLineJoin == Qt::BevelJoin )
+	else if (PLineJoin == Qt::BevelJoin)
 		cairo_set_line_join( m_cr, CAIRO_LINE_JOIN_BEVEL );
-	else if( PLineJoin == Qt::MiterJoin )
+	else if (PLineJoin == Qt::MiterJoin)
 		cairo_set_line_join( m_cr, CAIRO_LINE_JOIN_MITER );
 	if (m_strokeMode == 3)
 	{
@@ -1365,7 +1365,7 @@ void ScPainter::strokePathHelper()
 			cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
 		cairo_pattern_set_filter(pat, CAIRO_FILTER_GOOD);
 		QList<VColorStop*> colorStops = stroke_gradient.colorStops();
-		for( int offset = 0 ; offset < colorStops.count() ; offset++ )
+		for (int offset = 0 ; offset < colorStops.count() ; offset++)
 		{
 			rampPoint  = colorStops[ offset ]->rampPoint;
 			if ((lastPoint == rampPoint) && (!isFirst))
@@ -1861,6 +1861,18 @@ void ScPainter::drawShadePanel(const QRectF &r, const QColor& color, bool sunken
 	fillPath();
 }
 
+void ScPainter::drawUnderlinedRect(const QRectF &r, const QColor& color, int lineWidth)
+{
+	setPen(color, lineWidth, Qt::DashLine, Qt::FlatCap, Qt::MiterJoin);
+	setStrokeMode(ScPainter::Solid);
+	drawLine(r.bottomLeft(), r.topLeft());
+	drawLine(r.topLeft(), r.topRight());
+	drawLine(r.bottomRight(), r.topRight());
+
+	setPen(color, lineWidth, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
+	drawLine(r.bottomLeft(), r.bottomRight());
+}
+
 void ScPainter::colorizeAlpha(const QColor& color)
 {
 	cairo_surface_t *data = cairo_get_group_target(m_cr);
@@ -1872,10 +1884,10 @@ void ScPainter::colorizeAlpha(const QColor& color)
 	int cr = color.red();
 	int cg = color.green();
 	int cb = color.blue();
-	for(int y = 0; y < h; ++y)
+	for (int y = 0; y < h; ++y)
 	{
 		QRgb *dst = (QRgb*)d;
-		for(int x = 0; x < w; ++x)
+		for (int x = 0; x < w; ++x)
 		{
 			if (qAlpha(*dst) > 0)
 				*dst = qRgba(cr, cg, cb, qAlpha(*dst));
@@ -1900,10 +1912,10 @@ void ScPainter::colorize(const QColor& color)
 	int hu, sa, v;
 	int cc2, cm2, cy2, k2;
 	QColor tmpR;
-	for(int y = 0; y < h; ++y)
+	for (int y = 0; y < h; ++y)
 	{
 		QRgb *dst = (QRgb*)d;
-		for(int x = 0; x < w; ++x)
+		for (int x = 0; x < w; ++x)
 		{
 			if (qAlpha(*dst) > 0)
 			{
@@ -1946,7 +1958,7 @@ void ScPainter::blurAlpha(int radius)
 	}
 	yw = yi = 0;
 	int **stack = new int*[div];
-	for(int i = 0; i < div; ++i)
+	for (int i = 0; i < div; ++i)
 	{
 		stack[i] = new int[1];
 	}
@@ -1960,7 +1972,7 @@ void ScPainter::blurAlpha(int radius)
 	for (y = 0; y < h; ++y)
 	{
 		ainsum = aoutsum = asum = 0;
-		for(i = -radius; i <= radius; ++i)
+		for (i = -radius; i <= radius; ++i)
 		{
 			p = pix[yi+qMin(wm,qMax(i,0))];
 			sir = stack[i+radius];
@@ -1998,7 +2010,7 @@ void ScPainter::blurAlpha(int radius)
 	{
 		ainsum = aoutsum = asum = 0;
 		yp = -radius * w;
-		for(i = -radius; i <= radius; ++i)
+		for (i = -radius; i <= radius; ++i)
 		{
 			yi=qMax(0,yp)+x;
 			sir = stack[i+radius];
@@ -2041,7 +2053,7 @@ void ScPainter::blurAlpha(int radius)
 	delete [] a;
 	delete [] vmin;
 	delete [] dv;
-	for(int i = 0; i < div; ++i)
+	for (int i = 0; i < div; ++i)
 	{
 		delete [] stack[i];
 	}
@@ -2077,7 +2089,7 @@ void ScPainter::blur(int radius)
 	}
 	yw = yi = 0;
 	int **stack = new int*[div];
-	for(int i = 0; i < div; ++i)
+	for (int i = 0; i < div; ++i)
 	{
 		stack[i] = new int[4];
 	}
@@ -2091,7 +2103,7 @@ void ScPainter::blur(int radius)
 	for (y = 0; y < h; ++y)
 	{
 		rinsum = ginsum = binsum = ainsum = routsum = goutsum = boutsum = aoutsum = rsum = gsum = bsum = asum = 0;
-		for(i = -radius; i <= radius; ++i)
+		for (i = -radius; i <= radius; ++i)
 		{
 			p = pix[yi+qMin(wm,qMax(i,0))];
 			sir = stack[i+radius];
@@ -2171,7 +2183,7 @@ void ScPainter::blur(int radius)
 	{
 		rinsum = ginsum = binsum = ainsum = routsum = goutsum = boutsum = aoutsum = rsum = gsum = bsum = asum = 0;
 		yp =- radius * w;
-		for(i=-radius; i <= radius; ++i)
+		for (i=-radius; i <= radius; ++i)
 		{
 			yi=qMax(0,yp)+x;
 			sir = stack[i+radius];
@@ -2254,7 +2266,7 @@ void ScPainter::blur(int radius)
 	delete [] a;
 	delete [] vmin;
 	delete [] dv;
-	for(int i = 0; i < div; ++i)
+	for (int i = 0; i < div; ++i)
 	{
 		delete [] stack[i];
 	}

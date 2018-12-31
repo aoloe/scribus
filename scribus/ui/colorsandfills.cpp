@@ -346,7 +346,7 @@ void ColorsAndFillsDialog::selEditColor(QTreeWidgetItem *it)
 			duplicateButton->setEnabled(curCol != "Registration");
 			deleteButton->setEnabled(enableDel);
 			editButton->setEnabled(enableEdit);
-			if(enableEdit)
+			if (enableEdit)
 				editColorItem();
 		}
 	}
@@ -1335,7 +1335,7 @@ void ColorsAndFillsDialog::loadVectors(const QString& data)
 		if ((testResult != -1) && (testResult >= FORMATID_FIRSTUSER))
 		{
 			const FileFormat * fmt = LoadSavePlugin::getFormatById(testResult);
-			if( fmt )
+			if (fmt)
 			{
 				fmt->setupTargets(m_doc, nullptr, mainWin, nullptr, &(PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts));
 				fmt->loadFile(data, LoadSavePlugin::lfUseCurrentPage|LoadSavePlugin::lfInteractive|LoadSavePlugin::lfScripted|LoadSavePlugin::lfKeepPatterns|LoadSavePlugin::lfLoadAsPattern);
@@ -1462,7 +1462,7 @@ ColorList ColorsAndFillsDialog::getGradientColors()
 	for (itg = dialogGradients.begin(); itg != dialogGradients.end(); ++itg)
 	{
 		QList<VColorStop*> cstops = itg.value().colorStops();
-		for (int cst = 0; cst < itg.value().Stops(); ++cst)
+		for (int cst = 0; cst < itg.value().stops(); ++cst)
 		{
 			if ((!colorList.contains(cstops.at(cst)->name)) && (cstops.at(cst)->name != CommonStrings::None))
 				colorList.insert(cstops.at(cst)->name, m_colorList[cstops.at(cst)->name]);
@@ -1499,19 +1499,19 @@ ColorList ColorsAndFillsDialog::getGradientColors()
 				}
 			}
 			QList<VColorStop*> cstops = ite->fill_gradient.colorStops();
-			for (int cst = 0; cst < ite->fill_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < ite->fill_gradient.stops(); ++cst)
 			{
 				if ((!colorList.contains(cstops.at(cst)->name)) && (cstops.at(cst)->name != CommonStrings::None))
 					colorList.insert(cstops.at(cst)->name, m_colorList[cstops.at(cst)->name]);
 			}
 			cstops = ite->stroke_gradient.colorStops();
-			for (int cst = 0; cst < ite->stroke_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < ite->stroke_gradient.stops(); ++cst)
 			{
 				if ((!colorList.contains(cstops.at(cst)->name)) && (cstops.at(cst)->name != CommonStrings::None))
 					colorList.insert(cstops.at(cst)->name, m_colorList[cstops.at(cst)->name]);
 			}
 			cstops = ite->mask_gradient.colorStops();
-			for (int cst = 0; cst < ite->mask_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < ite->mask_gradient.stops(); ++cst)
 			{
 				if ((!colorList.contains(cstops.at(cst)->name)) && (cstops.at(cst)->name != CommonStrings::None))
 					colorList.insert(cstops.at(cst)->name, m_colorList[cstops.at(cst)->name]);
@@ -1528,7 +1528,7 @@ void ColorsAndFillsDialog::updateGradientColors(const QString& newName, const QS
 	for (itg = dialogGradients.begin(); itg != dialogGradients.end(); ++itg)
 	{
 		QList<VColorStop*> cstops = itg.value().colorStops();
-		for (int cst = 0; cst < itg.value().Stops(); ++cst)
+		for (int cst = 0; cst < itg.value().stops(); ++cst)
 		{
 			if (oldName == cstops.at(cst)->name)
 			{
@@ -1575,7 +1575,7 @@ void ColorsAndFillsDialog::updateGradientColors(const QString& newName, const QS
 				}
 			}
 			QList<VColorStop*> cstops = ite->fill_gradient.colorStops();
-			for (int cst = 0; cst < ite->fill_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < ite->fill_gradient.stops(); ++cst)
 			{
 				if (oldName == cstops.at(cst)->name)
 				{
@@ -1584,7 +1584,7 @@ void ColorsAndFillsDialog::updateGradientColors(const QString& newName, const QS
 				}
 			}
 			cstops = ite->stroke_gradient.colorStops();
-			for (int cst = 0; cst < ite->stroke_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < ite->stroke_gradient.stops(); ++cst)
 			{
 				if (oldName == cstops.at(cst)->name)
 				{
@@ -1593,7 +1593,7 @@ void ColorsAndFillsDialog::updateGradientColors(const QString& newName, const QS
 				}
 			}
 			cstops = ite->mask_gradient.colorStops();
-			for (int cst = 0; cst < ite->mask_gradient.Stops(); ++cst)
+			for (int cst = 0; cst < ite->mask_gradient.stops(); ++cst)
 			{
 				if (oldName == cstops.at(cst)->name)
 				{
@@ -1760,14 +1760,14 @@ void ColorsAndFillsDialog::addGimpColor(QString &colorName, double r, double g, 
 void ColorsAndFillsDialog::loadScribusFormat(const QString& fileName)
 {
 	QFile f(fileName);
-	if(!f.open(QIODevice::ReadOnly))
+	if (!f.open(QIODevice::ReadOnly))
 		return;
 	QDomDocument docu("scridoc");
 	QTextStream ts(&f);
 	ts.setCodec("UTF-8");
 	QString errorMsg;
 	int errorLine = 0, errorColumn = 0;
-	if( !docu.setContent(ts.readAll(), &errorMsg, &errorLine, &errorColumn) )
+	if (!docu.setContent(ts.readAll(), &errorMsg, &errorLine, &errorColumn) )
 	{
 		f.close();
 		return;
@@ -1777,7 +1777,7 @@ void ColorsAndFillsDialog::loadScribusFormat(const QString& fileName)
 	if (elem.tagName() != "SCRIBUSGRADIENT")
 		return;
 	QDomNode DOC = elem.firstChild();
-	while(!DOC.isNull())
+	while (!DOC.isNull())
 	{
 		QDomElement dc = DOC.toElement();
 		if (dc.tagName()=="COLOR")
@@ -1839,7 +1839,7 @@ void ColorsAndFillsDialog::loadScribusFormat(const QString& fileName)
 			VGradient gra = VGradient(VGradient::linear);
 			gra.clearStops();
 			QDomNode grad = dc.firstChild();
-			while(!grad.isNull())
+			while (!grad.isNull())
 			{
 				QDomElement stop = grad.toElement();
 				QString name = stop.attribute("NAME");

@@ -548,10 +548,10 @@ bool ScImgDataLoader_PS::loadPicture(const QString& fn, int page, int gsRes, boo
 				m_imageInfoRecord.colorspace = ColorSpaceCMYK;
 				QRgb *s;
 				unsigned char cc, cm, cy, ck;
-				for( int yit=0; yit < m_image.height(); ++yit )
+				for (int yit = 0; yit < m_image.height(); ++yit)
 				{
 					s = (QRgb*)(m_image.scanLine( yit ));
-					for(int xit=0; xit < m_image.width(); ++xit )
+					for (int xit = 0; xit < m_image.width(); ++xit)
 					{
 						cc = 255 - qRed(*s);
 						cm = 255 - qGreen(*s);
@@ -614,12 +614,12 @@ bool ScImgDataLoader_PS::loadPicture(const QString& fn, int page, int gsRes, boo
 					QRgb alphaFF = qRgba(255,255,255,255);
 					QRgb alpha00 = qRgba(255,255,255,  0);
 					QRgb *s;
-					for( int yi=0; yi < hi; ++yi )
+					for (int yi = 0; yi < hi; ++yi)
 					{
 						s = (QRgb*)(m_image.scanLine( yi ));
-						for(int xi=0; xi < wi; ++xi )
+						for (int xi = 0; xi < wi; ++xi)
 						{
-							if((*s) == alphaFF)
+							if ((*s) == alphaFF)
 								(*s) &= alpha00;
 							s++;
 						}
@@ -816,12 +816,12 @@ void ScImgDataLoader_PS::loadPhotoshop(const QString& fn, int gsRes)
 				QRgb alphaFF = qRgba(255,255,255,255);
 				QRgb alpha00 = qRgba(255,255,255,  0);
 				QRgb *s;
-				for( int yi=0; yi < hi; ++yi )
+				for (int yi = 0; yi < hi; ++yi)
 				{
 					s = (QRgb*)(m_image.scanLine( yi ));
-					for(int xi=0; xi < wi; ++xi )
+					for (int xi = 0; xi < wi; ++xi)
 					{
-						if((*s) == alphaFF)
+						if ((*s) == alphaFF)
 							(*s) &= alpha00;
 						s++;
 					}
@@ -1029,11 +1029,11 @@ bool ScImgDataLoader_PS::loadPSjpeg(const QString& fn)
 			m_image = QImage( cinfo.output_width, cinfo.output_height, QImage::Format_ARGB32 );
 			QRgb *s;
 			QRgb *d;
-			for( int yi=0; yi < tmpImg.height(); ++yi )
+			for (int yi=0; yi < tmpImg.height(); ++yi)
 			{
 				s = (QRgb*)(tmpImg.scanLine( yi ));
 				d = (QRgb*)(m_image.scanLine( yi ));
-				for(int xi=0; xi < tmpImg.width(); ++xi )
+				for (int xi=0; xi < tmpImg.width(); ++xi)
 				{
 					(*d) = (*s);
 					s++;
@@ -1155,11 +1155,11 @@ bool ScImgDataLoader_PS::loadPSjpeg(const QString& fn, QImage &tmpImg)
 			tmpImg = QImage( cinfo.output_width, cinfo.output_height, QImage::Format_ARGB32 );
 			QRgb *s;
 			QRgb *d;
-			for( int yi=0; yi < tmpImg2.height(); ++yi )
+			for (int yi=0; yi < tmpImg2.height(); ++yi)
 			{
 				s = (QRgb*)(tmpImg2.scanLine( yi ));
 				d = (QRgb*)(tmpImg.scanLine( yi ));
-				for(int xi=0; xi < tmpImg2.width(); ++xi )
+				for (int xi=0; xi < tmpImg2.width(); ++xi)
 				{
 					(*d) = (*s);
 					s++;
@@ -1730,12 +1730,12 @@ bool ScImgDataLoader_PS::preloadAlphaChannel(const QString& fn, int page, int gs
 				QRgb alphaFF = qRgba(255,255,255,255);
 				QRgb alpha00 = qRgba(255,255,255,  0);
 				QRgb *s;
-				for( int yi=0; yi < hi; ++yi )
+				for (int yi = 0; yi < hi; ++yi)
 				{
-					s = (QRgb*)(m_image.scanLine( yi ));
-					for(int xi=0; xi < wi; ++xi )
+					s = (QRgb*)(m_image.scanLine(yi));
+					for (int xi = 0; xi < wi; ++xi)
 					{
-						if((*s) == alphaFF)
+						if ((*s) == alphaFF)
 							(*s) &= alpha00;
 						s++;
 					}

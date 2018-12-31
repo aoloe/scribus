@@ -274,7 +274,7 @@ public: // Start public functions
 	PageItem_Table* parentTable() const { return (Parent ? Parent->asTable() : nullptr); }
 
 	virtual void applicableActions(QStringList& actionList) = 0;
-	virtual QString infoDescription();
+	virtual QString infoDescription() const;
 	virtual bool createInfoGroup(QFrame *, QGridLayout *) {return false;}
 
 	//<< ********* Functions related to drawing the item *********
@@ -292,7 +292,7 @@ public: // Start public functions
 	/**
 	 * @brief Set or get the redraw bounding box of the item, moved from the View
 	 */
-	QRect getRedrawBounding(const double);
+	QRect getRedrawBounding(const double viewScale) const;
 	void setRedrawBounding();
 	void setPolyClip(int up, int down = 0);
 	void updatePolyClip();
@@ -380,8 +380,6 @@ public: // Start public functions
 	ObjectAttribute getObjectAttribute(const QString&) const;
 	void setObjectAttributes(ObjAttrVector*);
 
-
-
 	void SetFrameShape(int count, const double *vals);
 	void SetRectFrame();
 	void SetOvalFrame();
@@ -389,7 +387,6 @@ public: // Start public functions
 	QTransform getGroupTransform() const;
 	void getTransform(QTransform& mat) const;
 	QTransform getTransform() const;
-
 
 	/// invalidates current layout information
 	virtual void invalidateLayout() { invalid = true; }
@@ -437,15 +434,16 @@ public: // Start public functions
 	void setEmbeddedImageProfile(const QString& val) { EmProfile = val; }
 	bool drawFrame() { return ((m_ItemType == TextFrame && !m_sampleItem) || (m_ItemType == ImageFrame) || (m_ItemType == PathText)); }
 	QString externalFile() const { return Pfile; }
-	void setExternalFile(const QString& filename);
+	void setExternalFile(const QString& filename, const QString& baseDir = QString());
 	void setImagePagenumber(int num) { pixm.imgInfo.actualPageNumber = num; }
 	void setResolution(int);
 
 	//FIXME: maybe these should go into annotation?
 	QString fileIconPressed() const { return Pfile2; }
-	void setFileIconPressed(const QString& filename);
+	void setFileIconPressed(const QString& filename, const QString& baseDir = QString());
 	QString fileIconRollover() const { return Pfile3; }
-	void setFileIconRollover(const QString& filename);
+	void setFileIconRollover(const QString& filename, const QString& baseDir = QString());
+
 	int  cmsRenderingIntent() const { return IRender; }
 	void setCmsRenderingIntent(eRenderIntent val) { IRender = val; }
 	QString cmsProfile() const { return IProfile; }
@@ -454,23 +452,22 @@ public: // Start public functions
 	void setCompressionMethodIndex(int val) { CompressionMethodIndex = val; }
 	void setOverrideCompressionQuality(bool val) { OverrideCompressionQuality = val; }
 	void setCompressionQualityIndex(int val) { CompressionQualityIndex = val; }
-	PageItem* prevInChain() { return BackBox; }
-	PageItem* nextInChain() { return NextBox; }
-	const PageItem* prevInChain() const { return BackBox; }
-	const PageItem* nextInChain() const { return NextBox; }
-	//simplify conditions checking if frame is in chain
-	//FIX: use it in other places
-	bool isInChain() { return ((prevInChain() != nullptr) || (nextInChain() != nullptr)); }
 
 	//you can change all code for search first or last item in chain
 	PageItem* firstInChain();
 	PageItem* lastInChain();
-	bool testLinkCandidate(PageItem* nextFrame);
+	PageItem* prevInChain() { return BackBox; }
+	PageItem* nextInChain() { return NextBox; }
+	const PageItem* prevInChain() const { return BackBox; }
+	const PageItem* nextInChain() const { return NextBox; }
+	bool isInChain() const { return ((BackBox != nullptr) || (NextBox != nullptr)); }
+
+	bool canBeLinkedTo(const PageItem* nextFrame) const;
 	void unlink(bool createUndo = true);
 	void link(PageItem* nextFrame, bool addPARSEP = true);
 	void dropLinks();
-	bool hasLinks() const;
-	void unlinkWithText(bool);
+	void unlinkWithText();
+
 	void setSampleItem(bool b) {m_sampleItem=b;}
 	const QVector<double>& dashes() const { return DashValues; }
 	QVector<double>& dashes() { return DashValues; }
@@ -1194,7 +1191,7 @@ public: // Start public functions
 	 * @brief Load an image into an image frame, moved from ScribusView
 	 * @return True if load succeeded
 	 */
-	bool loadImage(const QString& filename, const bool reload, const int gsResolution=-1, bool showMsg = false);
+	virtual bool loadImage(const QString& filename, const bool reload, const int gsResolution=-1, bool showMsg = false);
 
 
 	/**

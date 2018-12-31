@@ -124,7 +124,7 @@ void PageItem_Spiral::DrawObj_Item(ScPainter *p, QRectF /*e*/)
 					gradientStrokeVal = "";
 				if (!(gradientStrokeVal.isEmpty()) && (m_Doc->docGradients.contains(gradientStrokeVal)))
 					stroke_gradient = m_Doc->docGradients[gradientStrokeVal];
-				if (stroke_gradient.Stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
+				if (stroke_gradient.stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
 				{
 					if (lineColor() != CommonStrings::None)
 					{
@@ -345,7 +345,7 @@ void PageItem_Spiral::applicableActions(QStringList & actionList)
 	actionList << "itemConvertToPolygon";
 }
 
-QString PageItem_Spiral::infoDescription()
+QString PageItem_Spiral::infoDescription() const
 {
 	return QString();
 }

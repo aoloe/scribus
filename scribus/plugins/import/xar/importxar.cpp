@@ -531,7 +531,7 @@ bool XarPlug::convert(const QString& fn)
 	ignoreableTags << 2205 << 2900 << 2901;
 	ignoreableTags << 4031 << 4081 << 4082 << 4083 << 4087 << 4102 << 4103 << 4104 << 4105 << 4106 << 4107 << 4108 << 4109;
 	ignoreableTags << 4110 << 4111 << 4112 << 4113 << 4114 << 4115 << 4116 << 4124;
-	if(progressDialog)
+	if (progressDialog)
 	{
 		progressDialog->setOverallProgress(2);
 		progressDialog->setLabel("GI", tr("Generating Items"));
@@ -1897,10 +1897,10 @@ void XarPlug::handleBitmapTransparency(QDataStream &ts, quint32 dataLen)
 		int te = transEnd;
 		QRgb *s;
 		QRgb r;
-		for( int yi=0; yi < h; ++yi )
+		for (int yi = 0; yi < h; ++yi)
 		{
 			s = (QRgb*)(image.scanLine( yi ));
-			for( int xi=0; xi < w; ++xi )
+			for (int xi = 0; xi < w; ++xi)
 			{
 				r = *s;
 				k = qMin(qRound(0.3 * qRed(r) + 0.59 * qGreen(r) + 0.11 * qBlue(r)), 255);
@@ -2693,10 +2693,10 @@ void XarPlug::handleContoneBitmapFill(QDataStream &ts, quint32 dataLen)
 		endC.getRgb(&rE, &gE, &bE);
 		QRgb *s;
 		QRgb r;
-		for( int yi=0; yi < h; ++yi )
+		for (int yi = 0; yi < h; ++yi)
 		{
 			s = (QRgb*)(image.scanLine( yi ));
-			for( int xi=0; xi < w; ++xi )
+			for (int xi = 0; xi < w; ++xi)
 			{
 				r = *s;
 				k = qMin(qRound(0.3 * qRed(r) + 0.59 * qGreen(r) + 0.11 * qBlue(r)), 255);
@@ -2859,10 +2859,10 @@ void XarPlug::defineBitmap(QDataStream &ts, quint32 dataLen, quint32 tag)
 			int w = image.width();
 			QRgb *s;
 			QRgb r;
-			for( int yi=0; yi < h; ++yi )
+			for (int yi = 0; yi < h; ++yi)
 			{
 				s = (QRgb*)(image.scanLine( yi ));
-				for( int xi=0; xi < w; ++xi )
+				for (int xi = 0; xi < w; ++xi)
 				{
 					r = *s;
 					*s = qRgba(qRed(r), qGreen(r), qBlue(r), 255 - qAlpha(r));

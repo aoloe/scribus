@@ -555,6 +555,7 @@ void ContextMenu::createMenuItems_Selection()
 	
 	//<-- Add Properties
 	addSeparator();
+	addAction(m_ScMW->scrActions["toolsContent"]);
 	addAction(m_ScMW->scrActions["toolsProperties"]);
 	
 	bool containsTextFrame = false;

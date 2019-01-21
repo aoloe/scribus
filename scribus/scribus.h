@@ -91,6 +91,7 @@ class PagePalette;
 class PageSelector;
 class PrefsContext;
 class PrefsManager;
+class ContentPalette;
 class PropertiesPalette;
 class ResourceManager;
 class ScMWMenuManager;
@@ -230,6 +231,7 @@ public:
 	QLabel* mainWindowYPosDataLabel;
 	GuideManager *guidePalette;
 	CharSelect *charPalette;
+	ContentPalette *contentPalette;
 	PropertiesPalette *propertiesPalette;
 	TextPalette *textPalette;
 	MarksManager *marksManager;

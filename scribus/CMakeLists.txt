@@ -547,6 +547,7 @@ set(SCRIBUS_MOC_CLASSES
 	ui/tabmanager.h
 	ui/tabpdfoptions.h
 	ui/tabruler.h
+	ui/contentpalette.h
 	ui/textpalette.h
 	ui/transformdialog.h
 	ui/transparencypalette.h
@@ -1047,6 +1048,7 @@ set(SCRIBUS_SOURCES
 	ui/tabmanager.cpp
 	ui/tabpdfoptions.cpp
 	ui/tabruler.cpp
+	ui/contentpalette.cpp
 	ui/textpalette.cpp
 	ui/transformdialog.cpp
 	ui/transparencypalette.cpp

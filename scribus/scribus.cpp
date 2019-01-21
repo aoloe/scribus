@@ -221,6 +221,7 @@ for which a new license (GPL+exception) is in place.
 #include "ui/preferencesdialog.h"
 #include "ui/preview.h"
 #include "ui/printdialog.h"
+#include "ui/contentpalette.h"
 #include "ui/propertiespalette.h"
 #include "ui/propertiespalette_image.h"
 #include "ui/propertiespalette_line.h"
@@ -605,6 +606,12 @@ void ScribusMainWindow::initPalettes()
 	connect( scrActions["toolsOutline"], SIGNAL(toggled(bool)) , outlinePalette, SLOT(setPaletteShown(bool)));
 	connect( outlinePalette, SIGNAL(paletteShown(bool)), scrActions["toolsOutline"], SLOT(setChecked(bool)));
 
+	contentPalette = new ContentPalette(this);
+	contentPalette->setMainWindow(this);
+	connect( scrActions["toolsContent"], SIGNAL(toggled(bool)) , contentPalette, SLOT(setPaletteShown(bool)));
+	connect( contentPalette, SIGNAL(paletteShown(bool)), scrActions["toolsContent"], SLOT(setChecked(bool)));
+	contentPalette->installEventFilter(this);
+
 	propertiesPalette = new PropertiesPalette(this);
 	propertiesPalette->setMainWindow(this);
 	connect( scrActions["toolsProperties"], SIGNAL(toggled(bool)) , propertiesPalette, SLOT(setPaletteShown(bool)));
@@ -618,6 +625,11 @@ void ScribusMainWindow::initPalettes()
 	connect( textPalette, SIGNAL(paletteShown(bool)), scrActions["toolsText"], SLOT(setChecked(bool)));
 	emit UpdateRequest(reqDefFontListUpdate);
 	textPalette->installEventFilter(this);
+
+    contentPalette->addPalette(textPalette);
+
+    contentPalette->addPalette(textPalette);
+
 	nodePalette = new NodePalette(this);
 	nodePalette->installEventFilter(this);
 	layerPalette = new LayerPalette(this);
@@ -1202,6 +1214,7 @@ void ScribusMainWindow::addDefaultWindowMenuItems()
 	scrMenuMgr->addMenuItemString("windowsCascade", "Windows");
 	scrMenuMgr->addMenuItemString("windowsTile", "Windows");
 	scrMenuMgr->addMenuItemString("SEPARATOR", "Windows");
+	scrMenuMgr->addMenuItemString("toolsContent", "Windows");
 	scrMenuMgr->addMenuItemString("toolsProperties", "Windows");
 	scrMenuMgr->addMenuItemString("toolsText", "Windows");
 	scrMenuMgr->addMenuItemString("toolsActionHistory", "Windows");
@@ -1984,6 +1997,7 @@ void ScribusMainWindow::closeEvent(QCloseEvent *ce)
 			m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.append(currentTab);
 	}
 
+	contentPalette->hide();
 	propertiesPalette->hide();
 	textPalette->hide();
 	outlinePalette->hide();
@@ -5560,6 +5574,8 @@ void ScribusMainWindow::ToggleAllPalettes()
 	if (m_palettesStatus[PAL_ALL])
 	{
 		m_palettesStatus[PAL_ALL] = false;
+		if (m_palettesStatus[PAL_CONTENT])
+			contentPalette->show();
 		if (m_palettesStatus[PAL_PROPERTIES])
 			propertiesPalette->show();
 		if (m_palettesStatus[PAL_TEXT])
@@ -5582,6 +5598,7 @@ void ScribusMainWindow::ToggleAllPalettes()
 	}
 	else
 	{
+		m_palettesStatus[PAL_CONTENT] = contentPalette->isVisible();
 		m_palettesStatus[PAL_PROPERTIES] = propertiesPalette->isVisible();
 		m_palettesStatus[PAL_TEXT] = textPalette->isVisible();
 		m_palettesStatus[PAL_OUTLINE] = outlinePalette->isVisible();
@@ -5592,6 +5609,7 @@ void ScribusMainWindow::ToggleAllPalettes()
 		m_palettesStatus[PAL_UNDO] = undoPalette->isVisible();
 		m_palettesStatus[PAL_VERIFIER] = docCheckerPalette->isVisible();
 		m_palettesStatus[PAL_DOWNLOADS] = downloadsPalette->isVisible();
+		contentPalette->hide();
 		propertiesPalette->hide();
 		textPalette->hide();
 		outlinePalette->hide();
@@ -6778,6 +6796,7 @@ void ScribusMainWindow::slotDocSetup()
 
 int ScribusMainWindow::ShowSubs()
 {
+	contentPalette->startup();
 	propertiesPalette->startup();
 	textPalette->startup();
 	outlinePalette->startup();
@@ -10009,6 +10028,7 @@ void ScribusMainWindow::setPreviewToolbar()
 	inlinePalette->setEnabled(!doc->drawAsPreview);
 	undoPalette->setEnabled(!doc->drawAsPreview);
 	outlinePalette->setEnabled(!(doc->drawAsPreview && !doc->editOnPreview));
+	contentPalette->setEnabled(!(doc->drawAsPreview && !doc->editOnPreview));
 	propertiesPalette->setEnabled(!(doc->drawAsPreview && !doc->editOnPreview));
 	textPalette->setEnabled(!(doc->drawAsPreview && !doc->editOnPreview));
 	scrMenuMgr->setMenuEnabled("Edit", !doc->drawAsPreview);

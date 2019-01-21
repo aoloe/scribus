@@ -785,6 +785,8 @@ void ActionManager::initToolsMenuActions()
 {
 	QString name;
 	//Tool menu
+	name="toolsContent";
+	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="toolsProperties";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="toolsText";
@@ -894,6 +896,7 @@ void ActionManager::initToolsMenuActions()
 	scrActions->insert(name, new ScrAction(ScrAction::DataInt, im->loadPixmap("16/annot3d.png"), im->loadPixmap("22/annot3d.png"), "", defaultKey(name), mainWindow, modeInsertPDF3DAnnotation));
 #endif
 	//Set the applicaton wide palette shortcuts
+	(*scrActions)["toolsContent"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsProperties"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsText"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsScrapbook"]->setShortcutContext(Qt::ApplicationShortcut);
@@ -908,6 +911,7 @@ void ActionManager::initToolsMenuActions()
 	(*scrActions)["toolsInline"]->setShortcutContext(Qt::ApplicationShortcut);
 
 
+	(*scrActions)["toolsContent"]->setToggleAction(true);
 	(*scrActions)["toolsProperties"]->setToggleAction(true);
 	(*scrActions)["toolsText"]->setToggleAction(true);
 	(*scrActions)["toolsOutline"]->setToggleAction(true);
@@ -1673,6 +1677,7 @@ void ActionManager::languageChange()
 //	(*scrActions)["viewNewView"]->setTexts( tr("New View"));
 
 	//Tool menu
+	(*scrActions)["toolsContent"]->setTexts( tr("&Content Properties"));
 	(*scrActions)["toolsProperties"]->setTexts( tr("&Properties"));
 	(*scrActions)["toolsText"]->setTexts( tr("Text Properties"));
 	(*scrActions)["toolsOutline"]->setTexts( tr("&Outline", "Document Outline Palette"));
@@ -1940,8 +1945,8 @@ void ActionManager::createDefaultShortcuts()
 	defKeys.insert("viewShowContextMenu", Qt::Key_Menu); //Context menu key on Windows. Do we have one to use on Linux/OSX? Super_L ?
 
 	//Tool menu
+	defKeys.insert("toolsContent", Qt::Key_F3);
 	defKeys.insert("toolsProperties", Qt::Key_F2);
-	defKeys.insert("toolsText", Qt::Key_F3);
 	defKeys.insert("toolsLayers", Qt::Key_F6);
 
 	//toolbar only items
@@ -2346,6 +2351,7 @@ void ActionManager::createDefaultMenus()
 	itmenu->second
 		<< "windowsCascade"
 		<< "windowsTile"
+		<< "toolsContent"
 		<< "toolsProperties"
 		<< "toolsText"
 		<< "toolsOutline"

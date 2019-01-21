@@ -67,13 +67,13 @@ CanvasMode_EditArc::CanvasMode_EditArc(ScribusView* view) : CanvasMode(view), m_
 	m_arcPoint = noPointDefined;
 	m_startAngle = m_endAngle = 0;
 
-	vectorDialog = 0;
+	vectorDialog = nullptr;
 }
 
 inline bool CanvasMode_EditArc::GetItem(PageItem** pi)
 { 
 	*pi = m_doc->m_Selection->itemAt(0);
-	return (*pi) != NULL;
+	return (*pi) != nullptr;
 }
 
 void CanvasMode_EditArc::drawControls(QPainter* p)

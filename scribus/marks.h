@@ -34,7 +34,7 @@ struct MarkData
 	QString itemName;
 	MarkType markTyp;
 	
-	MarkData() : itemPtr(NULL), destmarkType(MARKNoType), notePtr(NULL), markTyp(MARKNoType) {}
+	MarkData() : itemPtr(nullptr), destmarkType(MARKNoType), notePtr(nullptr), markTyp(MARKNoType) {}
 };
 
 class SCRIBUS_API Mark
@@ -51,7 +51,7 @@ public:
 	QString label;
 	int OwnPage;
 
-	void setValues(const QString& l, int p, MarkType t, MarkData d);
+	void setValues(const QString& l, int p, MarkType t, const MarkData& d);
 	MarkType getType() { return typ; }
 	void setType(MarkType t) { typ = t; }
 	const MarkData getData() { return data; }
@@ -66,7 +66,7 @@ public:
 	//for marks to marks - set label and type of target mark from mark pointer
 	void setMark(Mark* mP)
 	{
-		if (mP == NULL)
+		if (mP == nullptr)
 		{
 			data.destmarkName = "";
 			data.destmarkType = MARKNoType;
@@ -81,7 +81,7 @@ public:
 	MarkType getMarkType() { return data.markTyp; }
 	void setMarkType(MarkType t) { data.markTyp = t; }
 	const QString getString();
-	void setString( const QString str );
+	void setString(const QString& str );
 	TextNote* getNotePtr() { return data.notePtr; }
 	void setNotePtr(TextNote *note);
 

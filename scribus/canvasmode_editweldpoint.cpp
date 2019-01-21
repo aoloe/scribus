@@ -69,8 +69,8 @@ CanvasMode_EditWeldPoint::CanvasMode_EditWeldPoint(ScribusView* view) : CanvasMo
 	m_selectedPoint(-1),
 	m_ScMW(view->m_ScMW),
 	m_keyRepeat(false),
-	m_currItem(NULL),
-	m_ModeDialog(NULL),
+	m_currItem(nullptr),
+	m_ModeDialog(nullptr),
 	m_editWeldMode(true)
 {
 }
@@ -78,7 +78,7 @@ CanvasMode_EditWeldPoint::CanvasMode_EditWeldPoint(ScribusView* view) : CanvasMo
 inline bool CanvasMode_EditWeldPoint::GetItem(PageItem** pi)
 {
 	*pi = m_doc->m_Selection->itemAt(0);
-	return (*pi) != NULL;
+	return (*pi) != nullptr;
 }
 
 void CanvasMode_EditWeldPoint::drawControls(QPainter* p)
@@ -335,13 +335,10 @@ void CanvasMode_EditWeldPoint::mouseDoubleClickEvent(QMouseEvent *m)
 			}
 			return;
 		}
-		else
+		if (!(GetItem(&m_currItem) && (m_doc->appMode == modeEdit) && m_currItem->asTextFrame()))
 		{
-			if (!(GetItem(&m_currItem) && (m_doc->appMode == modeEdit) && m_currItem->asTextFrame()))
-			{
-				mousePressEvent(m);
-				return;
-			}
+			mousePressEvent(m);
+			return;
 		}
 	}
 }
@@ -448,49 +445,49 @@ void CanvasMode_EditWeldPoint::snapToEdgePoints(double &x, double &y)
 		y = 0.0;
 		return;
 	}
-	else if ((qAbs((m_currItem->width() / 2.0) - x) < radius) && (qAbs(0.0 - y) < radius))
+	if ((qAbs((m_currItem->width() / 2.0) - x) < radius) && (qAbs(0.0 - y) < radius))
 	{
 		x = m_currItem->width() / 2.0;
 		y = 0.0;
 		return;
 	}
-	else if ((qAbs(m_currItem->width() - x) < radius) && (qAbs(0.0 - y) < radius))
+	if ((qAbs(m_currItem->width() - x) < radius) && (qAbs(0.0 - y) < radius))
 	{
 		x = m_currItem->width();
 		y = 0.0;
 		return;
 	}
-	else if ((qAbs(0.0 - x) < radius) && (qAbs((m_currItem->height() / 2.0) - y) < radius))
+	if ((qAbs(0.0 - x) < radius) && (qAbs((m_currItem->height() / 2.0) - y) < radius))
 	{
 		x = 0.0;
 		y = m_currItem->height() / 2.0;
 		return;
 	}
-	else if ((qAbs((m_currItem->width() / 2.0) - x) < radius) && (qAbs((m_currItem->height() / 2.0) - y) < radius))
+	if ((qAbs((m_currItem->width() / 2.0) - x) < radius) && (qAbs((m_currItem->height() / 2.0) - y) < radius))
 	{
 		x = m_currItem->width() / 2.0;
 		y = m_currItem->height() / 2.0;
 		return;
 	}
-	else if ((qAbs(m_currItem->width() - x) < radius) && (qAbs((m_currItem->height() / 2.0) - y) < radius))
+	if ((qAbs(m_currItem->width() - x) < radius) && (qAbs((m_currItem->height() / 2.0) - y) < radius))
 	{
 		x = m_currItem->width();
 		y = m_currItem->height() / 2.0;
 		return;
 	}
-	else if ((qAbs(0.0 - x) < radius) && (qAbs(m_currItem->height() - y) < radius))
+	if ((qAbs(0.0 - x) < radius) && (qAbs(m_currItem->height() - y) < radius))
 	{
 		x = 0.0;
 		y = m_currItem->height();
 		return;
 	}
-	else if ((qAbs((m_currItem->width() / 2.0) - x) < radius) && (qAbs(m_currItem->height() - y) < radius))
+	if ((qAbs((m_currItem->width() / 2.0) - x) < radius) && (qAbs(m_currItem->height() - y) < radius))
 	{
 		x = m_currItem->width() / 2.0;
 		y = m_currItem->height();
 		return;
 	}
-	else if ((qAbs(m_currItem->width() - x) < radius) && (qAbs(m_currItem->height() - y) < radius))
+	if ((qAbs(m_currItem->width() - x) < radius) && (qAbs(m_currItem->height() - y) < radius))
 	{
 		x = m_currItem->width();
 		y = m_currItem->height();

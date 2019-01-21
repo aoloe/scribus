@@ -10,36 +10,193 @@ for which a new license (GPL+exception) is in place.
 #include "util.h"
 #include "scribuscore.h"
 
-static PyObject *getLinkData(PyObject *rv,int page, QString action);
-static void prepareannotation(PageItem *i);
+static PyObject *getLinkData(PyObject *rv, int page, const QString& action);
+static void prepareannotation(PageItem *item);
 static void setactioncoords(Annotation &a, int x, int y);
-static bool testPageItem(PageItem *i);
-static void add_text_to_dict(PyObject *drv, PageItem *i);
+static bool testPageItem(PageItem *item);
+static void add_text_to_dict(PyObject *drv, PageItem *item);
+
+PyObject *scribus_setjsactionscript(PyObject * /*self*/, PyObject* args)
+{
+	/*
+		Java_ReleaseButton	= 0,
+		Java_PressButton	= 1,
+		Java_EnterWidget	= 2,
+		Java_LeaveWidget	= 3,
+		Java_FocusIn		= 4,
+		Java_FocusOut		= 5,
+		Java_SelectionChg	= 6,
+		Java_FieldFormat	= 7,
+		Java_FieldValidate	= 8,
+		Java_FieldCalculate	= 9
+	*/
+	int action;
+	char *script = const_cast<char*>("");
+	char *name = const_cast<char*>("");
+
+	if (!PyArg_ParseTuple(args, "is|es",&action,&script,"utf-8", &name))
+		return nullptr;
+
+	if (action < 0 || action > 9)
+	{
+		QString qnum = QString("%1").arg(action);
+		PyErr_SetString(PyExc_RuntimeError,
+			QObject::tr("Action must be an integer in range 0-9 " + qnum.toUtf8(), "python error").toLocal8Bit().constData());
+		return nullptr;
+	}
+
+	if (!checkHaveDocument())
+		return nullptr;
+
+	PageItem *item = GetUniqueItem(QString::fromUtf8(name));
+	if (item == nullptr)
+		return nullptr;
+
+	if (item->isAnnotation() == false)
+	{
+		PyErr_SetString(PyExc_RuntimeError,
+			QObject::tr("Page item must be an annotation", "python error").toLocal8Bit().constData());
+		return nullptr;
+	}
+	
+	Annotation &annotation = item->annotation();
+	annotation.setActionType(Annotation::Action_JavaScript);
+	QString javascript = QString::fromUtf8(script); 
+
+	switch (action)
+	{
+	case Annotation::Java_ReleaseButton:
+		annotation.setAction(javascript);
+		break;
+	case Annotation::Java_PressButton:
+		annotation.setD_act(javascript);
+		break;
+	case Annotation::Java_EnterWidget:
+		annotation.setE_act(javascript);
+		break;
+	case Annotation::Java_LeaveWidget:
+		annotation.setX_act(javascript);
+		break;
+	case Annotation::Java_FocusIn:
+		annotation.setFo_act(javascript);
+		break;
+	case Annotation::Java_FocusOut:
+		annotation.setBl_act(javascript);
+		break;
+	case Annotation::Java_SelectionChg:
+		annotation.setK_act(javascript);
+		break;
+	case Annotation::Java_FieldFormat:
+		annotation.setF_act(javascript);
+		break;
+	case Annotation::Java_FieldValidate:
+		annotation.setV_act(javascript);
+		break;
+	case Annotation::Java_FieldCalculate:
+		annotation.setC_act(javascript);
+		break;
+	}
+
+	Py_RETURN_NONE;
+}
+
+PyObject *scribus_getjsactionscript(PyObject * /*self*/, PyObject* args)
+{
+	int action;
+	char *name = const_cast<char*>("");
+
+	if (!PyArg_ParseTuple(args, "i|es",&action,"utf-8", &name))
+		return nullptr;
+
+	if (action < 0 || action > 9)
+	{
+		QString qnum = QString("%1").arg(action);
+		PyErr_SetString(PyExc_RuntimeError,
+			QObject::tr("Action must be be 0-9 " + qnum.toUtf8(), "python error").toLocal8Bit().constData());
+		return nullptr;
+	}
+
+	if (!checkHaveDocument())
+		return nullptr;
+
+	PageItem *item = GetUniqueItem(QString::fromUtf8(name));
+	if (item == nullptr)
+		return nullptr;
+
+	if (item->isAnnotation() == false)
+	{
+		PyErr_SetString(PyExc_RuntimeError,
+			QObject::tr("Page item must be an annotation", "python error").toLocal8Bit().constData());
+		return nullptr;
+	}
+
+    Annotation &annotation = item->annotation();
+	if (annotation.ActionType() != Annotation::Action_JavaScript)
+		Py_RETURN_NONE;
+
+	QString rv;
+	switch (action)
+	{
+	case Annotation::Java_ReleaseButton:
+		rv = annotation.Action();
+		break;
+	case Annotation::Java_PressButton:
+		rv = annotation.D_act();
+		break;
+	case Annotation::Java_EnterWidget:
+		rv = annotation.E_act();
+		break;
+	case Annotation::Java_LeaveWidget:
+		rv = annotation.X_act();
+		break;
+	case Annotation::Java_FocusIn:
+		rv = annotation.Fo_act();
+		break;
+	case Annotation::Java_FocusOut:
+		rv = annotation.Bl_act();
+		break;
+	case Annotation::Java_SelectionChg:
+		rv = annotation.K_act();
+		break;
+	case Annotation::Java_FieldFormat:
+		rv = annotation.F_act();
+		break;
+	case Annotation::Java_FieldValidate:
+		rv = annotation.V_act();
+		break;
+	case Annotation::Java_FieldCalculate:
+		rv = annotation.C_act();
+		break;
+	}
+
+	PyObject *rstr = PyString_FromString(rv.toUtf8());
+	return rstr;
+}
 
 PyObject *scribus_isannotated(PyObject * /*self*/, PyObject* args, PyObject *keywds)
 {
 	char *name = const_cast<char*>("");  
 	PyObject *deannotate = Py_False;
-	char *kwlist[] = {const_cast<char*>(""),const_cast<char*>("deannotate"), NULL};
+	char *kwlist[] = {const_cast<char*>(""),const_cast<char*>("deannotate"), nullptr};
 
 	if (!PyArg_ParseTupleAndKeywords(args, keywds, "|esO", kwlist, "utf-8", &name, &deannotate))
-		return NULL;
+		return nullptr;
 	if (!checkHaveDocument())
-		return NULL;
+		return nullptr;
 
-	PageItem *i = GetUniqueItem(QString::fromUtf8(name));
-	if (i == NULL)
-		return NULL;
+	PageItem *item = GetUniqueItem(QString::fromUtf8(name));
+	if (item == nullptr)
+		return nullptr;
 
-	if (i->isAnnotation())
+	if (item->isAnnotation())
 	{
 		if (PyObject_IsTrue(deannotate)==1)
 		{
-			i->setIsAnnotation(false);
+			item->setIsAnnotation(false);
 			Py_RETURN_NONE;
 		}
 
-		Annotation a = i->annotation();
+		Annotation a = item->annotation();
 		int atype = a.Type();
 		int actype = a.ActionType();
 
@@ -57,72 +214,72 @@ PyObject *scribus_isannotated(PyObject * /*self*/, PyObject* args, PyObject *key
 			PyObject *pathkey = PyString_FromString(path);
 			PyObject *pathvalue = PyString_FromString(a.Extern().toUtf8());
 			PyDict_SetItem(drv, pathkey, pathvalue);
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name3, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Link && actype == Annotation::Action_URI)
+		if (atype == Annotation::Link && actype == Annotation::Action_URI)
 		{
 			const char uri[] = "uri";
 			PyObject *ukey = PyString_FromString(uri);
 			PyObject *uval = PyString_FromString(a.Extern().toUtf8());
 			PyDict_SetItem(drv, ukey, uval);
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			char *name4= const_cast<char*>("Link URI");
 			PyObject *rv = Py_BuildValue("(sO)", name4, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Link)
+		if (atype == Annotation::Link)
 		{
 			getLinkData(drv, a.Ziel(), a.Action());
 			const char name2[] = "Link";
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name2, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Button)
+		if (atype == Annotation::Button)
 		{
 			const char name5[] = "Button";
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name5, drv);
 			return rv;
 		}
-		else if (atype == Annotation::RadioButton)
+		if (atype == Annotation::RadioButton)
 		{
 			const char name4[] = "RadioButton";
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name4, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Textfield)
+		if (atype == Annotation::Textfield)
 		{
 			const char name6[] = "Textfield";
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name6, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Checkbox)
+		if (atype == Annotation::Checkbox)
 		{
 			const char name7[] = "Checkbox";
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name7, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Combobox)
+		if (atype == Annotation::Combobox)
 		{
 			const char name4[] = "Combobox";
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name4, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Listbox)
+		if (atype == Annotation::Listbox)
 		{
 			const char name8[] = "Listbox";
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name8, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Text)
+		if (atype == Annotation::Text)
 		{
 			/** icons: 0 "Note", 1 "Comment", 2 "Key",
 			3 "Help", 4 "NewParagraph", 5 "Paragraph", 6 "Insert",
@@ -134,7 +291,7 @@ PyObject *scribus_isannotated(PyObject * /*self*/, PyObject* args, PyObject *key
 			  "Key", "Help", 
 			  "NewParagraph","Paragraph",
 			  "Insert","Cross",
-			  "Circle", NULL
+			  "Circle", nullptr
 			};
 			if (icon >= 0 && icon < 9)
 			{
@@ -149,22 +306,19 @@ PyObject *scribus_isannotated(PyObject * /*self*/, PyObject* args, PyObject *key
 				open = Py_True;
 			PyDict_SetItem(drv, openkey, open);
 
-			add_text_to_dict(drv, i);
+			add_text_to_dict(drv, item);
 			PyObject *rv = Py_BuildValue("(sO)", name9, drv);
 			return rv;
 		}
-		else if (atype == Annotation::Annot3D)
+		if (atype == Annotation::Annot3D)
 		{
 			const char a3dname[] = "Annot3D";
 			PyObject *rv = Py_BuildValue("(sO)",a3dname, drv);
 			return rv;
 		}
-		else
-		{
-			const char unknown[] = "Unknown Annotation";
-			PyObject *rv = Py_BuildValue("(sO)", unknown, drv);
-			return rv;
-		}
+		const char unknown[] = "Unknown Annotation";
+		PyObject *rv = Py_BuildValue("(sO)", unknown, drv);
+		return rv;
 	}
 
 	Py_RETURN_NONE;
@@ -177,24 +331,24 @@ PyObject *scribus_setlinkannotation(PyObject* /* self */, PyObject* args)
 	int page, x, y;
 
 	if (!PyArg_ParseTuple(args, "iii|es", &page, &x, &y, "utf-8", &name))
-		return NULL;
+		return nullptr;
 	if (!checkHaveDocument())
-		return NULL;
+		return nullptr;
 
-	PageItem *i = GetUniqueItem(QString::fromUtf8(name));
-	if (!testPageItem(i))
-		return NULL;
+	PageItem *item = GetUniqueItem(QString::fromUtf8(name));
+	if (!testPageItem(item))
+		return nullptr;
 
 	int numpages = ScCore->primaryMainWindow()->doc->Pages->count();
 	if (page <= 0 || page > numpages){
 		QString qnum = QString("%1").arg(numpages);
 		PyErr_SetString(PyExc_RuntimeError,
 			QObject::tr("which must be 1 to " + qnum.toUtf8(), "python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 
-	prepareannotation(i);
-	Annotation &a = i->annotation();
+	prepareannotation(item);
+	Annotation &a = item->annotation();
 	a.setType(Annotation::Link);
 	page -= 1;
 	a.setZiel(page);
@@ -202,8 +356,6 @@ PyObject *scribus_setlinkannotation(PyObject* /* self */, PyObject* args)
 	a.setExtern(QString::fromUtf8(""));
 	a.setActionType(Annotation::Action_GoTo);
 
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -217,21 +369,21 @@ PyObject *scribus_setfileannotation(PyObject * /*self*/, PyObject* args, PyObjec
 
 	char *kwlist[] = {const_cast<char*>("path"), const_cast<char*>("page"), 
 			  const_cast<char*>("x"), const_cast<char*>("y"), 
-			  const_cast<char*>("name"),const_cast<char*>("absolute"), NULL};
+			  const_cast<char*>("name"),const_cast<char*>("absolute"), nullptr};
 
 	if (!PyArg_ParseTupleAndKeywords(args, keywds, "esiii|esO", kwlist,
 					 "utf-8", &path, &page, &x, &y,
 					 "utf-8", &name, &absolute))
-		return NULL;
+		return nullptr;
 	if (!checkHaveDocument())
-		return NULL;
+		return nullptr;
 
-	PageItem *i = GetUniqueItem(QString::fromUtf8(name));
-	if (!testPageItem(i))
-		return NULL;
+	PageItem *item = GetUniqueItem(QString::fromUtf8(name));
+	if (!testPageItem(item))
+		return nullptr;
 
-	prepareannotation(i);
-	Annotation &a = i->annotation();
+	prepareannotation(item);
+	Annotation &a = item->annotation();
 	a.setType(Annotation::Link);
 	a.setZiel(page - 1);
 	a.setExtern(QString::fromUtf8(path));
@@ -243,7 +395,6 @@ PyObject *scribus_setfileannotation(PyObject * /*self*/, PyObject* args, PyObjec
 		a.setActionType(Annotation::Action_GoToR_FileRel);
 
 	Py_RETURN_NONE;
-
 }
 
 PyObject *scribus_seturiannotation(PyObject * /*self*/, PyObject* args)
@@ -252,16 +403,16 @@ PyObject *scribus_seturiannotation(PyObject * /*self*/, PyObject* args)
 	char *name = const_cast<char*>("");
 
 	if (!PyArg_ParseTuple(args, "es|es","utf-8" ,&uri,"utf-8", &name))
-		return NULL;
+		return nullptr;
 	if (!checkHaveDocument())
-		return NULL;
+		return nullptr;
 
-	PageItem *i = GetUniqueItem(QString::fromUtf8(name));
-	if (!testPageItem(i))
-		return NULL;
+	PageItem *item = GetUniqueItem(QString::fromUtf8(name));
+	if (!testPageItem(item))
+		return nullptr;
 		
-	prepareannotation(i);
-	Annotation &a = i->annotation();
+	prepareannotation(item);
+	Annotation &a = item->annotation();
 	a.setAction(QString::fromUtf8(""));
 	a.setExtern(QString::fromUtf8(uri));
 	a.setActionType(Annotation::Action_URI);
@@ -287,23 +438,23 @@ PyObject *scribus_settextannotation(PyObject * /*self*/, PyObject* args)
 	*/ 
 
 	if (!PyArg_ParseTuple(args, "iO|es",&icon,&isopen,"utf-8", &name))
-		return NULL;
+		return nullptr;
 	if (!checkHaveDocument())
-		return NULL;
+		return nullptr;
 	if (icon < 0 || icon > 8)
 	{
 		PyErr_SetString(PyExc_RuntimeError,
 			QObject::tr("Icon must be 0 to 8", "python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 
-	PageItem *i = GetUniqueItem(QString::fromUtf8(name));
-	if (!testPageItem(i))
-		return NULL;
+	PageItem *item = GetUniqueItem(QString::fromUtf8(name));
+	if (!testPageItem(item))
+		return nullptr;
 	
-	prepareannotation(i);
+	prepareannotation(item);
 
-	Annotation &a = i->annotation();
+	Annotation &a = item->annotation();
 	a.setAnOpen(PyObject_IsTrue(isopen));
 	a.setActionType(Annotation::Action_None);
 	a.setIcon(icon);
@@ -326,14 +477,14 @@ PyObject *scribus_createpdfannotation(PyObject * /*self*/, PyObject* args)
 	char *name = const_cast<char*>("");
 
 	if (!PyArg_ParseTuple(args, "idddd|es", &which, &x, &y, &w, &h, "utf-8", &name))
-		return NULL;
+		return nullptr;
 	if (!checkHaveDocument())
-		return NULL;
+		return nullptr;
 
 	if (which < 0 || which > 8){
 		PyErr_SetString(PyExc_RuntimeError,
 			QObject::tr("which must be 0 to 8", "python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 
 	ScribusDoc *m_doc = ScCore->primaryMainWindow()->doc;
@@ -372,15 +523,12 @@ PyObject *scribus_createpdfannotation(PyObject * /*self*/, PyObject* args)
 		else{
 			PyErr_SetString(PyExc_RuntimeError,
 			QObject::tr("Doesn't have OSG can't create 3DAnnotation", "python error").toLocal8Bit().constData());
-			return NULL;
+			return nullptr;
 		}
 	}
 
-
 	PageItem *pi = m_doc->Items->at(i);
 	pi->AutoName=false;
-
-
 
 	if (strlen(name) > 0)
 	{
@@ -418,7 +566,7 @@ PyObject *scribus_createpdfannotation(PyObject * /*self*/, PyObject* args)
 	};
 	a.setType(atypes[which]);
 
-	switch(which)
+	switch (which)
 	{
 		case PDFBUTTON:
 			a.setFlag(Annotation::Flag_PushButton);
@@ -452,13 +600,15 @@ void cmdannotationsdocwarnings()
       << scribus_setfileannotation__doc__
       << scribus_seturiannotation__doc__
       << scribus_settextannotation__doc__
-      << scribus_createpdfannotation__doc__;
+      << scribus_createpdfannotation__doc__
+      << scribus_setjsactionscript__doc__
+      << scribus_getjsactionscript__doc__;
 }
 
 
 //HELPER FUNCTIONS
 
-PyObject *getLinkData(PyObject *rv,int page, QString action)
+PyObject *getLinkData(PyObject *rv,int page, const QString& action)
 {
 	int x, y;
 
@@ -486,13 +636,14 @@ PyObject *getLinkData(PyObject *rv,int page, QString action)
 
 }
 
-static void prepareannotation(PageItem *i)
+static void prepareannotation(PageItem *item)
 {
-	if (i->isBookmark == true){
-	  i->isBookmark = false;
-	  ScCore->primaryMainWindow()->DelBookMark(i);
+	if (item->isBookmark)
+	{
+		item->isBookmark = false;
+		ScCore->primaryMainWindow()->DelBookMark(item);
 	}
-	i->setIsAnnotation(true);
+	item->setIsAnnotation(true);
 }
 
 static void setactioncoords(Annotation &a, int x, int y)
@@ -502,11 +653,11 @@ static void setactioncoords(Annotation &a, int x, int y)
 	a.setAction(xstring.setNum(x) + " " + ystring.setNum(height - y) + " 0");
 }
 
-static bool testPageItem(PageItem *i)
+static bool testPageItem(PageItem *item)
 {
-	if (i == NULL)
+	if (item == nullptr)
 		return false;
-	if (!i->asTextFrame())
+	if (!item->asTextFrame())
 	{
 		PyErr_SetString(WrongFrameTypeError, 
 				QObject::tr("Can't set annotation on a non-text frame", "python error").toLocal8Bit().constData());
@@ -516,22 +667,22 @@ static bool testPageItem(PageItem *i)
 	return true;
 }
 
-static void add_text_to_dict(PyObject *drv, PageItem * i)
+static void add_text_to_dict(PyObject *drv, PageItem * item)
 {
 	const char text[] = "text";
 	PyObject *textkey = PyString_FromString(text);
-	QString txt = i->itemText.text(0, i->itemText.length());
+	QString txt = item->itemText.text(0, item->itemText.length());
 	PyObject *textvalue = PyString_FromString(txt.toUtf8());
 	PyDict_SetItem(drv, textkey, textvalue);
 
-	Annotation &a = i->annotation();
+	Annotation &a = item->annotation();
 	int actype = a.ActionType();
 
 	if (actype == Annotation::Action_JavaScript)
 	{
 		const char text[] = "javascript";
 		PyObject *jskey = PyString_FromString(text);
-		PyObject *jsvalue = PyString_FromString(i->annotation().Action().toUtf8());
+		PyObject *jsvalue = PyString_FromString(item->annotation().Action().toUtf8());
 		PyDict_SetItem(drv, jskey, jsvalue);
 	}
 
@@ -540,7 +691,7 @@ static void add_text_to_dict(PyObject *drv, PageItem * i)
 			            "Reset Form",  "Import Data", 
 			            "Unknown",  "Goto File Relative", 
 			            "URI",  "Goto File Relative" , 
-			            "Named", NULL };
+						"Named", nullptr };
 
 	const char action[] = "action";
 	PyObject *akey = PyString_FromString(action);

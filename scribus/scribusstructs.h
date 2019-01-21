@@ -31,6 +31,7 @@ for which a new license (GPL+exception) is in place.
 #include "fpointarray.h"
 #include "pageitem.h"
 #include "margins.h"
+#include "sccolorstructs.h"
 #include "scfonts.h"
 #include "scimagestructs.h"
 #include "sctextstruct.h"
@@ -38,40 +39,6 @@ for which a new license (GPL+exception) is in place.
 #include "colormgmt/sccolormgmtstructs.h"
 
 extern bool SCRIBUS_API compareDouble(double, double);
-
-struct RGBColor
-{
-	int r;
-	int g;
-	int b;
-	void getValues(int& vr, int& vg, int& vb) { vr = r; vg = g; vb = b; }
-};
-
-struct RGBColorF
-{
-	double r;
-	double g;
-	double b;
-	void getValues(double& vr, double& vg, double& vb) { vr = r; vg = g; vb = b; }
-};
-
-struct CMYKColor
-{
-	int c;
-	int m;
-	int y;
-	int k;
-	void getValues(int& vc, int& vm, int& vy, int& vk) { vc = c; vm = m; vy = y; vk = k; }
-};
-
-struct CMYKColorF
-{
-	double c;
-	double m;
-	double y;
-	double k;
-	void getValues(double& vc, double& vm, double& vy, double& vk) { vc = c; vm = m; vy = y; vk = k; }
-};
 
 struct CopyContentsBuffer
 {
@@ -173,8 +140,8 @@ struct Bullet  //used by style reader while importing ODT files
 	double firstLineIndent;
 	double tabPosition;
 	CharStyle* style;
-	Bullet() : indent(0.0), firstLineIndent(0.0), tabPosition(0.0), style(NULL) {}
-	Bullet(QString n, QString ch) : name(n), charStr(ch), indent(0.0), firstLineIndent(0.0), tabPosition(0.0), style(NULL) {}
+	Bullet() : indent(0.0), firstLineIndent(0.0), tabPosition(0.0), style(nullptr) {}
+	Bullet(QString n, QString ch) : name(n), charStr(ch), indent(0.0), firstLineIndent(0.0), tabPosition(0.0), style(nullptr) {}
 	Bullet(QString n, QString ch, double first, double ind, double tab, CharStyle* chStyle)
 	    { name = n; charStr = ch, firstLineIndent = first; indent = ind; tabPosition = tab; style = chStyle; }
 };
@@ -330,7 +297,8 @@ enum PageToPixmapFlag {
 	Pixmap_NoFlags = 0,
 	Pixmap_DrawFrame = 1 << 0,
 	Pixmap_DrawBackground = 1 << 1,
-	Pixmap_DontReloadImages = 1 << 2,
+	Pixmap_DrawWhiteBackground = 1 << 2,
+	Pixmap_DontReloadImages = 1 << 3,
 };
 
 Q_DECLARE_FLAGS(PageToPixmapFlags, PageToPixmapFlag);

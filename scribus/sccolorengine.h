@@ -26,7 +26,7 @@ for which a new license (GPL+exception) is in place.
 
 #include "scribusapi.h"
 #include "sccolor.h"
-#include "scribusstructs.h"
+#include "sccolorstructs.h"
 class ScribusDoc;
 
 class SCRIBUS_API ScColorEngine
@@ -71,7 +71,7 @@ public:
 
 	/** \brief Return a color converted to monitor color space. No soft-proofing is done
 	* If gamut check is valid, the return value may be an gamut warning . */
-	static QColor getDisplayColorGC(const ScColor& color, const ScribusDoc* doc, bool *outOfG = NULL);
+	static QColor getDisplayColorGC(const ScColor& color, const ScribusDoc* doc, bool *outOfG = nullptr);
 
 	/** \brief Return a proofed QColor with 100% shade and optional gamut check.
 	* If color management is enabled, returned value use the monitor color space. */

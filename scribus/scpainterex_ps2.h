@@ -47,12 +47,13 @@ for which a new license (GPL+exception) is in place.
 #include "vgradient.h"
 #include "scpainterexbase.h"
 
+class ScImage;
 class ScribusDoc;
 
 class ScPs2OutputParams
 {
 public:
-	ScPs2OutputParams(ScribusDoc* doc = NULL);
+	ScPs2OutputParams(ScribusDoc* doc = nullptr);
 	ScPainterExBase::ColorMode colorMode;
 	ScribusDoc* document;
 	bool reloadImages;

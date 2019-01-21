@@ -56,19 +56,16 @@ for which a new license (GPL+exception) is in place.
 #include "util_formats.h"
 #include "util_math.h"
 
-
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 DrwPlug::DrwPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
 	m_Doc=doc;
 	importerFlags = flags;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
-	progressDialog = NULL;
+	progressDialog = nullptr;
 }
 
-QImage DrwPlug::readThumbnail(QString fName)
+QImage DrwPlug::readThumbnail(const QString& fName)
 {
 	QFileInfo fi = QFileInfo(fName);
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
@@ -76,12 +73,12 @@ QImage DrwPlug::readThumbnail(QString fName)
 	double h = PrefsManager::instance()->appPrefs.docSetupPrefs.pageHeight;
 	docWidth = b;
 	docHeight = h;
-	progressDialog = NULL;
+	progressDialog = nullptr;
 	m_Doc = new ScribusDoc();
 	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_Doc->setPage(docWidth, docHeight, 0, 0, 0, 0, 0, 0, false, false);
 	m_Doc->addPage(0);
-	m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), nullptr);
 	baseX = m_Doc->currentPage()->xOffset();
 	baseY = m_Doc->currentPage()->yOffset();
 	Elements.clear();
@@ -130,26 +127,22 @@ QImage DrwPlug::readThumbnail(QString fName)
 		delete m_Doc;
 		return tmpImage;
 	}
-	else
-	{
-		QDir::setCurrent(CurDirP);
-		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->setScriptRunning(false);
-		delete m_Doc;
-	}
+	QDir::setCurrent(CurDirP);
+	m_Doc->DoDrawing = true;
+	m_Doc->scMW()->setScriptRunning(false);
+	delete m_Doc;
 	return QImage();
 }
 
-bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool DrwPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
 	cancel = false;
 	double b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -158,7 +151,7 @@ bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -174,7 +167,7 @@ bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		qApp->processEvents();
 	}
 	else
-		progressDialog = NULL;
+		progressDialog = nullptr;
 /* Set default Page to size defined in Preferences */
 	b = 0.0;
 	h = 0.0;
@@ -225,18 +218,18 @@ bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			m_Doc->setPageOrientation(0);
 		m_Doc->setPageSize("Custom");
 	}
-	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != NULL))
+	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != nullptr))
 		m_Doc->view()->Deselect();
 	Elements.clear();
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
-	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != NULL))
+	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != nullptr))
 		m_Doc->view()->updatesOn(false);
 	m_Doc->scMW()->setScriptRunning(true);
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -263,14 +256,14 @@ bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 					}
 					m_Doc->m_Selection->delaySignalsOff();
 					m_Doc->m_Selection->setGroupRect();
-					if (m_Doc->view() != NULL)
+					if (m_Doc->view() != nullptr)
 						m_Doc->view()->updatesOn(true);
 				}
 			}
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -278,7 +271,7 @@ bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 					tmpSel->addItem(Elements.at(dre), true);
 				}
 				tmpSel->setGroupRect();
-				ScElemMimeData* md = ScriXmlDoc::WriteToMimeData(m_Doc, tmpSel);
+				ScElemMimeData* md = ScriXmlDoc::writeToMimeData(m_Doc, tmpSel);
 				m_Doc->itemSelection_DeleteItem(tmpSel);
 				m_Doc->view()->updatesOn(true);
 				if (importedColors.count() != 0)
@@ -301,7 +294,7 @@ bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -336,12 +329,11 @@ bool DrwPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 
 DrwPlug::~DrwPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSel;
 }
 
-bool DrwPlug::convert(QString fn)
+bool DrwPlug::convert(const QString& fn)
 {
 	Coords.resize(0);
 	Coords.svgInit();
@@ -367,8 +359,8 @@ bool DrwPlug::convert(QString fn)
 	recordCount = 0;
 	imageValid = false;
 	thumbRead = false;
-	currentItem = NULL;
-	if(progressDialog)
+	currentItem = nullptr;
+	if (progressDialog)
 	{
 		progressDialog->setOverallProgress(2);
 		progressDialog->setLabel("GI", tr("Generating Items"));
@@ -535,7 +527,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 							path.lineTo(coor);
 					}
 				}
-				if (currentItem != NULL)
+				if (currentItem != nullptr)
 				{
 					currentItem->PoLine.fromQPainterPath(path);
 					QRectF bBoxO = path.boundingRect();
@@ -544,14 +536,14 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 					if (bBoxO.y() < 0)
 						currentItem->PoLine.translate(0, -bBoxO.y());
 					finishItem(currentItem);
-					if (currentItem != NULL)
+					if (currentItem != nullptr)
 					{
 						handleLineStyle(currentItem, flags, lineColor);
 						handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 					}
 				}
 				createObjCode = 0;
-				currentItem = NULL;
+				currentItem = nullptr;
 			}
 			else if (createObjCode == 2)
 			{
@@ -575,7 +567,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 					a += 3;
 					path.cubicTo(p1, p2, p3);
 				}
-				if (currentItem != NULL)
+				if (currentItem != nullptr)
 				{
 					currentItem->PoLine.fromQPainterPath(path);
 					QRectF bBoxO = path.boundingRect();
@@ -584,14 +576,14 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 					if (bBoxO.y() < 0)
 						currentItem->PoLine.translate(0, -bBoxO.y());
 					finishItem(currentItem);
-					if (currentItem != NULL)
+					if (currentItem != nullptr)
 					{
 						handleLineStyle(currentItem, flags, lineColor);
 						handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 					}
 				}
 				createObjCode = 0;
-				currentItem = NULL;
+				currentItem = nullptr;
 			}
 			else if (createObjCode == 4)
 			{
@@ -615,7 +607,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 					a++;
 					path.quadTo(p1, p2);
 				}
-				if (currentItem != NULL)
+				if (currentItem != nullptr)
 				{
 					currentItem->PoLine.fromQPainterPath(path);
 					QRectF bBoxO = path.boundingRect();
@@ -624,14 +616,14 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 					if (bBoxO.y() < 0)
 						currentItem->PoLine.translate(0, -bBoxO.y());
 					finishItem(currentItem);
-					if (currentItem != NULL)
+					if (currentItem != nullptr)
 					{
 						handleLineStyle(currentItem, flags, lineColor);
 						handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 					}
 				}
 				createObjCode = 0;
-				currentItem = NULL;
+				currentItem = nullptr;
 			}
 			break;
 		case 7:
@@ -667,14 +659,14 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 				txS.translate(-bbox.x(), -bbox.y());
 				txS.translate(0, fm.leading() * scaleFactor);
 				path = txS.map(path);
-				if (currentItem != NULL)
+				if (currentItem != nullptr)
 				{
 					currentItem->PoLine.fromQPainterPath(path);
 					currentItem->setWidth(bbox.width());
 					finishItem(currentItem, false);
 				}
 				createObjCode = 0;
-				currentItem = NULL;
+				currentItem = nullptr;
 			}
 			break;
 		case 9:
@@ -742,7 +734,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 						if (!PrefsManager::instance()->appPrefs.fontPrefs.GFontSub.contains(fontName))
 						{
 							qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
-							MissingFont *dia = new MissingFont(0, fontName, m_Doc);
+							MissingFont *dia = new MissingFont(nullptr, fontName, m_Doc);
 							dia->exec();
 							textFont = dia->getReplacementFont();
 							delete dia;
@@ -788,7 +780,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 				else
 					m_Doc->setPageOrientation(0);
 				m_Doc->setPageSize("Custom");
-				m_Doc->changePageProperties(0, 0, 0, 0, docHeight, docWidth, docHeight, docWidth, m_Doc->pageOrientation(), m_Doc->pageSize(), m_Doc->currentPage()->pageNr(), 0);
+				m_Doc->changePageProperties(0, 0, 0, 0, docHeight, docWidth, docHeight, docWidth, m_Doc->pageOrientation(), m_Doc->pageSize(), m_Doc->currentPage()->pageNr(), false);
 				cmdText = QString("DRW Page  Width %1  Height %2").arg(docWidth).arg(docHeight);
 			}
 			break;
@@ -903,7 +895,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 				}
 				if (scanLinesRead >= imageHeight)
 				{
-					if (currentItem != NULL)
+					if (currentItem != nullptr)
 					{
 						QTemporaryFile *tempFile = new QTemporaryFile(QDir::tempPath() + "/scribus_temp_drw_XXXXXX.png");
 						tempFile->setAutoRemove(false);
@@ -931,7 +923,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			ds.device()->seek(0x11);
 			if (createObjCode == 6)
 			{
-				if (currentItem != NULL)
+				if (currentItem != nullptr)
 				{
 					DRWParagraph para = paragraphList.at(paragraphCounter);
 					paragraphCounter++;
@@ -965,7 +957,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 			break;
 		case 35:
 			cmdText += "DRW Colortable";
-			if (currentItem != NULL)
+			if (currentItem != nullptr)
 			{
 				if (currentItem->asImageFrame())
 				{
@@ -1261,7 +1253,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 	QRectF bBoxO;
 	QString fillC = CommonStrings::None;
 	createObjCode = 0;
-	currentItem = NULL;
+	currentItem = nullptr;
 	ds >> data8;							// reading Symbol Type
 // now reading common values
 	ds >> flags;
@@ -1389,7 +1381,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Ellipse, posX, posY, bBox.width(), bBox.height(), lineWidth, fillC, lineColor);
 			currentItem = m_Doc->Items->at(z);
 			finishItem(currentItem);
-			if (currentItem != NULL)
+			if (currentItem != nullptr)
 			{
 				handleLineStyle(currentItem, flags, lineColor);
 				handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
@@ -1469,7 +1461,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			currentItem = m_Doc->Items->at(z);
 			handleLineStyle(currentItem, flags, lineColor);
 			finishItem(currentItem);
-			if (currentItem != NULL)
+			if (currentItem != nullptr)
 			{
 				if (data8 == 11)
 					currentItem->setCornerRadius(cornerRadius);
@@ -1494,7 +1486,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			currentItem = m_Doc->Items->at(z);
 			handleLineStyle(currentItem, flags, lineColor);
 			finishItem(currentItem);
-			if (currentItem != NULL)
+			if (currentItem != nullptr)
 				handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
 			break;
 		case 14:
@@ -1554,7 +1546,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 			bBoxO = path.controlPointRect();
 			currentItem->PoLine.translate(-bBoxO.x(), -bBoxO.y());
 			finishItem(currentItem);
-			if (currentItem != NULL)
+			if (currentItem != nullptr)
 			{
 				handleLineStyle(currentItem, flags, lineColor);
 				handleGradient(currentItem, patternIndex, fillColor, backColor, bBox);
@@ -1750,7 +1742,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 	//printMSG = false;
 //	if (printMSG)
 //	{
-//		if (currentItem != NULL)
+//		if (currentItem != nullptr)
 //			qDebug() << cmdText << " " << currentItem->itemName();
 //		else
 //			qDebug() << cmdText;
@@ -1768,7 +1760,7 @@ void DrwPlug::decodeSymbol(QDataStream &ds, bool last)
 //	}
 }
 
-void DrwPlug::handleLineStyle(PageItem* currentItem, quint8 flags, QString lineColor)
+void DrwPlug::handleLineStyle(PageItem* currentItem, quint8 flags, const QString& lineColor)
 {
 	if ((flags & 0x0F) == 5)
 		currentItem->setLineColor(CommonStrings::None);
@@ -1786,7 +1778,7 @@ void DrwPlug::handleLineStyle(PageItem* currentItem, quint8 flags, QString lineC
 		currentItem->setLineStyle(Qt::SolidLine);
 }
 
-void DrwPlug::handleGradient(PageItem* currentItem, quint8 patternIndex, QString fillColor, QString backColor, QRectF bBox)
+void DrwPlug::handleGradient(PageItem* currentItem, quint8 patternIndex, const QString& fillColor, const QString& backColor, QRectF bBox)
 {
 	if ((fillColor == CommonStrings::None) || (backColor == CommonStrings::None))
 		return;
@@ -1937,7 +1929,7 @@ void DrwPlug::handlePreviewBitmap(QDataStream &ds)
 	thumbnailImage.loadFromData(header, "BMP");
 }
 
-QString DrwPlug::handleColor(ScColor &color, QString proposedName)
+QString DrwPlug::handleColor(ScColor &color, const QString& proposedName)
 {
 	QString tmpName = m_Doc->PageColors.tryAddColor(proposedName, color);
 	if (tmpName == proposedName)
@@ -1971,7 +1963,7 @@ void DrwPlug::finishItem(PageItem* ite, bool scale)
 		tmpSel->clear();
 		tmpSel->addItem(ite, true);
 		m_Doc->itemSelection_DeleteItem(tmpSel);
-		currentItem = NULL;
+		currentItem = nullptr;
 		createObjCode = 0;
 		tmpSel->clear();
 		return;

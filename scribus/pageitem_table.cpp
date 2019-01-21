@@ -44,8 +44,7 @@ const double PageItem_Table::MinimumRowHeight = 3.0;
 // The minimum column width.
 const double PageItem_Table::MinimumColumnWidth = 3.0;
 
-PageItem_Table::PageItem_Table(ScribusDoc *pa, double x, double y, double w, double h,
-	double w2, QString fill, QString outline, int numRows, int numColumns) :
+PageItem_Table::PageItem_Table(ScribusDoc *pa, double x, double y, double w, double h, double w2, const QString& fill, const QString& outline, int numRows, int numColumns) :
 	PageItem(pa, PageItem::Table, x, y, w, h, w2, fill, outline),
 	m_rows(0), m_columns(0), m_tablePainter(new CollapsedTablePainter(this))
 {
@@ -105,7 +104,7 @@ QList<PageItem*> PageItem_Table::getChildren() const
 void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 {
 	TableBorder lborder = leftBorder();
-	foreach (const TableBorderLine& line, lborder.borderLines())
+	for (const TableBorderLine& line : lborder.borderLines())
 	{
 		if (line.color() == CommonStrings::None)
 			continue;
@@ -113,7 +112,7 @@ void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 	}
 
 	TableBorder rborder = rightBorder();
-	foreach (const TableBorderLine& line, rborder.borderLines())
+	for (const TableBorderLine& line : rborder.borderLines())
 	{
 		if (line.color() == CommonStrings::None)
 			continue;
@@ -121,7 +120,7 @@ void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 	}
 
 	TableBorder bborder = bottomBorder();
-	foreach (const TableBorderLine& line, bborder.borderLines())
+	for (const TableBorderLine& line : bborder.borderLines())
 	{
 		if (line.color() == CommonStrings::None)
 			continue;
@@ -129,7 +128,7 @@ void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 	}
 
 	TableBorder tborder = topBorder();
-	foreach (const TableBorderLine& line, tborder.borderLines())
+	for (const TableBorderLine& line : tborder.borderLines())
 	{
 		if (line.color() == CommonStrings::None)
 			continue;
@@ -158,7 +157,7 @@ void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 				lists.collectColor(cellFill);
 
 			lborder = cell.leftBorder();
-			foreach (const TableBorderLine& line, lborder.borderLines())
+			for (const TableBorderLine& line : lborder.borderLines())
 			{
 				if (line.color() == CommonStrings::None)
 					continue;
@@ -166,7 +165,7 @@ void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 			}
 
 			rborder = cell.rightBorder();
-			foreach (const TableBorderLine& line, rborder.borderLines())
+			for (const TableBorderLine& line : rborder.borderLines())
 			{
 				if (line.color() == CommonStrings::None)
 					continue;
@@ -174,7 +173,7 @@ void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 			}
 
 			bborder = cell.bottomBorder();
-			foreach (const TableBorderLine& line, bborder.borderLines())
+			for (const TableBorderLine& line : bborder.borderLines())
 			{
 				if (line.color() == CommonStrings::None)
 					continue;
@@ -182,7 +181,7 @@ void PageItem_Table::getNamedResources(ResourceCollection& lists) const
 			}
 
 			tborder = cell.topBorder();
-			foreach (const TableBorderLine& line, tborder.borderLines())
+			for (const TableBorderLine& line : tborder.borderLines())
 			{
 				if (line.color() == CommonStrings::None)
 					continue;
@@ -714,7 +713,7 @@ void PageItem_Table::splitCell(int row, int column, int numRows, int numCols)
 QSet<int> PageItem_Table::selectedRows() const
 {
 	QSet<int> rows;
-	foreach (const TableCell& cell, selectedCells())
+	for (const TableCell& cell : selectedCells())
 	{
 		const int startRow = cell.row();
 		const int endRow = startRow + cell.rowSpan() - 1;
@@ -727,7 +726,7 @@ QSet<int> PageItem_Table::selectedRows() const
 QSet<int> PageItem_Table::selectedColumns() const
 {
 	QSet<int> columns;
-	foreach (const TableCell& cell, selectedCells())
+	for (const TableCell& cell : selectedCells())
 	{
 		const int startColumn = cell.column();
 		const int endColumn = startColumn + cell.columnSpan() - 1;
@@ -766,6 +765,20 @@ void PageItem_Table::selectCells(int startRow, int startColumn, int endRow, int 
 		for (int col = leftCol; col <= rightCol; ++col)
 			selectCell(row, col);
 	emit selectionChanged();
+}
+
+void PageItem_Table::selectColumn(int column)
+{
+	if (!validCell(0, column))
+		return;
+	selectCells(0, column, rows() - 1, column);
+}
+
+void PageItem_Table::selectRow(int row)
+{
+	if (!validCell(row, 0))
+		return;
+	selectCells(row, 0, row, columns() - 1);
 }
 
 void PageItem_Table::clearSelection()
@@ -1444,8 +1457,8 @@ void PageItem_Table::debug() const
 	qDebug() << "m_rowHeights: " <<  m_rowHeights;
 	qDebug() << "m_cellAreas: " <<  m_cellAreas;
 	qDebug() << "m_cellRows: ";
-	foreach(const QList<TableCell>& cellRow, m_cellRows)
-		foreach(const TableCell& cell, cellRow)
+	for (const QList<TableCell>& cellRow : m_cellRows)
+		for (const TableCell& cell : cellRow)
 			qDebug() << cell.asString();
 	qDebug() << "-------------------------------------------------";
 }
@@ -1458,7 +1471,7 @@ void PageItem_Table::assertValid() const
 	Q_ASSERT(columns() == m_columnPositions.size());
 	Q_ASSERT(columns() == m_columnWidths.size());
 	Q_ASSERT(rows() == m_cellRows.size());
-	foreach (QList<TableCell> cellRow, m_cellRows)
+	for (const QList<TableCell>& cellRow : m_cellRows)
 		Q_ASSERT(columns() == cellRow.size());
 
 	for (int row = 0; row < rows(); ++row)
@@ -1491,20 +1504,20 @@ void PageItem_Table::assertValid() const
 	Q_ASSERT(validCell(m_activeCell.row(), m_activeCell.column()));
 
 	// Check that selected cells are valid.
-	foreach (const TableCell& cell, m_selection)
+	for (const TableCell& cell : m_selection)
 	{
 		Q_ASSERT(cell.isValid());
 		Q_ASSERT(validCell(cell.row(), cell.column()));
 	}
 
-	foreach (const CellArea& cellArea, m_cellAreas)
+	for (const CellArea& cellArea : m_cellAreas)
 	{
 		// Check that the active cell is not covered.
 		if (cellArea.contains(m_activeCell.row(), m_activeCell.column()))
 			Q_ASSERT(m_activeCell.row() == cellArea.row() && m_activeCell.column() == cellArea.column());
 
 		// Check that the selected cells are not covered.
-		foreach (const TableCell& cell, m_selection)
+		for (const TableCell& cell : m_selection)
 			if (cellArea.contains(cell.row(), cell.column()))
 				Q_ASSERT(cell.row() == cellArea.row() && cell.column() == cellArea.column());
 	}

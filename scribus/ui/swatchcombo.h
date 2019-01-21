@@ -38,10 +38,10 @@ class SCRIBUS_API SwatchCombo : public QToolButton
 	Q_OBJECT
 
 public:
-	SwatchCombo( QWidget* parent = NULL );
-	QTreeWidgetItem* addTopLevelItem(QString name);
-	QTreeWidgetItem* addSubItem(QString name, QTreeWidgetItem* parent, bool selectable = true);
-	void setCurrentComboItem(QString text);
+	SwatchCombo( QWidget* parent = nullptr );
+	QTreeWidgetItem* addTopLevelItem(const QString& name);
+	QTreeWidgetItem* addSubItem(const QString& name, QTreeWidgetItem* parent, bool selectable = true);
+	void setCurrentComboItem(const QString& text);
 	QTreeWidgetItem* currentItem();
 signals:
 	void activated(const QString &);

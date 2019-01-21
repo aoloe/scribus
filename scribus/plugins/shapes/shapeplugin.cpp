@@ -51,9 +51,9 @@ void shapeplugin_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ShapePlugin::ShapePlugin() : ScPersistentPlugin()
+ShapePlugin::ShapePlugin()
 {
-	sc_palette = NULL;
+	sc_palette = nullptr;
 }
 
 ShapePlugin::~ShapePlugin() {};
@@ -114,7 +114,7 @@ bool ShapePlugin::cleanupPlugin()
 	{
 		sc_palette->writeToPrefs();
 		delete sc_palette;
-		sc_palette = NULL;
+		sc_palette = nullptr;
 	}
 	return true;
 }

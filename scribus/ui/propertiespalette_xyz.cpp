@@ -45,8 +45,8 @@ for which a new license (GPL+exception) is in place.
 
 PropertiesPalette_XYZ::PropertiesPalette_XYZ( QWidget* parent) : QWidget(parent)
 {
-	m_ScMW=0;
-	m_doc=0;
+	m_ScMW=nullptr;
+	m_doc=nullptr;
 	m_haveDoc  = false;
 	m_haveItem = false;
 	m_lineMode = false;
@@ -161,7 +161,7 @@ void PropertiesPalette_XYZ::setDoc(ScribusDoc *d)
 	}
 
 	m_doc  = d;
-	m_item = NULL;
+	m_item = nullptr;
 	m_unitRatio   = m_doc->unitRatio();
 	m_unitIndex   = m_doc->unitIndex();
 	int precision = unitGetPrecisionFromIndex(m_unitIndex);
@@ -172,7 +172,7 @@ void PropertiesPalette_XYZ::setDoc(ScribusDoc *d)
 	m_haveDoc = true;
 	m_haveItem = false;
 
-	QMap<QString, double>* docConstants = m_doc? &m_doc->constants()  : NULL;
+	QMap<QString, double>* docConstants = m_doc? &m_doc->constants()  : nullptr;
 	xposSpin->setValues( minXYVal, maxXYWHVal, precision, minXYVal);
 	xposSpin->setConstants(docConstants);
 	yposSpin->setValues( minXYVal, maxXYWHVal, precision, minXYVal);
@@ -200,13 +200,13 @@ void PropertiesPalette_XYZ::unsetDoc()
 
 	m_haveDoc  = false;
 	m_haveItem = false;
-	m_doc   = NULL;
-	m_item  = NULL;
+	m_doc   = nullptr;
+	m_item  = nullptr;
 	nameEdit->clear();
-	xposSpin->setConstants(NULL);
-	yposSpin->setConstants(NULL);
-	widthSpin->setConstants(NULL);
-	heightSpin->setConstants(NULL);
+	xposSpin->setConstants(nullptr);
+	yposSpin->setConstants(nullptr);
+	widthSpin->setConstants(nullptr);
+	heightSpin->setConstants(nullptr);
 	doGroup->setEnabled(false);
 	doUnGroup->setEnabled(false);
 	flipH->setEnabled(false);
@@ -226,7 +226,7 @@ void PropertiesPalette_XYZ::unsetDoc()
 void PropertiesPalette_XYZ::unsetItem()
 {
 	m_haveItem = false;
-	m_item     = NULL;
+	m_item     = nullptr;
 	handleSelectionChanged();
 }
 
@@ -256,7 +256,7 @@ void PropertiesPalette_XYZ::setLineMode(int lineMode)
 
 PageItem* PropertiesPalette_XYZ::currentItemFromSelection()
 {
-	PageItem *currentItem = NULL;
+	PageItem *currentItem = nullptr;
 
 	if (m_doc)
 	{
@@ -280,7 +280,7 @@ void PropertiesPalette_XYZ::setCurrentItem(PageItem *i)
 	//CB We shouldn't really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
 	//set some status if so.
-	//FIXME: This won't work until when a canvas deselect happens, m_item must be NULL.
+	//FIXME: This won't work until when a canvas deselect happens, m_item must be nullptr.
 	//if (m_item == i)
 	//	return;
 
@@ -438,7 +438,7 @@ void PropertiesPalette_XYZ::handleSelectionChanged()
 			m_ScMW->view->RCenter = FPoint(gx + gw / 2.0, gy + gh / 2.0);
 		else if (bp == 3)
 			m_ScMW->view->RCenter = FPoint(gx, gy + gh);
-		else if (bp == 0)
+		else if (bp == 4)
 			m_ScMW->view->RCenter = FPoint(gx + gw, gy + gh);
 		xposLabel->setText( tr( "&X-Pos:" ) );
 		yposLabel->setText( tr( "&Y-Pos:" ) );
@@ -524,13 +524,11 @@ void PropertiesPalette_XYZ::handleSelectionChanged()
 		case PageItem::ImageFrame:
 		case PageItem::LatexFrame:
 		case PageItem::OSGFrame:
-#ifdef HAVE_OSG
 			if (currItem->asOSGFrame())
 			{
 				setEnabled(true);
 				rotationSpin->setEnabled(false);
 			}
-#endif
 			break;
 		case PageItem::Line:
 			basePointWidget->setEnabled(false);
@@ -1237,16 +1235,15 @@ void PropertiesPalette_XYZ::handleNewName()
 
 void PropertiesPalette_XYZ::installSniffer(ScrSpinBox *spinBox)
 {
-	const QList<QObject*> list = spinBox->children();
-	if (!list.isEmpty())
+	const QList<QObject*>& list = spinBox->children();
+	if (list.isEmpty())
+		return;
+	QListIterator<QObject*> it(list);
+	QObject *obj;
+	while (it.hasNext())
 	{
-		QListIterator<QObject*> it(list);
-		QObject *obj;
-		while (it.hasNext())
-		{
-			obj = it.next();
-			obj->installEventFilter(userActionSniffer);
-		}
+		obj = it.next();
+		obj->installEventFilter(userActionSniffer);
 	}
 }
 

@@ -186,8 +186,7 @@ QString CharStyle::displayName() const
 		return name();
 //	else if ( inheritsAll() )
 //		return parent()->displayName();
-	else 
-		return parentStyle()->displayName() + "+";
+	return parentStyle()->displayName() + "+";
 }
 
 QString CharStyle::asString() const
@@ -395,7 +394,7 @@ void CharStyle::setStyle(const CharStyle& other)
 
 void CharStyle::getNamedResources(ResourceCollection& lists) const
 {
-	for (const BaseStyle* sty = parentStyle(); sty != NULL; sty = sty->parentStyle())
+	for (const BaseStyle* sty = parentStyle(); sty != nullptr; sty = sty->parentStyle())
 		lists.collectCharStyle(sty->name());
 	lists.collectColor(fillColor());
 	lists.collectFontfeatures(fontFeatures());
@@ -424,7 +423,7 @@ void CharStyle::replaceNamedResources(ResourceCollection& newNames)
 		setParent(it.value());
 
 	if (!inh_Font && (it = newNames.fonts().find(font().scName())) != newNames.fonts().end())
-		setFont(newNames.availableFonts->findFont(it.value(), NULL));
+		setFont(newNames.availableFonts->findFont(it.value(), nullptr));
 	updateFeatures();
 }
 
@@ -510,7 +509,7 @@ using namespace desaxe;
 
 const Xml_string CharStyle::saxxDefaultElem("charstyle");
 
-void CharStyle::desaxeRules(const Xml_string& prefixPattern, Digester& ruleset, Xml_string elemtag)
+void CharStyle::desaxeRules(const Xml_string& prefixPattern, Digester& ruleset, const Xml_string& elemtag)
 {
 	Xml_string stylePrefix(Digester::concat(prefixPattern, elemtag));
 	ruleset.addRule(stylePrefix, Factory<CharStyle>());

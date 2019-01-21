@@ -15,8 +15,8 @@ for which a new license (GPL+exception) is in place.
 #include "ui/bookmarkpalette.h"
 
 #include <QFileInfo>
+#include <QImage>
 #include <QList>
-#include <QPixmap>
 #include <vector>
 
 // these functions are located at utils.cpp
@@ -29,18 +29,18 @@ static int minmaxi(int val, int min, int max)
 {
 	if (val < min)
 		return min;
-	else if (val > max)
+	if (val > max)
 		return max;
-	else return val;
+	return val;
 }
 
 static double minmaxd(double val, double min, double max)
 {
 	if (val < min)
 		return min;
-	else if (val > max)
+	if (val > max)
 		return max;
-	else return val;
+	return val;
 }
 
 typedef struct
@@ -142,7 +142,7 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 {
 // do not create new object if there is no opened document
 	if (!checkHaveDocument()) {
-		return NULL;
+		return nullptr;
 	}
 
 	PDFfile *self;
@@ -153,30 +153,30 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 		self->file = PyString_FromString("");
 		if (!self->file) {
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set font embedding mode attribute
 		self->fontEmbedding = PyInt_FromLong(0);
 		if (!self->fontEmbedding) {
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set fonts attribute
 		self->fonts = PyList_New(0);
 		if (!self->fonts){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 		self->subsetList = PyList_New(0);
 		if (!self->subsetList){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set pages attribute
 		self->pages = PyList_New(0);
-		if (self->pages == NULL){
+		if (self->pages == nullptr){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set thumbnails attribute
 		self->thumbnails = 0;
@@ -204,13 +204,13 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 		self->resolution = PyInt_FromLong(300);
 		if (!self->resolution){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set downsample attribute
 		self->downsample = PyInt_FromLong(0);
 		if (!self->downsample){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set bookmarks attribute
 		self->bookmarks = 0;
@@ -222,7 +222,7 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 		self->effval = PyList_New(0);
 		if (!self->effval){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set article attribute
 		self->article = 0;
@@ -236,19 +236,19 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 		self->lpival = PyList_New(0);
 		if (!self->lpival){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set owner attribute
 		self->owner = PyString_FromString("");
 		if (!self->owner){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set user attribute
 		self->user = PyString_FromString("");
 		if (!self->user){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 // set allowPrinting attribute
 		self->allowPrinting = 1;
@@ -272,22 +272,22 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 		self->solidpr = PyString_FromString("");
 		if (!self->solidpr){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 		self->imagepr = PyString_FromString("");
 		if (!self->imagepr){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 		self->printprofc = PyString_FromString("");
 		if (!self->printprofc){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 		self->info = PyString_FromString("");
 		if (!self->info){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 		self->bleedt = 0; // double -
 		self->bleedl = 0; // double -
@@ -302,7 +302,7 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 		self->rotateDeg = PyInt_FromLong(0);
 		if (!self->rotateDeg){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 		self->isGrayscale = 0;
 		self->pageLayout = 0;
@@ -316,7 +316,7 @@ static PyObject * PDFfile_new(PyTypeObject *type, PyObject * /*args*/, PyObject 
 		self->openAction = PyString_FromString("");
 		if (!self->openAction){
 			Py_DECREF(self);
-			return NULL;
+			return nullptr;
 		}
 	}
 	return (PyObject *) self;
@@ -338,7 +338,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 		QFileInfo fi = QFileInfo(currentDoc->DocName);
 		tf = fi.path()+"/"+fi.baseName()+".pdf";
 	}
-	PyObject *file = NULL;
+	PyObject *file = nullptr;
 	file = PyString_FromString(tf.toLatin1());
 	if (file){
 		Py_DECREF(self->file);
@@ -348,7 +348,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 		return -1;
 	}
 // font embedding mode
-	PyObject *embeddingMode = NULL;
+	PyObject *embeddingMode = nullptr;
 	embeddingMode = PyInt_FromLong(pdfOptions.FontEmbedding);
 	if (embeddingMode){
 		Py_DECREF(self->fontEmbedding);
@@ -358,7 +358,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 		return -1;
 	}
 // embed all used fonts
-	PyObject *fonts = NULL;
+	PyObject *fonts = nullptr;
 	fonts = PyList_New(0);
 	if (fonts){
 		Py_DECREF(self->fonts);
@@ -373,8 +373,8 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	QList<QString> tmpEm = ReallyUsed.keys();
 	for (int i = 0; i < tmpEm.count(); ++i) 
 	{
-		QString fontName = tmpEm.at(i);
-		PyObject *tmp= NULL;
+		const QString& fontName = tmpEm.at(i);
+		PyObject *tmp= nullptr;
 		tmp = PyString_FromString(fontName.toLatin1());
 		if (tmp) {
 			PyList_Append(self->fonts, tmp);
@@ -400,7 +400,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 // copied from TabPDFOptions::restoreDefaults()
 	for (int fe = 0; fe < pdfOptions.SubsetList.count(); ++fe)
 	{
-		PyObject *tmp= NULL;
+		PyObject *tmp= nullptr;
 		tmp = PyString_FromString(pdfOptions.SubsetList[fe].toLatin1().data());
 		if (tmp) {
 			PyList_Append(self->subsetList, tmp);
@@ -413,7 +413,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	}
 
 // set to print all pages
-	PyObject *pages = NULL;
+	PyObject *pages = nullptr;
 	int num = 0;
 	// which one should I use ???
 	// new = ScCore->primaryMainWindow()->view->Pages.count()
@@ -457,7 +457,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 // use maximum image quality
 	self->quality = pdfOptions.Quality;
 // default resolution
-	PyObject *resolution = NULL;
+	PyObject *resolution = nullptr;
 	resolution = PyInt_FromLong(300);
 	if (resolution){
 		Py_DECREF(self->resolution);
@@ -468,7 +468,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	}
 // do not downsample images
 	int down = pdfOptions.RecalcPic ? pdfOptions.PicRes : 0;
-	PyObject *downsample = NULL;
+	PyObject *downsample = nullptr;
 	downsample = PyInt_FromLong(down);
 	if (downsample){
 		Py_DECREF(self->downsample);
@@ -484,7 +484,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	// do not enable presentation effects
 	self->presentation = pdfOptions.PresentMode;
 	// set effects values for all pages
-	PyObject *effval = NULL;
+	PyObject *effval = nullptr;
 	num = 0;
 	// which one should I use ???
 	// new = ScCore->primaryMainWindow()->view->Pages.count();
@@ -548,7 +548,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	Py_DECREF(self->lpival);
 	self->lpival = lpival;
 // set owner's password
-	PyObject *owner = NULL;
+	PyObject *owner = nullptr;
 	owner = PyString_FromString(pdfOptions.PassOwner.toLatin1());
 	if (owner){
 		Py_DECREF(self->owner);
@@ -558,7 +558,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 		return -1;
 	}
 // set user'a password
-	PyObject *user = NULL;
+	PyObject *user = nullptr;
 	user = PyString_FromString(pdfOptions.PassUser.toLatin1());
 	if (user){
 		Py_DECREF(self->user);
@@ -588,7 +588,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	QString tp = pdfOptions.SolidProf;
 	if (!ScCore->InputProfiles.contains(tp))
 		tp = currentDoc->cmsSettings().DefaultSolidColorRGBProfile;
-	PyObject *solidpr = NULL;
+	PyObject *solidpr = nullptr;
 	solidpr = PyString_FromString(tp.toLatin1());
 	if (solidpr){
 		Py_DECREF(self->solidpr);
@@ -600,7 +600,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	QString tp2 = pdfOptions.ImageProf;
 	if (!ScCore->InputProfiles.contains(tp2))
 		tp2 = currentDoc->cmsSettings().DefaultSolidColorRGBProfile;
-	PyObject *imagepr = NULL;
+	PyObject *imagepr = nullptr;
 	imagepr = PyString_FromString(tp2.toLatin1());
 	if (imagepr){
 		Py_DECREF(self->imagepr);
@@ -612,7 +612,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	QString tp3 = pdfOptions.PrintProf;
 	if (!ScCore->PDFXProfiles.contains(tp3))
 		tp3 = currentDoc->cmsSettings().DefaultPrinterProfile;
-	PyObject *printprofc = NULL;
+	PyObject *printprofc = nullptr;
 	printprofc = PyString_FromString(tp3.toLatin1());
 	if (printprofc){
 		Py_DECREF(self->printprofc);
@@ -622,7 +622,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 		return -1;
 	}
 	QString tinfo = pdfOptions.Info;
-	PyObject *info = NULL;
+	PyObject *info = nullptr;
 	info = PyString_FromString(tinfo.toLatin1());
 	if (info){
 		Py_DECREF(self->info);
@@ -641,7 +641,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	self->mirrorH = pdfOptions.MirrorH; // bool
 	self->mirrorV = pdfOptions.MirrorV; // bool
 	self->doClip = pdfOptions.doClip; // bool
-	PyObject *rotateDeg = NULL;
+	PyObject *rotateDeg = nullptr;
 	rotateDeg = PyInt_FromLong(0);
 	if (rotateDeg){
 		Py_DECREF(self->rotateDeg);
@@ -660,7 +660,7 @@ static int PDFfile_init(PDFfile *self, PyObject * /*args*/, PyObject * /*kwds*/)
 	self->hideMenuBar = pdfOptions.hideMenuBar; // bool
 	self->fitWindow = pdfOptions.fitWindow; // bool
 
-	PyObject *openAction = NULL;
+	PyObject *openAction = nullptr;
 	openAction = PyString_FromString(pdfOptions.openAction.toLatin1().data());
 	if (openAction){
 		Py_DECREF(self->openAction);
@@ -733,7 +733,7 @@ static PyMemberDef PDFfile_members[] = {
 	{const_cast<char*>("achange"), T_INT, offsetof(PDFfile, allowChange), 0, const_cast<char*>("Deprecated. Use 'allowChange' instead.")},
 	{const_cast<char*>("acopy"), T_INT, offsetof(PDFfile, allowCopy), 0, const_cast<char*>("Deprecated. Use 'allowCopy' instead.")},
 	{const_cast<char*>("aanot"), T_INT, offsetof(PDFfile, allowAnnots), 0, const_cast<char*>("Deprecated. Use 'allowAnnots' instead.")},
-	{NULL, 0, 0, 0, NULL} // sentinel
+	{nullptr, 0, 0, 0, nullptr} // sentinel
 };
 
 
@@ -747,7 +747,7 @@ static PyObject *PDFfile_getfile(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setfile(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'file' attribute.");
 		return -1;
 	}
@@ -769,7 +769,7 @@ static PyObject *PDFfile_getFontEmbeddingMode(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setFontEmbeddingMode(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'fontEmbedding' attribute.");
 		return -1;
 	}
@@ -796,7 +796,7 @@ static PyObject *PDFfile_getfonts(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setfonts(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'fonts' attribute.");
 		return -1;
 	}
@@ -829,7 +829,7 @@ static PyObject *PDFfile_getSubsetList(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setSubsetList(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'subsetList' attribute.");
 		return -1;
 	}
@@ -859,7 +859,7 @@ static PyObject *PDFfile_getpages(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setpages(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'pages' attribute.");
 		return -1;
 	}
@@ -870,7 +870,7 @@ static int PDFfile_setpages(PDFfile *self, PyObject *value, void * /*closure*/)
 	int len = PyList_Size(value);
 	for (int i = 0; i<len; i++){
 		PyObject *tmp = PyList_GetItem(value, i);
-		// I did not check if tmp is NULL
+		// I did not check if tmp is nullptr
 		// how can PyList_GetItem fail in this case (my guess: short of available memory?)
 		// Also do I need Py_INCREF or Py_DECREF here?
 		if (!PyInt_Check(tmp)){
@@ -897,7 +897,7 @@ static PyObject *PDFfile_getresolution(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setresolution(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'resolution' attribute.");
 		return -1;
 	}
@@ -924,7 +924,7 @@ static PyObject *PDFfile_getdownsample(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setdownsample(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'downsample' attribute.");
 		return -1;
 	}
@@ -951,7 +951,7 @@ static PyObject *PDFfile_geteffval(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_seteffval(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'effval' attribute.");
 		return -1;
 	}
@@ -992,7 +992,7 @@ static PyObject *PDFfile_getlpival(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setlpival(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'lpival' attribute.");
 		return -1;
 	}
@@ -1038,7 +1038,7 @@ static PyObject *PDFfile_getowner(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setowner(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'owner' attribute.");
 		return -1;
 	}
@@ -1060,7 +1060,7 @@ static PyObject *PDFfile_getuser(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setuser(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'user' attribute.");
 		return -1;
 	}
@@ -1082,7 +1082,7 @@ static PyObject *PDFfile_getsolidpr(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setsolidpr(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'solidpr' attribute.");
 		return -1;
 	}
@@ -1104,7 +1104,7 @@ static PyObject *PDFfile_getimagepr(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setimagepr(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'imagepr' attribute.");
 		return -1;
 	}
@@ -1126,7 +1126,7 @@ static PyObject *PDFfile_getprintprofc(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setprintprofc(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'printprofc' attribute.");
 		return -1;
 	}
@@ -1148,7 +1148,7 @@ static PyObject *PDFfile_getinfo(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setinfo(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'info' attribute.");
 		return -1;
 	}
@@ -1170,7 +1170,7 @@ static PyObject *PDFfile_getRotateDeg(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setRotateDeg(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'rotateDeg' attribute.");
 		return -1;
 	}
@@ -1197,7 +1197,7 @@ static PyObject *PDFfile_getopenAction(PDFfile *self, void * /*closure*/)
 
 static int PDFfile_setopenAction(PDFfile *self, PyObject *value, void * /*closure*/)
 {
-	if (value == NULL) {
+	if (value == nullptr) {
 		PyErr_SetString(PyExc_TypeError, "Cannot delete 'openAction' attribute.");
 		return -1;
 	}
@@ -1232,30 +1232,30 @@ static char *lpival_doc = const_cast<char*>(
 "Be careful when supplying these values as they\nare not checked for validity.");
 
 static PyGetSetDef PDFfile_getseters [] = {
-	{const_cast<char*>("file"), (getter)PDFfile_getfile, (setter)PDFfile_setfile, const_cast<char*>("Name of file to save into"), NULL},
-	{const_cast<char*>("fontEmbedding"), (getter)PDFfile_getFontEmbeddingMode, (setter)PDFfile_setFontEmbeddingMode, const_cast<char*>("Font embedding mode.\n\tValue must be one of integers: 0 (Embed), 1 (Outline), 2 (No embedding)."), NULL},
-	{const_cast<char*>("fonts"), (getter)PDFfile_getfonts, (setter)PDFfile_setfonts, const_cast<char*>("List of fonts to embed."), NULL},
-	{const_cast<char*>("subsetList"), (getter)PDFfile_getSubsetList, (setter)PDFfile_setSubsetList, const_cast<char*>("List of fonts to subsetted."), NULL},
-	{const_cast<char*>("pages"), (getter)PDFfile_getpages, (setter)PDFfile_setpages, const_cast<char*>("List of pages to print"), NULL},
-	{const_cast<char*>("resolution"), (getter)PDFfile_getresolution, (setter)PDFfile_setresolution, const_cast<char*>("Resolution of output file. Values from 35 to 4000."), NULL},
-	{const_cast<char*>("downsample"), (getter)PDFfile_getdownsample, (setter)PDFfile_setdownsample, const_cast<char*>("Downsample image resolusion to this value. Values from 35 to 4000\nSet 0 for not to downsample"), NULL},
-	{const_cast<char*>("effval"), (getter)PDFfile_geteffval, (setter)PDFfile_seteffval, effval_doc, NULL},
-	{const_cast<char*>("lpival"), (getter)PDFfile_getlpival, (setter)PDFfile_setlpival, lpival_doc, NULL},
-	{const_cast<char*>("owner"), (getter)PDFfile_getowner, (setter)PDFfile_setowner, const_cast<char*>("Owner's password"), NULL},
-	{const_cast<char*>("user"), (getter)PDFfile_getuser, (setter)PDFfile_setuser, const_cast<char*>("User's password"), NULL},
-	{const_cast<char*>("solidpr"), (getter)PDFfile_getsolidpr, (setter)PDFfile_setsolidpr, const_cast<char*>("Color profile for solid colors"), NULL},
-	{const_cast<char*>("imagepr"), (getter)PDFfile_getimagepr, (setter)PDFfile_setimagepr, const_cast<char*>("Color profile for images"), NULL},
-	{const_cast<char*>("printprofc"), (getter)PDFfile_getprintprofc, (setter)PDFfile_setprintprofc, const_cast<char*>("Output profile for printing. If possible, get some guidance from your printer on profile selection."), NULL},
-	{const_cast<char*>("info"), (getter)PDFfile_getinfo, (setter)PDFfile_setinfo, const_cast<char*>("Mandatory string for PDF/X or the PDF will fail\nPDF/X conformance. We recommend you use the title of the document."), NULL},
-	{const_cast<char*>("rotateDeg"), (getter)PDFfile_getRotateDeg, (setter)PDFfile_setRotateDeg, const_cast<char*>("Automatically rotate the exported pages\n\tValue must be one of integers: 0, 90, 180 or 270"), NULL},
-	{const_cast<char*>("openAction"), (getter)PDFfile_getopenAction, (setter)PDFfile_setopenAction, const_cast<char*>("Javascript to be executed when PDF document is opened."), NULL},
-	{NULL, NULL, NULL, NULL, NULL}  // sentinel
+	{const_cast<char*>("file"), (getter)PDFfile_getfile, (setter)PDFfile_setfile, const_cast<char*>("Name of file to save into"), nullptr},
+	{const_cast<char*>("fontEmbedding"), (getter)PDFfile_getFontEmbeddingMode, (setter)PDFfile_setFontEmbeddingMode, const_cast<char*>("Font embedding mode.\n\tValue must be one of integers: 0 (Embed), 1 (Outline), 2 (No embedding)."), nullptr},
+	{const_cast<char*>("fonts"), (getter)PDFfile_getfonts, (setter)PDFfile_setfonts, const_cast<char*>("List of fonts to embed."), nullptr},
+	{const_cast<char*>("subsetList"), (getter)PDFfile_getSubsetList, (setter)PDFfile_setSubsetList, const_cast<char*>("List of fonts to subsetted."), nullptr},
+	{const_cast<char*>("pages"), (getter)PDFfile_getpages, (setter)PDFfile_setpages, const_cast<char*>("List of pages to print"), nullptr},
+	{const_cast<char*>("resolution"), (getter)PDFfile_getresolution, (setter)PDFfile_setresolution, const_cast<char*>("Resolution of output file. Values from 35 to 4000."), nullptr},
+	{const_cast<char*>("downsample"), (getter)PDFfile_getdownsample, (setter)PDFfile_setdownsample, const_cast<char*>("Downsample image resolusion to this value. Values from 35 to 4000\nSet 0 for not to downsample"), nullptr},
+	{const_cast<char*>("effval"), (getter)PDFfile_geteffval, (setter)PDFfile_seteffval, effval_doc, nullptr},
+	{const_cast<char*>("lpival"), (getter)PDFfile_getlpival, (setter)PDFfile_setlpival, lpival_doc, nullptr},
+	{const_cast<char*>("owner"), (getter)PDFfile_getowner, (setter)PDFfile_setowner, const_cast<char*>("Owner's password"), nullptr},
+	{const_cast<char*>("user"), (getter)PDFfile_getuser, (setter)PDFfile_setuser, const_cast<char*>("User's password"), nullptr},
+	{const_cast<char*>("solidpr"), (getter)PDFfile_getsolidpr, (setter)PDFfile_setsolidpr, const_cast<char*>("Color profile for solid colors"), nullptr},
+	{const_cast<char*>("imagepr"), (getter)PDFfile_getimagepr, (setter)PDFfile_setimagepr, const_cast<char*>("Color profile for images"), nullptr},
+	{const_cast<char*>("printprofc"), (getter)PDFfile_getprintprofc, (setter)PDFfile_setprintprofc, const_cast<char*>("Output profile for printing. If possible, get some guidance from your printer on profile selection."), nullptr},
+	{const_cast<char*>("info"), (getter)PDFfile_getinfo, (setter)PDFfile_setinfo, const_cast<char*>("Mandatory string for PDF/X or the PDF will fail\nPDF/X conformance. We recommend you use the title of the document."), nullptr},
+	{const_cast<char*>("rotateDeg"), (getter)PDFfile_getRotateDeg, (setter)PDFfile_setRotateDeg, const_cast<char*>("Automatically rotate the exported pages\n\tValue must be one of integers: 0, 90, 180 or 270"), nullptr},
+	{const_cast<char*>("openAction"), (getter)PDFfile_getopenAction, (setter)PDFfile_setopenAction, const_cast<char*>("Javascript to be executed when PDF document is opened."), nullptr},
+	{nullptr, nullptr, nullptr, nullptr, nullptr}  // sentinel
 };
 
 static PyObject *PDFfile_save(PDFfile *self)
 {
 	if (!checkHaveDocument()) {
-		return NULL;
+		return nullptr;
 	}
 
 	ScribusDoc* currentDoc = ScCore->primaryMainWindow()->doc;
@@ -1303,7 +1303,7 @@ static PyObject *PDFfile_save(PDFfile *self)
 		QStringList docFonts = currentDoc->UsedFonts.keys();
 		for (int i = 0; i < docFonts.count(); ++i)
 		{
-			QString fontName = docFonts.at(i);
+			const QString& fontName = docFonts.at(i);
 			if (pdfOptions.SubsetList.contains(fontName))
 				continue;
 			if (pdfOptions.EmbedList.contains(fontName))
@@ -1401,7 +1401,7 @@ static PyObject *PDFfile_save(PDFfile *self)
 //		if (!PyArg_ParseTuple(t, "[siii]", &s, &lpi.Frequency,
 //				 &lpi.Angle, &lpi.SpotFunc)) {
 //			PyErr_SetString(PyExc_SystemError, "while parsing 'lpival'. WHY THIS HAPPENED????");
-//			return NULL;
+//			return nullptr;
 //		}
 //		pdfOptions.LPISettings[QString(s)]=lpi;
 		QString st;
@@ -1480,14 +1480,17 @@ static PyObject *PDFfile_save(PDFfile *self)
 			pdfOptions.UseProfiles2 = false;
 		}
 	}
-	QMap<int,QPixmap> thumbs;
+
+	QMap<int, QImage> thumbs;
+	PageToPixmapFlags pixmapFlags = Pixmap_DontReloadImages | Pixmap_DrawWhiteBackground;
 	for (uint ap = 0; ap < pageNs.size(); ++ap)
 	{
-		QPixmap pm(10,10);
+		QImage thumb(10, 10, QImage::Format_ARGB32_Premultiplied );
 		if (pdfOptions.Thumbnails)
-			pm = QPixmap::fromImage(ScCore->primaryMainWindow()->view->PageToPixmap(pageNs[ap]-1, 100));
-		thumbs.insert(pageNs[ap], pm);
+			thumb = ScCore->primaryMainWindow()->view->PageToPixmap(pageNs[ap]-1, 100, pixmapFlags);
+		thumbs.insert(pageNs[ap], thumb);
 	}
+
 	ReOrderText(ScCore->primaryMainWindow()->doc, ScCore->primaryMainWindow()->view);
 
 	MarginStruct optBleeds(pdfOptions.bleeds);
@@ -1536,16 +1539,16 @@ static PyObject *PDFfile_save(PDFfile *self)
 
 	if (success)
 		Py_RETURN_NONE;
-	return NULL;
+	return nullptr;
 }
 
 static PyMethodDef PDFfile_methods[] = {
 	{const_cast<char*>("save"), (PyCFunction)PDFfile_save, METH_NOARGS, const_cast<char*>("Save selected pages to pdf file")},
-	{NULL, (PyCFunction)(0), 0, NULL} // sentinel
+	{nullptr, (PyCFunction)(nullptr), 0, nullptr} // sentinel
 };
 
 PyTypeObject PDFfile_Type = {
-	PyObject_HEAD_INIT(NULL) // PyObject_VAR_HEAD
+	PyObject_HEAD_INIT(nullptr) // PyObject_VAR_HEAD
 	0,		      //
 	const_cast<char*>("scribus.PDFfile"), // char *tp_name; /* For printing, in format "<module>.<name>" */
 	sizeof(PDFfile),     // int tp_basicsize, /* For allocation */
@@ -1554,28 +1557,28 @@ PyTypeObject PDFfile_Type = {
 	/* Methods to implement standard operations */
 
 	(destructor) PDFfile_dealloc, //     destructor tp_dealloc;
-	0, //     printfunc tp_print;
-	0, //     getattrfunc tp_getattr;
-	0, //     setattrfunc tp_setattr;
-	0, //     cmpfunc tp_compare;
-	0, //     reprfunc tp_repr;
+	nullptr, //     printfunc tp_print;
+	nullptr, //     getattrfunc tp_getattr;
+	nullptr, //     setattrfunc tp_setattr;
+	nullptr, //     cmpfunc tp_compare;
+	nullptr, //     reprfunc tp_repr;
 
 	/* Method suites for standard classes */
 
-	0, //     PyNumberMethods *tp_as_number;
-	0, //     PySequenceMethods *tp_as_sequence;
-	0, //     PyMappingMethods *tp_as_mapping;
+	nullptr, //     PyNumberMethods *tp_as_number;
+	nullptr, //     PySequenceMethods *tp_as_sequence;
+	nullptr, //     PyMappingMethods *tp_as_mapping;
 
 	/* More standard operations (here for binary compatibility) */
 
-	0, //     hashfunc tp_hash;
-	0, //     ternaryfunc tp_call;
-	0, //     reprfunc tp_str;
-	0, //     getattrofunc tp_getattro;
-	0, //     setattrofunc tp_setattro;
+	nullptr, //     hashfunc tp_hash;
+	nullptr, //     ternaryfunc tp_call;
+	nullptr, //     reprfunc tp_str;
+	nullptr, //     getattrofunc tp_getattro;
+	nullptr, //     setattrofunc tp_setattro;
 
 	/* Functions to access object as input/output buffer */
-	0, //     PyBufferProcs *tp_as_buffer;
+	nullptr, //     PyBufferProcs *tp_as_buffer;
 
 	/* Flags to define presence of optional/expanded features */
 	Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE,    // long tp_flags;
@@ -1584,43 +1587,43 @@ PyTypeObject PDFfile_Type = {
 
 	/* Assigned meaning in release 2.0 */
 	/* call function for all accessible objects */
-	0, //     traverseproc tp_traverse;
+	nullptr, //     traverseproc tp_traverse;
 
 	/* delete references to contained objects */
-	0, //     inquiry tp_clear;
+	nullptr, //     inquiry tp_clear;
 
 	/* Assigned meaning in release 2.1 */
 	/* rich comparisons */
-	0, //     richcmpfunc tp_richcompare;
+	nullptr, //     richcmpfunc tp_richcompare;
 
 	/* weak reference enabler */
 	0, //     long tp_weaklistoffset;
 
 	/* Added in release 2.2 */
 	/* Iterators */
-	0, //     getiterfunc tp_iter;
-	0, //     iternextfunc tp_iternext;
+	nullptr, //     getiterfunc tp_iter;
+	nullptr, //     iternextfunc tp_iternext;
 
 	/* Attribute descriptor and subclassing stuff */
 	PDFfile_methods, //     struct PyMethodDef *tp_methods;
 	PDFfile_members, //     struct PyMemberDef *tp_members;
 	PDFfile_getseters, //     struct PyGetSetDef *tp_getset;
-	0, //     struct _typeobject *tp_base;
-	0, //     PyObject *tp_dict;
-	0, //     descrgetfunc tp_descr_get;
-	0, //     descrsetfunc tp_descr_set;
+	nullptr, //     struct _typeobject *tp_base;
+	nullptr, //     PyObject *tp_dict;
+	nullptr, //     descrgetfunc tp_descr_get;
+	nullptr, //     descrsetfunc tp_descr_set;
 	0, //     long tp_dictoffset;
 	(initproc)PDFfile_init, //     initproc tp_init;
-	0, //     allocfunc tp_alloc;
+	nullptr, //     allocfunc tp_alloc;
 	PDFfile_new, //     newfunc tp_new;
-	0, //     freefunc tp_free; /* Low-level free-memory routine */
-	0, //     inquiry tp_is_gc; /* For PyObject_IS_GC */
-	0, //     PyObject *tp_bases;
-	0, //     PyObject *tp_mro; /* method resolution order */
-	0, //     PyObject *tp_cache;
-	0, //     PyObject *tp_subclasses;
-	0, //     PyObject *tp_weaklist;
-	0, //     destructor tp_del;
+	nullptr, //     freefunc tp_free; /* Low-level free-memory routine */
+	nullptr, //     inquiry tp_is_gc; /* For PyObject_IS_GC */
+	nullptr, //     PyObject *tp_bases;
+	nullptr, //     PyObject *tp_mro; /* method resolution order */
+	nullptr, //     PyObject *tp_cache;
+	nullptr, //     PyObject *tp_subclasses;
+	nullptr, //     PyObject *tp_weaklist;
+	nullptr, //     destructor tp_del;
 
 #ifdef COUNT_ALLOCS
 	/* these must be last and never explicitly initialized */

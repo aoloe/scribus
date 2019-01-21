@@ -31,7 +31,7 @@ QStringList FileExtensions()
 	return QStringList();
 }
 
-void GetText(QString filename, QString encoding, bool, gtWriter *writer)
+void GetText(const QString& filename, const QString& encoding, bool, gtWriter *writer)
 {
 	TextFilter* tf = new TextFilter(filename, encoding, writer);
 	delete tf;
@@ -43,7 +43,7 @@ TextFilter::TextFilter(const QString& fname, const QString& enc, gtWriter* w)
 {
 	filename = fname;
 	encoding = enc;
-	filters = 0;
+	filters = nullptr;
 	writer = w;
 	writer->setOverridePStyleFont(false);
 	prefs = PrefsManager::instance()->prefsFile->getPluginContext("TextFilter");
@@ -122,12 +122,12 @@ void TextFilter::write()
 			}
 		}
 	}
-	if (pstyles.size() == 0)
+	if (pstyles.empty())
 		writer->append(text);
 	else
 	{
 		QStringList list = text.split("\n", QString::KeepEmptyParts);
-		gtParagraphStyle *useStyle = NULL;
+		gtParagraphStyle *useStyle = nullptr;
 		for (int i = 0; i < static_cast<int>(list.size()); ++i)
 		{
 			QString tmpText(list[i]);
@@ -135,7 +135,7 @@ void TextFilter::write()
 			tmpText2=tmpText2.simplified();
 			int numberOfWords = tmpText2.count(" ");
 			++numberOfWords;
-			useStyle = NULL;
+			useStyle = nullptr;
 			for (int j = 0; j < static_cast<int>(filters->size()); ++j)
 			{
 				if ((*filters)[j]->isEnabled())

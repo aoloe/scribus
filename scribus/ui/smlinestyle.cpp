@@ -21,7 +21,7 @@ for which a new license (GPL+exception) is in place.
 #include "util.h"
 
 
-SMLineStyle::SMLineStyle() : StyleItem(), m_doc(0), m_widget(0), m_twidget(0), m_selectionIsDirty(false), m_unitRatio(1.0)
+SMLineStyle::SMLineStyle() : m_doc(nullptr), m_widget(nullptr), m_twidget(nullptr), m_selectionIsDirty(false), m_unitRatio(1.0)
 {
 	
 }
@@ -256,7 +256,7 @@ void SMLineStyle::apply()
 				ite->NamedLStyle = replacement[ite->NamedLStyle];
 		}
 	}
-	for (QHash<int, PageItem*>::iterator it = m_doc->FrameItems.begin(); it != m_doc->FrameItems.end(); ++it)
+	for (auto it = m_doc->FrameItems.begin(); it != m_doc->FrameItems.end(); ++it)
 	{
 		ite = it.value();
 		if (!ite->NamedLStyle.isEmpty())
@@ -794,7 +794,7 @@ SMLineStyle::~SMLineStyle()
 {
 	delete m_widget;
 	delete m_twidget;
-	m_widget = 0;
-	m_twidget = 0;
+	m_widget = nullptr;
+	m_twidget = nullptr;
 }
 

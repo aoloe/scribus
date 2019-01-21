@@ -156,9 +156,9 @@ HelpBrowser::HelpBrowser( QWidget* parent, const QString& /*caption*/, const QSt
 	language = guiLanguage.isEmpty() ? QString("en") : guiLanguage.left(2);
 	finalBaseDir = ScPaths::instance().docDir() + "en/"; //Sane default for help location
 	textBrowser->setSearchPaths(QStringList(finalBaseDir));
-	menuModel=NULL;
+	menuModel=nullptr;
 	loadMenu();
-	if (menuModel!=NULL)
+	if (menuModel!=nullptr)
 	{
 		readBookmarks();
 		readHistory();
@@ -328,7 +328,7 @@ void HelpBrowser::languageChange()
 		else
 			language=ScCore->getGuiLanguage();
 		loadMenu();
-		if (menuModel!=NULL)
+		if (menuModel!=nullptr)
 			loadHelp(finalBaseDir + "/" + filename);
 	}
 	else
@@ -393,7 +393,7 @@ void HelpBrowser::searchingInDirectory(const QString& aDir)
 
 void HelpBrowser::find()
 {
-	findText = QInputDialog::getText( this, tr("Find"), tr("Search Term:"), QLineEdit::Normal, findText, 0);
+	findText = QInputDialog::getText( this, tr("Find"), tr("Search Term:"), QLineEdit::Normal, findText, nullptr);
 	if (findText.isNull())
 		return;
 	findNext();
@@ -448,7 +448,7 @@ void HelpBrowser::bookmarkButton_clicked()
 void HelpBrowser::deleteBookmarkButton_clicked()
 {
 	QTreeWidgetItem *twi=helpNav->bookmarksView->currentItem();
-	if (twi!=NULL)
+	if (twi!=nullptr)
 	{
 		if (bookmarkIndex.contains(twi->text(0)))
 			bookmarkIndex.remove(twi->text(0));
@@ -610,8 +610,7 @@ void HelpBrowser::loadMenu()
 	textBrowser->setSearchPaths(QStringList(finalBaseDir));
 	if (baseFi.exists())
 	{
-		if (menuModel!=NULL)
-			delete menuModel;
+		delete menuModel;
 		menuModel=new ScHelpTreeModel(toLoad, "Topic", "Location", &quickHelpIndex);
 	
 		helpNav->listView->setModel(menuModel);
@@ -623,7 +622,7 @@ void HelpBrowser::loadMenu()
 		helpNav->listView->setColumnHidden(1,true);
 	}
 	else
-		menuModel=NULL;
+		menuModel=nullptr;
 }
 
 void HelpBrowser::readBookmarks()
@@ -654,12 +653,11 @@ void HelpBrowser::itemSelected(const QItemSelection & selected, const QItemSelec
 {
 	Q_UNUSED(deselected);
 
-	QModelIndex index;
-	QModelIndexList items = selected.indexes();
-	int i=0;
-	foreach (index, items)
+	int i = 0;
+	const QModelIndexList items = selected.indexes();
+	for (const QModelIndex& index : items)
 	{
-		if (i==1) // skip 0, as this is always the rootitem, even if we are selecting the rootitem. hmm
+		if (i == 1) // skip 0, as this is always the rootitem, even if we are selecting the rootitem. hmm
 		{
 			QString filename(menuModel->data(index, Qt::DisplayRole).toString());
 			if (!filename.isEmpty())

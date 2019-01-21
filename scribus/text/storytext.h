@@ -25,15 +25,15 @@ pageitem.cpp  -  description
 #ifndef STORYTEXT_H_
 #define STORYTEXT_H_
 
+#include <cassert>
 #include <QObject>
 #include <QString>
 #include <QList>
-#include <cassert>
-#include "unicode/brkiter.h"
-#include "itextsource.h"
 
+#include <unicode/brkiter.h>
+
+#include "itextsource.h"
 #include "marks.h"
-//#include "text/paragraphlayout.h"
 #include "text/frect.h"
 #include "text/specialchars.h"
 #include "sctextstruct.h"
@@ -42,17 +42,15 @@ pageitem.cpp  -  description
 #include "styles/paragraphstyle.h"
 #include "desaxe/saxio.h"
 
-
 class CharStyle;
 class ParagraphStyle;
 class PageItem;
-//class ScTextEngine;
-//class ScScriptItem;
 class ScribusDoc;
 class ScText_Shared;
 class ResourceCollection;
 class ShapedTextCache;
 
+using namespace icu;
 
 /**
  * This class holds the text of a Scribus textframe and pointers to its
@@ -120,7 +118,7 @@ class SCRIBUS_API StoryText : public QObject, public SaxIO, public ITextSource
 	// Removes trailing empty paragraphs
 	void trim();
 	// Insert chars at current cursor position
-	void insertChars(QString txt, bool applyNeighbourStyle = false);
+	void insertChars(const QString& txt, bool applyNeighbourStyle = false);
 	// Insert chars ar specific position
 	void insertChars(int pos, const QString& txt, bool applyNeighbourStyle = false);
 	// Insert inline object at current cursor position
@@ -134,7 +132,7 @@ class SCRIBUS_API StoryText : public QObject, public SaxIO, public ITextSource
 	int replaceWord(int pos, QString newWord);
 	void replaceObject(int pos, int obj);
 
-	void hyphenateWord(int pos, uint len, char* hyphens);
+	void hyphenateWord(int pos, uint len, const char* hyphens);
 	
  	// Retrieve length of story text
  	int length() const;
@@ -164,7 +162,7 @@ class SCRIBUS_API StoryText : public QObject, public SaxIO, public ITextSource
 
 	bool hasObject(int pos) const;
  	PageItem* getItem(int pos) const; // deprecated
-    bool hasMark(int pos, Mark* mrk = NULL) const;
+	bool hasMark(int pos, Mark* mrk = nullptr) const;
 	Mark *mark(int pos) const;
     void replaceMark(int pos, Mark* mrk);
 	void applyMarkCharstyle(Mark* mrk, CharStyle& currStyle) const;
@@ -188,7 +186,7 @@ class SCRIBUS_API StoryText : public QObject, public SaxIO, public ITextSource
  	void applyStyle(int pos, const ParagraphStyle& style, bool rmDirectFormatting = false);
  	void eraseCharStyle(int pos, uint len, const CharStyle& style);
  	void eraseStyle(int pos, const ParagraphStyle& style);
-	void replaceStyles(QMap<QString,QString> newNameForOld);
+	void replaceStyles(const QMap<QString,QString>& newNameForOld);
 	void replaceCharStyles(QMap<QString,QString> newNameForOld);
 
 	// Cleanup legacy formatting for whole story, ie remove direct
@@ -281,16 +279,6 @@ private:
  	ScText * item(uint index);
  	const ScText * item(uint index) const;
 	void fixSurrogateSelection();
-
-//public:
-//	ScText * item_p(uint index) { return item(index); }
-
-// 	int screenToPosition(FPoint coord) const;
-// 	FRect  boundingBox(int pos, uint len = 1) const;
-
-//	uint lines() const { return (uint) m_lines.count(); }
-	
-//	LineSpec line(uint i) const { return m_lines[i]; }
 	
 private:
 	ScribusDoc * m_doc; 
@@ -300,14 +288,9 @@ private:
 	static BreakIterator* m_wordIterator;
 	static BreakIterator* m_sentenceIterator;
 	static BreakIterator* m_lineIterator;
-//	int m_firstFrameItem, m_lastFrameItem;
-//	QList<LineSpec> m_lines;
-//	bool m_validLayout;
-//	qreal m_magicX;
-//	int m_lastMagicPos;
 
 	QString textWithSoftHyphens (int pos, uint len) const;
-	void    insertCharsWithSoftHyphens(int pos, QString txt, bool applyNeighbourStyle = false);
+	void    insertCharsWithSoftHyphens(int pos, const QString& txt, bool applyNeighbourStyle = false);
 	
  	/// mark these runs as invalid, ie. need itemize and shaping
  	void invalidate(int firstRun, int lastRun);

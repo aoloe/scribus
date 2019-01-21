@@ -123,7 +123,7 @@ public:
 		Display(true),
 		FillCSpace(false),
 		StrokeCSpace(false),
-		CurCol("None"),
+		CurCol("Black"),
 		dashOffset(0),
 		FontFamily(""),
 		FontStyle("normal"),
@@ -234,9 +234,9 @@ public:
 	 */
 	SVGPlug(ScribusDoc* doc, int flags);
 	~SVGPlug();
-	bool import(QString fname, const TransactionSettings& trSettings, int flags);
-	QImage readThumbnail(QString fn);
-	bool loadData(QString fname);
+	bool import(const QString& fname, const TransactionSettings& trSettings, int flags);
+	QImage readThumbnail(const QString& fn);
+	bool loadData(const QString& fname);
 	void convert(const TransactionSettings& trSettings, int flags);
 	void addGraphicContext();
 	void setupNode( const QDomElement &e );
@@ -244,7 +244,7 @@ public:
 	PageItem* finishNode( const QDomNode &e, PageItem* item);
 	bool isIgnorableNode( const QDomElement &e );
 	bool isIgnorableNodeName( const QString &n );
-	FPoint parseTextPosition(const QDomElement &e, const FPoint* pos = NULL);
+	FPoint parseTextPosition(const QDomElement &e, const FPoint* pos = nullptr);
 	QSizeF  parseWidthHeight(const QDomElement &e);
 	QRectF  parseViewBox(const QDomElement &e);
 	void parseDefs(const QDomElement &e);

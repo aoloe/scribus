@@ -45,7 +45,7 @@ protected:
 public:
 //	static const short NOVALUE = -16000;
 
-	BaseStyle(): m_isDefaultStyle(false), m_name(""), m_context(NULL), m_contextversion(-1), m_parent(""), m_shortcut() {}
+	BaseStyle(): m_isDefaultStyle(false), m_name(""), m_context(nullptr), m_contextversion(-1), m_parent(""), m_shortcut() {}
 
 	BaseStyle(StyleContext* b, QString n): m_isDefaultStyle(false), m_name(n), m_context(b), m_contextversion(-1), m_parent(""), m_shortcut() {}
 	
@@ -69,7 +69,7 @@ public:
 	// this is an abstract class, so:
 	// static const Xml_string saxxDefaultElem; 
 	template<class SUBSTYLE>
-		static void  desaxeRules(const Xml_string& prefixPattern, desaxe::Digester& ruleset, Xml_string elemtag);
+		static void  desaxeRules(const Xml_string& prefixPattern, desaxe::Digester& ruleset, const Xml_string& elemtag);
 	
 	void saxxAttributes(Xml_attr& attr) const;
 	//virtual void saxx(SaxHandler& handler, const Xml_string& elemtag) const;
@@ -104,10 +104,10 @@ public:
 	const StyleContext* context() const        { return m_context; }
 	
 	/**
-		sets a new StyleContext if b is not NULL and then uses the StyleContext
+		sets a new StyleContext if b is not nullptr and then uses the StyleContext
 		to set all inherited attributes to their valid value.
 	 */
-	virtual void update(const StyleContext* b = NULL);
+	virtual void update(const StyleContext* b = nullptr);
 	
 	/**
 		Checks if this BaseStyle needs an update

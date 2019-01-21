@@ -19,7 +19,7 @@ for which a new license (GPL+exception) is in place.
 
 Prefs_ItemTools::Prefs_ItemTools(QWidget* parent, ScribusDoc* doc)
 	: Prefs_Pane(parent),
-	m_doc(NULL),
+	m_doc(nullptr),
 	showFontPreview(false)
 {
 	setupUi(this);
@@ -78,7 +78,7 @@ void Prefs_ItemTools::restoreDefaults(struct ApplicationPrefs *prefsData)
 	unitChange(docUnitIndex);
 
 	PrefsManager* prefsManager=PrefsManager::instance();
-	ColorList* colorList = (m_doc != NULL) ? (&m_doc->PageColors) : prefsManager->colorSetPtr();
+	ColorList* colorList = (m_doc != nullptr) ? (&m_doc->PageColors) : prefsManager->colorSetPtr();
 
 	//Text Tool
 	for (int i=0; i<textFontComboBox->count(); ++i)
@@ -175,7 +175,7 @@ void Prefs_ItemTools::restoreDefaults(struct ApplicationPrefs *prefsData)
 
 	lineFillColorShadingSpinBox->setValue(prefsData->itemToolPrefs.lineColorShade);
 	lineStyleComboBox->setCurrentIndex(static_cast<int>(prefsData->itemToolPrefs.lineStyle) - 1);
-	if (m_doc != 0)
+	if (m_doc != nullptr)
 	{
 		lineStartArrowComboBox->rebuildList(&m_doc->arrowStyles());
 		lineEndArrowComboBox->rebuildList(&m_doc->arrowStyles());
@@ -372,7 +372,7 @@ void Prefs_ItemTools::updateFontPreview()
 	si.setText( tr("Woven silk pyjamas exchanged for blue quartz"));
 	if (textFrameFillColorComboBox->currentText() != CommonStrings::tr_NoneColor)
 	{
-		if (m_doc != 0)
+		if (m_doc != nullptr)
 		{
 			si.setBgColor(m_doc->PageColors[textFrameFillColorComboBox->currentText()].getRawRGBColor());
 		}
@@ -389,7 +389,7 @@ void Prefs_ItemTools::updateFontPreview()
 
 	if (textColorComboBox->currentText() != CommonStrings::tr_NoneColor)
 	{
-		if (m_doc != 0)
+		if (m_doc != nullptr)
 		{
 			si.setTxColor(m_doc->PageColors[textColorComboBox->currentText()].getRawRGBColor());
 		}

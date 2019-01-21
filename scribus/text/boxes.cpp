@@ -5,7 +5,7 @@
  for which a new license (GPL+exception) is in place.
  */
 
-#include <math.h>
+#include <cmath>
 
 #include "pageitem.h"
 #include "boxes.h"
@@ -24,7 +24,7 @@
 int GroupBox::pointToPosition(QPointF coord, const StoryText &story) const
 {
 	QPointF rel = coord - QPointF(m_x, m_y);
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 	{
 		if (box->containsPoint(rel))
 		{
@@ -51,7 +51,7 @@ int GroupBox::pointToPosition(QPointF coord, const StoryText &story) const
 QLineF GroupBox::positionToPoint(int pos, const StoryText& story) const
 {
 	QLineF result;
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 	{
 		if (box->containsPos(pos))
 		{
@@ -67,7 +67,7 @@ void GroupBox::render(TextLayoutPainter *p) const
 {
 	p->save();
 	p->translate(x(), y());
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 	{
 		box->render(p);
 	}
@@ -78,7 +78,7 @@ void GroupBox::render(ScreenPainter *p, ITextContext *ctx) const
 {
 	p->save();
 	p->translate(x(), y());
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 	{
 		box->render(p, ctx);
 	}
@@ -89,7 +89,7 @@ void GroupBox::drawSelection(ScreenPainter *p, ITextContext *ctx) const
 {
 	p->save();
 	p->translate(x(), y());
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 	{
 		box->drawSelection(p, ctx);
 	}
@@ -99,7 +99,7 @@ void GroupBox::drawSelection(ScreenPainter *p, ITextContext *ctx) const
 double GroupBox::naturalHeight() const
 {
 	double nH = 0;
-	foreach (const Box* box, boxes()) {
+	for (const Box* box : boxes()) {
 		if (m_direction == D_Horizontal)
 			nH = qMax(m_naturalHeight, box->naturalHeight());
 		else
@@ -126,7 +126,7 @@ void GroupBox::removeBox(int i)
 void GroupBox::update()
 {
 	m_naturalHeight = m_naturalWidth = 0;
-	foreach (const Box* box, boxes()) {
+	for (const Box* box : boxes()) {
 		m_firstChar = qMin(m_firstChar, box->firstChar());
 		m_lastChar = qMax(m_lastChar, box->lastChar());
 		if (m_direction == D_Horizontal)
@@ -194,7 +194,7 @@ int LineBox::pointToPosition(QPointF coord, const StoryText &story) const
 QLineF LineBox::positionToPoint(int pos, const StoryText& story) const
 {
 	QLineF result;
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 	{
 		if (box->containsPos(pos))
 		{
@@ -218,7 +218,7 @@ void LineBox::render(TextLayoutPainter *p) const
 	drawBackGround(p);
 
 	p->translate(0, ascent());
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 	{
 		box->render(p);
 	}
@@ -234,7 +234,7 @@ void LineBox::render(ScreenPainter *p, ITextContext *ctx) const
 	drawSelection(p, ctx);
 
 	p->translate(0, ascent());
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 		box->render(p, ctx);
 
 	p->translate(-x(), -y() - ascent());
@@ -242,7 +242,7 @@ void LineBox::render(ScreenPainter *p, ITextContext *ctx) const
 
 void LineBox::drawSelection(ScreenPainter *p, ITextContext *ctx) const
 {
-	foreach (const Box *box, boxes())
+	for (const Box *box : boxes())
 		box->drawSelection(p, ctx);
 }
 
@@ -463,7 +463,7 @@ void LineBox::justify(const ParagraphStyle& style)
 
 void PathLineBox::update()
 {
-	foreach (Box* box, boxes()) {
+	for (Box* box : boxes()) {
 		m_firstChar = qMin(m_firstChar, box->firstChar());
 		m_lastChar = qMax(m_lastChar, box->lastChar());
 	}
@@ -513,7 +513,7 @@ void GlyphBox::render(ScreenPainter *p, ITextContext *ctx) const
 	}
 
 	if (((selectionFirst >= 0 && item->isSelected()) ||
-	     ((item->nextInChain() != 0 || item->prevInChain() != 0) && selectionFirst >= 0)) &&
+		 ((item->nextInChain() != nullptr || item->prevInChain() != nullptr) && selectionFirst >= 0)) &&
 		(item->doc()->appMode == modeEdit || item->doc()->appMode == modeEditTable))
 	{
 		if (selectionFirst == firstChar() && selectionLast == lastChar())
@@ -567,7 +567,7 @@ void GlyphBox::drawSelection(ScreenPainter *p, ITextContext *ctx) const
 	p->setStrokeWidth(0);
 
 	if (((selectionFirst >= 0 && item->isSelected()) ||
-		 ((item->nextInChain() != 0 || item->prevInChain() != 0) && selectionFirst >= 0)) &&
+		 ((item->nextInChain() != nullptr || item->prevInChain() != nullptr) && selectionFirst >= 0)) &&
 			(item->doc()->appMode == modeEdit || item->doc()->appMode == modeEditTable))
 	{
 		if (selectionFirst == firstChar() && selectionLast == lastChar())

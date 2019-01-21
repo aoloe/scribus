@@ -7,7 +7,7 @@ for which a new license (GPL+exception) is in place.
 #include <QFile>
 #include <QFileInfo>
 #include <QObject>
-#include <setjmp.h>
+#include <csetjmp>
 #include "scconfig.h"
 #include "colormgmt/sccolormgmtengine.h"
 #include "scimgdataloader_jpeg.h"
@@ -34,12 +34,12 @@ static void my_error_exit (j_common_ptr cinfo)
 #define MAX_DATA_BYTES_IN_MARKER  (MAX_BYTES_IN_MARKER - ICC_OVERHEAD_LEN)
 
 
-ScImgDataLoader_JPEG::ScImgDataLoader_JPEG(void)
+ScImgDataLoader_JPEG::ScImgDataLoader_JPEG()
 {
 	initSupportedFormatList();
 }
 
-void ScImgDataLoader_JPEG::initSupportedFormatList(void)
+void ScImgDataLoader_JPEG::initSupportedFormatList()
 {
 	m_supportedFormats.clear();
 	m_supportedFormats.append( "jpg" );
@@ -57,7 +57,7 @@ void ScImgDataLoader_JPEG::loadEmbeddedProfile(const QString& fn, int /*page*/)
 	FILE     *infile;
 	cinfo.err = jpeg_std_error (&jerr.pub);
 	jerr.pub.error_exit = my_error_exit;
-	infile = NULL;
+	infile = nullptr;
 	if (setjmp (jerr.setjmp_buffer))
 	{
 		jpeg_destroy_decompress (&cinfo);
@@ -67,10 +67,10 @@ void ScImgDataLoader_JPEG::loadEmbeddedProfile(const QString& fn, int /*page*/)
 	}
 	jpeg_create_decompress (&cinfo);
 #if defined(Q_OS_WIN32)
-	if ((infile = _wfopen((const wchar_t*) fn.utf16(), L"rb")) == NULL)
+	if ((infile = _wfopen((const wchar_t*) fn.utf16(), L"rb")) == nullptr)
 		return;
 #else
-	if ((infile = fopen (fn.toLocal8Bit(), "rb")) == NULL)
+	if ((infile = fopen (fn.toLocal8Bit(), "rb")) == nullptr)
 		return;
 #endif
 	jpeg_stdio_src(&cinfo, infile);
@@ -78,7 +78,7 @@ void ScImgDataLoader_JPEG::loadEmbeddedProfile(const QString& fn, int /*page*/)
 	jpeg_read_header(&cinfo, true);
 	//jpeg_start_decompress(&cinfo);
 	unsigned int EmbedLen = 0;
-	unsigned char* EmbedBuffer = 0;
+	unsigned char* EmbedBuffer = nullptr;
 	if (read_jpeg_marker(ICC_MARKER, &cinfo, &EmbedBuffer, &EmbedLen))
 	{
 		bool profileIsValid = false;
@@ -132,7 +132,7 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 	FILE     *infile;
 	cinfo.err = jpeg_std_error (&jerr.pub);
 	jerr.pub.error_exit = my_error_exit;
-	infile = NULL;
+	infile = nullptr;
 
 	initialize();
 	m_imageInfoRecord.type = ImageTypeJPG;
@@ -146,10 +146,10 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 	}
 	jpeg_create_decompress (&cinfo);
 #if defined(Q_OS_WIN32)
-	if ((infile = _wfopen((const wchar_t*) fn.utf16(), L"rb")) == NULL)
+	if ((infile = _wfopen((const wchar_t*) fn.utf16(), L"rb")) == nullptr)
 		return false;
 #else
-	if ((infile = fopen (fn.toLocal8Bit(), "rb")) == NULL)
+	if ((infile = fopen (fn.toLocal8Bit(), "rb")) == nullptr)
 		return false;
 #endif
 	jpeg_stdio_src(&cinfo, infile);
@@ -174,10 +174,10 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 			{
 				QRgb *s;
 				unsigned char cc, cm, cy, ck;
-				for( int yit=0; yit < m_image.height(); ++yit )
+				for (int yit=0; yit < m_image.height(); ++yit)
 				{
 					s = (QRgb*)(m_image.scanLine( yit ));
-					for(int xit=0; xit < m_image.width(); ++xit )
+					for (int xit=0; xit < m_image.width(); ++xit)
 					{
 						cc = 255 - qRed(*s);
 						cm = 255 - qGreen(*s);
@@ -208,17 +208,17 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 			xres = 72;
 			yres = 72;
 		}
-		else if ( cinfo.density_unit == 1 )
+		else if (cinfo.density_unit == 1)
 		{
 			xres = cinfo.X_density;
 			yres = cinfo.Y_density;
 		}
-		else if ( cinfo.density_unit == 2 )
+		else if (cinfo.density_unit == 2)
 		{
 			xres = cinfo.X_density * 2.54;
 			yres = cinfo.Y_density * 2.54;
 		}
-		if( xres <= 1.0 || yres <= 1.0 || xres > 3000.0 || yres > 3000.0 )
+		if (xres <= 1.0 || yres <= 1.0 || xres > 3000.0 || yres > 3000.0)
 		{
 			xres = yres = 72.0;
 			QFileInfo qfi(fn);
@@ -246,21 +246,21 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 		m_image.setDotsPerMeterX(2834);
 		m_image.setDotsPerMeterY(2834);
 	}
-	else if ( cinfo.density_unit == 1 )
+	else if (cinfo.density_unit == 1)
 	{
 		xres = cinfo.X_density;
 		yres = cinfo.Y_density;
 		m_image.setDotsPerMeterX( int(100. * cinfo.X_density / 2.54) );
 		m_image.setDotsPerMeterY( int(100. * cinfo.Y_density / 2.54) );
 	}
-	else if ( cinfo.density_unit == 2 )
+	else if (cinfo.density_unit == 2)
 	{
 		xres = cinfo.X_density * 2.54;
 		yres = cinfo.Y_density * 2.54;
 		m_image.setDotsPerMeterX( int(100. * cinfo.X_density) );
 		m_image.setDotsPerMeterY( int(100. * cinfo.Y_density) );
 	}
-	if( xres <= 1.0 || yres <= 1.0 || xres > 3000.0 || yres > 3000.0 )
+	if (xres <= 1.0 || yres <= 1.0 || xres > 3000.0 || yres > 3000.0)
 	{
 		xres = yres = 72.0;
 		m_image.setDotsPerMeterX(2834);
@@ -317,7 +317,7 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 	}
 
 	unsigned int PhotoshopLen = 0;
-	unsigned char * PhotoshopBuffer = 0;
+	unsigned char * PhotoshopBuffer = nullptr;
 	if (read_jpeg_marker(PHOTOSHOP_MARKER, &cinfo, &PhotoshopBuffer, &PhotoshopLen) )
 	{
 		bool savEx = m_imageInfoRecord.exifDataValid;
@@ -341,7 +341,7 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 		yres = m_imageInfoRecord.yres;
 		m_image.setDotsPerMeterX( int(100. * m_imageInfoRecord.xres / 2.54) );
 		m_image.setDotsPerMeterY( int(100. * m_imageInfoRecord.yres / 2.54) );
-		if( xres <= 1.0 || yres <= 1.0 || xres > 3000.0 || yres > 3000.0 )
+		if (xres <= 1.0 || yres <= 1.0 || xres > 3000.0 || yres > 3000.0)
 		{
 			xres = yres = 72.0;
 			m_imageInfoRecord.xres = qRound(xres);
@@ -362,11 +362,11 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 				QRgb *d;
 				QRgb *s;
 				unsigned char cc, cm, cy, ck;
-				for( int yit=0; yit < m_image.height(); ++yit )
+				for (int yit=0; yit < m_image.height(); ++yit)
 				{
 					d = (QRgb*)(m_image.scanLine( yit ));
 					s = (QRgb*)(m_imageInfoRecord.exifInfo.thumbnail.scanLine( yit ));
-					for(int xit=0; xit < m_image.width(); ++xit )
+					for (int xit=0; xit < m_image.width(); ++xit)
 					{
 						cc = 255 - qRed(*s);
 						cm = 255 - qGreen(*s);
@@ -382,10 +382,10 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 				m_image = m_imageInfoRecord.exifInfo.thumbnail.copy();
 			m_pixelFormat = Format_BGRA_8;
 		}
-		m_imageInfoRecord.valid = (m_imageInfoRecord.PDSpathData.size())>0?true:false; // The only interest is vectormask
+		m_imageInfoRecord.valid = (m_imageInfoRecord.PDSpathData.size())>0; // The only interest is vectormask
 		arrayPhot.clear();
 		free(PhotoshopBuffer );
-		PhotoshopBuffer = 0;
+		PhotoshopBuffer = nullptr;
 		if (m_imageInfoRecord.exifDataValid && !m_imageInfoRecord.exifInfo.thumbnail.isNull() && thumbnail)
 		{
 			jpeg_destroy_decompress(&cinfo);
@@ -396,9 +396,9 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 		m_imageInfoRecord.exifDataValid = savEx;
 		fromPS = true;
 	}
-	if ( cinfo.output_components == 3 || cinfo.output_components == 4)
+	if (cinfo.output_components == 3 || cinfo.output_components == 4)
 		m_image = QImage( cinfo.output_width, cinfo.output_height, QImage::Format_ARGB32 );
-	else if ( cinfo.output_components == 1 )
+	else if (cinfo.output_components == 1)
 	{
 		m_image = QImage( cinfo.output_width, cinfo.output_height, QImage::Format_Indexed8 );
 		m_image.setColorCount(256);
@@ -414,7 +414,7 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 			uchar *d = data + cinfo.output_scanline * bpl;
 			(void) jpeg_read_scanlines(&cinfo, &d, 1);
 		}
-		if ( cinfo.output_components == 3 )
+		if (cinfo.output_components == 3)
 		{
 			uchar *in;
 			QRgb *out;
@@ -430,7 +430,7 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 			}
 			m_pixelFormat = Format_BGRA_8;
 		}
-		if ( cinfo.output_components == 4 )
+		if (cinfo.output_components == 4)
 		{
 			int method = 0;
 			if ((cinfo.jpeg_color_space == JCS_YCCK) || (cinfo.out_color_space == JCS_CMYK))
@@ -493,17 +493,17 @@ bool ScImgDataLoader_JPEG::loadPicture(const QString& fn, int /*page*/, int res,
 		}
 		//else
 		//	isCMYK = false;
-		if ( cinfo.output_components == 1 )
+		if (cinfo.output_components == 1)
 		{
 			QImage tmpImg = m_image.convertToFormat(QImage::Format_ARGB32);
 			m_image = QImage( cinfo.output_width, cinfo.output_height, QImage::Format_ARGB32 );
 			QRgb *s;
 			QRgb *d;
-			for( int yi=0; yi < tmpImg.height(); ++yi )
+			for (int yi=0; yi < tmpImg.height(); ++yi)
 			{
 				s = (QRgb*)(tmpImg.scanLine( yi ));
 				d = (QRgb*)(m_image.scanLine( yi ));
-				for(int xi=0; xi < tmpImg.width(); ++xi )
+				for (int xi=0; xi < tmpImg.width(); ++xi)
 				{
 					(*d) = (*s);
 					s++;
@@ -620,7 +620,7 @@ bool ScImgDataLoader_JPEG::read_jpeg_marker (UINT8 requestmarker, j_decompress_p
 	unsigned int data_length[MAX_SEQ_NO+1]; /* size of profile data in marker */
 	unsigned int data_offset[MAX_SEQ_NO+1]; /* offset for data in marker */
 
-	*icc_data_ptr = NULL;		/* avoid confusion if false return */
+	*icc_data_ptr = nullptr;		/* avoid confusion if false return */
 	*icc_data_len = 0;
 
 	/* This first pass over the saved markers discovers whether there are
@@ -630,7 +630,7 @@ bool ScImgDataLoader_JPEG::read_jpeg_marker (UINT8 requestmarker, j_decompress_p
 	for (seq_no = 1; seq_no <= MAX_SEQ_NO; seq_no++)
 		marker_present[seq_no] = 0;
 	seq_no = 0;
-	for (marker = cinfo->marker_list; marker != NULL; marker = marker->next)
+	for (marker = cinfo->marker_list; marker != nullptr; marker = marker->next)
 	{
 		if (requestmarker == ICC_MARKER && marker_is_icc(marker))
 		{
@@ -646,7 +646,7 @@ bool ScImgDataLoader_JPEG::read_jpeg_marker (UINT8 requestmarker, j_decompress_p
 			marker_present[seq_no] = 1;
 			data_length[seq_no] = marker->data_length - ICC_OVERHEAD_LEN;
 		}
-		else if(requestmarker == PHOTOSHOP_MARKER && marker_is_photoshop(marker))
+		else if (requestmarker == PHOTOSHOP_MARKER && marker_is_photoshop(marker))
 		{
 			num_markers = ++seq_no;
 			marker_present[seq_no] = 1;
@@ -675,11 +675,11 @@ bool ScImgDataLoader_JPEG::read_jpeg_marker (UINT8 requestmarker, j_decompress_p
 
 	/* Allocate space for assembled data */
 	icc_data = (JOCTET *) malloc(total_length * sizeof(JOCTET));
-	if (icc_data == NULL)
+	if (icc_data == nullptr)
 		return false;		/* oops, out of memory */
 	seq_no=0;
 	/* and fill it in */
-	for (marker = cinfo->marker_list; marker != NULL; marker = marker->next)
+	for (marker = cinfo->marker_list; marker != nullptr; marker = marker->next)
 	{
 		if ( (requestmarker == ICC_MARKER && marker_is_icc(marker)) ||
 		        (requestmarker == PHOTOSHOP_MARKER && marker_is_photoshop(marker)) || (requestmarker == 0xE1))
@@ -687,9 +687,9 @@ bool ScImgDataLoader_JPEG::read_jpeg_marker (UINT8 requestmarker, j_decompress_p
 			JOCTET FAR *src_ptr;
 			JOCTET *dst_ptr;
 			unsigned int length;
-			if(requestmarker == ICC_MARKER)
+			if (requestmarker == ICC_MARKER)
 				seq_no = GETJOCTET(marker->data[12]);
-			else if(requestmarker == PHOTOSHOP_MARKER)
+			else if (requestmarker == PHOTOSHOP_MARKER)
 				seq_no++;
 			dst_ptr = icc_data + data_offset[seq_no];
 			src_ptr = marker->data + ICC_OVERHEAD_LEN;

@@ -24,12 +24,10 @@ PyObject *scribus_setredraw(PyObject* /* self */, PyObject* args)
 {
 	int e;
 	if (!PyArg_ParseTuple(args, "i", &e))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	ScCore->primaryMainWindow()->doc->DoDrawing = static_cast<bool>(e);
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -85,7 +83,7 @@ PyObject *scribus_renderfont(PyObject* /*self*/, PyObject* args, PyObject* kw)
 	char *Name = const_cast<char*>("");
 	char *FileName = const_cast<char*>("");
 	char *Sample = const_cast<char*>("");
-	char *format = NULL;
+	char *format = nullptr;
 	int Size;
 	bool ret = false;
 	char *kwargs[] = {const_cast<char*>("fontname"),
@@ -93,20 +91,20 @@ PyObject *scribus_renderfont(PyObject* /*self*/, PyObject* args, PyObject* kw)
 					  const_cast<char*>("sample"),
 					  const_cast<char*>("size"),
 					  const_cast<char*>("format"),
-					  NULL};
+					  nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "esesesi|es", kwargs,
 				"utf-8", &Name, "utf-8", &FileName, "utf-8", &Sample, &Size, "ascii", &format))
-		return NULL;
+		return nullptr;
 	if (!PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts.contains(QString::fromUtf8(Name)))
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Font not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	QVector<uint> ts = QString::fromUtf8(Sample).toUcs4();
 	if (ts.isEmpty())
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot render an empty sample.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	if (!format)
 		// User specified no format, so use the historical default of PPM format.
@@ -123,37 +121,35 @@ PyObject *scribus_renderfont(PyObject* /*self*/, PyObject* args, PyObject* kw)
 		if (!ret)
 		{
 			PyErr_SetString(ScribusException, QObject::tr("Unable to save pixmap","scripter error").toLocal8Bit().constData());
-			return NULL;
+			return nullptr;
 		}
 		int bufferSize = buffer.size();
 		buffer.close();
 		// Now make a Python string from the data we generated
 		PyObject* stringPython = PyString_FromStringAndSize(buffer_string,bufferSize);
-		// Return even if the result is NULL (error) since an exception will have been
+		// Return even if the result is nullptr (error) since an exception will have been
 		// set in that case.
 		return stringPython;
 	}
-	else
+
 	// Save the pixmap to a file, since the filename is non-empty
+	ret = pm.save(QString::fromUtf8(FileName), format);
+	if (!ret)
 	{
-		ret = pm.save(QString::fromUtf8(FileName), format);
-		if (!ret)
-		{
-			PyErr_SetString(PyExc_Exception, QObject::tr("Unable to save pixmap","scripter error").toLocal8Bit().constData());
-			return NULL;
-		}
-		// For historical reasons, we need to return true on success.
-//		Py_INCREF(Py_True);
-//		return Py_True;
-//		Py_RETURN_TRUE;
-		return PyBool_FromLong(static_cast<long>(true));
+		PyErr_SetString(PyExc_Exception, QObject::tr("Unable to save pixmap","scripter error").toLocal8Bit().constData());
+		return nullptr;
 	}
+	// For historical reasons, we need to return true on success.
+	//		Py_INCREF(Py_True);
+	//		return Py_True;
+	//		Py_RETURN_TRUE;
+	return PyBool_FromLong(static_cast<long>(true));
 }
 
 PyObject *scribus_getlayers(PyObject* /* self */)
 {
-	if(!checkHaveDocument())
-		return NULL;
+	if (!checkHaveDocument())
+		return nullptr;
 	PyObject *l;
 	l = PyList_New(ScCore->primaryMainWindow()->doc->Layers.count());
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); lam++)
@@ -165,13 +161,13 @@ PyObject *scribus_setactlayer(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
-	if (Name == 0)
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
+	if (Name == nullptr)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = ScCore->primaryMainWindow()->doc->setActiveLayer(QString::fromUtf8(Name));
 	if (found)
@@ -179,17 +175,15 @@ PyObject *scribus_setactlayer(PyObject* /* self */, PyObject* args)
 	else
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
 PyObject *scribus_getactlayer(PyObject* /* self */)
 {
-	if(!checkHaveDocument())
-		return NULL;
+	if (!checkHaveDocument())
+		return nullptr;
 	return PyString_FromString(ScCore->primaryMainWindow()->doc->activeLayerName().toUtf8());
 }
 
@@ -198,24 +192,24 @@ PyObject *scribus_senttolayer(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	char *Layer = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es|es", "utf-8", &Layer, "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Layer) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	PageItem *item = GetUniqueItem(QString::fromUtf8(Name));
-	if (item == NULL)
-		return NULL;
+	if (item == nullptr)
+		return nullptr;
 	ScribusDoc* currentDoc   = ScCore->primaryMainWindow()->doc;
 	ScribusView* currentView = ScCore->primaryMainWindow()->view;
 	const ScLayer *scLayer = currentDoc->Layers.layerByName( QString::fromUtf8(Layer) );
 	if (!scLayer)
 	{
 		PyErr_SetString(ScribusException, QString("Layer not found").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	// If no name have been specified in args, process whole selection
 	currentView->SelectItem(item);
@@ -232,8 +226,6 @@ PyObject *scribus_senttolayer(PyObject* /* self */, PyObject* args)
 		item->LayerID = scLayer->ID;
 	}
 
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -242,13 +234,13 @@ PyObject *scribus_layervisible(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	int vis = 1;
 	if (!PyArg_ParseTuple(args, "esi", "utf-8", &Name, &vis))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QString("Cannot have an empty layer name").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -263,10 +255,8 @@ PyObject *scribus_layervisible(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -275,13 +265,13 @@ PyObject *scribus_layerprint(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	int vis = 1;
 	if (!PyArg_ParseTuple(args, "esi", "utf-8", &Name, &vis))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -296,10 +286,8 @@ PyObject *scribus_layerprint(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -308,13 +296,13 @@ PyObject *scribus_layerlock(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	int vis = 1;
 	if (!PyArg_ParseTuple(args, "esi", "utf-8", &Name, &vis))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -329,10 +317,8 @@ PyObject *scribus_layerlock(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -341,13 +327,13 @@ PyObject *scribus_layeroutline(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	int vis = 1;
 	if (!PyArg_ParseTuple(args, "esi", "utf-8", &Name, &vis))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -362,10 +348,8 @@ PyObject *scribus_layeroutline(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -374,13 +358,13 @@ PyObject *scribus_layerflow(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	int vis = 1;
 	if (!PyArg_ParseTuple(args, "esi", "utf-8", &Name, &vis))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -395,10 +379,8 @@ PyObject *scribus_layerflow(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -407,13 +389,13 @@ PyObject *scribus_layerblend(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	int vis = 0;
 	if (!PyArg_ParseTuple(args, "esi", "utf-8", &Name, &vis))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QString("Cannot have an empty layer name").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -428,10 +410,8 @@ PyObject *scribus_layerblend(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -440,13 +420,13 @@ PyObject *scribus_layertrans(PyObject* /* self */, PyObject* args)
 	char *Name = const_cast<char*>("");
 	double vis = 1.0;
 	if (!PyArg_ParseTuple(args, "esd", "utf-8", &Name, &vis))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QString("Cannot have an empty layer name").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -461,10 +441,8 @@ PyObject *scribus_layertrans(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -472,13 +450,13 @@ PyObject *scribus_glayervisib(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	int i = 0;
 	bool found = false;
@@ -494,7 +472,7 @@ PyObject *scribus_glayervisib(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyInt_FromLong(static_cast<long>(i));
 }
@@ -503,13 +481,13 @@ PyObject *scribus_glayerprint(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	int i = 0;
 	bool found = false;
@@ -525,7 +503,7 @@ PyObject *scribus_glayerprint(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyInt_FromLong(static_cast<long>(i));
 }
@@ -534,13 +512,13 @@ PyObject *scribus_glayerlock(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	int i = 0;
 	bool found = false;
@@ -556,7 +534,7 @@ PyObject *scribus_glayerlock(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyInt_FromLong(static_cast<long>(i));
 }
@@ -565,13 +543,13 @@ PyObject *scribus_glayeroutline(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	int i = 0;
 	bool found = false;
@@ -587,7 +565,7 @@ PyObject *scribus_glayeroutline(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyInt_FromLong(static_cast<long>(i));
 }
@@ -596,13 +574,13 @@ PyObject *scribus_glayerflow(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	int i = 0;
 	bool found = false;
@@ -618,7 +596,7 @@ PyObject *scribus_glayerflow(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyInt_FromLong(static_cast<long>(i));
 }
@@ -627,13 +605,13 @@ PyObject *scribus_glayerblend(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	int i = 0;
 	bool found = false;
@@ -649,7 +627,7 @@ PyObject *scribus_glayerblend(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyInt_FromLong(static_cast<long>(i));
 }
@@ -658,13 +636,13 @@ PyObject *scribus_glayertrans(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	double i = 1.0;
 	bool found = false;
@@ -680,7 +658,7 @@ PyObject *scribus_glayertrans(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyFloat_FromDouble(i);
 }
@@ -690,18 +668,18 @@ PyObject *scribus_removelayer(PyObject* /* self */, PyObject* args)
 //FIXME: Use the docs remove layer code
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
-	if(!checkHaveDocument())
-		return NULL;
+		return nullptr;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot have an empty layer name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	if (ScCore->primaryMainWindow()->doc->Layers.count() == 1)
 	{
 		PyErr_SetString(ScribusException, QObject::tr("Cannot remove the last layer.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	bool found = false;
 	for (int lam=0; lam < ScCore->primaryMainWindow()->doc->Layers.count(); ++lam)
@@ -727,10 +705,8 @@ PyObject *scribus_removelayer(PyObject* /* self */, PyObject* args)
 	if (!found)
 	{
 		PyErr_SetString(NotFoundError, QObject::tr("Layer not found.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -738,18 +714,16 @@ PyObject *scribus_createlayer(PyObject* /* self */, PyObject* args)
 {
 	char *Name = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "es", "utf-8", &Name))
-		return NULL;
+		return nullptr;
 	if (!checkHaveDocument())
-		return NULL;
+		return nullptr;
 	if (strlen(Name) == 0)
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Cannot create layer without a name.","python error").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	ScCore->primaryMainWindow()->doc->addLayer(QString::fromUtf8(Name), true);
 	ScCore->primaryMainWindow()->changeLayer(ScCore->primaryMainWindow()->doc->activeLayer());
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 
@@ -781,16 +755,16 @@ PyObject *scribus_moveselectiontoback(PyObject*)
 PyObject *scribus_savepdfoptions(PyObject* /* self */, PyObject* args)
 {
 	char* file;
-	if(!checkHaveDocument())
-		return NULL;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (!PyArg_ParseTuple(args, const_cast<char*>("es"), "utf-8", &file))
-		return NULL;
+		return nullptr;
 
 	PDFOptionsIO io(ScCore->primaryMainWindow()->doc->pdfOptions());
 	if (!io.writeTo(file))
 	{
 		PyErr_SetString(ScribusException, io.lastError().toUtf8());
-		return NULL;
+		return nullptr;
 	}
 	Py_RETURN_NONE;
 }
@@ -798,16 +772,16 @@ PyObject *scribus_savepdfoptions(PyObject* /* self */, PyObject* args)
 PyObject *scribus_readpdfoptions(PyObject* /* self */, PyObject* args)
 {
 	char* file;
-	if(!checkHaveDocument())
-		return NULL;
+	if (!checkHaveDocument())
+		return nullptr;
 	if (!PyArg_ParseTuple(args, const_cast<char*>("es"), "utf-8", &file))
-		return NULL;
+		return nullptr;
 
 	PDFOptionsIO io(ScCore->primaryMainWindow()->doc->pdfOptions());
 	if (!io.readFrom(file))
 	{
 		PyErr_SetString(ScribusException, io.lastError().toUtf8());
-		return NULL;
+		return nullptr;
 	}
 	Py_RETURN_NONE;
 }

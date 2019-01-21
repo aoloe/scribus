@@ -17,8 +17,8 @@ for which a new license (GPL+exception) is in place.
 
 PropertyWidget_OptMargins::PropertyWidget_OptMargins(QWidget* parent) : QFrame(parent)
 {
-	m_item = 0;
-	m_ScMW = 0;
+	m_item = nullptr;
+	m_ScMW = nullptr;
 
 	setupUi(this);
 
@@ -49,7 +49,7 @@ void PropertyWidget_OptMargins::setDoc(ScribusDoc *d)
 	}
 
 	m_doc  = d;
-	m_item = NULL;
+	m_item = nullptr;
 
 	if (m_doc.isNull())
 	{
@@ -68,7 +68,7 @@ void PropertyWidget_OptMargins::setCurrentItem(PageItem *item)
 	//CB We shouldn't really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
 	//set some status if so.
-	//FIXME: This won't work until when a canvas deselect happens, m_item must be NULL.
+	//FIXME: This won't work until when a canvas deselect happens, m_item must be nullptr.
 	//if (m_item == i)
 	//	return;
 
@@ -112,7 +112,7 @@ void PropertyWidget_OptMargins::disconnectSignals()
 	disconnect(optMarginResetButton, SIGNAL(clicked()), this, SLOT(resetOpticalMargins()) );
 }
 
-void PropertyWidget_OptMargins::configureWidgets(void)
+void PropertyWidget_OptMargins::configureWidgets()
 {
 	bool enabled = false;
 	if (m_item && m_doc)
@@ -121,7 +121,7 @@ void PropertyWidget_OptMargins::configureWidgets(void)
 		if (m_doc->appMode == modeEditTable)
 			textItem = m_item->asTable()->activeCell().textFrame();
 
-		enabled  = (m_item->isPathText() || (textItem != NULL));
+		enabled  = (m_item->isPathText() || (textItem != nullptr));
 		enabled &= (m_doc->m_Selection->count() == 1);
 	}
 	setEnabled(enabled);
@@ -180,7 +180,7 @@ void PropertyWidget_OptMargins::handleOpticalMargins()
 	PageItem *item = m_item;
 	if (m_doc->appMode == modeEditTable)
 		item = m_item->asTable()->activeCell().textFrame();
-	if (item != NULL)
+	if (item != nullptr)
 	{
 		Selection tempSelection(this, false);
 		tempSelection.addItem(item, true);
@@ -195,7 +195,7 @@ void PropertyWidget_OptMargins::resetOpticalMargins()
 	PageItem *item = m_item;
 	if (m_doc->appMode == modeEditTable)
 		item = m_item->asTable()->activeCell().textFrame();
-	if (item != NULL)
+	if (item != nullptr)
 	{
 		Selection tempSelection(this, false);
 		tempSelection.addItem(item, true);

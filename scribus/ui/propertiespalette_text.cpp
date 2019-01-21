@@ -52,9 +52,9 @@ for which a new license (GPL+exception) is in place.
 
 PropertiesPalette_Text::PropertiesPalette_Text( QWidget* parent) : QWidget(parent)
 {
-	m_ScMW=0;
-	m_doc=0;
-	m_item=0;
+	m_ScMW=nullptr;
+	m_doc=nullptr;
+	m_item=nullptr;
 	m_haveDoc = false;
 	m_haveItem = false;
 	m_unitIndex = 0;
@@ -108,7 +108,7 @@ PropertiesPalette_Text::PropertiesPalette_Text( QWidget* parent) : QWidget(paren
 	languageChange();
 
 	connect(lineSpacing   , SIGNAL(valueChanged(double)), this, SLOT(handleLineSpacing()));
-	connect(fonts         , SIGNAL(fontSelected(QString )), this, SLOT(handleTextFont(QString)));
+	connect(fonts         , SIGNAL(fontSelected(QString)), this, SLOT(handleTextFont(QString)));
 	connect(fontSize      , SIGNAL(valueChanged(double)), this, SLOT(handleFontSize()));
 	connect(textAlignment , SIGNAL(State(int))   , this, SLOT(handleAlignment(int)));
 	connect(textDirection , SIGNAL(State(int))   , this, SLOT(handleDirection(int)));
@@ -158,7 +158,7 @@ void PropertiesPalette_Text::setDoc(ScribusDoc *d)
 	}
 
 	m_doc  = d;
-	m_item = NULL;
+	m_item = nullptr;
 
 	m_unitRatio   = m_doc->unitRatio();
 	m_unitIndex   = m_doc->unitIndex();
@@ -180,7 +180,7 @@ void PropertiesPalette_Text::setDoc(ScribusDoc *d)
 	orphanBox->setDoc(m_doc);
 	pathTextWidgets->setDoc(m_doc);
 
-	fonts->RebuildList(m_doc);
+	fonts->rebuildList(m_doc);
 	paraStyleCombo->setDoc(m_doc);
 	charStyleCombo->setDoc(m_doc);
 
@@ -198,22 +198,22 @@ void PropertiesPalette_Text::unsetDoc()
 
 	m_haveDoc  = false;
 	m_haveItem = false;
-	m_doc      = NULL;
-	m_item     = NULL;
+	m_doc      = nullptr;
+	m_item     = nullptr;
 
-	paraStyleCombo->setDoc(0);
-	charStyleCombo->setDoc(0);
+	paraStyleCombo->setDoc(nullptr);
+	charStyleCombo->setDoc(nullptr);
 
-	advancedWidgets->setDoc(0);
-	fontfeaturesWidget->setDoc(0);
-	colorWidgets->setDoc(0);
-	distanceWidgets->setDoc(0);
-	flopBox->setDoc(0);
-	hyphenationWidget->setDoc(NULL);
-	optMargins->setDoc(0);
-	orphanBox->setDoc(0);
-	parEffectWidgets->setDoc(0);
-	pathTextWidgets->setDoc(0);
+	advancedWidgets->setDoc(nullptr);
+	fontfeaturesWidget->setDoc(nullptr);
+	colorWidgets->setDoc(nullptr);
+	distanceWidgets->setDoc(nullptr);
+	flopBox->setDoc(nullptr);
+	hyphenationWidget->setDoc(nullptr);
+	optMargins->setDoc(nullptr);
+	orphanBox->setDoc(nullptr);
+	parEffectWidgets->setDoc(nullptr);
+	pathTextWidgets->setDoc(nullptr);
 
 	m_haveItem = false;
 
@@ -223,14 +223,14 @@ void PropertiesPalette_Text::unsetDoc()
 void PropertiesPalette_Text::unsetItem()
 {
 	m_haveItem = false;
-	m_item     = NULL;
+	m_item     = nullptr;
 	colorWidgets->setCurrentItem(m_item);
 	handleSelectionChanged();
 }
 
 PageItem* PropertiesPalette_Text::currentItemFromSelection()
 {
-	PageItem *currentItem = NULL;
+	PageItem *currentItem = nullptr;
 
 	if (m_doc)
 	{
@@ -300,14 +300,14 @@ void PropertiesPalette_Text::handleUpdateRequest(int updateFlags)
 	if (updateFlags & reqParaStylesUpdate)
 		paraStyleCombo->updateFormatList();
 	if (updateFlags & reqDefFontListUpdate)
-		fonts->RebuildList(0);
+		fonts->rebuildList(nullptr);
 	if (updateFlags & reqDocFontListUpdate)
-		fonts->RebuildList(m_haveDoc ? m_doc : 0);
+		fonts->rebuildList(m_haveDoc ? m_doc : nullptr);
 	if (updateFlags & reqStyleComboDocUpdate)
 	{
-		paraStyleCombo->setDoc(m_haveDoc ? m_doc : 0);
-		charStyleCombo->setDoc(m_haveDoc ? m_doc : 0);
-		parEffectWidgets->setDoc(m_haveDoc ? m_doc : 0);
+		paraStyleCombo->setDoc(m_haveDoc ? m_doc : nullptr);
+		charStyleCombo->setDoc(m_haveDoc ? m_doc : nullptr);
+		parEffectWidgets->setDoc(m_haveDoc ? m_doc : nullptr);
 	}
 }
 
@@ -318,7 +318,7 @@ void PropertiesPalette_Text::setCurrentItem(PageItem *i)
 	//CB We shouldn't really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
 	//set some status if so.
-	//FIXME: This won't work until when a canvas deselect happens, m_item must be NULL.
+	//FIXME: This won't work until when a canvas deselect happens, m_item must be nullptr.
 	//if (m_item == i)
 	//	return;
 
@@ -427,8 +427,8 @@ void PropertiesPalette_Text::showFontFace(const QString& newFont)
 		return;
 	bool tmp = m_haveItem;
 	m_haveItem = false;
-	if (m_item != NULL)
-		fonts->RebuildList(m_doc, m_item->isAnnotation());
+	if (m_item != nullptr)
+		fonts->rebuildList(m_doc, m_item->isAnnotation());
 	fonts->setCurrentFont(newFont);
 	m_haveItem = tmp;
 }
@@ -440,7 +440,7 @@ void PropertiesPalette_Text::showFontSize(double s)
 	fontSize->showValue(s / 10.0);
 }
 
-void PropertiesPalette_Text::showLanguage(QString w)
+void PropertiesPalette_Text::showLanguage(const QString& w)
 {
 	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
@@ -649,11 +649,13 @@ void PropertiesPalette_Text::handleDirection(int d)
 	}
 }
 
-void PropertiesPalette_Text::handleTextFont(QString c)
+void PropertiesPalette_Text::handleTextFont(const QString& font)
 {
 	if (!m_haveDoc || !m_haveItem || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
-	m_ScMW->SetNewFont(c);
+	Selection tempSelection(this, false);
+	tempSelection.addItem(m_item, true);
+	m_doc->itemSelection_SetFont(font, &tempSelection);
 }
 
 void PropertiesPalette_Text::doClearCStyle()

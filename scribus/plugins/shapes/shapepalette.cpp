@@ -47,7 +47,7 @@ for which a new license (GPL+exception) is in place.
 ShapeView::ShapeView(QWidget* parent) : QListWidget(parent)
 {
 	shapes.clear();
-	scMW = NULL;
+	scMW = nullptr;
 
 	setDragEnabled(true);
 	setViewMode(QListView::IconMode);
@@ -74,7 +74,7 @@ void ShapeView::HandleContextMenu(QPoint)
 	if (this->count() != 0)
 	{
 		QListWidgetItem* it = currentItem();
-		if (it != NULL)
+		if (it != nullptr)
 		{
 			QAction* delAct = pmenu->addAction( tr("Delete selected Shape"));
 			connect(delAct, SIGNAL(triggered()), this, SLOT(delOne()));
@@ -106,7 +106,7 @@ void ShapeView::deleteAll()
 void ShapeView::delOne()
 {
 	QListWidgetItem* it = currentItem();
-	if (it != NULL)
+	if (it != nullptr)
 	{
 		QString key = it->data(Qt::UserRole).toString();
 		shapes.remove(key);
@@ -123,13 +123,13 @@ void ShapeView::changeDisplay()
 
 bool ShapeView::viewportEvent(QEvent *event)
 {
-	if (event != NULL)
+	if (event != nullptr)
 	{
 		if (event->type() == QEvent::ToolTip)
 		{
 			QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
 			QListWidgetItem* it = itemAt(helpEvent->pos());
-			if (it != NULL)
+			if (it != nullptr)
 			{
 				event->accept();
 				QString tipText = it->text();
@@ -158,7 +158,7 @@ void ShapeView::keyPressEvent(QKeyEvent* e)
 		case Qt::Key_Delete:
 			{
 				QListWidgetItem* it = currentItem();
-				if (it != NULL)
+				if (it != nullptr)
 				{
 					QString key = it->data(Qt::UserRole).toString();
 					if (shapes.contains(key))
@@ -217,7 +217,7 @@ void ShapeView::startDrag(Qt::DropActions supportedActions)
 		m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 		m_Doc->setPage(w, h, 0, 0, 0, 0, 0, 0, false, false);
 		m_Doc->addPage(0);
-		m_Doc->setGUI(false, scMW, 0);
+		m_Doc->setGUI(false, scMW, nullptr);
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, m_Doc->currentPage()->xOffset(), m_Doc->currentPage()->yOffset(), w, h, m_Doc->itemToolPrefs().shapeLineWidth, m_Doc->itemToolPrefs().shapeFillColor, m_Doc->itemToolPrefs().shapeLineColor);
 		PageItem* ite = m_Doc->Items->at(z);
 		ite->PoLine = shapes[key].path.copy();
@@ -231,7 +231,7 @@ void ShapeView::startDrag(Qt::DropActions supportedActions)
 		ite->ClipEdited = true;
 		ite->FrameType = 3;
 		m_Doc->m_Selection->addItem(ite, true);
-		ScElemMimeData* md = ScriXmlDoc::WriteToMimeData(m_Doc, m_Doc->m_Selection);
+		ScElemMimeData* md = ScriXmlDoc::writeToMimeData(m_Doc, m_Doc->m_Selection);
 		QDrag* dr = new QDrag(this);
 		dr->setMimeData(md);
 		dr->setPixmap(currentItem()->icon().pixmap(QSize(48, 48)));
@@ -277,7 +277,7 @@ void ShapeView::updateShapeList()
 	}
 }
 
-ShapePalette::ShapePalette( QWidget* parent) : ScDockPalette( parent, "Shap", 0)
+ShapePalette::ShapePalette( QWidget* parent) : ScDockPalette( parent, "Shap", nullptr)
 {
 	setMinimumSize( QSize( 220, 240 ) );
 	setObjectName(QString::fromLocal8Bit("Shap"));
@@ -307,7 +307,7 @@ ShapePalette::ShapePalette( QWidget* parent) : ScDockPalette( parent, "Shap", 0)
 	setWidget(containerWidget);
 
 	unsetDoc();
-	m_scMW  = NULL;
+	m_scMW  = nullptr;
 	languageChange();
 	connect(importButton, SIGNAL(clicked()), this, SLOT(Import()));
 	connect(closeButton, SIGNAL(clicked()), this, SLOT(closeTab()));
@@ -317,7 +317,7 @@ void ShapePalette::writeToPrefs()
 {
 	QString prFile = QDir::toNativeSeparators(PrefsManager::instance()->preferencesLocation()+"/scribusshapes.xml");
 	QFile f(prFile);
-	if(!f.open(QIODevice::WriteOnly))
+	if (!f.open(QIODevice::WriteOnly))
 		return;
 	QDomDocument docu = QDomDocument("svgdoc");
 	QString vo = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
@@ -561,11 +561,11 @@ void ShapePalette::setMainWindow(ScribusMainWindow *mw)
 
 void ShapePalette::setDoc(ScribusDoc *newDoc)
 {
-	if (m_scMW == NULL)
-		m_doc = NULL;
+	if (m_scMW == nullptr)
+		m_doc = nullptr;
 	else
 		m_doc = newDoc;
-	if (m_doc == NULL)
+	if (m_doc == nullptr)
 		setEnabled(true);
 	else
 		setEnabled(!m_doc->drawAsPreview);
@@ -573,7 +573,7 @@ void ShapePalette::setDoc(ScribusDoc *newDoc)
 
 void ShapePalette::unsetDoc()
 {
-	m_doc = NULL;
+	m_doc = nullptr;
 	setEnabled(true);
 }
 

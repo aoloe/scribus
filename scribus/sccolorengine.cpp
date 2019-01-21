@@ -21,11 +21,12 @@ for which a new license (GPL+exception) is in place.
  *                                                                         *
  ***************************************************************************/
 
+#include <cmath>
+
 #include "sccolorengine.h"
 #include "scribuscore.h"
 #include "scribusdoc.h"
 #include "colormgmt/sccolormgmtengine.h"
-#include <cmath>
 
 QColor ScColorEngine::getRGBColor(const ScColor& color, const ScribusDoc* doc)
 {
@@ -494,8 +495,7 @@ void ScColorEngine::getShadeColorCMYK(const ScColor& color, const ScribusDoc* do
 	}
 }
 
-void ScColorEngine::getShadeColorCMYK(const ScColor& color, const ScribusDoc* doc, 
-										  CMYKColorF& cmyk, double level)
+void ScColorEngine::getShadeColorCMYK(const ScColor& color, const ScribusDoc* doc, CMYKColorF& cmyk, double level)
 {
 	if (color.getColorModel() == colorModelRGB)
 	{
@@ -539,17 +539,17 @@ void ScColorEngine::getShadeColorRGB(const ScColor& color, const ScribusDoc* doc
 	}
 	else if (color.getColorModel() == colorModelRGB)
 	{
-		int h, s, v, snew, vnew;
-		QColor tmpR = color.getRawRGBColor();
-		tmpR.getHsv(&h, &s, &v);
-		snew = qRound(s * level / 100.0);
-		vnew = 255 - qRound(((255 - v) * level / 100.0));
-		tmpR.setHsv(h, snew, vnew);
-		tmpR.getRgb(&rgb.r, &rgb.g, &rgb.b);
+		HSVColorF hsv;
+		RGBColorF rgbF;
+		color.getRawRGBColor(&rgbF);
+		rgbF.toHsv(hsv);
+		hsv.s = hsv.s * (level / 100.0);
+		hsv.v = 1.0 - (1.0 - hsv.v) * (level / 100.0);
+		hsv.toRgb(rgb);
 		//We could also compute rgb shade using rgb directly
-		/*rgb.CR = 255 - ((255 - color.CR) * level / 100);
-		rgb.MG = 255 - ((255 - color.MG) * level / 100);
-		rgb.YB = 255 - ((255 - color.YB) * level / 100);*/
+		/*rgb.r = 255 - ((255 - color.m_values[0]) * level / 100);
+		rgb.g = 255 - ((255 - color.m_values[1]) * level / 100);
+		rgb.b = 255 - ((255 - color.m_values[2]) * level / 100);*/
 	}
 	else if (color.getColorModel() == colorModelLab)
 	{
@@ -578,17 +578,12 @@ void ScColorEngine::getShadeColorRGB(const ScColor& color, const ScribusDoc* doc
 	}
 	else if (color.getColorModel() == colorModelRGB)
 	{
-		int h, s, v, snew, vnew;
-		QColor tmpR = color.getRawRGBColor();
-		tmpR.getHsv(&h, &s, &v);
-		snew = qRound(s * level / 100.0);
-		vnew = 255 - qRound(((255 - v) * level / 100.0));
-		RGBColor tmpRgb;
-		tmpR.setHsv(h, snew, vnew);
-		tmpR.getRgb(&tmpRgb.r, &tmpRgb.g, &tmpRgb.b);
-		rgb.r = tmpRgb.r / 255.0;
-		rgb.g = tmpRgb.g / 255.0;
-		rgb.b = tmpRgb.b / 255.0;
+		HSVColorF hsv;
+		color.getRawRGBColor(&rgb);
+		rgb.toHsv(hsv);
+		hsv.s = hsv.s * (level / 100.0);
+		hsv.v = 1.0 - (1.0 - hsv.v) * (level / 100.0);
+		hsv.toRgb(rgb);
 		//We could also compute rgb shade using rgb directly
 		/*rgb.r = 1.0 - ((1.0 - color.m_values[0]) * level / 100);
 		rgb.g = 1.0 - ((1.0 - color.m_values[1]) * level / 100);
@@ -632,7 +627,7 @@ QColor ScColorEngine::getDisplayColor(const ScColor& color, const ScribusDoc* do
 	else if (color.getColorModel() == colorModelLab)
 	{
 		bool cmsUse = doc ? doc->HasCMS : false;
-		ScColorTransform trans  = doc ? doc->stdLabToRGBTrans : ScCore->defaultLabToRGBTrans;
+		ScColorTransform trans  = doc ? doc->stdLabToScreenTrans : ScCore->defaultLabToRGBTrans;
 		if (cmsUse && trans)
 		{
 			double inC[3];
@@ -715,7 +710,7 @@ QColor ScColorEngine::getDisplayColor(const ScColor& color, const ScribusDoc* do
 	}
 	else if (color.getColorModel() == colorModelLab)
 	{
-		ScColorTransform trans  = doc ? doc->stdLabToRGBTrans : ScCore->defaultLabToRGBTrans;
+		ScColorTransform trans  = doc ? doc->stdLabToScreenTrans : ScCore->defaultLabToRGBTrans;
 		double inC[3];
 		inC[0] = 100 - (100 - color.m_L_val) * (level / 100.0);
 		inC[1] = color.m_a_val * (level / 100.0);
@@ -735,7 +730,7 @@ QColor ScColorEngine::getDisplayColorGC(const ScColor& color, const ScribusDoc* 
 	if (doSoftProofing && doGamutCheck)
 	{
 		bool outOfGamutFlag = isOutOfGamut(color, doc);
-		if (outOfG != NULL)
+		if (outOfG != nullptr)
 			*outOfG = outOfGamutFlag;
 		tmp = outOfGamutFlag ? QColor(0, 255, 0) : getDisplayColor(color, doc);
 	}
@@ -826,7 +821,7 @@ QColor ScColorEngine::getShadeColorProof(const ScColor& color, const ScribusDoc*
 		inC[1] = color.m_a_val * (level / 100.0);
 		inC[2] = color.m_b_val * (level / 100.0);
 		quint16 outC[3];
-		ScColorTransform trans  = doc ? doc->stdLabToRGBTrans : ScCore->defaultLabToRGBTrans;
+		ScColorTransform trans  = doc ? doc->stdLabToScreenTrans : ScCore->defaultLabToRGBTrans;
 		ScColorTransform transProof   = doc ? doc->stdProofLab   : ScCore->defaultLabToRGBTrans;
 		ScColorTransform transProofGC = doc ? doc->stdProofLabGC : ScCore->defaultLabToRGBTrans;
 		if (cmsUse && doc && doc->SoftProofing)

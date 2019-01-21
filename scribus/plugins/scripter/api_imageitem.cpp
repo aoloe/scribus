@@ -68,7 +68,7 @@ void ImageAPI::setGrayscale()
 {
     if (!checkHaveDocument())
         RAISE("No document open");
-    if (item == NULL)
+	if (item == nullptr)
         return;
     if (! item->asImageFrame())
     {
@@ -89,7 +89,7 @@ void ImageAPI::load(QString filename)
 {
 	if (!checkHaveDocument())
 		RAISE("No document open");
-	if (item == NULL)
+	if (item == nullptr)
 		return;
 	if (!item->asImageFrame())
 	{
@@ -103,7 +103,7 @@ void ImageAPI::scale(double x, double y)
 {
 	if (!checkHaveDocument())
 		RAISE("No document open");
-	if (item == NULL)
+	if (item == nullptr)
 		return;
 	if (! item->asImageFrame())
 	{
@@ -131,7 +131,7 @@ void ImageAPI::offset(double x, double y)
 {
 	if (!checkHaveDocument())
 		RAISE("No document open");
-	if (item == NULL)
+	if (item == nullptr)
 		return;
 	if (! item->asImageFrame())
 	{
@@ -166,7 +166,7 @@ void ImageAPI::setBrightness(double n)
 {
 	if (!checkHaveDocument())
 		RAISE("No document open");
-	if (item == NULL)
+	if (item == nullptr)
 		return ;
 	if (! item->asImageFrame())
 	{
@@ -185,16 +185,11 @@ void ImageAPI::setBrightness(double n)
 	ScCore->primaryMainWindow()->doc->updatePic();
 }
 
-void ImageAPI::scaleToFrame(bool scaletoframe, bool Proportional)
+void ImageAPI::scaleToFrame(bool scaleToFrame, bool proportional)
 {
-	bool scaleToFrame = false;
-	bool proportional = true;
-	
-	scaleToFrame = scaletoframe;
-	proportional = Proportional;
 	if (!checkHaveDocument())
 		RAISE("No document open.");
-	if (item == NULL)
+	if (item == nullptr)
 		return;
 	if (! item->asImageFrame())
 	{
@@ -203,11 +198,10 @@ void ImageAPI::scaleToFrame(bool scaletoframe, bool Proportional)
 	}
 	// Set the item to scale if appropriate. ScaleType 1 is free
 	// scale, 0 is scale to frame.
-	item->ScaleType = scaleToFrame == 0;
+	item->ScaleType = !scaleToFrame;
 	// Now, if the user has chosen to set the proportional mode,
 	// set it. 1 is proportional, 0 is free aspect.
-	if (proportional != -1)
-		item->AspectRatio = proportional > 0;
+	item->AspectRatio = proportional;
 	// Force the braindead app to notice the changes
 
 	//FIXME emit or something so we dont need this

@@ -34,7 +34,6 @@ add_subdirectory(ui/qml)
 if(WITH_TESTS)
 	add_subdirectory(tests)
 endif()
-add_subdirectory(unicodemap)
 if (WANT_DESIGNER)
 	add_subdirectory(designer)
 endif ()
@@ -675,6 +674,7 @@ set(SCRIBUS_SOURCES
 	pageitem_table.cpp
 	pageitem_textframe.cpp
 	pageitem_noteframe.cpp
+	pageitemiterator.cpp
 	pageitempointer.cpp
 	pagesize.cpp
 	pdf_analyzer.cpp
@@ -699,6 +699,7 @@ set(SCRIBUS_SOURCES
 	sccolor.cpp
 	sccolorengine.cpp
 	sccolorshade.cpp
+	sccolorstructs.cpp
 	scdocoutput.cpp
 	scdocoutput_ps2.cpp
 	scdomelement.cpp

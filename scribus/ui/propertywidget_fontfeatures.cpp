@@ -16,8 +16,8 @@ for which a new license (GPL+exception) is in place.
 
 PropertyWidget_FontFeatures::PropertyWidget_FontFeatures(QWidget* parent) : QFrame(parent)
 {
-	m_item = NULL;
-	m_ScMW = NULL;
+	m_item = nullptr;
+	m_ScMW = nullptr;
 	setupUi(this);
 
 	setFrameStyle(QFrame::Box | QFrame::Plain);
@@ -48,7 +48,7 @@ void PropertyWidget_FontFeatures::languageChange()
 	retranslateUi(this);
 }
 
-void PropertyWidget_FontFeatures::showFontFeatures(QString s, QStringList availableFeatures)
+void PropertyWidget_FontFeatures::showFontFeatures(const QString& s, const QStringList& availableFeatures)
 {
 	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
@@ -257,7 +257,7 @@ void PropertyWidget_FontFeatures::setDoc(ScribusDoc *d)
 	}
 
 	m_doc  = d;
-	m_item = NULL;
+	m_item = nullptr;
 
 	if (m_doc.isNull())
 	{
@@ -444,7 +444,7 @@ void PropertyWidget_FontFeatures::disableAllFeatures()
 	StyleSet20->setChecked(false);
 }
 
-void PropertyWidget_FontFeatures::enableFeatures(QStringList fontFeatures)
+void PropertyWidget_FontFeatures::enableFeatures(const QStringList& fontFeatures)
 {
 	quint64 oldFlags = featureFlags();
 	quint64 newFlags = FontFeatures::fontFlagsFromList(fontFeatures);

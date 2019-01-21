@@ -19,7 +19,7 @@ for which a new license (GPL+exception) is in place.
 #include "ui/useprintermarginsdialog.h"
 
 
-MarginWidget::MarginWidget( QWidget* parent, QString /*title*/, const MarginStruct* margs, int unitIndex, bool showChangeAll, bool showBleeds) : QTabWidget(parent),
+MarginWidget::MarginWidget( QWidget* parent, const QString& /*title*/, const MarginStruct* margs, int unitIndex, bool showChangeAll, bool showBleeds) : QTabWidget(parent),
 	pageWidth(0.0),
 	pageHeight(0.0),
 	pageType(0)
@@ -94,13 +94,13 @@ MarginWidget::MarginWidget( QWidget* parent, QString /*title*/, const MarginStru
 	}
 	else
 	{
-		marginsForPagesLayout=NULL;
-		marginsForPages=NULL;
-		marginsForAllPages=NULL;
-		marginsForAllMasterPages=NULL;
+		marginsForPagesLayout=nullptr;
+		marginsForPages=nullptr;
+		marginsForAllPages=nullptr;
+		marginsForAllMasterPages=nullptr;
 	}
 
-	usePrinterMarginsButton=NULL;
+	usePrinterMarginsButton=nullptr;
 	usePrinterMarginsButton = new QPushButton( tr("Printer Margins..."),marginPage );
 	GroupLayout->addWidget( usePrinterMarginsButton, 5, 1 );
 	usePrinterMarginsButton->setToolTip( "<qt>" + tr( "Import the margins for the selected page size from the available printers" ) + "</qt>");
@@ -236,8 +236,8 @@ void MarginWidget::setFacingPages(bool facing, int pagetype)
 {
 	facingPages = facing;
 	pageType = pagetype;
-	lText->setText(facing == true ? tr( "&Inside:" ) : tr( "&Left:" ));
-	rText->setText(facing == true ? tr( "O&utside:" ) : tr( "&Right:" ));
+	lText->setText(facing ? tr( "&Inside:" ) : tr( "&Left:" ));
+	rText->setText(facing ? tr( "O&utside:" ) : tr( "&Right:" ));
 	if (useBleeds)
 	{
 		if (facing)

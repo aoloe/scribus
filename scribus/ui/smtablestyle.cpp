@@ -15,7 +15,7 @@ for which a new license (GPL+exception) is in place.
 #include "smtablestylewidget.h"
 #include "ui/scmessagebox.h"
 
-SMTableStyle::SMTableStyle() : StyleItem(),m_widget(0), m_page(0), m_doc(0)
+SMTableStyle::SMTableStyle() : m_widget(nullptr), m_page(nullptr), m_doc(nullptr)
 {
 	m_widget = new QTabWidget();
 	Q_CHECK_PTR(m_widget);
@@ -31,8 +31,8 @@ SMTableStyle::~SMTableStyle()
 {
 	delete m_page;
 	delete m_widget;
-	m_page = 0;
-	m_widget = 0;
+	m_page = nullptr;
+	m_widget = nullptr;
 }
 
 QTabWidget* SMTableStyle::widget()
@@ -114,7 +114,7 @@ void SMTableStyle::selected(const QStringList &styleNames)
 	for (int i = 0; i < m_cachedStyles.count(); ++i)
 		tableStyles << m_cachedStyles[i];
 
-	foreach (const QString& styleName, styleNames)
+	for (const QString& styleName : styleNames)
 	{
 		int index = m_cachedStyles.find(styleName);
 		// FIXME: #7133: Use .isDefaultStyle() instead here rather than relying on tr text comparison
@@ -273,7 +273,7 @@ void SMTableStyle::setShortcut(const QString &shortcut)
 
 void SMTableStyle::deleteStyles(const QList<RemoveItem> &removeList)
 {
-	foreach (const RemoveItem& removeItem, removeList)
+	for (const RemoveItem& removeItem : removeList)
 	{
 		for (int i = 0; i < m_selection.count(); ++i)
 		{
@@ -495,7 +495,7 @@ void SMTableStyle::slotParentChanged(const QString &parent)
 	Q_ASSERT(!parent.isNull());
 
 	bool  loop = false, parentLoop = false;
-	const BaseStyle* parentStyle = (!parent.isEmpty()) ? m_cachedStyles.resolve(parent) : NULL;
+	const BaseStyle* parentStyle = (!parent.isEmpty()) ? m_cachedStyles.resolve(parent) : nullptr;
 	QStringList  sel;
 
 	for (int i = 0; i < m_selection.count(); ++i)
@@ -510,7 +510,7 @@ void SMTableStyle::slotParentChanged(const QString &parent)
 				loop = parentLoop = true;
 				break;
 			}
-			pStyle = pStyle->hasParent() ? pStyle->parentStyle() : NULL;
+			pStyle = pStyle->hasParent() ? pStyle->parentStyle() : nullptr;
 		}
 		if (!loop)
 		{

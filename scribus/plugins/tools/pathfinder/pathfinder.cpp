@@ -60,7 +60,7 @@ void pathfinder_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-PathFinderPlugin::PathFinderPlugin() : ScActionPlugin()
+PathFinderPlugin::PathFinderPlugin()
 {
 	// Set action info in languageChange, so we only have to do
 	// it in one place.
@@ -124,10 +124,10 @@ void PathFinderPlugin::deleteAboutData(const AboutData* about) const
 	delete about;
 }
 
-bool PathFinderPlugin::run(ScribusDoc* doc, QString)
+bool PathFinderPlugin::run(ScribusDoc* doc, const QString&)
 {
 	ScribusDoc* currDoc = doc;
-	if (currDoc == 0)
+	if (currDoc == nullptr)
 		currDoc = ScCore->primaryMainWindow()->doc;
 	if (currDoc->m_Selection->count() <= 1)
 		return true;
@@ -225,7 +225,7 @@ bool PathFinderPlugin::run(ScribusDoc* doc, QString)
 			//<<#9046
 			FPointArray oldPOLine=currItem->PoLine;
 			FPointArray oldContourLine=currItem->ContourLine;
-			ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >* state = NULL;
+			ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >* state = nullptr;
 			if (UndoManager::undoEnabled())
 			{
 				state = new ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >(Um::PathOperation);
@@ -276,7 +276,7 @@ bool PathFinderPlugin::run(ScribusDoc* doc, QString)
 				//<<#9046
 				FPointArray oldPOLine=Item1->PoLine;
 				FPointArray oldContourLine=Item1->ContourLine;
-				ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >* state = NULL;
+				ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >* state = nullptr;
 				if (UndoManager::undoEnabled())
 				{
 					state = new ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >(Um::PathOperation);
@@ -317,7 +317,7 @@ bool PathFinderPlugin::run(ScribusDoc* doc, QString)
 				//<<#9046
 				FPointArray oldPOLine=Item2->PoLine;
 				FPointArray oldContourLine=Item2->ContourLine;
-				ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >* state = NULL;
+				ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >* state = nullptr;
 				if (UndoManager::undoEnabled())
 				{
 					state = new ScItemState<QPair<QPair<FPointArray, FPointArray>, QPair<FPointArray, FPointArray> > >(Um::PathOperation);

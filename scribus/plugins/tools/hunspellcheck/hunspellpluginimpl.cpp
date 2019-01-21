@@ -31,12 +31,12 @@ for which a new license (GPL+exception) is in place.
 
 
 // Initialize members here, if any
-HunspellPluginImpl::HunspellPluginImpl() : QObject(0)
+HunspellPluginImpl::HunspellPluginImpl() : QObject(nullptr)
 {
 //	numDicts=0;
-	m_doc=NULL;
+	m_doc=nullptr;
 	m_runningForSE=false;
-	m_SE=NULL;
+	m_SE=nullptr;
 }
 
 HunspellPluginImpl::~HunspellPluginImpl()
@@ -44,7 +44,7 @@ HunspellPluginImpl::~HunspellPluginImpl()
 	foreach (HunspellDict* h, hspellerMap)
 	{
 		delete h;
-		h = NULL;
+		h = nullptr;
 	}
 	hspellerMap.clear();
 //	numDicts = 0;
@@ -79,8 +79,8 @@ bool HunspellPluginImpl::initHunspell()
 		return false;
 
 	//Initialise one hunspeller for each dictionary found
-	QMap<QString, QString>::iterator it = dictionaryMap.begin();
-	while (it != dictionaryMap.end())
+	auto it = dictionaryMap.cbegin();
+	while (it != dictionaryMap.cend())
 	{
 		//qDebug()<<"hunspell init:"<<it.key()<<it.value();
 		hspellerMap.insert(it.key(), new HunspellDict(it.value()+".aff", it.value()+".dic"));
@@ -93,7 +93,7 @@ bool HunspellPluginImpl::checkWithHunspell()
 {
 	PageItem *frameToCheck;
 
-	for( int i = 0; i < m_doc->m_Selection->count(); ++i )
+	for (int i = 0; i < m_doc->m_Selection->count(); ++i)
 	{
 		frameToCheck = m_doc->m_Selection->itemAt(i);
 		StoryText *iText=&frameToCheck->itemText;
@@ -137,7 +137,7 @@ bool HunspellPluginImpl::parseTextFrame(StoryText *iText)
 		{
 			const StyleSet<CharStyle> &tmp(m_doc->charStyles());
 			for (int i = 0; i < tmp.count(); ++i)
-				if(tmp[i].isDefaultStyle())
+				if (tmp[i].isDefaultStyle())
 				{
 					//check out why we are getting "German" back here next
 					wordLang=tmp[i].language();
@@ -165,10 +165,10 @@ bool HunspellPluginImpl::parseTextFrame(StoryText *iText)
 		{
 			//qDebug()<<"Spelling language to match style language IS installed ("<<wordLang<<")";
 			int i = 0;
-			QMap<QString, QString>::iterator it = dictionaryMap.begin();
-			while (it != dictionaryMap.end())
+			auto it = dictionaryMap.cbegin();
+			while (it != dictionaryMap.cend())
 			{
-				if (it.key()==wordLang)
+				if (it.key() == wordLang)
 					break;
 				++i;
 				++it;

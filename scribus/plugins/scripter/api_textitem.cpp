@@ -56,7 +56,7 @@ QString TextAPI::font()
 		for (int b = 0; b < item->itemText.length(); b++)
 			if (item->itemText.selected(b))
 				return item->itemText.charStyle(b).font().scName();
-		return NULL;
+		return nullptr;
 	}
 	else
 		return item->currentCharStyle().font().scName();
@@ -66,20 +66,18 @@ void TextAPI::setFont(QString name)
 {
 	if (PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts.contains(name))
 	{
-		int Apm = ScCore->primaryMainWindow()->doc->appMode;
-		ScCore->primaryMainWindow()->doc->m_Selection->clear();
-		ScCore->primaryMainWindow()->doc->m_Selection->addItem(item);
-		if (item->HasSel)
-			ScCore->primaryMainWindow()->doc->appMode = modeEdit;
-		ScCore->primaryMainWindow()->SetNewFont(name);
-		ScCore->primaryMainWindow()->doc->appMode = Apm;
-		ScCore->primaryMainWindow()->view->Deselect();
-	}
-	else
-	{
 		RAISE("Font not found");
+		return;
 	}
-
+	
+	int Apm = ScCore->primaryMainWindow()->doc->appMode;
+	ScCore->primaryMainWindow()->doc->m_Selection->clear();
+	ScCore->primaryMainWindow()->doc->m_Selection->addItem(item);
+	if (item->HasSel)
+		ScCore->primaryMainWindow()->doc->appMode = modeEdit;
+	ScCore->primaryMainWindow()->doc->itemSelection_SetFont(name);
+	ScCore->primaryMainWindow()->doc->appMode = Apm;
+	ScCore->primaryMainWindow()->view->Deselect();
 }
 
 double TextAPI::fontSize()
@@ -89,7 +87,7 @@ double TextAPI::fontSize()
 		for (int b = 0; b < item->itemText.length(); b++)
 			if (item->itemText.selected(b))
 				return item->itemText.charStyle(b).fontSize() / 10.0;
-		return NULL;
+		return nullptr;
 	}
 	else
 	{
@@ -392,7 +390,7 @@ void TextAPI::linkToTextFrame(QString name2)
 		RAISE("No document open");
 
 	PageItem *toitem = GetUniqueItem(name2);
-	if (toitem == NULL)
+	if (toitem == nullptr)
 		return;
 	if (!(toitem->asTextFrame()))
 	{

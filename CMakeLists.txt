@@ -63,7 +63,7 @@ project(scribus)
 #where VERSION_SUFFIX is of the form "", "svn" or "Nsvn" (N being the minor patch level)
 set (VERSION_MAJOR "1")
 set (VERSION_MINOR "5")
-set (VERSION_PATCH "4")
+set (VERSION_PATCH "5")
 set (VERSION_SUFFIX "svn")
 set (VERSION ${VERSION_MAJOR})
 if (VERSION_MINOR GREATER -1)
@@ -164,6 +164,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 ## Do our Apple OSX version setup
 if (APPLE AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND (ARCH_X86 EQUAL 1 OR ARCH_X86_64 EQUAL 1))
 	string(REGEX REPLACE ".*-darwin([0-9]+).*" "\\1" _apple_ver "${MACHINE}")
+	if (_apple_ver EQUAL "18")
+		message(STATUS "Found macOS Mojave Target: Apple, 64 bit, X86")
+		set(APPLE_10_14_X 1 CACHE TYPE BOOL)
+	endif()
 	if (_apple_ver EQUAL "17")
 		message(STATUS "Found macOS High Sierra Target: Apple, 64 bit, X86")
 		set(APPLE_10_13_X 1 CACHE TYPE BOOL)
@@ -452,6 +456,16 @@ endif()
 
 #Based on our build type, setup our build options
 if(APPLE)
+	if(APPLE_10_14_X)
+		set(OSXMINVER "10.14" CACHE TYPE STRING)
+		if (WANT_OSX_SDK)
+			if(EXISTS("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk"))
+				set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk")
+			elseif(EXISTS("/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk"))
+				set(CMAKE_OSX_SYSROOT "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.13.sdk")
+			endif()
+		endif()
+	endif()
 	if(APPLE_10_13_X)
 		set(OSXMINVER "10.13" CACHE TYPE STRING)
 		if (WANT_OSX_SDK)
@@ -542,7 +556,7 @@ if(APPLE)
 			if (WANT_OSX_SDK)
 				set(CMAKE_OSX_DEPLOYMENT_TARGET "${OSXMINVER}")
 			endif()
-			if(APPLE_10_6_X OR APPLE_10_7_X OR APPLE_10_8_X OR APPLE_10_9_X OR APPLE_10_10_X OR APPLE_10_11_X OR APPLE_10_12_X OR APPLE_10_13_X)
+			if(APPLE_10_6_X OR APPLE_10_7_X OR APPLE_10_8_X OR APPLE_10_9_X OR APPLE_10_10_X OR APPLE_10_11_X OR APPLE_10_12_X OR APPLE_10_13_X OR APPLE_10_14_X)
 				message("Setting x86_64 Architecture for OSX Build/Bundle")
 				set(CMAKE_OSX_ARCHITECTURES "x86_64" )
 				set(CMAKE_TRY_COMPILE_OSX_ARCHITECTURES "x86_64" )
@@ -610,7 +624,7 @@ endif()
 ########## Find Dependencies                                                                        ##########
 
 #<< Qt
-set (QT_MIN_VERSION "5.5.0")
+set (QT_MIN_VERSION "5.7.0")
 set(CMAKE_PREFIX_PATH "${QT_PREFIX}/lib/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Qt5Core ${QT_MIN_VERSION} REQUIRED)
@@ -685,17 +699,25 @@ include_directories(${Qt5PrintSupport_INCLUDE_DIRS})
 add_definitions(${Qt5PrintSupport_DEFINITIONS})
 
 message(STATUS "Qt VERSION: ${Qt5Widgets_VERSION}")
-if (NOT WANT_CPP11 AND Qt5Widgets_VERSION_MAJOR EQUAL 5 AND Qt5Widgets_VERSION_MINOR GREATER 6)
-	message(STATUS "Your Qt version is 5.7.0 or superior, enabling C++11 compiler features")
-	set(WANT_CPP11 1)
-endif()
+#if (NOT WANT_CPP11 AND Qt5Widgets_VERSION_MAJOR EQUAL 5 AND Qt5Widgets_VERSION_MINOR GREATER 6)
+#	message(STATUS "Your Qt version is 5.7.0 or superior, enabling C++11 compiler features")
+#	set(WANT_CPP11 1)
+#endif()
 #>> Qt
 
 
 #C++11 Support
-if(WANT_CPP11)
+#as of 1.5.5.svn, require C++11
+#if(WANT_CPP11)
 	message(STATUS "Enabling C++11 compiler features")
 	set(CMAKE_CXX_STANDARD 11)
+#endif()
+if(WANT_CPP14)
+	message(STATUS "Enabling C++14 compiler features")
+	set(CMAKE_CXX_STANDARD 14)
+elseif(WANT_CPP17)
+	    message(STATUS "Enabling C++17 compiler features")
+		set(CMAKE_CXX_STANDARD 17)
 endif()
 
 #<< ZLIB, PNG
@@ -898,16 +920,12 @@ endif()
 #<<Poppler for PDF import
 find_package(POPPLER REQUIRED)
 if (POPPLER_FOUND)
-	if (FREETYPE_FOUND)
-		set( HAVE_POPPLER 1 )
-		message(STATUS "Found poppler")
-		message(STATUS "Found poppler libs: ${POPPLER_LIBRARY}")
-		message(STATUS "Found poppler includes: ${POPPLER_INCLUDE_DIR}")
-	else()
-		message("Poppler NOT found - Disabling support for native PDF import")
-	endif()
+	set( HAVE_POPPLER 1 )
+	message(STATUS "Found poppler")
+	message(STATUS "Found poppler libs: ${POPPLER_LIBRARY}")
+	message(STATUS "Found poppler includes: ${POPPLER_INCLUDE_DIR}")
 else()
-	message("Poppler NOT found - Disabling support for native PDF import")
+	message(FATAL_ERROR "Could not find poppler library")
 endif()
 #>>Poppler for PDF import
 
@@ -1021,6 +1039,7 @@ add_subdirectory(resources/profiles)
 add_subdirectory(resources/swatches)
 add_subdirectory(resources/templates)
 add_subdirectory(resources/translations)
+add_subdirectory(resources/unicodemap)
 
 #Install our READMEs etc.
 install(FILES
@@ -1113,12 +1132,12 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
 	set(CPACK_TOPLEVEL_TAG "")
 	set(CPACK_SOURCE_IGNORE_FILES
 		CMakeCache.txt
-		scribus-1.5.4.tar.bz2
-		scribus-1.5.4.tar.Z
-		scribus-1.5.4.tar.gz
-		scribus-1.5.4.svn.tar.bz2
-		scribus-1.5.4.svn.tar.Z
-		scribus-1.5.4.svn.tar.gz
+		scribus-1.5.5.tar.bz2
+		scribus-1.5.5.tar.Z
+		scribus-1.5.5.tar.gz
+		scribus-1.5.5.svn.tar.bz2
+		scribus-1.5.5.svn.tar.Z
+		scribus-1.5.5.svn.tar.gz
 		"~$"
 		"\\\\.cvsignore$"
 		"\\\\.o$"

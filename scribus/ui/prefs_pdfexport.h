@@ -21,7 +21,7 @@ class SCRIBUS_API Prefs_PDFExport : public Prefs_Pane, Ui::Prefs_PDFExport
 	Q_OBJECT
 
 	public:
-		Prefs_PDFExport(QWidget* parent, ScribusDoc* doc=NULL);
+		Prefs_PDFExport(QWidget* parent, ScribusDoc* doc=nullptr);
 		~Prefs_PDFExport();
 
 		virtual void restoreDefaults(struct ApplicationPrefs *prefsData);
@@ -71,7 +71,7 @@ class SCRIBUS_API Prefs_PDFExport : public Prefs_Pane, Ui::Prefs_PDFExport
 		void SetEffOpts(int nr);
 
 	protected:
-		QListWidgetItem* addFontItem(QString fontName, QListWidget* fontList);
+		QListWidgetItem* addFontItem(const QString& fontName, QListWidget* fontList);
 		void setCustomRenderingWidgetsShown(bool);
 		void setSolidsImagesWidgetsShown(bool);
 		void enableCustomRenderingWidgets(bool);

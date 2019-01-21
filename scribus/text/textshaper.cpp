@@ -14,6 +14,7 @@
 #include "styles/paragraphstyle.h"
 #include "util.h"
 
+using namespace icu;
 
 TextShaper::TextShaper(ITextContext* context, ITextSource &story, int firstChar, bool singlePar)
 	: m_context(context),
@@ -24,7 +25,7 @@ TextShaper::TextShaper(ITextContext* context, ITextSource &story, int firstChar,
 { }
 
 TextShaper::TextShaper(ITextSource &story, int firstChar)
-	: m_context(NULL),
+	: m_context(nullptr),
 	m_contextNeeded(false),
 	m_story(story),
 	m_firstChar(firstChar),
@@ -52,7 +53,7 @@ QList<TextShaper::TextRun> TextShaper::itemizeBiDi()
 	if (style.direction() == ParagraphStyle::RTL)
 		parLevel = UBIDI_RTL;
 
-	ubidi_setPara(obj, (const UChar*) m_text.utf16(), m_text.length(), parLevel, NULL, &err);
+	ubidi_setPara(obj, (const UChar*) m_text.utf16(), m_text.length(), parLevel, nullptr, &err);
 	if (U_SUCCESS(err))
 	{
 		int32_t count = ubidi_countRuns(obj, &err);
@@ -77,7 +78,7 @@ QList<TextShaper::TextRun> TextShaper::itemizeScripts(const QList<TextRun> &runs
 	QList<TextRun> newRuns;
 	ScriptRun scriptrun((const UChar*) m_text.utf16(), m_text.length());
 
-	foreach (TextRun run, runs)
+	for (TextRun run : runs)
 	{
 		int start = run.start;
 		QList<TextRun> subRuns;
@@ -137,7 +138,8 @@ QList<TextShaper::TextRun> TextShaper::itemizeStyles(const QList<TextRun> &runs)
 {
 	QList<TextRun> newRuns;
 
-	foreach (TextRun run, runs) {
+	for (TextRun run : runs)
+	{
 		int start = run.start;
 		QList<TextRun> subRuns;
 
@@ -186,7 +188,7 @@ void TextShaper::buildText(int fromPos, int toPos, QVector<int>& smallCaps)
 		if (m_story.hasExpansionPoint(i))
 		{
 			m_contextNeeded = true;
-			if (m_context != NULL)
+			if (m_context != nullptr)
 			{
 				str = m_context->expand(m_story.expansionPoint(i));
 				if (str.isEmpty())
@@ -201,7 +203,7 @@ void TextShaper::buildText(int fromPos, int toPos, QVector<int>& smallCaps)
 		str.replace(SpecialChars::SHYPHEN, SpecialChars::ZWNJ);
 
 		//set style for paragraph effects
-		if (m_story.isBlockStart(i) && (m_context != 0) && (m_context->getDoc() != 0))
+		if (m_story.isBlockStart(i) && (m_context != nullptr) && (m_context->getDoc() != nullptr))
 		{
 			const ScribusDoc* doc = m_context->getDoc();
 			const ParagraphStyle& style = m_story.paragraphStyle(i);
@@ -288,7 +290,8 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 
 	// Insert implicit spaces in justification between characters
 	// in scripts that do not use spaces to seperate words
-	foreach (const TextRun& run, scriptRuns) {
+	for (const TextRun& run : scriptRuns)
+	{
 		switch (run.script) {
 		// clustered scripts from https://drafts.csswg.org/css-text-3/#script-groups
 		case USCRIPT_KHMER:
@@ -323,12 +326,13 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 		}
 	}
 
-	foreach (const TextRun& textRun, textRuns) {
+	for (const TextRun& textRun : textRuns)
+	{
 		const CharStyle &style = m_story.charStyle(m_textMap.value(textRun.start));
 
 		const ScFace &scFace = style.font();
 		hb_font_t *hbFont = reinterpret_cast<hb_font_t*>(scFace.hbFont());
-		if (hbFont == NULL)
+		if (hbFont == nullptr)
 			continue;
 
 		hb_font_set_scale(hbFont, style.fontSize(), style.fontSize());
@@ -349,14 +353,16 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 		hb_buffer_set_cluster_level(hbBuffer, HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS);
 
 		QVector<hb_feature_t> hbFeatures;
-		QList<FeaturesRun> featuresRuns = itemizeFeatures(textRun);
-		foreach (const FeaturesRun& featuresRun, featuresRuns)
+		const QList<FeaturesRun> featuresRuns = itemizeFeatures(textRun);
+		for (const FeaturesRun& featuresRun : featuresRuns)
 		{
 			const QStringList& features = featuresRun.features;
 			hbFeatures.reserve(features.length());
-			foreach (const QString& feature, features) {
+			for (const QString& feature : features)
+			{
 				hb_feature_t hbFeature;
-				hb_bool_t ok = hb_feature_from_string(feature.toStdString().c_str(), feature.toStdString().length(), &hbFeature);
+				std::string strFeature(feature.toStdString());
+				hb_bool_t ok = hb_feature_from_string(strFeature.c_str(), strFeature.length(), &hbFeature);
 				if (ok)
 				{
 					hbFeature.start = featuresRun.start;
@@ -370,12 +376,12 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 		// at the point, shaping with graphite fonts is either buggy (harfbuzz 1.4.2)
 		// or trigger weird results (harfbuzz 1.4.3), so disable graphite for now.
 		// Prevent also use of platform specific shapers for cross-platform reasons
-		const char* shapers[] = { "ot", "fallback", 0 };
+		const char* shapers[] = { "ot", "fallback", nullptr };
 		hb_shape_full(hbFont, hbBuffer, hbFeatures.data(), hbFeatures.length(), shapers);
 
 		unsigned int count = hb_buffer_get_length(hbBuffer);
-		hb_glyph_info_t *glyphs = hb_buffer_get_glyph_infos(hbBuffer, NULL);
-		hb_glyph_position_t *positions = hb_buffer_get_glyph_positions(hbBuffer, NULL);
+		hb_glyph_info_t *glyphs = hb_buffer_get_glyph_infos(hbBuffer, nullptr);
+		hb_glyph_position_t *positions = hb_buffer_get_glyph_positions(hbBuffer, nullptr);
 
 		result.glyphs().reserve(result.glyphs().size() + count);
 		for (size_t i = 0; i < count; )
@@ -471,6 +477,9 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				     ch == SpecialChars::FRAMEBREAK || ch == SpecialChars::COLBREAK))
 				{
 					gl.glyph = scFace.emulateGlyph(ch.unicode());
+
+					GlyphMetrics metrics = scFace.glyphBBox(gl.glyph, style.fontSize());
+					positions[i].x_advance = metrics.width;
 				}
 
 				if (gl.glyph < ScFace::CONTROL_GLYPHS)
@@ -496,14 +505,14 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				if (m_story.hasObject(firstChar))
 				{
 					m_contextNeeded = true;
-					if (m_context != NULL)
+					if (m_context != nullptr)
 						gl.xadvance = m_context->getVisualBoundingBox(m_story.object(firstChar)).width();
 				}
 
 				if ((effects & ScStyle_Superscript) || (effects & ScStyle_Subscript))
 				{
 					m_contextNeeded = true;
-					if (m_context != NULL)
+					if (m_context != nullptr)
 					{
 						double scale;
 						double asce = style.font().ascent(style.fontSize() / 10.0);
@@ -526,7 +535,7 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				if (smallCaps.contains(firstCluster))
 				{
 					m_contextNeeded = true;
-					if (m_context != NULL)
+					if (m_context != nullptr)
 					{
 						
 						double smallcapsScale = m_context->typographicPrefs().valueSmallCaps / 100.0;
@@ -559,25 +568,29 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				if (currStat != 0)
 				{
 					// current char is CJK
-					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar + 1).unicode())) {
-						switch(currStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_KANJI:
-						case SpecialChars::CJK_KANA:
-						case SpecialChars::CJK_NOTOP:
-							run.extraWidth += quarterEM;
+					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar + 1).unicode()))
+					{
+						switch (currStat & SpecialChars::CJK_CHAR_MASK)
+						{
+							case SpecialChars::CJK_KANJI:
+							case SpecialChars::CJK_KANA:
+							case SpecialChars::CJK_NOTOP:
+								run.extraWidth += quarterEM;
 						}
 					}
 				}
 				else
 				{
 					// current char is not CJK
-					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar).unicode())) {
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_KANJI:
-						case SpecialChars::CJK_KANA:
-						case SpecialChars::CJK_NOTOP:
-							// use the size of the current char instead of the next one
-							run.extraWidth += quarterEM;
+					if (SpecialChars::isLetterRequiringSpaceAroundCJK(m_story.text(lastChar).unicode()))
+					{
+						switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+						{
+							case SpecialChars::CJK_KANJI:
+							case SpecialChars::CJK_KANA:
+							case SpecialChars::CJK_NOTOP:
+								// use the size of the current char instead of the next one
+								run.extraWidth += quarterEM;
 						}
 					}
 				}
@@ -585,43 +598,50 @@ ShapedText TextShaper::shape(int fromPos, int toPos)
 				// 2. remove spaces from glyphs with the following CJK attributes
 				if (currStat != 0)
 				{	// current char is CJK
-					switch(currStat & SpecialChars::CJK_CHAR_MASK) {
-					case SpecialChars::CJK_FENCE_END:
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_FENCE_BEGIN:
+					switch (currStat & SpecialChars::CJK_CHAR_MASK)
+					{
 						case SpecialChars::CJK_FENCE_END:
+							switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+							{
+								case SpecialChars::CJK_FENCE_BEGIN:
+								case SpecialChars::CJK_FENCE_END:
+								case SpecialChars::CJK_COMMA:
+								case SpecialChars::CJK_PERIOD:
+								case SpecialChars::CJK_MIDPOINT:
+									run.extraWidth -= halfEM;
+							}
+							break;
+
 						case SpecialChars::CJK_COMMA:
 						case SpecialChars::CJK_PERIOD:
+							switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+							{
+								case SpecialChars::CJK_FENCE_BEGIN:
+								case SpecialChars::CJK_FENCE_END:
+									run.extraWidth -= halfEM;
+							}
+							break;
+
 						case SpecialChars::CJK_MIDPOINT:
-							run.extraWidth -= halfEM;
-						}
-						break;
-					case SpecialChars::CJK_COMMA:
-					case SpecialChars::CJK_PERIOD:
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
+							switch (nextStat & SpecialChars::CJK_CHAR_MASK)
+							{
+								case SpecialChars::CJK_FENCE_BEGIN:
+									run.extraWidth -= halfEM;
+							}
+							break;
+
 						case SpecialChars::CJK_FENCE_BEGIN:
-						case SpecialChars::CJK_FENCE_END:
-							run.extraWidth -= halfEM;;
-						}
-						break;
-					case SpecialChars::CJK_MIDPOINT:
-						switch(nextStat & SpecialChars::CJK_CHAR_MASK) {
-						case SpecialChars::CJK_FENCE_BEGIN:
-							run.extraWidth -= halfEM;
-						}
-						break;
-					case SpecialChars::CJK_FENCE_BEGIN:
-						int prevStat = SpecialChars::getCJKAttr(m_story.text(lastChar - 1));
-						if ((prevStat & SpecialChars::CJK_CHAR_MASK) == SpecialChars::CJK_FENCE_BEGIN)
-						{
-							run.extraWidth -= halfEM;
-							run.xoffset -= halfEM;
-						}
-						else
-						{
-							run.setFlag(ScLayout_CJKFence);
-						}
-						break;
+							int prevStat = SpecialChars::getCJKAttr(m_story.text(lastChar - 1));
+							if ((prevStat & SpecialChars::CJK_CHAR_MASK) == SpecialChars::CJK_FENCE_BEGIN)
+							{
+								run.extraWidth -= halfEM;
+								run.xoffset -= halfEM;
+							}
+							else
+							{
+								run.setFlag(ScLayout_CJKFence);
+							}
+							break;
 					}
 				}
 			}

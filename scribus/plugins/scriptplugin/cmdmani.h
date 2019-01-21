@@ -241,6 +241,15 @@ currently selected item is used.\n\
 /*! Status of locking 2004/7/10 pv.*/
 PyObject *scribus_islocked(PyObject * /*self*/, PyObject* args);
 
+PyDoc_STRVAR(scribus_setscaleframetoimage__doc__,
+QT_TR_NOOP("setScaleFrameToImage([name])\n\
+\n\
+Set frame size on the selected or specified image frame to image size.\n\
+\n\
+May raise WrongFrameTypeError.\n\
+"));
+PyObject *scribus_setscaleframetoimage(PyObject * /*self*/, PyObject* args);
+
 PyDoc_STRVAR(scribus_setscaleimagetoframe__doc__,
 QT_TR_NOOP("setScaleImageToFrame(scaletoframe, proportional=None, name=<selection>)\n\
 \n\
@@ -261,5 +270,12 @@ If \"name\" is not given the currently selected item is used.\n\
 "));
 /*! Flip the object 2010/5/18.*/
 PyObject *scribus_flipobject(PyObject * /*self*/, PyObject* args);
+
+PyDoc_STRVAR(scribus_combinepolygons__doc__,
+QT_TR_NOOP("combinePolygons()\n\
+\n\
+Combine two or more selected Polygons\n\
+"));
+PyObject *scribus_combinepolygons(PyObject * /* self */);
 
 #endif

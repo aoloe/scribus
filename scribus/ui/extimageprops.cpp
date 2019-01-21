@@ -43,7 +43,7 @@ ExtImageProps::ExtImageProps( QWidget* parent, ImageInfoRecord *info, PageItem *
 	ExtImagePropsLayout->setMargin(6);
 	ExtImagePropsLayout->setSpacing(6);
 	m_view  = view;
-	m_timer = 0;
+	m_timer = nullptr;
 	if (info->layerInfo.count() != 0)
 	{
 		m_timer = new QTimer(this);
@@ -492,7 +492,7 @@ void ExtImageProps::noPath()
 
 void ExtImageProps::selPath(QListWidgetItem *c)
 {
-	if ((c != NULL) && (doPreview))
+	if ((c != nullptr) && (doPreview))
 	{
 		m_item->imageClip = m_item->pixm.imgInfo.PDSpathData[c->text()].copy();
 		m_item->pixm.imgInfo.usedPath = c->text();

@@ -17,11 +17,11 @@ bool ScDocOutput::makeOutput(ScribusDoc* doc, vector<int>& pageNumbers)
 	bool done = true;
 	ScPage* page;
 
-	for (uint index = 0; index < pageNumbers.size(); index++)
+	for (int index = 0; index < pageNumbers.size(); index++)
 	{
 		page = doc->Pages->at( pageNumbers[index] - 1 );
 		ScPageOutput* outputComponent = createPageOutputComponent(index + 1);
-		if (outputComponent != NULL)
+		if (outputComponent != nullptr)
 		{
 			outputComponent->begin();
 			outputComponent->drawPage(page);

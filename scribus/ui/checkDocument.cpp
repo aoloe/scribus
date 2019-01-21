@@ -36,8 +36,8 @@ for which a new license (GPL+exception) is in place.
 // #define COLUMN_INFO 3
 
 CheckDocument::CheckDocument( QWidget* parent, bool modal )
-	: ScrPaletteBase( parent, "checkDocument", modal, 0 ),
-	m_Doc(0),
+	: ScrPaletteBase( parent, "checkDocument", modal, nullptr ),
+	m_Doc(nullptr),
 	pageGraveError(false),
 	itemError(false),
 	minResDPI(0),
@@ -222,7 +222,7 @@ void CheckDocument::doReScan()
 void CheckDocument::newScan(const QString& name)
 {
 	clearErrorList();
-	if (m_Doc==0)
+	if (m_Doc==nullptr)
 		return;
 	m_Doc->setCurCheckProfile(name);
 	DocumentChecker::checkDocument(m_Doc);
@@ -245,9 +245,9 @@ void CheckDocument::buildItem(QTreeWidgetItem * item,
 							   PreflightError errorType,
 							   PageItem * pageItem)
 {
-	Q_ASSERT_X(item != 0, "CheckDocument::buildItem",
+	Q_ASSERT_X(item != nullptr, "CheckDocument::buildItem",
 				"No reference to QTreeWidgetItem item");
-	Q_ASSERT_X(pageItem != 0, "CheckDocument::buildItem",
+	Q_ASSERT_X(pageItem != nullptr, "CheckDocument::buildItem",
 				"No reference to PageItem pageItem");
 
 	switch (errorType)
@@ -374,7 +374,7 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 	curCheckProfile->clear();
 	clearErrorList();
 
-	if (m_Doc==0)
+	if (m_Doc==nullptr)
 		return;
 
 	minResDPI = qRound(doc->checkerProfiles()[doc->curCheckProfile()].minResolution);
@@ -473,7 +473,7 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 		{
 			hasError = false;
 			pageGraveError = false;
-			QTreeWidgetItem * page=NULL;
+			QTreeWidgetItem * page=nullptr;
 			if (showPagesWithoutErrors)
 			{
 				page = new QTreeWidgetItem( masterPageRootItem);
@@ -492,7 +492,7 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 					(!showNonPrintingLayerErrors && doc->layerPrintable(masterItemErrorsIt.key()->LayerID)))
 					)
 				{
-					if (!showPagesWithoutErrors && page==NULL)
+					if (!showPagesWithoutErrors && page==nullptr)
 					{
 						page = new QTreeWidgetItem( masterPageRootItem);
 						masterPageMap.insert(page, doc->MasterPages.at(mPage));
@@ -536,10 +536,10 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 			}
 			else
 			{
-				if (showPagesWithoutErrors && page!=NULL)
+				if (showPagesWithoutErrors && page!=nullptr)
 					page->setIcon(COLUMN_ITEM, noErrors );
 			}
-			if (page!=NULL)
+			if (page!=nullptr)
 				page->setText(COLUMN_ITEM, doc->MasterPages.at(mPage)->pageName());
 		}
 		masterPageRootItem->setExpanded(true);
@@ -553,7 +553,7 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 			QString tmp;
 			hasError = false;
 			pageGraveError = false;
-			QTreeWidgetItem * page=NULL;
+			QTreeWidgetItem * page=nullptr;
 			if (showPagesWithoutErrors)
 			{
 				page = new QTreeWidgetItem( reportDisplay);
@@ -567,7 +567,7 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 			{
 				if (pageErrorsIt.key() == aPage)
 				{
-					if (page==NULL)
+					if (page==nullptr)
 					{
 						page = new QTreeWidgetItem( reportDisplay);
 						pageMap.insert(page, doc->DocPages.at(aPage));
@@ -593,7 +593,7 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 					(!showNonPrintingLayerErrors && doc->layerPrintable(docItemErrorsIt.key()->LayerID)))
 					)
 				{
-					if (!showPagesWithoutErrors && page==NULL)
+					if (!showPagesWithoutErrors && page==nullptr)
 					{
 						page = new QTreeWidgetItem( reportDisplay);
 						pageMap.insert(page, doc->DocPages.at(aPage));
@@ -640,10 +640,10 @@ void CheckDocument::buildErrorList(ScribusDoc *doc)
 			}
 			else
 			{
-				if (showPagesWithoutErrors && page!=NULL)
+				if (showPagesWithoutErrors && page!=nullptr)
 					page->setIcon( 0, noErrors );
 			}
-			if (page!=NULL)
+			if (page!=nullptr)
 				page->setText(COLUMN_ITEM, tr("Page ")+tmp.setNum(aPage+1));
 		}
 		// END of PAGES

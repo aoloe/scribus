@@ -95,7 +95,7 @@ void RulerGesture::prepare(Mode mode)
 
 void RulerGesture::activate(bool fromGesture)
 {
-	m_haveCursor = (qApp->overrideCursor() != NULL);
+	m_haveCursor = (qApp->overrideCursor() != nullptr);
 	if ( (!fromGesture) && qApp->overrideCursor())
 	{
 		m_haveCursor = true;
@@ -128,7 +128,7 @@ void RulerGesture::deactivate(bool)
 }
 
 
-bool RulerGesture::mouseHitsGuide(FPoint mousePointDoc)
+bool RulerGesture::mouseHitsGuide(const FPoint& mousePointDoc)
 {
 	const int page = m_doc->OnPage(mousePointDoc.x(), mousePointDoc.y());
 	if ((m_doc->guidesPrefs().guidesShown) && (!m_doc->GuideLock) && page >= 0)

@@ -5,8 +5,11 @@ a copyright and/or license notice that predates the release of Scribus 1.3.2
 for which a new license (GPL+exception) is in place.
 */
 
+#include <cstdlib>
+
 #include <QByteArray>
 #include <QCursor>
+#include <QDebug>
 #include <QDrag>
 #include <QFile>
 #include <QInputDialog>
@@ -14,8 +17,7 @@ for which a new license (GPL+exception) is in place.
 #include <QMimeData>
 #include <QRegExp>
 #include <QStack>
-#include <QDebug>
-#include "slaoutput.h"
+
 #include <poppler/ErrorCodes.h>
 #include <poppler/GlobalParams.h>
 #include <poppler/OptionalContent.h>
@@ -27,8 +29,8 @@ for which a new license (GPL+exception) is in place.
 #include <poppler/splash/SplashBitmap.h>
 
 #include "importpdf.h"
-
-#include <cstdlib>
+#include "importpdfconfig.h"
+#include "slaoutput.h"
 
 #include "commonstrings.h"
 #include "loadsaveplugin.h"
@@ -60,23 +62,17 @@ for which a new license (GPL+exception) is in place.
 #include "ui/multiprogressdialog.h"
 #include "ui/propertiespalette.h"
 
-#define POPPLER_VERSION_ENCODE(major, minor, micro) (	\
-	  ((major) * 10000)				\
-	+ ((minor) *   100)				\
-	+ ((micro) *     1))
-#define POPPLER_ENCODED_VERSION POPPLER_VERSION_ENCODE(POPPLER_VERSION_MAJOR, POPPLER_VERSION_MINOR, POPPLER_VERSION_MICRO)
-
 PdfPlug::PdfPlug(ScribusDoc* doc, int flags)
 {
 	tmpSele = new Selection(this, false);
 	m_Doc = doc;
 	importerFlags = flags;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
-	progressDialog = NULL;
-	m_pdfDoc = NULL;
+	progressDialog = nullptr;
+	m_pdfDoc = nullptr;
 }
 
-QImage PdfPlug::readThumbnail(QString fName)
+QImage PdfPlug::readThumbnail(const QString& fName)
 {
 	QString pdfFile = QDir::toNativeSeparators(fName);
 	globalParams = new GlobalParams();
@@ -88,7 +84,7 @@ QImage PdfPlug::readThumbnail(QString fName)
 		GooString *fname = new GooString(QFile::encodeName(pdfFile).data());
 #endif
 		globalParams->setErrQuiet(gTrue);
-		PDFDoc *pdfDoc = new PDFDoc(fname, NULL, NULL, NULL);
+		PDFDoc *pdfDoc = new PDFDoc(fname, nullptr, nullptr, nullptr);
 		if (pdfDoc)
 		{
 			if (pdfDoc->getErrorCode() == errEncrypted)
@@ -141,15 +137,9 @@ QImage PdfPlug::readThumbnail(QString fName)
 				delete globalParams;
 				return image;
 			}
-			else
-			{
-				delete pdfDoc;
-				delete globalParams;
-				return QImage();
-			}
+			delete pdfDoc;
+			delete globalParams;
 		}
-		else
-			return QImage();
 	}
 	return QImage();
 }
@@ -178,21 +168,20 @@ QImage PdfPlug::readThumbnail(QString fName)
 	return QImage();
 */
 
-bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool PdfPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
 #ifdef Q_OS_OSX
 	#if QT_VERSION >= 0x050300
 		showProgress = false;
 	#endif
 #endif
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
 	cancel = false;
 	double b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -201,7 +190,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw = (m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw = (m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -217,7 +206,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		qApp->processEvents();
 	}
 	else
-		progressDialog = NULL;
+		progressDialog = nullptr;
 /* Set default Page to size defined in Preferences */
 	b = 0.0;
 	h = 0.0;
@@ -268,18 +257,18 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			m_Doc->setPageOrientation(0);
 		m_Doc->setPageSize("Custom");
 	}
-	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != NULL))
+	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != nullptr))
 		m_Doc->view()->Deselect();
 	Elements.clear();
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
-	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != NULL))
+	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != nullptr))
 		m_Doc->view()->updatesOn(false);
 	m_Doc->scMW()->setScriptRunning(true);
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSele->clear();
 		QDir::setCurrent(CurDirP);
@@ -315,14 +304,14 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 					}
 					m_Doc->m_Selection->delaySignalsOff();
 					m_Doc->m_Selection->setGroupRect();
-					if (m_Doc->view() != NULL)
+					if (m_Doc->view() != nullptr)
 						m_Doc->view()->updatesOn(true);
 				}
 			}
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -330,7 +319,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 					tmpSele->addItem(Elements.at(dre), true);
 				}
 				tmpSele->setGroupRect();
-				ScElemMimeData* md = ScriXmlDoc::WriteToMimeData(m_Doc, tmpSele);
+				ScElemMimeData* md = ScriXmlDoc::writeToMimeData(m_Doc, tmpSele);
 				m_Doc->itemSelection_DeleteItem(tmpSele);
 				m_Doc->view()->updatesOn(true);
 				m_Doc->m_Selection->delaySignalsOff();
@@ -339,7 +328,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -376,8 +365,7 @@ bool PdfPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 
 PdfPlug::~PdfPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSele;
 }
 
@@ -402,7 +390,7 @@ bool PdfPlug::convert(const QString& fn)
 	}
 
 	globalParams = new GlobalParams();
-	GooString *userPW = NULL;
+	GooString *userPW = nullptr;
 	if (globalParams)
 	{
 #if defined(Q_OS_WIN32) && POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 62, 0)
@@ -414,13 +402,13 @@ bool PdfPlug::convert(const QString& fn)
 		GBool hasOcg = gFalse;
 		QList<OptionalContentGroup*> ocgGroups;
 //		globalParams->setPrintCommands(gTrue);
-		PDFDoc *pdfDoc = new PDFDoc(fname, NULL, NULL, NULL);
+		PDFDoc *pdfDoc = new PDFDoc(fname, nullptr, nullptr, nullptr);
 		if (pdfDoc)
 		{
 			if (pdfDoc->getErrorCode() == errEncrypted)
 			{
 				delete pdfDoc;
-				pdfDoc = NULL;
+				pdfDoc = nullptr;
 				if (progressDialog)
 					progressDialog->hide();
 				qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
@@ -435,7 +423,7 @@ bool PdfPlug::convert(const QString& fn)
 					fname = new GooString(QFile::encodeName(fn).data());
 #endif
 					userPW = new GooString(text.toLocal8Bit().data());
-					pdfDoc = new PDFDoc(fname, userPW, userPW, NULL);
+					pdfDoc = new PDFDoc(fname, userPW, userPW, nullptr);
 					qApp->changeOverrideCursor(QCursor(Qt::WaitCursor));
 				}
 				if ((!pdfDoc) || (pdfDoc->getErrorCode() != errNone))
@@ -461,7 +449,7 @@ bool PdfPlug::convert(const QString& fn)
 				GBool useMediaBox = gTrue;
 				GBool crop = gTrue;
 				GBool printing = gFalse;
-				PDFRectangle *mediaBox = pdfDoc->getPage(1)->getMediaBox();
+				const PDFRectangle *mediaBox = pdfDoc->getPage(1)->getMediaBox();
 				QRectF mediaRect = QRectF(QPointF(mediaBox->x1, mediaBox->y1), QPointF(mediaBox->x2, mediaBox->y2)).normalized();
 				bool boxesAreDifferent = false;
 				if (getCBox(Crop_Box, 1) != mediaRect)
@@ -526,20 +514,10 @@ bool PdfPlug::convert(const QString& fn)
 							{
 								for (int i = 0; i < order->getLength (); ++i)
 								{
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 									Object orderItem = order->get(i);
-#else
-									Object orderItem;
-									order->get(i, &orderItem);
-#endif
 									if (orderItem.isDict())
 									{
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
-										Object ref = order->getNF(i);		
-#else
-										Object ref;
-										order->getNF(i, &ref);
-#endif
+										Object ref = order->getNF(i);
 										if (ref.isRef())
 										{
 											OptionalContentGroup *oc = ocg->findOcgByRef(ref.getRef());
@@ -550,16 +528,24 @@ bool PdfPlug::convert(const QString& fn)
 												ocgNames.append(ocgName);
 											}
 										}
-#if POPPLER_ENCODED_VERSION < POPPLER_VERSION_ENCODE(0, 58, 0)
-										ref.free();
-#endif
 									}
 									else
 									{
-										GooList *ocgs;
-										int i;
-										ocgs = ocg->getOCGs ();
-										for (i = 0; i < ocgs->getLength (); ++i)
+#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 69, 0)
+										const auto& ocgs = ocg->getOCGs ();
+										for (const auto& ocg : ocgs)
+										{
+											OptionalContentGroup *oc = ocg.second.get();
+											QString ocgName = UnicodeParsedString(oc->getName());
+											if (!ocgNames.contains(ocgName))
+											{
+												ocgGroups.prepend(oc);
+												ocgNames.append(ocgName);
+											}
+										}
+#else
+										GooList *ocgs = ocg->getOCGs ();
+										for (int i = 0; i < ocgs->getLength (); ++i)
 										{
 											OptionalContentGroup *oc = (OptionalContentGroup *)ocgs->get(i);
 											QString ocgName = UnicodeParsedString(oc->getName());
@@ -569,15 +555,27 @@ bool PdfPlug::convert(const QString& fn)
 												ocgNames.append(ocgName);
 											}
 										}
+#endif
 									}
 								}
 							}
 							else
 							{
-								GooList *ocgs;
-								int i;
-								ocgs = ocg->getOCGs ();
-								for (i = 0; i < ocgs->getLength (); ++i)
+#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 69, 0)
+								const auto& ocgs = ocg->getOCGs ();
+								for (const auto& ocg : ocgs)
+								{
+									OptionalContentGroup *oc = ocg.second.get();
+									QString ocgName = UnicodeParsedString(oc->getName());
+									if (!ocgNames.contains(ocgName))
+									{
+										ocgGroups.prepend(oc);
+										ocgNames.append(ocgName);
+									}
+								}
+#else
+								GooList *ocgs = ocg->getOCGs ();
+								for (int i = 0; i < ocgs->getLength (); ++i)
 								{
 									OptionalContentGroup *oc = (OptionalContentGroup *)ocgs->get(i);
 									QString ocgName = UnicodeParsedString(oc->getName());
@@ -587,6 +585,7 @@ bool PdfPlug::convert(const QString& fn)
 										ocgNames.append(ocgName);
 									}
 								}
+#endif
 							}
 						}
 					}
@@ -599,8 +598,6 @@ bool PdfPlug::convert(const QString& fn)
 					rotate = 0;
 					if (importerFlags & LoadSavePlugin::lfCreateDoc)
 					{
-// POPPLER_VERSION appeared in 0.19.0 first
-#ifdef POPPLER_VERSION
 						if (hasOcg)
 						{
 							QString actL = m_Doc->activeLayerName();
@@ -625,9 +622,7 @@ bool PdfPlug::convert(const QString& fn)
 							}
 							dev->layersSetByOCG = true;
 						}
-#endif
 
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 						Object info = pdfDoc->getDocInfo();
 						if (info.isDict())
 						{
@@ -656,41 +651,7 @@ bool PdfPlug::convert(const QString& fn)
 							}
 						}
 						info = Object();
-#else
-						Object info;
-						pdfDoc->getDocInfo(&info);
-						if (info.isDict())
-						{
-							Object obj;
-							//	GooString *s1;
-							Dict *infoDict = info.getDict();
-							if (infoDict->lookup((char*)"Title", &obj)->isString())
-							{
-								//		s1 = obj.getString();
-								m_Doc->documentInfo().setTitle(UnicodeParsedString(obj.getString()));
-								obj.free();
-							}
-							if (infoDict->lookup((char*)"Author", &obj)->isString())
-							{
-								//		s1 = obj.getString();
-								m_Doc->documentInfo().setAuthor(UnicodeParsedString(obj.getString()));
-								obj.free();
-							}
-							if (infoDict->lookup((char*)"Subject", &obj)->isString())
-							{
-								//		s1 = obj.getString();
-								m_Doc->documentInfo().setSubject(UnicodeParsedString(obj.getString()));
-								obj.free();
-							}
-							if (infoDict->lookup((char*)"Keywords", &obj)->isString())
-							{
-								//		s1 = obj.getString();
-								m_Doc->documentInfo().setKeywords(UnicodeParsedString(obj.getString()));
-								obj.free();
-							}
-						}
-						info.free();
-#endif
+
 						if (cropped)
 						{
 							QRectF crBox = getCBox(contentRect, pageNs[0]);
@@ -775,9 +736,9 @@ bool PdfPlug::convert(const QString& fn)
 							{
 							//	int numObj = m_Doc->Items->count();
 							//	if (cropped)
-							//		pdfDoc->displayPageSlice(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, crBox.x(), crBox.y(), crBox.width(), crBox.height(), NULL, NULL, dev->annotations_callback, dev);
+							//		pdfDoc->displayPageSlice(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, crBox.x(), crBox.y(), crBox.width(), crBox.height(), nullptr, nullptr, dev->annotations_callback, dev);
 							//	else
-							//		pdfDoc->displayPage(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, NULL, NULL, dev->annotations_callback, dev);
+							//		pdfDoc->displayPage(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, nullptr, nullptr, dev->annotations_callback, dev);
 							//	int numObj2 = m_Doc->Items->count();
 							//	int countObj = numObj2 - numObj;
 								for (int a = 0; a < ocgGroups.count(); a++)
@@ -787,9 +748,9 @@ bool PdfPlug::convert(const QString& fn)
 							//		currentLayer = m_Doc->activeLayer();
 									oc->setState(OptionalContentGroup::On);
 									if (cropped)
-										pdfDoc->displayPageSlice(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, crBox.x() - mdBox.x(), mdBox.bottom() - crBox.bottom(), crBox.width(), crBox.height(), NULL, NULL, dev->annotations_callback, dev);
+										pdfDoc->displayPageSlice(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, crBox.x() - mdBox.x(), mdBox.bottom() - crBox.bottom(), crBox.width(), crBox.height(), nullptr, nullptr, dev->annotations_callback, dev);
 									else
-										pdfDoc->displayPage(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, NULL, NULL, dev->annotations_callback, dev);
+										pdfDoc->displayPage(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, nullptr, nullptr, dev->annotations_callback, dev);
 									oc->setState(OptionalContentGroup::Off);
 							//		for (int dd = 0; dd < countObj; dd++)
 							//		{
@@ -802,18 +763,14 @@ bool PdfPlug::convert(const QString& fn)
 							else
 							{
 								if (cropped)
-									pdfDoc->displayPageSlice(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, crBox.x() - mdBox.x(), mdBox.bottom() - crBox.bottom(), crBox.width(), crBox.height(), NULL, NULL, dev->annotations_callback, dev);
+									pdfDoc->displayPageSlice(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, crBox.x() - mdBox.x(), mdBox.bottom() - crBox.bottom(), crBox.width(), crBox.height(), nullptr, nullptr, dev->annotations_callback, dev);
 								else
-									pdfDoc->displayPage(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, NULL, NULL, dev->annotations_callback, dev);
+									pdfDoc->displayPage(dev, pp, hDPI, vDPI, rotate, useMediaBox, crop, printing, nullptr, nullptr, dev->annotations_callback, dev);
 							}
+
 							PDFPresentationData ef;
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 							Object trans = pdfDoc->getPage(pp)->getTrans();
 							Object *transi = &trans;
-#else
-							Object trans;
-							Object *transi = pdfDoc->getPage(pp)->getTrans(&trans);
-#endif
 							if (transi->isDict())
 							{
 								m_Doc->pdfOptions().PresentMode = true;
@@ -859,54 +816,28 @@ bool PdfPlug::convert(const QString& fn)
 								delete pgTrans;
 							}
 							m_Doc->currentPage()->PresentVals = ef;
-#if POPPLER_ENCODED_VERSION < POPPLER_VERSION_ENCODE(0, 58, 0)
-							trans.free();
-							transi->free();
-#endif
 						}
 						int numjs = pdfDoc->getCatalog()->numJS();
 						if (numjs > 0)
 						{
 							NameTree *jsNameTreeP = new NameTree();
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 							Object catDict = pdfDoc->getXRef()->getCatalog();
-#else
-							Object catDict;
-							pdfDoc->getXRef()->getCatalog(&catDict);
-#endif
 							if (catDict.isDict())
 							{
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 								Object names = catDict.dictLookup("Names");
-#else
-								Object names;
-								catDict.dictLookup("Names", &names);
-#endif
 								if (names.isDict())
 								{
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 									Object obj = names.dictLookup("JavaScript");
 									jsNameTreeP->init(pdfDoc->getXRef(), &obj);
-#else
-									Object obj;
-									names.dictLookup("JavaScript", &obj);
-									jsNameTreeP->init(pdfDoc->getXRef(), &obj);
-									obj.free();
-#endif
 								}
 								for (int a = 0; a < numjs; a++)
 								{
 									m_Doc->JavaScripts.insert(UnicodeParsedString(jsNameTreeP->getName(a)), UnicodeParsedString(pdfDoc->getCatalog()->getJS(a)));
 								}
-#if POPPLER_ENCODED_VERSION >= POPPLER_VERSION_ENCODE(0, 58, 0)
 								names = catDict.dictLookup("OpenAction");
-#else
-								names.free();
-								catDict.dictLookup("OpenAction", &names);
-#endif
 								if (names.isDict())
 								{
-									LinkAction *linkAction = NULL;
+									LinkAction *linkAction = nullptr;
 									linkAction = LinkAction::parseAction(&names, pdfDoc->getCatalog()->getBaseURI());
 									if (linkAction)
 									{
@@ -924,13 +855,7 @@ bool PdfPlug::convert(const QString& fn)
 										}
 									}
 								}
-#if POPPLER_ENCODED_VERSION < POPPLER_VERSION_ENCODE(0, 58, 0)
-								names.free();
-#endif
 							}
-#if POPPLER_ENCODED_VERSION < POPPLER_VERSION_ENCODE(0, 58, 0)
-							catDict.free();
-#endif
 							delete jsNameTreeP;
 						}
 						m_Doc->pdfOptions().Version = (PDFOptions::PDFVersion)qMin(15, qMax(13, pdfDoc->getPDFMajorVersion() * 10 + pdfDoc->getPDFMinorVersion()));
@@ -974,7 +899,7 @@ bool PdfPlug::convert(const QString& fn)
 								ocgGroups[a]->setState(OptionalContentGroup::On);
 							}
 						}
-						pdfDoc->displayPage(dev, firstPage, hDPI, vDPI, rotate, useMediaBox, crop, printing, NULL, NULL, dev->annotations_callback, dev);
+						pdfDoc->displayPage(dev, firstPage, hDPI, vDPI, rotate, useMediaBox, crop, printing, nullptr, nullptr, dev->annotations_callback, dev);
 					}
 				}
 				delete dev;
@@ -983,7 +908,7 @@ bool PdfPlug::convert(const QString& fn)
 		delete pdfDoc;
 	}
 	delete globalParams;
-	globalParams = 0;
+	globalParams = nullptr;
 
 //	qDebug() << "converting finished";
 //	qDebug() << "Imported" << Elements.count() << "Elements";
@@ -1066,7 +991,7 @@ QImage PdfPlug::readPreview(int pgNum, int width, int height, int box)
 
 QRectF PdfPlug::getCBox(int box, int pgNum)
 {
-	PDFRectangle *cBox = NULL;
+	const PDFRectangle *cBox = nullptr;
 	if (box == Media_Box)
 		cBox = m_pdfDoc->getPage(pgNum)->getMediaBox();
 	else if (box == Bleed_Box)
@@ -1081,7 +1006,7 @@ QRectF PdfPlug::getCBox(int box, int pgNum)
 	return cRect;
 }
 
-QString PdfPlug::UnicodeParsedString(GooString *s1)
+QString PdfPlug::UnicodeParsedString(POPPLER_CONST GooString *s1)
 {
 	if ( !s1 || s1->getLength() == 0 )
 		return QString();

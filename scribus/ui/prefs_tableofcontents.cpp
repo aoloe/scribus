@@ -28,12 +28,12 @@ Prefs_TableOfContents::Prefs_TableOfContents(QWidget* parent, ScribusDoc* doc)
 	//do not connect( tocListBox, SIGNAL( currentRowChanged(int) ), this, SLOT( selectToC(int) ) );
 	connect( tocAddButton, SIGNAL( clicked() ), this, SLOT( addToC() ) );
 	connect( tocDeleteButton, SIGNAL( clicked() ), this, SLOT( deleteToC() ) );
-	connect( itemAttrComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemAttributeSelected(const QString&) ) );
-	connect( itemDestFrameComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemFrameSelected(const QString&) ) );
-	connect( itemParagraphStyleComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemParagraphStyleSelected(const QString&) ) );
-	connect( itemNumberPlacementComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemPageNumberPlacedSelected(const QString&) ) );
-	connect( tocNameLineEdit, SIGNAL( textChanged(const QString&) ), this, SLOT( setToCName(const QString&) ) );
-	connect( itemListNonPrintingCheckBox, SIGNAL( toggled(bool) ), this, SLOT( nonPrintingFramesSelected(bool) ) );
+	connect( itemAttrComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemAttributeSelected(const QString&)));
+	connect( itemDestFrameComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemFrameSelected(const QString&)));
+	connect( itemParagraphStyleComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemParagraphStyleSelected(const QString&)));
+	connect( itemNumberPlacementComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemPageNumberPlacedSelected(const QString&)));
+	connect( tocNameLineEdit, SIGNAL( textChanged(const QString&)), this, SLOT( setToCName(const QString&)));
+	connect( itemListNonPrintingCheckBox, SIGNAL( toggled(bool) ), this, SLOT( nonPrintingFramesSelected(bool)));
 	setCurrentComboItem(itemNumberPlacementComboBox, trStrPNEnd);
 	numSelected=999;
 }
@@ -62,7 +62,7 @@ void Prefs_TableOfContents::restoreDefaults(struct ApplicationPrefs *prefsData)
 	{
 		updateToCListBox();
 		updateParagraphStyleComboBox();
-		tocListBox->setCurrentItem(0);
+		tocListBox->setCurrentItem(nullptr);
 		selectToC(0);
 	}
 	else
@@ -104,7 +104,7 @@ void Prefs_TableOfContents::generatePageItemList()
 {
 	itemDestFrameComboBox->clear();
 	itemDestFrameComboBox->addItem(CommonStrings::tr_None);
-	if (m_Doc!=NULL)
+	if (m_Doc!=nullptr)
 	{
 		QList<PageItem*> allItems;
 		for (int a = 0; a < m_Doc->DocItems.count(); ++a)
@@ -127,7 +127,7 @@ void Prefs_TableOfContents::generatePageItemList()
 		itemDestFrameComboBox->setEnabled(false);
 }
 
-void Prefs_TableOfContents::setupItemAttrs( QStringList newNames )
+void Prefs_TableOfContents::setupItemAttrs(const QStringList& newNames)
 {
 	disconnect( itemAttrComboBox, SIGNAL( activated(const QString&) ), this, SLOT( itemAttributeSelected(const QString&) ) );
 	itemAttrComboBox->clear();
@@ -167,12 +167,12 @@ void Prefs_TableOfContents::selectToC( int numberSelected )
 		setCurrentComboItem(itemNumberPlacementComboBox, trStrPNNotShown);
 	else
 		if (localToCSetupVector[numSelected].pageLocation==Beginning)
-		setCurrentComboItem(itemNumberPlacementComboBox, trStrPNBeginning);
-	else
-		setCurrentComboItem(itemNumberPlacementComboBox, trStrPNEnd);
+			setCurrentComboItem(itemNumberPlacementComboBox, trStrPNBeginning);
+		else
+			setCurrentComboItem(itemNumberPlacementComboBox, trStrPNEnd);
 
 	itemListNonPrintingCheckBox->setChecked(localToCSetupVector[numSelected].listNonPrintingFrames);
-	if (m_Doc!=NULL)
+	if (m_Doc!=nullptr)
 	{
 		if (localToCSetupVector[numSelected].frameName==CommonStrings::None)
 			setCurrentComboItem(itemDestFrameComboBox, CommonStrings::tr_None);
@@ -205,7 +205,7 @@ void Prefs_TableOfContents::addToC()
 {
 	bool found=false;
 	QString newName=tocNameLineEdit->text();
-	for(ToCSetupVector::Iterator it = localToCSetupVector.begin(); it!= localToCSetupVector.end(); ++it)
+	for (ToCSetupVector::Iterator it = localToCSetupVector.begin(); it!= localToCSetupVector.end(); ++it)
 	{
 		if ((*it).name==newName)
 			found=true;
@@ -235,7 +235,7 @@ void Prefs_TableOfContents::updateToCListBox()
 {
 	tocListBox->clear();
 	QStringList sl;
-	for(ToCSetupVector::Iterator it = localToCSetupVector.begin(); it!= localToCSetupVector.end(); ++it)
+	for (ToCSetupVector::Iterator it = localToCSetupVector.begin(); it!= localToCSetupVector.end(); ++it)
 		sl << (*it).name;
 	tocListBox->insertItems(0, sl);
 }
@@ -245,7 +245,7 @@ void Prefs_TableOfContents::updateParagraphStyleComboBox()
 	paragraphStyleList.clear();
 	paragraphStyleList.append(CommonStrings::tr_None);
 
-	if(m_Doc!=NULL) // && m_Doc->docParagraphStyles.count()>5)
+	if(m_Doc!=nullptr) // && m_Doc->docParagraphStyles.count()>5)
 	{
 		for (int i = 0; i < m_Doc->paragraphStyles().count(); ++i)
 			paragraphStyleList.append(m_Doc->paragraphStyles()[i].name());
@@ -262,7 +262,7 @@ void Prefs_TableOfContents::enableGUIWidgets()
 	tocDeleteButton->setEnabled(enabled);
 	itemAttrComboBox->setEnabled(enabled);
 	itemNumberPlacementComboBox->setEnabled(enabled);
-	bool haveDoc=enabled && m_Doc!=NULL;
+	bool haveDoc=enabled && m_Doc!=nullptr;
 	itemDestFrameComboBox->setEnabled(haveDoc);
 	itemParagraphStyleComboBox->setEnabled(haveDoc);
 }

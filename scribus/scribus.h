@@ -33,11 +33,11 @@ for which a new license (GPL+exception) is in place.
 
 #include <QActionGroup>
 #include <QClipboard>
+#include <QImage>
 #include <QKeyEvent>
 #include <QMainWindow>
 #include <QMap>
 #include <QMultiHash>
-#include <QPixmap>
 #include <QPointer>
 #include <QPushButton>
 #include <QProcess>
@@ -134,7 +134,7 @@ public:
 	* \retval 0 - ok, 1 - no fonts, ...
 	*/
 	int initScMW(bool primaryMainwWindow);
-	void addScToolBar(ScToolBar *tb, QString name);
+	void addScToolBar(ScToolBar *tb, const QString& name);
 	bool warningVersion(QWidget *parent);
 	void SetShortCut();
 	void startUpDialog();
@@ -146,7 +146,7 @@ public:
 
 	ScribusDoc *doFileNew(double width, double height, double topMargin, double leftMargin, double rightMargin, double bottomMargin, double columnDistance, double columnCount, bool autoTextFrames, int pageArrangement, int unitIndex, int firstPageLocation, int orientation, int firstPageNumber, const QString& defaultPageSize, bool requiresGUI, int pageCount=1, bool showView=true, int marginPreset=0);
 	ScribusDoc *newDoc(double width, double height, double topMargin, double leftMargin, double rightMargin, double bottomMargin, double columnDistance, double columnCount, bool autoTextFrames, int pageArrangement, int unitIndex, int firstPageLocation, int orientation, int firstPageNumber, const QString& defaultPageSize, bool requiresGUI, int pageCount=1, bool showView=true, int marginPreset=0);
-	bool DoFileSave(const QString& fileName, QString* savedFileName = NULL);
+	bool DoFileSave(const QString& fileName, QString* savedFileName = nullptr);
 	void changeEvent(QEvent *e);
 	void closeEvent(QCloseEvent *ce);
 	void keyPressEvent(QKeyEvent *k);
@@ -156,24 +156,24 @@ public:
 	void requestUpdate(int);
 	void setTBvals(PageItem *currItem);
 	int ShowSubs();
-	void applyNewMaster(QString name);
-	void updateRecent(QString fn);
-	void doPasteRecent(QString data);
-	bool getPDFDriver(const QString & filename, const QString & name, int components, const std::vector<int> & pageNumbers, const QMap<int,QPixmap> & thumbs, QString& error, bool* cancelled = NULL);
-	bool DoSaveAsEps(QString fn, QString& error);
-	QString CFileDialog(QString workingDirectory = ".", QString dialogCaption = "", QString fileFilter = "", QString defNa = "",
+	void applyNewMaster(const QString& name);
+	void updateRecent(const QString& fn);
+	void doPasteRecent(const QString& data);
+	bool getPDFDriver(const QString & filename, const QString & name, int components, const std::vector<int> & pageNumbers, const QMap<int, QImage> & thumbs, QString& error, bool* cancelled = nullptr);
+	bool DoSaveAsEps(const QString& fn, QString& error);
+	QString CFileDialog(const QString& workingDirectory = ".", const QString& dialogCaption = "", const QString& fileFilter = "", const QString& defNa = "",
 						int optionFlags = fdExistingFiles, bool *useCompression = 0, bool *useFonts = 0, bool *useProfiles = 0);
 	/*! \brief Recalculate the colors after changing CMS settings.
 	Call the appropriate document function and then update the GUI elements.
 	\param dia optional progress widget */
-	void recalcColors(QProgressBar *dia = 0);
+	void recalcColors();
 	void SwitchWin();
 	void RestoreBookMarks();
 	QStringList  scrapbookNames();
 	void updateLayerMenu();
 	void emergencySave();
 	QStringList findRecoverableFile();
-	bool recoverFile(QStringList foundFiles);
+	bool recoverFile(const QStringList& foundFiles);
 
 	/**
 	 * @brief Returns true if an arrow key is pressed down.
@@ -266,7 +266,7 @@ public:
 	QMultiHash<QString, QActionGroup*> scrActionGroups;
 	ScMWMenuManager* scrMenuMgr;
 	ActionManager* actionManager;
-	QStringList RecentDocs;
+	QStringList m_recentDocsList;
 	QStringList patternsDependingOnThis;
 
 public slots:
@@ -289,7 +289,7 @@ public slots:
 	void setStatusBarTextPosition(double base, double xp);
 	void setStatusBarTextSelectedItemInfo();
 	void setTempStatusBarText(const QString &text);
-	void setStatusBarInfoText(QString newText);
+	void setStatusBarInfoText(const QString& newText);
 	bool DoFileClose();
 	void windowsMenuAboutToShow();
 	//! \brief Handle the Extras menu for its items availability.
@@ -299,7 +299,7 @@ public slots:
 	void updateActiveWindowCaption(const QString &newCaption);
 	void windowsMenuActivated(int id);
 	void PutScrap(int scID);
-	void PutToInline(QString buffer);
+	void PutToInline(const QString& buffer);
 	void PutToInline();
 	void PutToPatterns();
 	void ConvertToSymbol();
@@ -310,17 +310,17 @@ public slots:
 	void setCurrentPage(int p);
 	void ManageJava();
 	void editSelectedSymbolStart();
-	void editSymbolStart(QString temp);
+	void editSymbolStart(const QString& temp);
 	void editSymbolEnd();
 	void editInlineStart(int id);
 	void editInlineEnd();
-	void editMasterPagesStart(QString temp = "");
+	void editMasterPagesStart(const QString& temp = "");
 	void editMasterPagesEnd();
 	/** \brief generate a new document in the current view */
 	bool slotFileNew();
 	void newFileFromTemplate();
 	bool slotPageImport();
-	bool loadPage(QString fileName, int Nr, bool Mpa, const QString& renamedPageName=QString::null);
+	bool loadPage(const QString& fileName, int Nr, bool Mpa, const QString& renamedPageName=QString::null);
 	void GotoLa(int l);
 	void slotGetContent();
 	void slotGetContent2(); // kk2006
@@ -332,18 +332,18 @@ public slots:
 	*/
 	void slotFileAppend();
 
-	void removeRecent(QString fn, bool fromFileWatcher = false);
-	void removeRecentFromWatcher(QString filename);
-	void loadRecent(QString filename);
+	void removeRecent(const QString& fn, bool fromFileWatcher = false);
+	void removeRecentFromWatcher(const QString& filename);
+	void loadRecent(const QString& filename);
 	void rebuildRecentFileMenu();
 	void rebuildRecentPasteMenu();
 	void rebuildScrapbookMenu();
-	void pasteRecent(QString fn);
-	void pasteFromScrapbook(QString fn);
+	void pasteRecent(const QString& fn);
+	void pasteFromScrapbook(const QString& fn);
 	void importVectorFile();
 	void rebuildLayersList();
 	bool slotFileOpen();
-	bool loadDoc(QString);
+	bool loadDoc(const QString& );
 	/**
 	 * @brief Do post loading functions
 	 */
@@ -398,7 +398,7 @@ public slots:
 	void ToggleTips();
 	void ToggleMouseTips();
 	/** \brief Erzeugt eine neue Seite */
-	void slotNewPageP(int wo, QString templ);
+	void slotNewPageP(int wo, const QString& templ);
 	void slotNewPageM();
 	void slotNewMasterPage(int w, const QString &);
 	void slotNewPage(int w, const QString& masterPageName=QString::null, bool mov = true);
@@ -457,12 +457,9 @@ public slots:
 	void slotDocCh(bool reb = true);
 	/** Setzt die Abstufung */
 	//void setItemShade(int id);
-	/** Setzt den Font */
-	/** Korrigiert das FontMenu */
-	void SetNewFont(const QString& nf);
 	/** Setz die Zeichensatzgroesse */
 	void setItemFontSize(int fontSize);
-	void setItemLanguage(QString language);
+	void setItemLanguage(const QString& language);
 	/** Color Replacement */
 	void slotReplaceColors();
 	/** Style Manager */
@@ -500,14 +497,14 @@ public slots:
 	void setItemEffects(int h);
 	void setStyleEffects(int s);
 	void setItemTypeStyle(int id);
-	void slotElemRead(QString Name, double x, double y, bool art, bool loca, ScribusDoc* docc, ScribusView* vie);
+	void slotElemRead(const QString& Name, double x, double y, bool art, bool loca, ScribusDoc* docc, ScribusView* vie);
 	void slotChangeUnit(int art, bool draw = true);
 	/*!
 	 * @brief Apply master pages from the Apply Master Page dialog
 	 * @todo Make this work with real page numbers, negative numbers and document sections when they are implemented
 	*/
 	void ApplyMasterPage();
-	void Apply_MasterPage(QString pageName, int pageNumber, bool reb = true);
+	void Apply_MasterPage(const QString& pageName, int pageNumber, bool reb = true);
 	void GroupObj(bool showLockDia = true);
 	void UnGroupObj();
 	void AdjustGroupObj();
@@ -565,7 +562,7 @@ public slots:
 	void slotEditMark();
 	//connected to signal emitted by actions when "Update Marks" menu item is triggered
 	void slotUpdateMarks();
-	bool editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem = NULL);
+	bool editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem = nullptr);
 //	void testQT_slot1(QString);
 //	void testQT_slot2(double);
 //	void testQT_slot3(int);
@@ -607,7 +604,7 @@ private:
 	void initPalettes();
 	void initScrapbook();
 
-	void updateColorMenu(QProgressBar* progressBar=NULL);
+	void updateColorMenu(QProgressBar* progressBar=nullptr);
 
 	int m_ScriptRunning;
 
@@ -638,7 +635,7 @@ private:
 	bool m_objectSpecificUndo;
 
 	//CB: #8212: add overrideMasterPageSizing, however default to true for compatibility with other calls.. for now
-	void addNewPages(int wo, int where, int numPages, double height, double width, int orient, QString siz, bool mov, QStringList* basedOn = 0, bool overrideMasterPageSizing=true);
+	void addNewPages(int wo, int where, int numPages, double height, double width, int orient, const QString& siz, bool mov, QStringList* basedOn = 0, bool overrideMasterPageSizing=true);
 
 	int m_DocNr;
 	bool m_PrinterUsed;

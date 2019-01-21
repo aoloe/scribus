@@ -20,8 +20,7 @@ QString CellStyle::displayName() const
 		return CommonStrings::trDefaultCellStyle;
 	if (hasName() || !hasParent() || !m_context)
 		return name();
-	else 
-		return parentStyle()->displayName() + "+";
+	return parentStyle()->displayName() + "+";
 }
 
 bool CellStyle::equiv(const BaseStyle& other) const
@@ -64,7 +63,7 @@ void CellStyle::update(const StyleContext* context)
 
 void CellStyle::getNamedResources(ResourceCollection& lists) const
 {
-	for (const BaseStyle* style = parentStyle(); style != NULL; style = style->parentStyle())
+	for (const BaseStyle* style = parentStyle(); style != nullptr; style = style->parentStyle())
 		lists.collectCellStyle(style->name());
 	lists.collectColor(fillColor());
 	// TODO: Collect border colors.

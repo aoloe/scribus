@@ -69,9 +69,9 @@ CreateMode::CreateMode(ScribusView* view) : CanvasMode(view)
 	inItemCreation = false;
 	createObjectMode     = 0;
 	createObjectSubMode  = 0;
-	modifiers            = 0;
+	modifiers            = Qt::NoModifier;
 	m_MouseButtonPressed = false;
-	m_createTransaction  = NULL;
+	m_createTransaction  = nullptr;
 }
 
 
@@ -178,7 +178,7 @@ void CreateMode::drawControls(QPainter* p)
 inline bool CreateMode::GetItem(PageItem** pi)
 { 
 	*pi = m_doc->m_Selection->itemAt(0); 
-	return (*pi) != NULL; 
+	return (*pi) != nullptr;
 }
 
 // the following code was moved from scribusview.cpp:
@@ -246,7 +246,6 @@ void CreateMode::mouseMoveEvent(QMouseEvent *m)
 	
 	double newX, newY;
 	PageItem *currItem;
-	QPoint np, np2, mop;
 	QPainter p;
 //	QRect tx;
 	m->accept();
@@ -298,9 +297,9 @@ void CreateMode::mouseMoveEvent(QMouseEvent *m)
 				double ny = np2.y();
 				m_doc->ApplyGuides(&nx, &ny);
 				m_doc->ApplyGuides(&nx, &ny,true);
-				if(nx!=np2.x())
+				if (nx!=np2.x())
 					xSnap = nx;
-				if(ny!=np2.y())
+				if (ny!=np2.y())
 					ySnap = ny;
 				// #8959 : suppress qRound here as this prevent drawing line with angle constrain
 				// precisely and does not allow to stick precisely to grid or guides
@@ -571,16 +570,14 @@ void CreateMode::getFrameItemTypes(int& itemType, int& frameType)
 		itemType  = (int) PageItem::Table;
 		frameType = (int) PageItem::Unspecified;
 		break;
-#ifdef HAVE_OSG
 	case modeInsertPDF3DAnnotation:
 		itemType  = (int) PageItem::OSGFrame;
 		frameType = (int) PageItem::Unspecified;
 		break;
-#endif
 	}
 }
 
-PageItem* CreateMode::doCreateNewObject(void)
+PageItem* CreateMode::doCreateNewObject()
 {
 	int z = -1;
 	double rot, len;
@@ -603,7 +600,7 @@ PageItem* CreateMode::doCreateNewObject(void)
 		{
 			if (!doOneClick(createObjectPos, canvasCurrCoord))
 			{
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
@@ -617,7 +614,7 @@ PageItem* CreateMode::doCreateNewObject(void)
 			hSize = wSize;
 	}
 
-	PageItem *newObject = NULL, *currItem = NULL;
+	PageItem *newObject = nullptr, *currItem = nullptr;
 	// FIXME for modeDrawLine
 	QRectF createObjectRect(createObjectPos.x(), createObjectPos.y(), wSize, hSize);
 	if (createObjectMode != modeDrawLine)
@@ -796,13 +793,13 @@ PageItem* CreateMode::doCreateNewObject(void)
 			{
 				m_view->requestMode(submodePaintingDone);
 				delete dia;
-				dia = 0;
+				dia = nullptr;
 				break;
 			}
 			int numRows = dia->Rows->value();
 			int numColumns = dia->Cols->value();
 			delete dia;
-			dia = 0;
+			dia = nullptr;
 			// Add the table item.
 			// TODO: This should be done in an undo transaction.
 			m_doc->dontResize = true;
@@ -844,6 +841,7 @@ PageItem* CreateMode::doCreateNewObject(void)
 		SetupDrawNoResize(z);
 		newObject = m_doc->Items->at(z);
 		newObject->ContourLine = newObject->PoLine.copy();
+		m_doc->setRedrawBounding(newObject);
 	}
 	return newObject;
 }

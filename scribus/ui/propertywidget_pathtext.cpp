@@ -16,9 +16,9 @@ for which a new license (GPL+exception) is in place.
 
 PropertyWidget_PathText::PropertyWidget_PathText(QWidget* parent) : QFrame(parent)
 {
-	m_ScMW = 0;
-	m_doc  = 0;
-	m_item = 0;
+	m_ScMW = nullptr;
+	m_doc  = nullptr;
+	m_item = nullptr;
 	m_unitRatio = 1.0;
 	m_unitIndex = 0;
 
@@ -56,7 +56,7 @@ void PropertyWidget_PathText::setDoc(ScribusDoc *d)
 	}
 
 	m_doc  = d;
-	m_item = NULL;
+	m_item = nullptr;
 
 	if (m_doc.isNull())
 	{
@@ -64,8 +64,8 @@ void PropertyWidget_PathText::setDoc(ScribusDoc *d)
 		return;
 	}
 
-	m_unitRatio   = m_doc->unitRatio();
-	m_unitIndex   = m_doc->unitIndex();
+	m_unitRatio = m_doc->unitRatio();
+	m_unitIndex = m_doc->unitIndex();
 
 	startOffset->setMaximum( 30000 );
 	startOffset->setMinimum( 0 );
@@ -85,7 +85,7 @@ void PropertyWidget_PathText::setCurrentItem(PageItem *item)
 	//CB We shouldn't really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
 	//set some status if so.
-	//FIXME: This won't work until when a canvas deselect happens, m_item must be NULL.
+	//FIXME: This won't work until when a canvas deselect happens, m_item must be nullptr.
 	//if (m_item == i)
 	//	return;
 
@@ -137,7 +137,7 @@ void PropertyWidget_PathText::disconnectSignals()
 	disconnect(distFromCurve    , SIGNAL(valueChanged(double)), this, SLOT(handlePathOffs()));
 }
 
-void PropertyWidget_PathText::configureWidgets(void)
+void PropertyWidget_PathText::configureWidgets()
 {
 	bool enabled = false;
 	if (m_item && m_doc)

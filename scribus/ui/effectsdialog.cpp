@@ -48,7 +48,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	m_item = item;
 	effectsList = m_item->effectsInUse;
 	m_doc = docc;
-	currentOptions = 0;
+	currentOptions = nullptr;
 
 //	CMSettings cms(docc, "", Intent_Perceptual);
 //	cms.allowColorManagement(false);
@@ -249,7 +249,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shade1 = new ShadeButton(WStackPage_8);
 	shade1->setValue(100);
 	WStackPage8Layout->addWidget( shade1, 1, 1 );
-	CurveD1 = new CurveWidget( NULL );
+	CurveD1 = new CurveWidget( nullptr );
 	CurveD1Pop = new QMenu();
 	CurveD1Act = new QWidgetAction(this);
 	CurveD1Act->setDefaultWidget(CurveD1);
@@ -271,7 +271,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shade2 = new ShadeButton(WStackPage_8);
 	shade2->setValue(100);
 	WStackPage8Layout->addWidget( shade2, 3, 1 );
-	CurveD2 = new CurveWidget( NULL );
+	CurveD2 = new CurveWidget( nullptr );
 	CurveD2Pop = new QMenu();
 	CurveD2Act = new QWidgetAction(this);
 	CurveD2Act->setDefaultWidget(CurveD2);
@@ -301,7 +301,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shadet1 = new ShadeButton(WStackPage_9);
 	shadet1->setValue(100);
 	WStackPage9Layout->addWidget( shadet1, 1, 1 );
-	CurveT1 = new CurveWidget( NULL );
+	CurveT1 = new CurveWidget( nullptr );
 	CurveT1Pop = new QMenu();
 	CurveT1Act = new QWidgetAction(this);
 	CurveT1Act->setDefaultWidget(CurveT1);
@@ -322,7 +322,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shadet2 = new ShadeButton(WStackPage_9);
 	shadet2->setValue(100);
 	WStackPage9Layout->addWidget( shadet2, 3, 1 );
-	CurveT2 = new CurveWidget( NULL );
+	CurveT2 = new CurveWidget( nullptr );
 	CurveT2Pop = new QMenu();
 	CurveT2Act = new QWidgetAction(this);
 	CurveT2Act->setDefaultWidget(CurveT2);
@@ -343,7 +343,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shadet3 = new ShadeButton(WStackPage_9);
 	shadet3->setValue(100);
 	WStackPage9Layout->addWidget( shadet3, 5, 1 );
-	CurveT3 = new CurveWidget( NULL );
+	CurveT3 = new CurveWidget( nullptr );
 	CurveT3Act = new QWidgetAction(this);
 	CurveT3Pop = new QMenu();
 	CurveT3Act->setDefaultWidget(CurveT3);
@@ -370,7 +370,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shadeq1 = new ShadeButton(WStackPage_10);
 	shadeq1->setValue(100);
 	WStackPage10Layout->addWidget( shadeq1, 1, 1 );
-	CurveQ1 = new CurveWidget( NULL );
+	CurveQ1 = new CurveWidget( nullptr );
 	CurveQ1Pop = new QMenu();
 	CurveQ1Act = new QWidgetAction(this);
 	CurveQ1Act->setDefaultWidget(CurveQ1);
@@ -391,7 +391,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shadeq2 = new ShadeButton(WStackPage_10);
 	shadeq2->setValue(100);
 	WStackPage10Layout->addWidget( shadeq2, 3, 1 );
-	CurveQ2 = new CurveWidget( NULL );
+	CurveQ2 = new CurveWidget( nullptr );
 	CurveQ2Pop = new QMenu();
 	CurveQ2Act = new QWidgetAction(this);
 	CurveQ2Act->setDefaultWidget(CurveQ2);
@@ -412,7 +412,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shadeqc3 = new ShadeButton(WStackPage_10);
 	shadeqc3->setValue(100);
 	WStackPage10Layout->addWidget( shadeqc3, 5, 1 );
-	CurveQc3 = new CurveWidget( NULL );
+	CurveQc3 = new CurveWidget( nullptr );
 	CurveQc3Pop = new QMenu();
 	CurveQc3Act = new QWidgetAction(this);
 	CurveQc3Act->setDefaultWidget(CurveQc3);
@@ -433,7 +433,7 @@ EffectsDialog::EffectsDialog( QWidget* parent, PageItem* item, ScribusDoc* docc 
 	shadeq4 = new ShadeButton(WStackPage_10);
 	shadeq4->setValue(100);
 	WStackPage10Layout->addWidget( shadeq4, 7, 1 );
-	CurveQ4 = new CurveWidget( NULL );
+	CurveQ4 = new CurveWidget( nullptr );
 	CurveQ4Pop = new QMenu();
 	CurveQ4Act = new QWidgetAction(this);
 	CurveQ4Act->setDefaultWidget(CurveQ4);
@@ -714,7 +714,7 @@ void EffectsDialog::setItemSelectable(QListWidget* widget, int itemNr, bool enab
 	if (enable)
 		widget->item(itemNr)->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 	else
-		widget->item(itemNr)->setFlags(0);
+		widget->item(itemNr)->setFlags(Qt::NoItemFlags);
 }
 
 void EffectsDialog::leaveOK()
@@ -843,13 +843,11 @@ void EffectsDialog::saveValues(bool final)
 
 void EffectsDialog::selectAvailEffectDbl(QListWidgetItem* c)
 {
-	if (c)
-	{
-		if (!(c->flags() & Qt::ItemIsSelectable))
-			return;
-		else
-			moveToEffects();
-	}
+	if (!c)
+		return;
+	if (!(c->flags() & Qt::ItemIsSelectable))
+		return;
+	moveToEffects();
 }
 
 void EffectsDialog::moveToEffects()
@@ -936,7 +934,7 @@ void EffectsDialog::moveFromEffects()
 	int curr = usedEffects->currentRow();
 	QListWidgetItem *it = usedEffects->takeItem(curr);
 	delete it;
-	currentOptions = 0;
+	currentOptions = nullptr;
 	usedEffects->clearSelection();
 	if (usedEffects->count() == 0)
 	{
@@ -1003,7 +1001,7 @@ void EffectsDialog::selectEffect(QListWidgetItem* c)
 		{
 			effectUp->setEnabled(true);
 			effectDown->setEnabled(true);
-			if (usedEffects->currentItem() == 0)
+			if (usedEffects->currentItem() == nullptr)
 				effectUp->setEnabled(false);
 			if (usedEffects->currentRow() == static_cast<int>(usedEffects->count())-1)
 				effectDown->setEnabled(false);
@@ -1402,7 +1400,7 @@ void EffectsDialog::selectAvailEffect(QListWidgetItem* c)
 	effectDown->setEnabled(false);
 	disconnect( usedEffects, SIGNAL( itemActivated(QListWidgetItem*) ), this, SLOT( selectEffect(QListWidgetItem*) ) );
 	selectEffectHelper();
-	currentOptions = 0;
+	currentOptions = nullptr;
 	usedEffects->clearSelection();
 	optionStack->setCurrentIndex(0);
 	connect( usedEffects, SIGNAL( itemActivated(QListWidgetItem*) ), this, SLOT( selectEffect(QListWidgetItem*) ) );
@@ -1410,7 +1408,7 @@ void EffectsDialog::selectAvailEffect(QListWidgetItem* c)
 
 void EffectsDialog::selectEffectHelper(bool final)
 {
-	if (currentOptions != 0)
+	if (currentOptions != nullptr)
 	{
 		if (currentOptions->text() == tr("Colorize"))
 		{
@@ -1477,7 +1475,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveD1->cDisplay->isLinear())
@@ -1489,7 +1487,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveD2->cDisplay->isLinear())
@@ -1516,7 +1514,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveT1->cDisplay->isLinear())
@@ -1528,7 +1526,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveT2->cDisplay->isLinear())
@@ -1540,7 +1538,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveT3->cDisplay->isLinear())
@@ -1570,7 +1568,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveQ1->cDisplay->isLinear())
@@ -1582,7 +1580,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveQ2->cDisplay->isLinear())
@@ -1594,7 +1592,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveQc3->cDisplay->isLinear())
@@ -1606,7 +1604,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += " "+tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (CurveQ4->cDisplay->isLinear())
@@ -1624,7 +1622,7 @@ void EffectsDialog::selectEffectHelper(bool final)
 			efval += tmp;
 			for (int p = 0; p < Vals.size(); p++)
 			{
-				FPoint pv = Vals.point(p);
+				const FPoint& pv = Vals.point(p);
 				efval += QString(" %1 %2").arg(pv.x()).arg(pv.y());
 			}
 			if (Kdisplay->cDisplay->isLinear())

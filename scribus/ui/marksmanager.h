@@ -14,7 +14,7 @@ class SCRIBUS_API MarksManager : public ScrPaletteBase, Ui::MarksManager
 	Q_OBJECT
 
 public:
-	explicit MarksManager(QWidget *parent = 0, const char *name = "MarksManager");
+	explicit MarksManager(QWidget *parent = nullptr, const char *name = "MarksManager");
 	~MarksManager();
 
 	virtual void changeEvent(QEvent *e);
@@ -24,7 +24,7 @@ private:
 	ScribusDoc         *m_Doc;
 	PrefsContext       *m_prefs;
 	Mark* getMarkFromListView();
-	void addListItem(MarkType typeMrk, QString typeStr, const QList<Mark *> &marks, int &index);
+	void addListItem(MarkType typeMrk, const QString& typeStr, const QList<Mark *> &marks, int &index);
 	QStringList expandedItems;
 	void storeColaption();
 	void restoreColaption();

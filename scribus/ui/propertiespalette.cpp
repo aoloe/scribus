@@ -57,11 +57,11 @@ for which a new license (GPL+exception) is in place.
 #include "util_math.h"
 
 
-PropertiesPalette::PropertiesPalette( QWidget* parent) : ScDockPalette( parent, "PropertiesPalette", 0)
+PropertiesPalette::PropertiesPalette( QWidget* parent) : ScDockPalette( parent, "PropertiesPalette", nullptr)
 {
 	undoManager = UndoManager::instance();
-	m_ScMW=0;
-	m_doc=0;
+	m_ScMW=nullptr;
+	m_doc=nullptr;
 	m_haveDoc = false;
 	m_haveItem = false;
 	m_unitRatio = 1.0;
@@ -115,14 +115,14 @@ PropertiesPalette::PropertiesPalette( QWidget* parent) : ScDockPalette( parent, 
 
 	connect(TabStack, SIGNAL(currentChanged2(int)), this, SLOT(SelTab(int)));
 
-	connect(Cpal, SIGNAL(NewSpecial(double, double, double, double, double, double, double, double, double, double)), this, SLOT(NewSpGradient(double, double, double, double, double, double, double, double, double, double )));
+	connect(Cpal, SIGNAL(NewSpecial(double,double,double,double,double,double,double,double,double,double)), this, SLOT(NewSpGradient(double,double,double,double,double,double,double,double,double,double )));
 	connect(Cpal, SIGNAL(editGradient(int)), this, SLOT(toggleGradientEdit(int)));
-	connect(Tpal, SIGNAL(NewSpecial(double, double, double, double, double, double, double, double, double, double)), this, SLOT(NewSpGradientM(double, double, double, double, double, double, double, double )));
+	connect(Tpal, SIGNAL(NewSpecial(double,double,double,double,double,double,double,double,double,double)), this, SLOT(NewSpGradientM(double,double,double,double,double,double,double,double )));
 	connect(Tpal, SIGNAL(editGradient()), this, SLOT(toggleGradientEditM()));
 
 	m_haveItem = false;
-	for (int ws = 1; ws < 10; ++ws)
-		TabStack->setItemEnabled(ws, false);
+	for (int i = 1; i < 10; ++i)
+		TabStack->setItemEnabled(i, false);
 	TabStack->setCurrentIndex(0);
 	TabStack->widget(0)->setEnabled(false);
 	TabStack->setItemEnabled(0, false);
@@ -216,12 +216,12 @@ void PropertiesPalette::setDoc(ScribusDoc *d)
 	}
 
 	m_doc = d;
-	m_item = NULL;
+	m_item = nullptr;
 	setEnabled(!m_doc->drawAsPreview);
 	Cpal->setDocument(m_doc);
-	Cpal->setCurrentItem(NULL);
+	Cpal->setCurrentItem(nullptr);
 	Tpal->setDocument(m_doc);
-	Tpal->setCurrentItem(NULL);
+	Tpal->setCurrentItem(nullptr);
 
 	m_unitRatio = m_doc->unitRatio();
 	m_unitIndex = m_doc->unitIndex();
@@ -255,8 +255,8 @@ void PropertiesPalette::unsetDoc()
 	setEnabled(true);
 	m_haveDoc = false;
 	m_haveItem = false;
-	m_doc=NULL;
-	m_item = NULL;
+	m_doc=nullptr;
+	m_item = nullptr;
 
 	imagePal->unsetItem();
 	xyzPal->unsetDoc();
@@ -273,10 +273,10 @@ void PropertiesPalette::unsetDoc()
 	tablePal->unsetItem();
 	tablePal->unsetDocument();
 
-	Cpal->setCurrentItem(NULL);
-	Cpal->setDocument(NULL);
-	Tpal->setCurrentItem(NULL);
-	Tpal->setDocument(NULL);
+	Cpal->setCurrentItem(nullptr);
+	Cpal->setDocument(nullptr);
+	Tpal->setCurrentItem(nullptr);
+	Tpal->setDocument(nullptr);
 
 	m_haveItem = false;
 	for (int ws = 1; ws < 10; ++ws)
@@ -288,9 +288,9 @@ void PropertiesPalette::unsetDoc()
 void PropertiesPalette::unsetItem()
 {
 	m_haveItem = false;
-	m_item     = NULL;
-	Cpal->setCurrentItem(NULL);
-	Tpal->setCurrentItem(NULL);
+	m_item     = nullptr;
+	Cpal->setCurrentItem(nullptr);
+	Tpal->setCurrentItem(nullptr);
 	imagePal->unsetItem();
 	tablePal->unsetItem();
 	shapePal->unsetItem();
@@ -311,7 +311,7 @@ void PropertiesPalette::setTextFlowMode(PageItem::TextFlowMode mode)
 
 PageItem* PropertiesPalette::currentItemFromSelection()
 {
-	PageItem *currentItem = NULL;
+	PageItem *currentItem = nullptr;
 
 	if (m_doc)
 	{
@@ -359,7 +359,7 @@ void PropertiesPalette::setCurrentItem(PageItem *i)
 	//CB We shouldn't really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
 	//set some status if so.
-	//FIXME: This won't work until when a canvas deselect happens, m_item must be NULL.
+	//FIXME: This won't work until when a canvas deselect happens, m_item must be nullptr.
 	//if (m_item == i)
 	//	return;
 

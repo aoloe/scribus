@@ -89,7 +89,7 @@ PageLayouts::PageLayouts(QWidget* parent)  : QGroupBox( parent )
 	connect(firstPage, SIGNAL(activated(int)), this, SIGNAL(selectedFirstPage(int)));
 }
 
-PageLayouts::PageLayouts(QWidget* parent, QList<PageSet> pSets, bool mode)  : QGroupBox( parent )
+PageLayouts::PageLayouts(QWidget* parent, const QList<PageSet>& pSets, bool mode)  : QGroupBox( parent )
 {
 	pageSets = pSets;
 	modus = mode;
@@ -120,7 +120,7 @@ PageLayouts::PageLayouts(QWidget* parent, QList<PageSet> pSets, bool mode)  : QG
 	connect(firstPage, SIGNAL(activated(int)), this, SIGNAL(selectedFirstPage(int)));
 }
 
-void PageLayouts::updateLayoutSelector(QList<PageSet> pSets)
+void PageLayouts::updateLayoutSelector(const QList<PageSet>& pSets)
 {
 	disconnect(layoutsCombo, SIGNAL(activated(int)), this, SLOT(itemSelected(int)));
 	pageSets = pSets;
@@ -161,7 +161,7 @@ void PageLayouts::selectItem(uint nr)
 		firstPage->setEnabled(true);
 		firstPage->clear();
 		QStringList::Iterator pNames;
-		for(pNames = pageSets[nr].pageNames.begin(); pNames != pageSets[nr].pageNames.end(); ++pNames )
+		for (pNames = pageSets[nr].pageNames.begin(); pNames != pageSets[nr].pageNames.end(); ++pNames)
 		{
 			firstPage->addItem(CommonStrings::translatePageSetLocString((*pNames)));
 		}
@@ -194,7 +194,7 @@ void PageLayouts::itemSelectedPost(int chosen)
 		firstPage->setEnabled(true);
 		firstPage->clear();
 		QStringList::Iterator pNames;
-		for(pNames = pageSets[chosen].pageNames.begin(); pNames != pageSets[chosen].pageNames.end(); ++pNames )
+		for (pNames = pageSets[chosen].pageNames.begin(); pNames != pageSets[chosen].pageNames.end(); ++pNames)
 		{
 			firstPage->addItem(CommonStrings::translatePageSetLocString((*pNames)));
 		}
@@ -216,7 +216,7 @@ void PageLayouts::itemSelected(int ic)
 
 void PageLayouts::itemSelected(QListWidgetItem* ic)
 {
-	if (ic == 0)
+	if (ic == nullptr)
 		return;
 	itemSelectedPost(layoutsView->row(ic));
 	emit selectedLayout(layoutsView->row(ic));
@@ -285,8 +285,8 @@ void PageLayouts::languageChange()
 		disconnect(firstPage, SIGNAL(activated(int)), this, SIGNAL(selectedFirstPage(int)));
 		int currFirstPageIndex=firstPage->currentIndex();
 		firstPage->clear();
-		if (currIndex>=0 && currIndex<pageSets.count())
-			for(QStringList::Iterator pNames = pageSets[currIndex].pageNames.begin(); pNames != pageSets[currIndex].pageNames.end(); ++pNames )
+		if (currIndex >= 0 && currIndex<pageSets.count())
+			for (QStringList::Iterator pNames = pageSets[currIndex].pageNames.begin(); pNames != pageSets[currIndex].pageNames.end(); ++pNames)
 			{
 				firstPage->addItem(CommonStrings::translatePageSetLocString((*pNames)));
 			}

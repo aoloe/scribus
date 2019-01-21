@@ -90,7 +90,7 @@ QSize PageLayoutsWidget::minimumSizeHint() const
 	return QSize(maxX, maxY);
 }
 
-NewDoc::NewDoc( QWidget* parent, const QStringList& recentDocs, bool startUp, QString lang) : QDialog( parent )
+NewDoc::NewDoc( QWidget* parent, const QStringList& recentDocs, bool startUp, const QString& lang) : QDialog( parent )
 {
 	setObjectName(QString::fromLocal8Bit("NewDocumentWindow"));
 	setModal(true);
@@ -460,7 +460,7 @@ void NewDoc::selectItem(uint nr)
 		firstPage->setEnabled(true);
 		firstPage->clear();
 		QStringList::Iterator pNames;
-		for(pNames = prefsManager->appPrefs.pageSets[nr].pageNames.begin(); pNames != prefsManager->appPrefs.pageSets[nr].pageNames.end(); ++pNames )
+		for (pNames = prefsManager->appPrefs.pageSets[nr].pageNames.begin(); pNames != prefsManager->appPrefs.pageSets[nr].pageNames.end(); ++pNames )
 		{
 			firstPage->addItem(CommonStrings::translatePageSetLocString((*pNames)));
 		}
@@ -481,7 +481,7 @@ void NewDoc::selectItem(uint nr)
 
 void NewDoc::itemSelected(QListWidgetItem* ic)
 {
-	if (ic == 0)
+	if (ic == nullptr)
 		return;
 	selectItem(layoutsView->row(ic));
 	setDocLayout(layoutsView->row(ic));
@@ -562,7 +562,7 @@ void NewDoc::ExitOK()
 		}
 		else if (m_tabSelected == NewDoc::OpenRecentTab) // open recent doc
 		{
-			if (recentDocListBox->currentItem() != NULL)
+			if (recentDocListBox->currentItem() != nullptr)
 			{
 				QString fileName(recentDocListBox->currentItem()->text());
 				if (!fileName.isEmpty())
@@ -616,7 +616,7 @@ void NewDoc::setPageSize(const QString &size)
 	marginGroup->setPageSize(size);
 }
 
-void NewDoc::setSize(QString gr)
+void NewDoc::setSize(const QString& gr)
 {
 	m_pageWidth = widthSpinBox->value() / m_unitRatio;
 	m_pageHeight = heightSpinBox->value() / m_unitRatio;
@@ -673,12 +673,12 @@ void NewDoc::adjustTitles(int tab)
 		setWindowTitle(tr("Open Existing Document"));
 	else if (tab == 3)
 		setWindowTitle(tr("Open Recent Document"));
- 	else
+	else
 		setWindowTitle(tr("New Document"));
 	OKButton->setEnabled(tab!=2);
 }
 
-void NewDoc::locationDropped(QString fileUrl)
+void NewDoc::locationDropped(const QString& fileUrl)
 {
 	QFileInfo fi(fileUrl);
 	if (fi.isDir())

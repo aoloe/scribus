@@ -80,7 +80,7 @@ CanvasMode_Edit::CanvasMode_Edit(ScribusView* view) : CanvasMode(view), m_ScMW(v
 inline bool CanvasMode_Edit::GetItem(PageItem** pi)
 { 
 	*pi = m_doc->m_Selection->itemAt(0); 
-	return (*pi) != NULL; 
+	return (*pi) != nullptr;
 }
 
 
@@ -287,7 +287,7 @@ void CanvasMode_Edit::activate(bool fromGesture)
 		m_view->update();
 	}
 	mRulerGuide = -1;
-	PageItem * it(0);
+	PageItem * it(nullptr);
 	if (GetItem(&it))
 	{
 		if (it->asTextFrame())
@@ -319,7 +319,7 @@ void CanvasMode_Edit::mouseDoubleClickEvent(QMouseEvent *m)
 	m->accept();
 	m_canvas->m_viewMode.m_MouseButtonPressed = false;
 	m_canvas->resetRenderMode();
-	PageItem *currItem = 0;
+	PageItem *currItem = nullptr;
 	if (GetItem(&currItem) && (m_doc->appMode == modeEdit) && currItem->asTextFrame())
 	{
 		//CB if annotation, open the annotation dialog
@@ -936,14 +936,14 @@ void CanvasMode_Edit::mouseReleaseEvent(QMouseEvent *m)
 	for (int i = 0; i < m_doc->m_Selection->count(); ++i)
 		m_doc->m_Selection->itemAt(i)->checkChanges(true);
 	//Commit drag created items to undo manager.
-	if (m_doc->m_Selection->itemAt(0)!=NULL)
+	if (m_doc->m_Selection->itemAt(0)!=nullptr)
 	{
 		m_doc->itemAddCommit(m_doc->m_Selection->itemAt(0));
 	}
 	//Make sure the Zoom spinbox and page selector don't have focus if we click on the canvas
 	m_view->m_ScMW->zoomSpinBox->clearFocus();
 	m_view->m_ScMW->pageSelector->clearFocus();
-	if (m_doc->m_Selection->itemAt(0) != 0) // is there the old clip stored for the undo action
+	if (m_doc->m_Selection->itemAt(0) != nullptr) // is there the old clip stored for the undo action
 	{
 		currItem = m_doc->m_Selection->itemAt(0);
 		m_doc->nodeEdit.finishTransaction(currItem);
@@ -1026,7 +1026,7 @@ bool CanvasMode_Edit::SeleItem(QMouseEvent *m)
 		m_view->setRulerPos(m_view->contentsX(), m_view->contentsY());
 	}
 	
-	currItem = NULL;
+	currItem = nullptr;
 	if ((m->modifiers() & SELECT_BENEATH) != 0)
 	{
 		for (int i=0; i < m_doc->m_Selection->count(); ++i)
@@ -1094,12 +1094,12 @@ bool CanvasMode_Edit::SeleItem(QMouseEvent *m)
 
 void CanvasMode_Edit::createContextMenu(PageItem* currItem, double mx, double my)
 {
-	ContextMenu* cmen=NULL;
+	ContextMenu* cmen=nullptr;
 	m_view->setCursor(QCursor(Qt::ArrowCursor));
 	m_view->setObjectUndoMode();
 	Mxp = mx;
 	Myp = my;
-	if(currItem!=NULL)
+	if (currItem!=nullptr)
 		cmen = new ContextMenu(*(m_doc->m_Selection), m_ScMW, m_doc);
 	else
 		cmen = new ContextMenu(m_ScMW, m_doc, mx, my);

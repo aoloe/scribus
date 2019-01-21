@@ -22,7 +22,7 @@ ScLcms2ColorProfileImpl::~ScLcms2ColorProfileImpl()
 
 bool ScLcms2ColorProfileImpl::isNull() const
 {
-	return (m_profileHandle == NULL);
+	return (m_profileHandle == nullptr);
 }
 
 eColorSpaceType ScLcms2ColorProfileImpl::colorSpace()  const
@@ -46,7 +46,7 @@ QString ScLcms2ColorProfileImpl::productDescription() const
 		if (m_profileHandle)
 		{
 #ifdef _WIN32
-			cmsUInt32Number descSize = cmsGetProfileInfo(m_profileHandle, cmsInfoDescription, "en", "US", NULL, 0);
+			cmsUInt32Number descSize = cmsGetProfileInfo(m_profileHandle, cmsInfoDescription, "en", "US", nullptr, 0);
 			if (descSize > 0)
 			{
 				wchar_t* descData = (wchar_t*) malloc(descSize + sizeof(wchar_t));
@@ -64,7 +64,7 @@ QString ScLcms2ColorProfileImpl::productDescription() const
 				}
 			}
 #else
-			cmsUInt32Number descSize = cmsGetProfileInfoASCII(m_profileHandle, cmsInfoDescription, "en", "US", NULL, 0);
+			cmsUInt32Number descSize = cmsGetProfileInfoASCII(m_profileHandle, cmsInfoDescription, "en", "US", nullptr, 0);
 			if (descSize > 0)
 			{
 				char* descData = (char*) malloc(descSize + sizeof(char));
@@ -81,11 +81,11 @@ QString ScLcms2ColorProfileImpl::productDescription() const
 	return m_productDescription;
 }
 
-void ScLcms2ColorProfileImpl::closeProfile(void)
+void ScLcms2ColorProfileImpl::closeProfile()
 {
 	if (m_profileHandle)
 	{
 		cmsCloseProfile(m_profileHandle);
-		m_profileHandle = NULL;
+		m_profileHandle = nullptr;
 	}
 }

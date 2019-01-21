@@ -146,7 +146,6 @@ void BookMView::getTextAndTitle(PageItem* item, QString& text, QString& title)
 	text.clear();
 	title.clear();
 
-	const StoryText& itemText = item->itemText;
 	for (int i = 0; i < item->itemText.length(); ++i)
 	{
 		ch = item->itemText.text(i);
@@ -212,12 +211,12 @@ void BookMView::rebuildTree()
 		currItem->Pare = parent ? parent->ItemNr : 0;
 		if (currItem->Pare == 0) // top level item
 		{
-			BookMItem *prev   = NULL, *next = NULL;
+			BookMItem *prev   = nullptr, *next = nullptr;
 			int topLevelIndex = this->indexOfTopLevelItem(currItem);
 			if (topLevelIndex >= 0)
 			{
-				prev = (topLevelIndex > 0) ? (BookMItem *) this->topLevelItem(topLevelIndex - 1) : NULL;
-				next = (topLevelIndex < (topLevelCount - 1)) ? (BookMItem *) this->topLevelItem(topLevelIndex + 1) : NULL;
+				prev = (topLevelIndex > 0) ? (BookMItem *) this->topLevelItem(topLevelIndex - 1) : nullptr;
+				next = (topLevelIndex < (topLevelCount - 1)) ? (BookMItem *) this->topLevelItem(topLevelIndex + 1) : nullptr;
 			}
 			currItem->Prev = prev ? prev->ItemNr : 0;
 			currItem->Next = next ? next->ItemNr : 0;
@@ -229,7 +228,7 @@ void BookMView::rebuildTree()
 		int childCount  = currItem->childCount();
 		if (childCount > 0)
 		{
-			BookMItem * child = NULL, *prev = NULL, *next = NULL;
+			BookMItem * child = nullptr, *prev = nullptr, *next = nullptr;
 			BookMItem * firstChild = (BookMItem*) currItem->child(0);
 			BookMItem * lastChild  = (BookMItem*) currItem->child(childCount - 1);
 			currItem->First = firstChild->ItemNr;
@@ -237,7 +236,7 @@ void BookMView::rebuildTree()
 			for (int i = 0; i < childCount; ++i)
 			{
 				child = (BookMItem*) currItem->child(i);
-				next  = (i < (childCount - 1)) ? (BookMItem*) currItem->child(i + 1) : NULL;
+				next  = (i < (childCount - 1)) ? (BookMItem*) currItem->child(i + 1) : nullptr;
 				child->Prev = prev ? prev->ItemNr : 0;
 				child->Next = next ? next->ItemNr : 0;
 				prev = child;
@@ -252,7 +251,7 @@ void BookMView::rebuildTree()
 	emit changed();
 }
 
-void BookMView::addItem(QString text, QString Tit, PageItem *PageObject)
+void BookMView::addItem(const QString& text, const QString& Tit, PageItem *PageObject)
 {
 	BookMItem * ite = new BookMItem(this, NrItems+1, PageObject);
 	ite->setText(0, text);
@@ -277,7 +276,7 @@ void BookMView::deleteItem(PageItem *pObject)
 	rebuildTree();
 }
 
-void BookMView::setAction(PageItem *currItem, QString Act)
+void BookMView::setAction(PageItem *currItem, const QString& Act)
 {
 	BookMItem *ite;
 	QTreeWidgetItemIterator it(this);

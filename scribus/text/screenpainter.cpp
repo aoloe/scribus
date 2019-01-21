@@ -23,7 +23,7 @@ ScreenPainter::ScreenPainter(ScPainter *p, PageItem *item)
 	, m_item(item)
 	, m_fillColor("", -1)
 	, m_strokeColor("", -1)
-	, m_cairoFace(NULL)
+	, m_cairoFace(nullptr)
 	, m_faceIndex(-10) // ScFace::faceIndex() defaults to -1, we need a different value
 {
 	m_painter->save();
@@ -39,7 +39,7 @@ ScreenPainter::ScreenPainter(ScPainter *p, PageItem *item)
 
 ScreenPainter::~ScreenPainter()
 {
-	if (m_cairoFace != NULL)
+	if (m_cairoFace != nullptr)
 		cairo_font_face_destroy(m_cairoFace);
 	m_painter->restore();
 }
@@ -61,7 +61,7 @@ void ScreenPainter::drawGlyph(const GlyphCluster& gc)
 		cairo_set_source_rgba(cr, r, g, b, m_painter->brushOpacity());
 		m_painter->setRasterOp(m_painter->blendModeFill());
 
-		if (m_fontPath != font().fontFilePath() || m_faceIndex != font().faceIndex() || m_cairoFace == NULL)
+		if (m_fontPath != font().fontFilePath() || m_faceIndex != font().faceIndex() || m_cairoFace == nullptr)
 		{
 			m_fontPath = font().fontFilePath();
 			m_faceIndex = font().faceIndex();
@@ -70,10 +70,10 @@ void ScreenPainter::drawGlyph(const GlyphCluster& gc)
 			// crazy values, breaking any subsequent call to the layout
 			// painter.  FIXME: drop the FontConfig dependency here once
 			// Scribus font handling code is made sane!
-			FcPattern *pattern = FcPatternBuild(NULL,
+			FcPattern *pattern = FcPatternBuild(nullptr,
 							    FC_FILE, FcTypeString, QFile::encodeName(font().fontFilePath()).data(),
 							    FC_INDEX, FcTypeInteger, font().faceIndex(),
-							    NULL);
+								nullptr);
 			m_cairoFace = cairo_ft_font_face_create_for_pattern(pattern);
 			FcPatternDestroy(pattern);
 		}
@@ -82,7 +82,7 @@ void ScreenPainter::drawGlyph(const GlyphCluster& gc)
 		cairo_set_font_size(cr, fontSize());
 
 		double current_x = 0.0;
-		foreach (const GlyphLayout& gl, gc.glyphs()) {
+		for (const GlyphLayout& gl : gc.glyphs()) {
 			cairo_scale(cr, gl.scaleH, gl.scaleV);
 			cairo_glyph_t glyph = { gl.glyph, gl.xoffset + current_x, gl.yoffset };
 			cairo_show_glyphs(cr, &glyph, 1);
@@ -245,7 +245,8 @@ void ScreenPainter::drawGlyphOutline(const GlyphCluster& gc, bool fill)
 
 	setupState(false);
 	double current_x = 0.0;
-	foreach (const GlyphLayout& gl, gc.glyphs()) {
+	for (const GlyphLayout& gl : gc.glyphs())
+	{
 		m_painter->save();
 		m_painter->translate(gl.xoffset + current_x, - (fontSize() * gl.scaleV) + gl.yoffset );
 		FPointArray outline = font().glyphOutline(gl.glyph);
@@ -302,7 +303,7 @@ void ScreenPainter::drawObject(PageItem* embedded)
 	embedded->invalid = true;
 	embedded->DrawObj_Pre(m_painter);
 
-	switch(embedded->itemType())
+	switch (embedded->itemType())
 	{
 	case PageItem::ImageFrame:
 	case PageItem::TextFrame:

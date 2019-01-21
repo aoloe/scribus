@@ -90,7 +90,7 @@ for which a new license (GPL+exception) is in place.
 
 #include <iostream>
 #include <sstream>
-#include <signal.h>
+#include <csignal>
 #include <string>
 
 
@@ -290,28 +290,28 @@ bool printDinUse;
 QString DocDir;
 
 
-extern ScribusQApp* ScQApp;
+//extern ScribusQApp* ScQApp;
 extern bool emergencyActivated;
 
 
 ScribusMainWindow::ScribusMainWindow()
 {
-	actionManager=0;
-	appModeHelper=0;
-	scrMenuMgr=0;
-	m_prefsManager=0;
-	m_formatsManager=0;
-	resourceManager=0;
+	actionManager=nullptr;
+	appModeHelper=nullptr;
+	scrMenuMgr=nullptr;
+	m_prefsManager=nullptr;
+	m_formatsManager=nullptr;
+	resourceManager=nullptr;
 	UrlLauncher::instance();
-	m_mainWindowStatusLabel=0;
+	m_mainWindowStatusLabel=nullptr;
 	m_ScriptRunning = 0;
 #ifdef Q_OS_MAC
 	//commenting this out until this is resolved :https://bugreports.qt.io/browse/QTBUG-44565
 	//ScQApp->setAttribute(Qt::AA_DontShowIconsInMenus);
 	//noIcon = IconManager::instance()->loadPixmap("noicon.png");
 #endif
-	m_doc = 0;
-	m_tocGenerator = 0;
+	m_doc = nullptr;
+	m_tocGenerator = nullptr;
 }
 
 /*
@@ -336,8 +336,8 @@ int ScribusMainWindow::initScMW(bool primaryMainWindow)
 	m_doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_doc->setPage(100, 100, 0, 0, 0, 0, 0, 0, false, false);
 	m_doc->addPage(0);
-	m_doc->setGUI(false, this, 0);
-	CurrStED = NULL;
+	m_doc->setGUI(false, this, nullptr);
+	CurrStED = nullptr;
 	QString scribusTitle(tr("Scribus") + " " + QString(VERSION));
 #if defined(HAVE_SVNVERSION) && defined(SVNVERSION)
 	if (QString(VERSION).contains("svn", Qt::CaseInsensitive))
@@ -390,7 +390,7 @@ int ScribusMainWindow::initScMW(bool primaryMainWindow)
 	initKeyboardShortcuts();
 
 	resize(610, 600);
-	connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(newActWin(QMdiSubWindow *)));
+	connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(newActWin(QMdiSubWindow*)));
 	//Connect windows cascade and tile actions to the workspace after its created. Only depends on mdiArea created.
 	connect( scrActions["windowsCascade"], SIGNAL(triggered()) , mdiArea, SLOT(cascadeSubWindows()) );
 	connect( scrActions["windowsTile"], SIGNAL(triggered()) , mdiArea, SLOT(tileSubWindows()) );
@@ -427,7 +427,7 @@ int ScribusMainWindow::initScMW(bool primaryMainWindow)
 	if (scrActions["SaveAsDocumentTemplate"])
 		scrActions["SaveAsDocumentTemplate"]->setEnabled(false);
 
-	connect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString )), this, SLOT(removeRecentFromWatcher(QString)));
+	connect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString)), this, SLOT(removeRecentFromWatcher(QString)));
 	connect(ClipB, SIGNAL(dataChanged()), this, SLOT(ClipChange()));
 	setAcceptDrops(true);
 	QCoreApplication::instance()->installEventFilter(this);
@@ -463,17 +463,13 @@ int ScribusMainWindow::initScMW(bool primaryMainWindow)
 
 ScribusMainWindow::~ScribusMainWindow()
 {
-	if (actionManager)
-		delete actionManager;
-	if (appModeHelper)
-		delete appModeHelper;
-	if (m_doc)
-		delete m_doc;
-	if (m_tocGenerator)
-		delete m_tocGenerator;
+	delete actionManager;
+	delete appModeHelper;
+	delete m_doc;
+	delete m_tocGenerator;
 }
 
-void ScribusMainWindow::addScToolBar(ScToolBar *tb, QString name)
+void ScribusMainWindow::addScToolBar(ScToolBar *tb, const QString & name)
 {
 	if (!scrToolBars.contains(name))
 		scrToolBars.insert(name, tb);
@@ -536,8 +532,8 @@ void ScribusMainWindow::setStyleSheet()
 void ScribusMainWindow::initDefaultValues()
 {
 	HaveDoc = false;
-	view = NULL;
-	doc = NULL;
+	view = nullptr;
+	doc = nullptr;
 	m_DocNr = 1;
 	m_PrinterUsed = false;
 	PDef.Pname = "";
@@ -556,18 +552,18 @@ void ScribusMainWindow::initDefaultValues()
 	QStringList realSupportedExts;
 	QMap<QString, QString> formats;
 	osgDB::FileNameList plugins = osgDB::listAllAvailablePlugins();
-	for(osgDB::FileNameList::iterator itr = plugins.begin(); itr != plugins.end(); ++itr)
+	for (osgDB::FileNameList::iterator itr = plugins.begin(); itr != plugins.end(); ++itr)
 	{
 		osgDB::ReaderWriterInfoList infoList;
 		if (QString::fromStdString(*itr).contains("qfont"))
 			continue;
 		if (osgDB::queryPlugin(*itr, infoList))
 		{
-			for(osgDB::ReaderWriterInfoList::iterator rwi_itr = infoList.begin(); rwi_itr != infoList.end(); ++rwi_itr)
+			for (auto rwi_itr = infoList.begin(); rwi_itr != infoList.end(); ++rwi_itr)
 			{
 				osgDB::ReaderWriterInfo& info = *(*rwi_itr);
 				osgDB::ReaderWriter::FormatDescriptionMap::iterator fdm_itr;
-				for(fdm_itr = info.extensions.begin(); fdm_itr != info.extensions.end(); ++fdm_itr)
+				for (fdm_itr = info.extensions.begin(); fdm_itr != info.extensions.end(); ++fdm_itr)
 				{
 					if (supportedExts.contains(QString::fromStdString(fdm_itr->first)))
 						formats.insert("*." + QString::fromStdString(fdm_itr->first) + " *." + QString::fromStdString(fdm_itr->first).toUpper(), QString::fromStdString(fdm_itr->second) + " (*." + QString::fromStdString(fdm_itr->first) + " *." + QString::fromStdString(fdm_itr->first).toUpper() + ")");
@@ -586,9 +582,9 @@ void ScribusMainWindow::initDefaultValues()
 
 void ScribusMainWindow::initKeyboardShortcuts()
 {
-	for( QMap<QString, QPointer<ScrAction> >::Iterator it = scrActions.begin(); it!=scrActions.end(); ++it )
+	for (auto it = scrActions.begin(); it!=scrActions.end(); ++it )
 	{
-		if ((ScrAction*)(it.value())!=NULL)
+		if ((ScrAction*)(it.value()) != nullptr)
 		{
 			QString accelerator = it.value()->shortcut().toString();
 			m_prefsManager->setKeyEntry(it.key(), it.value()->cleanMenuText(), accelerator,0);
@@ -606,19 +602,19 @@ void ScribusMainWindow::initPalettes()
 	// these must be filtered too as they take control of the palettes events
 	outlinePalette = new OutlinePalette(this);
 	outlinePalette->setMainWindow(this);
-	connect( scrActions["toolsOutline"], SIGNAL(toggled(bool)) , outlinePalette, SLOT(setPaletteShown(bool)) );
+	connect( scrActions["toolsOutline"], SIGNAL(toggled(bool)) , outlinePalette, SLOT(setPaletteShown(bool)));
 	connect( outlinePalette, SIGNAL(paletteShown(bool)), scrActions["toolsOutline"], SLOT(setChecked(bool)));
 
 	propertiesPalette = new PropertiesPalette(this);
 	propertiesPalette->setMainWindow(this);
-	connect( scrActions["toolsProperties"], SIGNAL(toggled(bool)) , propertiesPalette, SLOT(setPaletteShown(bool)) );
+	connect( scrActions["toolsProperties"], SIGNAL(toggled(bool)) , propertiesPalette, SLOT(setPaletteShown(bool)));
 	connect( propertiesPalette, SIGNAL(paletteShown(bool)), scrActions["toolsProperties"], SLOT(setChecked(bool)));
 	emit UpdateRequest(reqDefFontListUpdate);
 	propertiesPalette->installEventFilter(this);
 
 	textPalette = new TextPalette(this);
 	textPalette->setMainWindow(this);
-	connect( scrActions["toolsText"], SIGNAL(toggled(bool)) , textPalette, SLOT(setPaletteShown(bool)) );
+	connect( scrActions["toolsText"], SIGNAL(toggled(bool)) , textPalette, SLOT(setPaletteShown(bool)));
 	connect( textPalette, SIGNAL(paletteShown(bool)), scrActions["toolsText"], SLOT(setChecked(bool)));
 	emit UpdateRequest(reqDefFontListUpdate);
 	textPalette->installEventFilter(this);
@@ -627,12 +623,12 @@ void ScribusMainWindow::initPalettes()
 	layerPalette = new LayerPalette(this);
 	guidePalette = new GuideManager(this);
 	charPalette = new CharSelect(this);
-	connect( scrActions["toolsLayers"], SIGNAL(toggled(bool)) , layerPalette, SLOT(setPaletteShown(bool)) );
+	connect( scrActions["toolsLayers"], SIGNAL(toggled(bool)) , layerPalette, SLOT(setPaletteShown(bool)));
 	connect( layerPalette, SIGNAL(paletteShown(bool)), scrActions["toolsLayers"], SLOT(setChecked(bool)));
 	layerPalette->installEventFilter(this);
 	layerPalette->Table->installEventFilter(this);
 	scrapbookPalette = new Biblio(this);
-	connect( scrActions["toolsScrapbook"], SIGNAL(toggled(bool)) , scrapbookPalette, SLOT(setPaletteShown(bool)) );
+	connect( scrActions["toolsScrapbook"], SIGNAL(toggled(bool)) , scrapbookPalette, SLOT(setPaletteShown(bool)));
 	connect( scrapbookPalette, SIGNAL(paletteShown(bool)), scrActions["toolsScrapbook"], SLOT(setChecked(bool)));
 	connect( scrapbookPalette, SIGNAL(pasteToActualPage(QString)), this, SLOT(pasteFromScrapbook(QString)));
 	connect( scrapbookPalette, SIGNAL(scrapbookListChanged()), this, SLOT(rebuildScrapbookMenu()));
@@ -649,7 +645,7 @@ void ScribusMainWindow::initPalettes()
 	connect( scrActions["toolsDownloads"], SIGNAL(toggled(bool)) , downloadsPalette, SLOT(setPaletteShown(bool)) );
 	connect( downloadsPalette, SIGNAL(paletteShown(bool)), scrActions["toolsDownloads"], SLOT(setChecked(bool)));
 	downloadsPalette->installEventFilter(this);
-	connect( scrActions["toolsMeasurements"], SIGNAL(toggledData(bool, int)) , this, SLOT(setAppModeByToggle(bool, int)) );
+	connect( scrActions["toolsMeasurements"], SIGNAL(toggledData(bool,int)) , this, SLOT(setAppModeByToggle(bool,int)) );
 	docCheckerPalette = new CheckDocument(this, false);
 	connect( scrActions["toolsPreflightVerifier"], SIGNAL(toggled(bool)) , docCheckerPalette, SLOT(setPaletteShown(bool)) );
 	connect( scrActions["toolsPreflightVerifier"], SIGNAL(toggled(bool)) , this, SLOT(docCheckToggle(bool)) );
@@ -713,11 +709,11 @@ void ScribusMainWindow::initPalettes()
 	connect( nsEditor, SIGNAL(paletteShown(bool)), scrActions["editNotesStyles"], SLOT(setChecked(bool)));
 	nsEditor->installEventFilter(this);
 
-	connect(docCheckerPalette, SIGNAL(selectElementByItem(PageItem *, bool)), this, SLOT(selectItemsFromOutlines(PageItem *, bool)));
-	connect(docCheckerPalette, SIGNAL(selectElement(PageItem *, bool, int)), this, SLOT(selectItemFromOutlines(PageItem *, bool, int)));
+	connect(docCheckerPalette, SIGNAL(selectElementByItem(PageItem*,bool)), this, SLOT(selectItemsFromOutlines(PageItem*,bool)));
+	connect(docCheckerPalette, SIGNAL(selectElement(PageItem*,bool,int)), this, SLOT(selectItemFromOutlines(PageItem*,bool,int)));
 	connect(docCheckerPalette, SIGNAL(selectPage(int)), this, SLOT(selectPagesFromOutlines(int)));
 	connect(docCheckerPalette, SIGNAL(selectMasterPage(QString)), this, SLOT(editMasterPagesStart(QString)));
-	connect(outlinePalette, SIGNAL(selectElementByItem(PageItem *, bool)), this, SLOT(selectItemsFromOutlines(PageItem *, bool)));
+	connect(outlinePalette, SIGNAL(selectElementByItem(PageItem *, bool)), this, SLOT(selectItemsFromOutlines(PageItem*,bool)));
 	connect(outlinePalette, SIGNAL(editElementByItem(PageItem *)), this, SLOT(editItemsFromOutlines(PageItem *)));
 	connect(outlinePalette, SIGNAL(selectPage(int)), this, SLOT(selectPagesFromOutlines(int)));
 	connect(outlinePalette, SIGNAL(selectMasterPage(QString)), this, SLOT(editMasterPagesStart(QString)));
@@ -764,7 +760,6 @@ void ScribusMainWindow::initScrapbook()
 	connect(ScCore->fileWatcher, SIGNAL(dirDeleted(QString )), scrapbookPalette, SLOT(closeOnDel(QString )));
 }
 
-
 bool ScribusMainWindow::warningVersion(QWidget *parent)
 {
 	bool retval = false;
@@ -796,7 +791,7 @@ void ScribusMainWindow::initMdiArea()
 
 void ScribusMainWindow::initMenuBar()
 {
-	RecentDocs.clear();
+	m_recentDocsList.clear();
 	scrMenuMgr->createMenu("File", ActionManager::defaultMenuNameEntryTranslated("File"));
 	scrMenuMgr->addMenuItemString("fileNew", "File");
 	scrMenuMgr->addMenuItemString("fileNewFromTemplate", "File");
@@ -1452,7 +1447,7 @@ void ScribusMainWindow::setTempStatusBarText(const QString &text)
 	}
 }
 
-void ScribusMainWindow::setStatusBarInfoText(QString newText)
+void ScribusMainWindow::setStatusBarInfoText(const QString & newText)
 {
 	if (m_mainWindowStatusLabel)
 		m_mainWindowStatusLabel->setText(newText);
@@ -1499,7 +1494,7 @@ void ScribusMainWindow::setTBvals(PageItem *currItem)
 		{
 			Mark* mark = item->itemText.mark(item->itemText.cursorPosition());
 			scrActions["editMark"]->setEnabled(true);
-			if ((mark->isType(MARKNoteMasterType) || mark->isType(MARKNoteFrameType)) && (mark->getNotePtr() != NULL))
+			if ((mark->isType(MARKNoteMasterType) || mark->isType(MARKNoteFrameType)) && (mark->getNotePtr() != nullptr))
 				nsEditor->setNotesStyle(mark->getNotePtr()->notesStyle());
 		}
 		else
@@ -1523,7 +1518,7 @@ void ScribusMainWindow::specialActionKeyEvent(int unicodevalue)
 			currItem = selItem->asTable()->activeCell().textFrame();
 		else
 			currItem = selItem->asTextFrame();
-		if (currItem!=NULL)
+		if (currItem!=nullptr)
 		{
 			if (unicodevalue!=-1)
 			{
@@ -1654,7 +1649,7 @@ QVariant ScribusMainWindow::inputMethodQuery ( Qt::InputMethodQuery query ) cons
 void ScribusMainWindow::keyPressEvent(QKeyEvent *k)
 {
 	QList<QMdiSubWindow *> windows;
-	QMdiSubWindow* w = NULL;
+	QMdiSubWindow* w = nullptr;
 	int kk = k->key();
 	if (HaveDoc)
 	{
@@ -1728,7 +1723,7 @@ void ScribusMainWindow::keyPressEvent(QKeyEvent *k)
 		doc->leaveDrag = false;
 		view->stopAllDrags();
 		doc->SubMode = -1;
-		doc->ElemToLink = NULL;
+		doc->ElemToLink = nullptr;
 		slotSelect();
 		if (doc->m_Selection->isEmpty())
 			HaveNewSel();
@@ -1743,7 +1738,7 @@ void ScribusMainWindow::keyPressEvent(QKeyEvent *k)
 		//Show our context menu
 		if (actionManager->compareKeySeqToShortcut(kk, buttonModifiers, "viewShowContextMenu"))
 		{
-			ContextMenu* cmen=NULL;
+			ContextMenu* cmen=nullptr;
 			if (doc->m_Selection->isEmpty())
 			{
 				//CB We should be able to get this calculated by the canvas.... it is already in m_canvas->globalToCanvas(m->globalPos());
@@ -1870,7 +1865,7 @@ void ScribusMainWindow::keyPressEvent(QKeyEvent *k)
 			}
 		}
 	}
-	switch(kk)
+	switch (kk)
 	{
 		case Qt::Key_Left:
 		case Qt::Key_Right:
@@ -1894,7 +1889,7 @@ void ScribusMainWindow::keyReleaseEvent(QKeyEvent *k)
 	}
 	if (k->isAutoRepeat() || !m__arrowKeyDown)
 		return;
-	switch(k->key())
+	switch (k->key())
 	{
 		case Qt::Key_Left:
 		case Qt::Key_Right:
@@ -1936,7 +1931,7 @@ void ScribusMainWindow::closeEvent(QCloseEvent *ce)
 	//Do not quit if Preferences or new doc window is open
 	PreferencesDialog *prefsDialog = findChild<PreferencesDialog *>(QString::fromLocal8Bit("PreferencesDialog"));
 	NewDoc *newDocWin = findChild<NewDoc *>(QString::fromLocal8Bit("NewDocumentWindow"));
-	if (prefsDialog!=NULL || newDocWin!=NULL)
+	if (prefsDialog!=nullptr || newDocWin!=nullptr)
 	{
 		ce->ignore();
 		return;
@@ -1961,7 +1956,7 @@ void ScribusMainWindow::closeEvent(QCloseEvent *ce)
 				if (tw == ActWin)
 				{
 					ce->ignore();
-					connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(newActWin(QMdiSubWindow *)));
+					connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(newActWin(QMdiSubWindow*)));
 					return;
 				}
 			}
@@ -1982,7 +1977,7 @@ void ScribusMainWindow::closeEvent(QCloseEvent *ce)
 		{
 			currentTab.activeTab = bar->currentIndex();
 			QObject *obj = (QObject*)bar->tabData(ii).toULongLong();
-			if (obj != NULL)
+			if (obj != nullptr)
 				currentTab.palettes.append(obj->objectName());
 		}
 		if (!currentTab.palettes.isEmpty())
@@ -2080,7 +2075,7 @@ QStringList ScribusMainWindow::findRecoverableFile()
 	return foundFiles.toList();
 }
 
-bool ScribusMainWindow::recoverFile(QStringList foundFiles)
+bool ScribusMainWindow::recoverFile(const QStringList& foundFiles)
 {
 	appModeHelper->setStartupActionsEnabled(false);
 	bool ret = false;
@@ -2110,7 +2105,7 @@ void ScribusMainWindow::startUpDialog()
 {
 	bool docSet = false;
 	PrefsContext* docContext = m_prefsManager->prefsFile->getContext("docdirs", false);
-	NewDoc* dia = new NewDoc(this, RecentDocs, true, ScCore->getGuiLanguage());
+	NewDoc* dia = new NewDoc(this, m_recentDocsList, true, ScCore->getGuiLanguage());
 	if (dia->exec())
 	{
 		if (dia->tabSelected() == NewDoc::NewDocumentTab)
@@ -2194,7 +2189,7 @@ bool ScribusMainWindow::slotFileNew()
 		view->requestMode(submodeEndNodeEdit);
 	bool retVal = false;
 	bool docSet = false;
-	NewDoc* dia = new NewDoc(this, RecentDocs);
+	NewDoc* dia = new NewDoc(this, m_recentDocsList);
 	if (dia->exec())
 	{
 		int facingPages = dia->choosenLayout();
@@ -2317,12 +2312,12 @@ ScribusDoc *ScribusMainWindow::doFileNew(double width, double height, double top
 		actionManager->connectNewDocActions(tempDoc);
 	}
 	//<<View and window code
-	QMdiArea* qwsp = 0;
+	QMdiArea* qwsp = nullptr;
 	if (requiresGUI)
 		qwsp = mdiArea;
 	ScribusWin* w = new ScribusWin(qwsp, tempDoc);
 	w->setMainWindow(this);
-	if (requiresGUI && view!=NULL)
+	if (requiresGUI && view!=nullptr)
 	{
 		actionManager->disconnectNewViewActions();
 		disconnect(view, SIGNAL(signalGuideInformation(int, qreal)), alignDistributePalette, SLOT(setGuide(int, qreal)));
@@ -2360,7 +2355,7 @@ ScribusDoc *ScribusMainWindow::doFileNew(double width, double height, double top
 	if (requiresGUI)
 	{
 		w->setSubWin(mdiArea->addSubWindow(w));
-			connect(tempView, SIGNAL(signalGuideInformation(int, qreal)), alignDistributePalette, SLOT(setGuide(int, qreal)));
+			connect(tempView, SIGNAL(signalGuideInformation(int,qreal)), alignDistributePalette, SLOT(setGuide(int,qreal)));
 	}
 	//Independent finishing tasks after tempDoc setup
 	if (showView)
@@ -2371,14 +2366,14 @@ ScribusDoc *ScribusMainWindow::doFileNew(double width, double height, double top
 			w->show();
 		tempView->show();
 		// Seems to fix crash on loading
-		ActWin = NULL;
+		ActWin = nullptr;
 		newActWin(w->getSubWin());
 	}
 	if (requiresGUI)
 	{
 		connect(ScCore->fileWatcher, SIGNAL(fileChanged(QString)), tempDoc, SLOT(updatePict(QString)));
 		connect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString)), tempDoc, SLOT(removePict(QString)));
-		connect(ScCore->fileWatcher, SIGNAL(dirChanged(QString )), tempDoc, SLOT(updatePictDir(QString )));
+		connect(ScCore->fileWatcher, SIGNAL(dirChanged(QString)), tempDoc, SLOT(updatePictDir(QString)));
 		connect(doc, SIGNAL(updateAutoSaveClock()), view->clockLabel, SLOT(resetTime()));
 		view->clockLabel->resetTime();
 		scrActions["viewToggleCMS"]->setChecked(tempDoc->HasCMS);
@@ -2432,7 +2427,7 @@ void ScribusMainWindow::windowsMenuAboutToShow()
 {
 	if (!scrWindowsActions.isEmpty())
 	{
-		for (QMap<QString, QPointer<ScrAction> >::iterator it = scrWindowsActions.begin(); it != scrWindowsActions.end(); ++it)
+		for (auto it = scrWindowsActions.begin(); it != scrWindowsActions.end(); ++it)
 		{
 			scrMenuMgr->removeMenuItem(it.key(), it.value(), "Windows");
 		}
@@ -2479,11 +2474,7 @@ void ScribusMainWindow::extrasMenuAboutToShow()
 			for (int ii = 0; ii < allItems.count(); ii++)
 			{
 				PageItem* item = allItems.at(ii);
-#ifdef HAVE_OSG
-				if ((item->itemType() == PageItem::ImageFrame) && (!((item->asLatexFrame()) || (item->asOSGFrame()))))
-#else
-				if ((item->itemType() == PageItem::ImageFrame) && (!(item->asLatexFrame())))
-#endif
+				if ((item->itemType() == PageItem::ImageFrame) && (!item->asLatexFrame()) && (!item->asOSGFrame()))
 				{
 					enablePicManager = true;
 					break;
@@ -2497,13 +2488,13 @@ void ScribusMainWindow::extrasMenuAboutToShow()
 
 void ScribusMainWindow::newActWin(QMdiSubWindow *w)
 {
-	if (w == NULL)
+	if (w == nullptr)
 	{
 		if (mdiArea->subWindowList().count() == 0)
-			ActWin = NULL;
+			ActWin = nullptr;
 		return;
 	}
-	if (w->widget() == NULL)
+	if (w->widget() == nullptr)
 		return;
 	ScribusWin* scw = dynamic_cast<ScribusWin *>(w->widget());
 	if (!scw)
@@ -2516,9 +2507,9 @@ void ScribusMainWindow::newActWin(QMdiSubWindow *w)
 	if (scw == ActWin)
 		return;
 	ActWin = scw;
-	if (ActWin->doc() == NULL)
+	if (ActWin->doc() == nullptr)
 		return;
-	if (doc != NULL)
+	if (doc != nullptr)
 	{
 		if (doc->appMode == modeEditClip)
 			view->requestMode(submodeEndNodeEdit);
@@ -2526,7 +2517,7 @@ void ScribusMainWindow::newActWin(QMdiSubWindow *w)
 			outlinePalette->buildReopenVals();
 	}
 	docCheckerPalette->clearErrorList();
-	if (HaveDoc && (doc != NULL) && doc->hasGUI())
+	if (HaveDoc && (doc != nullptr) && doc->hasGUI())
 	{
 		disconnect(m_undoManager, SIGNAL(undoRedoBegin()), doc, SLOT(undoRedoBegin()));
 		disconnect(m_undoManager, SIGNAL(undoRedoDone()) , doc, SLOT(undoRedoDone()));
@@ -2546,13 +2537,13 @@ void ScribusMainWindow::newActWin(QMdiSubWindow *w)
 	}
 	doc = ActWin->doc();
 	m_undoManager->switchStack(doc->DocName);
-	if ((doc != NULL) && doc->hasGUI())
+	if ((doc != nullptr) && doc->hasGUI())
 	{
 		connect(m_undoManager, SIGNAL(undoRedoBegin()), doc, SLOT(undoRedoBegin()));
 		connect(m_undoManager, SIGNAL(undoRedoDone()) , doc, SLOT(undoRedoDone()));
 		connect(m_undoManager, SIGNAL(undoRedoDone()) , doc->view(), SLOT(DrawNew()));
-		connect(doc, SIGNAL(addBookmark(PageItem *)), this, SLOT(AddBookMark(PageItem *)));
-		connect(doc, SIGNAL(deleteBookmark(PageItem *)), this, SLOT(DelBookMark(PageItem *)));
+		connect(doc, SIGNAL(addBookmark(PageItem*)), this, SLOT(AddBookMark(PageItem*)));
+		connect(doc, SIGNAL(deleteBookmark(PageItem*)), this, SLOT(DelBookMark(PageItem*)));
 		connect(unitSwitcher, SIGNAL(activated(int)), doc->view(), SLOT(ChgUnit(int)));
 		connect(zoomSpinBox, SIGNAL(valueChanged(double)), doc->view(), SLOT(setZoom()));
 		connect(zoomDefaultToolbarButton, SIGNAL(clicked()), doc->view(), SLOT(slotZoom100()));
@@ -2577,12 +2568,12 @@ void ScribusMainWindow::newActWin(QMdiSubWindow *w)
 		connect(pageSelector, SIGNAL(GotoPage(int)), this, SLOT(setCurrentPage(int)));
 		pageSelector->setEnabled(true);
 	}
-	if (view!=NULL)
+	if (view!=nullptr)
 	{
 		actionManager->disconnectNewViewActions();
 		disconnect(view, SIGNAL(signalGuideInformation(int, qreal)), alignDistributePalette, SLOT(setGuide(int, qreal)));
 		if (ScCore->usingGUI())
-			disconnect(doc->m_Selection, SIGNAL(selectionIsMultiple(bool)), 0, 0);
+			doc->m_Selection->disconnect(SIGNAL(selectionIsMultiple(bool)));
 	}
 	view = ActWin->view();
 	bool b = zoomSpinBox->blockSignals(true);
@@ -2591,7 +2582,7 @@ void ScribusMainWindow::newActWin(QMdiSubWindow *w)
 	actionManager->connectNewViewActions(view);
 	actionManager->disconnectNewDocActions();
 	actionManager->connectNewDocActions(doc);
-	connect(view, SIGNAL(signalGuideInformation(int, qreal)), alignDistributePalette, SLOT(setGuide(int, qreal)));
+	connect(view, SIGNAL(signalGuideInformation(int,qreal)), alignDistributePalette, SLOT(setGuide(int,qreal)));
 	if (ScCore->usingGUI())
 		connect(doc->m_Selection, SIGNAL(selectionIsMultiple(bool)), actionManager, SLOT( handleMultipleSelections(bool)));
 	pagePalette->setView(view);
@@ -2738,20 +2729,20 @@ void ScribusMainWindow::HaveNewDoc()
 	connect(view, SIGNAL(changeUN(int)), this, SLOT(slotChangeUnit(int)), Qt::UniqueConnection);
 	connect(view, SIGNAL(changeLA(int)), layerPalette, SLOT(markActiveLayer(int)), Qt::UniqueConnection);
 	connect(this, SIGNAL(changeLayers(int)), layerPalette, SLOT(markActiveLayer(int)), Qt::UniqueConnection);
-	connect(view->horizRuler, SIGNAL(MarkerMoved(double, double)), this, SLOT(setStatusBarTextPosition(double, double)), Qt::UniqueConnection);
+	connect(view->horizRuler, SIGNAL(MarkerMoved(double,double)), this, SLOT(setStatusBarTextPosition(double,double)), Qt::UniqueConnection);
 	connect(view->horizRuler, SIGNAL(DocChanged(bool)), this, SLOT(slotDocCh(bool)), Qt::UniqueConnection);
-	connect(view, SIGNAL(ClipPo(double, double)), nodePalette, SLOT(SetXY(double, double)), Qt::UniqueConnection);
+	connect(view, SIGNAL(ClipPo(double,double)), nodePalette, SLOT(SetXY(double,double)), Qt::UniqueConnection);
 	connect(view, SIGNAL(PolyOpen()), nodePalette, SLOT(IsOpen()), Qt::UniqueConnection);
-	connect(view, SIGNAL(PStatus(int, uint)), nodePalette, SLOT(PolyStatus(int, uint)), Qt::UniqueConnection);
+	connect(view, SIGNAL(PStatus(int,uint)), nodePalette, SLOT(PolyStatus(int,uint)), Qt::UniqueConnection);
 	connect(view, SIGNAL(ItemGeom()), propertiesPalette->xyzPal, SLOT(handleSelectionChanged()), Qt::UniqueConnection);
-	connect(view, SIGNAL(ChBMText(PageItem *)), this, SLOT(BookMarkTxT(PageItem *)), Qt::UniqueConnection);
+	connect(view, SIGNAL(ChBMText(PageItem*)), this, SLOT(BookMarkTxT(PageItem*)), Qt::UniqueConnection);
 	connect(view, SIGNAL(HaveSel()), this, SLOT(HaveNewSel()), Qt::UniqueConnection);
 	connect(view, SIGNAL(PaintingDone()), this, SLOT(slotSelect()), Qt::UniqueConnection);
 	connect(view, SIGNAL(DocChanged()), this, SLOT(slotDocCh()), Qt::UniqueConnection);
-	connect(view, SIGNAL(MousePos(double, double)), this, SLOT(setStatusBarMousePosition(double, double)), Qt::UniqueConnection);
+	connect(view, SIGNAL(MousePos(double,double)), this, SLOT(setStatusBarMousePosition(double,double)), Qt::UniqueConnection);
 	connect(view, SIGNAL(ItemCharStyle(const CharStyle&)), textPalette->textPal, SLOT(updateCharStyle(const CharStyle&)), Qt::UniqueConnection);
 	connect(view, SIGNAL(ItemTextEffects(int)), this, SLOT(setStyleEffects(int)), Qt::UniqueConnection);
-	connect(view, SIGNAL(ItemTextAlign(int))  , this, SLOT(setAlignmentValue(int)), Qt::UniqueConnection);
+	connect(view, SIGNAL(ItemTextAlign(int)), this, SLOT(setAlignmentValue(int)), Qt::UniqueConnection);
 	connect(view, SIGNAL(HasTextSel()), this, SLOT(EnableTxEdit()), Qt::UniqueConnection);
 	connect(view, SIGNAL(HasNoTextSel()), this, SLOT(DisableTxEdit()), Qt::UniqueConnection);
 	connect(view, SIGNAL(CopyItem()), this, SLOT(slotEditCopy()), Qt::UniqueConnection);
@@ -2760,32 +2751,32 @@ void ScribusMainWindow::HaveNewDoc()
 	connect(view, SIGNAL(StatusPic()), this, SLOT(StatusPic()), Qt::UniqueConnection);
 	connect(view, SIGNAL(AppendText()), this, SLOT(slotFileAppend()), Qt::UniqueConnection);
 	connect(view, SIGNAL(AnnotProps()), this, SLOT(ModifyAnnot()), Qt::UniqueConnection);
-	connect(view, SIGNAL(LoadElem(QString, double ,double, bool, bool, ScribusDoc *, ScribusView*)), this, SLOT(slotElemRead(QString, double, double, bool, bool, ScribusDoc *, ScribusView*)), Qt::UniqueConnection);
-	connect(view, SIGNAL(AddBM(PageItem *)), this, SLOT(AddBookMark(PageItem *)), Qt::UniqueConnection);
-	connect(view, SIGNAL(DelBM(PageItem *)), this, SLOT(DelBookMark(PageItem *)), Qt::UniqueConnection);
+	connect(view, SIGNAL(LoadElem(QString,double,double,bool,bool,ScribusDoc*,ScribusView*)), this, SLOT(slotElemRead(QString,double,double,bool,bool,ScribusDoc*,ScribusView*)), Qt::UniqueConnection);
+	connect(view, SIGNAL(AddBM(PageItem*)), this, SLOT(AddBookMark(PageItem*)), Qt::UniqueConnection);
+	connect(view, SIGNAL(DelBM(PageItem*)), this, SLOT(DelBookMark(PageItem*)), Qt::UniqueConnection);
 	connect(view, SIGNAL(DoGroup()), this, SLOT(GroupObj()), Qt::UniqueConnection);
 	connect(view, SIGNAL(callGimp()), this, SLOT(callImageEditor()), Qt::UniqueConnection);
 }
 
 void ScribusMainWindow::HaveNewSel()
 {
-	if (doc == NULL)
+	if (doc == nullptr)
 		return;
 	int SelectedType = -1;
-	PageItem *currItem = NULL;
+	PageItem *currItem = nullptr;
 	const int docSelectionCount = doc->m_Selection->count();
 	if (docSelectionCount > 0)
 	{
 		currItem = doc->m_Selection->itemAt(0);
 		SelectedType = currItem->itemType();
 	}
-	assert (docSelectionCount == 0 || currItem != NULL); // help coverity analysis
+	assert (docSelectionCount == 0 || currItem != nullptr); // help coverity analysis
 
 	setStatusBarTextSelectedItemInfo();
 
 	actionManager->disconnectNewSelectionActions();
 
-	charPalette->setEnabled(false, 0);
+	charPalette->setEnabled(false, nullptr);
 	view->horizRuler->textMode(false);
 	view->horizRuler->update();
 	if (!doc->inAnEditMode())
@@ -2794,7 +2785,7 @@ void ScribusMainWindow::HaveNewSel()
 	switch (SelectedType)
 	{
 	case -1: // None
-		outlinePalette->slotShowSelect(doc->currentPageNumber(), NULL);
+		outlinePalette->slotShowSelect(doc->currentPageNumber(), nullptr);
 		propertiesPalette->setGradientEditMode(false);
 		break;
 	case PageItem::TextFrame: //Text Frame
@@ -2868,7 +2859,7 @@ void ScribusMainWindow::HaveNewSel()
 	QStringList pluginNames(pluginManager.pluginNames(false));
 	ScPlugin* plugin;
 	ScActionPlugin* ixplug;
-	ScrAction* pluginAction = 0;
+	ScrAction* pluginAction = nullptr;
 	QString pName;
 	for (int i = 0; i < pluginNames.count(); ++i)
 	{
@@ -2881,7 +2872,7 @@ void ScribusMainWindow::HaveNewSel()
 			Q_ASSERT(ixplug);
 			ScActionPlugin::ActionInfo ai(ixplug->actionInfo());
 			pluginAction = ScCore->primaryMainWindow()->scrActions[ai.name];
-			if (pluginAction != 0)
+			if (pluginAction != nullptr)
 				pluginAction->setEnabled(ixplug->handleSelection(doc, SelectedType));
 		}
 	}
@@ -2947,31 +2938,31 @@ void ScribusMainWindow::slotDocCh(bool /*reb*/)
 	}
 }
 
-void ScribusMainWindow::updateRecent(QString fn)
+void ScribusMainWindow::updateRecent(const QString& fn)
 {
-	if (RecentDocs.indexOf(fn) != -1)
-		RecentDocs.removeAll(fn);
-	RecentDocs.prepend(fn);
+	if (m_recentDocsList.indexOf(fn) != -1)
+		m_recentDocsList.removeAll(fn);
+	m_recentDocsList.prepend(fn);
 	rebuildRecentFileMenu();
 }
 
-void ScribusMainWindow::removeRecent(QString fn, bool fromFileWatcher)
+void ScribusMainWindow::removeRecent(const QString& fn, bool fromFileWatcher)
 {
-	if (RecentDocs.indexOf(fn) != -1)
+	if (m_recentDocsList.indexOf(fn) != -1)
 	{
-		RecentDocs.removeAll(fn);
+		m_recentDocsList.removeAll(fn);
 		//#9845: if (!fromFileWatcher)
 		//#9845:	ScCore->fileWatcher->removeFile(fn);
 	}
 	rebuildRecentFileMenu();
 }
 
-void ScribusMainWindow::removeRecentFromWatcher(QString filename)
+void ScribusMainWindow::removeRecentFromWatcher(const QString& filename)
 {
 	removeRecent(filename, true);
 }
 
-void ScribusMainWindow::loadRecent(QString filename)
+void ScribusMainWindow::loadRecent(const QString& filename)
 {
 	QFileInfo fd(filename);
 	if (!fd.exists())
@@ -2982,16 +2973,16 @@ void ScribusMainWindow::loadRecent(QString filename)
 
 void ScribusMainWindow::rebuildRecentFileMenu()
 {
+	QString strippedName, localName;
 	scrMenuMgr->clearMenuStrings("FileOpenRecent");
 	scrRecentFileActions.clear();
-	uint max = qMin(m_prefsManager->appPrefs.uiPrefs.recentDocCount, RecentDocs.count());
-	QString strippedName, localName;
-	for (uint m = 0; m < max; ++m)
+	int max = qMin(m_prefsManager->appPrefs.uiPrefs.recentDocCount, m_recentDocsList.count());
+	for (int i = 0; i < max; ++i)
 	{
-		strippedName = localName = QDir::toNativeSeparators(RecentDocs[m]);
+		strippedName = localName = QDir::toNativeSeparators(m_recentDocsList[i]);
 		strippedName.remove(QDir::separator());
-		strippedName.prepend(QString("%1").arg(m+1, 2, 10, QChar('0')));
-		scrRecentFileActions.insert(strippedName, new ScrAction(ScrAction::RecentFile, QPixmap(), QPixmap(), QString("%1 &%2").arg(m+1).arg(localName.replace("&","&&")), QKeySequence(), this, RecentDocs[m]));
+		strippedName.prepend(QString("%1").arg(i+1, 2, 10, QChar('0')));
+		scrRecentFileActions.insert(strippedName, new ScrAction(ScrAction::RecentFile, QPixmap(), QPixmap(), QString("%1 &%2").arg(i+1).arg(localName.replace("&","&&")), QKeySequence(), this, m_recentDocsList[i]));
 		connect( scrRecentFileActions[strippedName], SIGNAL(triggeredData(QString)), this, SLOT(loadRecent(QString)) );
 		scrMenuMgr->addMenuItemString(strippedName, "FileOpenRecent");
 	}
@@ -3042,7 +3033,7 @@ void ScribusMainWindow::rebuildScrapbookMenu()
 	scrMenuMgr->addMenuItemStringstoRememberedMenu("ItemSendToScrapbook", scrScrapActions);
 }
 
-void ScribusMainWindow::pasteFromScrapbook(QString fn)
+void ScribusMainWindow::pasteFromScrapbook(const QString& fn)
 {
 	if (!HaveDoc)
 		return;
@@ -3051,12 +3042,12 @@ void ScribusMainWindow::pasteFromScrapbook(QString fn)
 	doPasteRecent(scrapbookPalette->activeBView->objectMap[fn].Data);
 }
 
-void ScribusMainWindow::pasteRecent(QString fn)
+void ScribusMainWindow::pasteRecent(const QString& fn)
 {
 	doPasteRecent(scrapbookPalette->tempBView->objectMap[fn].Data);
 }
 
-void ScribusMainWindow::doPasteRecent(QString data)
+void ScribusMainWindow::doPasteRecent(const QString& data)
 {
 	if (!HaveDoc)
 		return;
@@ -3072,7 +3063,7 @@ void ScribusMainWindow::doPasteRecent(QString data)
 		if ((testResult != -1) && (testResult >= FORMATID_FIRSTUSER))
 		{
 			const FileFormat * fmt = LoadSavePlugin::getFormatById(testResult);
-			if( fmt )
+			if (fmt)
 			{
 				fmt->loadFile(data, LoadSavePlugin::lfUseCurrentPage|LoadSavePlugin::lfInteractive|LoadSavePlugin::lfScripted);
 			}
@@ -3101,7 +3092,7 @@ void ScribusMainWindow::doPasteRecent(QString data)
 	else
 	{
 		UndoTransaction pasteAction;
-		if(UndoManager::undoEnabled())
+		if (UndoManager::undoEnabled())
 			pasteAction = m_undoManager->beginTransaction(Um::SelectionGroup, Um::IGroup, Um::Create,"",Um::ICreate);
 		view->Deselect(true);
 		int docItemCount = doc->Items->count();
@@ -3144,7 +3135,7 @@ void ScribusMainWindow::importVectorFile()
 	QString allFormats = tr("All Supported Formats")+" (";
 	int fmtCode = FORMATID_FIRSTUSER;
 	const FileFormat *fmt = LoadSavePlugin::getFormatById(fmtCode);
-	while (fmt != 0)
+	while (fmt != nullptr)
 	{
 		if (fmt->load)
 		{
@@ -3243,7 +3234,7 @@ void ScribusMainWindow::rebuildLayersList()
 	Q_ASSERT(found);
 	scrLayersActions[QString("%1").arg((*it).ID)]->setChecked(true);
 
-	for( QMap<QString, QPointer<ScrAction> >::Iterator it = scrLayersActions.begin(); it!=scrLayersActions.end(); ++it )
+	for (auto it = scrLayersActions.begin(); it != scrLayersActions.end(); ++it )
 	{
 		scrMenuMgr->addMenuItemString(it.key(), "ItemLayer");
 		connect( (*it), SIGNAL(triggeredData(int)), doc, SLOT(itemSelection_SendToLayer(int)) );
@@ -3256,14 +3247,14 @@ void ScribusMainWindow::updateItemLayerList()
 	if (!HaveDoc)
 		return;
 	QMap<QString, QPointer<ScrAction> >::Iterator itend=scrLayersActions.end();
-	for( QMap<QString, QPointer<ScrAction> >::Iterator it = scrLayersActions.begin(); it!=itend; ++it )
+	for (auto it = scrLayersActions.begin(); it!=itend; ++it)
 	{
-		disconnect( (*it), SIGNAL(triggeredData(int)), 0, 0 );
+		(*it)->disconnect(SIGNAL(triggeredData(int)));
 		(*it)->setChecked(false);
 	}
 	if (!doc->m_Selection->isEmpty() && doc->m_Selection->itemAt(0))
 		scrLayersActions[QString("%1").arg(doc->m_Selection->itemAt(0)->LayerID)]->setChecked(true);
-	for( QMap<QString, QPointer<ScrAction> >::Iterator it = scrLayersActions.begin(); it!=itend; ++it )
+	for (auto it = scrLayersActions.begin(); it != itend; ++it)
 		connect( (*it), SIGNAL(triggeredData(int)), doc, SLOT(itemSelection_SendToLayer(int)) );
 }
 
@@ -3304,7 +3295,7 @@ bool ScribusMainWindow::slotPageImport()
 	bool ret = false;
 	UndoTransaction activeTransaction;
 	if (UndoManager::undoEnabled())
-		activeTransaction = m_undoManager->beginTransaction(Um::ImportPage, Um::IGroup, Um::ImportPage, 0, Um::ILock);
+		activeTransaction = m_undoManager->beginTransaction(Um::ImportPage, Um::IGroup, Um::ImportPage, nullptr, Um::ILock);
 
 	m_mainWindowStatusLabel->setText( tr("Importing Pages..."));
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
@@ -3399,7 +3390,7 @@ bool ScribusMainWindow::slotPageImport()
 	return ret;
 }
 
-bool ScribusMainWindow::loadPage(QString fileName, int Nr, bool Mpa, const QString& renamedPageName)
+bool ScribusMainWindow::loadPage(const QString& fileName, int Nr, bool Mpa, const QString& renamedPageName)
 {
 	bool ret = false;
 	if (!fileName.isEmpty())
@@ -3412,7 +3403,7 @@ bool ScribusMainWindow::loadPage(QString fileName, int Nr, bool Mpa, const QStri
 		}
 		doc->setLoading(true);
 		int oldItemsCount = doc->Items->count();
-		if(!fl->loadPage(doc, Nr, Mpa, renamedPageName))
+		if (!fl->loadPage(doc, Nr, Mpa, renamedPageName))
 		{
 			delete fl;
 			doc->setLoading(false);
@@ -3449,7 +3440,7 @@ bool ScribusMainWindow::loadPage(QString fileName, int Nr, bool Mpa, const QStri
 	return ret;
 }
 
-bool ScribusMainWindow::loadDoc(QString fileName)
+bool ScribusMainWindow::loadDoc(const QString& fileName)
 {
 #ifdef DEBUG_LOAD_TIMES
 	QTime t;
@@ -3470,7 +3461,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		outlinePalette->buildReopenVals();
 	bool ret = false;
 	QList<QMdiSubWindow *> windows = mdiArea->subWindowList();
-	ScribusWin* ActWinOld = NULL;
+	ScribusWin* ActWinOld = nullptr;
 	if (windows.count() != 0)
 	{
 		ActWinOld = ActWin;
@@ -3541,7 +3532,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		if (docFontDir3.exists())
 			m_prefsManager->appPrefs.fontPrefs.AvailFonts.AddScalableFonts(fi.absolutePath()+"/Document fonts", FName);
 		m_prefsManager->appPrefs.fontPrefs.AvailFonts.updateFontMap();
-		if (view != NULL)
+		if (view != nullptr)
 		{
 			actionManager->disconnectNewViewActions();
 			disconnect(view, SIGNAL(signalGuideInformation(int, qreal)), alignDistributePalette, SLOT(setGuide(int, qreal)));
@@ -3580,16 +3571,16 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 			view->close();
 			delete fileLoader;
 			delete doc;
-			doc=NULL;
+			doc=nullptr;
 			mdiArea->removeSubWindow(w->getSubWin());
 			delete w;
-			view=NULL;
-			doc=NULL;
+			view=nullptr;
+			doc=nullptr;
 			setScriptRunning(false);
 			qApp->restoreOverrideCursor();
 			m_mainWindowStatusLabel->setText("");
 			mainWindowProgressBar->reset();
-			ActWin = NULL;
+			ActWin = nullptr;
 			if (windows.count() != 0)
 			{
 				newActWin(ActWinOld->getSubWin());
@@ -3784,7 +3775,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		doc->reformPages();
 		doc->refreshGuides();
 		doc->setLoading(false);
-		for (QList<PageItem*>::iterator itm = doc->MasterItems.begin(); itm != doc->MasterItems.end(); ++itm)
+		for (auto itm = doc->MasterItems.begin(); itm != doc->MasterItems.end(); ++itm)
 		{
 			PageItem* ite = *itm;
 			// TODO fix that for Groups on Masterpages
@@ -3797,10 +3788,10 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		/*QTime t;
 		t.start();*/
 		doc->flag_Renumber = false;
-		for (QList<PageItem*>::iterator iti = doc->Items->begin(); iti != doc->Items->end(); ++iti)
+		for (auto iti = doc->Items->begin(); iti != doc->Items->end(); ++iti)
 		{
 			PageItem* ite = *iti;
-			if((ite->nextInChain() == NULL) && !ite->isNoteFrame())  //do not layout notes frames
+			if ((ite->nextInChain() == nullptr) && !ite->isNoteFrame())  //do not layout notes frames
 				ite->layout();
 		}
 		if (!doc->marksList().isEmpty())
@@ -3809,11 +3800,11 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 			doc->updateMarks(true);
 			doc->setLoading(false);
 		}
-		for (QHash<int, PageItem*>::iterator itf = doc->FrameItems.begin(); itf != doc->FrameItems.end(); ++itf)
+		for (auto itf = doc->FrameItems.begin(); itf != doc->FrameItems.end(); ++itf)
 		{
 			PageItem *ite = itf.value();
 //			qDebug() << QString("load F: %1 %2 %3").arg(azz).arg((uint)ite).arg(ite->itemType());
-			if(ite->nextInChain() == NULL)
+			if (ite->nextInChain() == nullptr)
 				ite->layout();
 		}
 		/*qDebug("Time elapsed: %d ms", t.elapsed());*/
@@ -3840,7 +3831,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 			w->show();
 		view->show();
 		// Seems to fix crash on loading
-		ActWin = NULL;
+		ActWin = nullptr;
 		newActWin(w->getSubWin());
 		doc->updateNumbers(true);
 		emit UpdateRequest(reqNumUpdate);
@@ -3848,10 +3839,10 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 		scrActions["viewToggleCMS"]->setChecked(doc->HasCMS);
 		view->zoom();
 		view->GotoPage(0);
-		connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow *)), this, SLOT(newActWin(QMdiSubWindow *)));
-		connect(ScCore->fileWatcher, SIGNAL(fileChanged(QString )), doc, SLOT(updatePict(QString)));
-		connect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString )), doc, SLOT(removePict(QString)));
-		connect(ScCore->fileWatcher, SIGNAL(dirChanged(QString )), doc, SLOT(updatePictDir(QString )));
+		connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(newActWin(QMdiSubWindow*)));
+		connect(ScCore->fileWatcher, SIGNAL(fileChanged(QString)), doc, SLOT(updatePict(QString)));
+		connect(ScCore->fileWatcher, SIGNAL(fileDeleted(QString)), doc, SLOT(removePict(QString)));
+		connect(ScCore->fileWatcher, SIGNAL(dirChanged(QString)), doc, SLOT(updatePictDir(QString)));
 		connect(m_undoManager, SIGNAL(undoRedoBegin()), doc, SLOT(undoRedoBegin()));
 		connect(m_undoManager, SIGNAL(undoRedoDone()), doc, SLOT(undoRedoDone()));
 		connect(m_undoManager, SIGNAL(undoRedoDone()), view, SLOT(DrawNew()));
@@ -3868,7 +3859,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 	}
 	else
 	{
-		pagePalette->setView(0);
+		pagePalette->setView(nullptr);
 	}
 
 	m_undoManager->switchStack(doc->DocName);
@@ -3893,9 +3884,7 @@ bool ScribusMainWindow::loadDoc(QString fileName)
 bool ScribusMainWindow::postLoadDoc()
 {
 	//FIXME Just return for now, if we arent using the GUI
-	if (!ScCore->usingGUI())
-		return false;
-	return true;
+	return ScCore->usingGUI();
 }
 
 // This method was once named slotFileOpen(...) but it hasn't had anything to
@@ -4315,7 +4304,7 @@ bool ScribusMainWindow::DoFileClose()
 	textPalette->unsetDoc();
 	inlinePalette->unsetDoc();
 	symbolPalette->unsetDoc();
-	pagePalette->setView(0);
+	pagePalette->setView(nullptr);
 	pagePalette->Rebuild();
 	if (doc->appMode == modeEditClip)
 		view->requestMode(submodeEndNodeEdit);
@@ -4324,7 +4313,7 @@ bool ScribusMainWindow::DoFileClose()
 	bookmarkPalette->BView->First = 1;
 	bookmarkPalette->BView->Last = 0;
 	outlinePalette->unsetDoc();
-	alignDistributePalette->setDoc(NULL);
+	alignDistributePalette->setDoc(nullptr);
 	//>>
 
 	if ((mdiArea->subWindowList().isEmpty()) || (mdiArea->subWindowList().count() == 1))
@@ -4348,22 +4337,22 @@ bool ScribusMainWindow::DoFileClose()
 		plugin->unsetDoc();
 	}
 	view->close();
-	//CB Yes, we are setting it to NULL without deleting it. ActWin(ScribusWin) owns the view
+	//CB Yes, we are setting it to nullptr without deleting it. ActWin(ScribusWin) owns the view
 	//due to it being the central widget and will delete it at the correct moment from its own pointer.
-	view = NULL;
+	view = nullptr;
 	doc->setLoading(true);
-	guidePalette->setDoc(0);
-	charPalette->setDoc(0);
-	m_tocGenerator->setDoc(0);
-	m_styleManager->setDoc(0);
-	marksManager->setDoc(0);
-	nsEditor->setDoc(0);
+	guidePalette->setDoc(nullptr);
+	charPalette->setDoc(nullptr);
+	m_tocGenerator->setDoc(nullptr);
+	m_styleManager->setDoc(nullptr);
+	marksManager->setDoc(nullptr);
+	nsEditor->setDoc(nullptr);
 	layerPalette->ClearInhalt();
-	docCheckerPalette->buildErrorList(0);
+	docCheckerPalette->buildErrorList(nullptr);
 	HaveDoc--;
 	delete doc;
-	doc = NULL;
-	ActWin = NULL;
+	doc = nullptr;
+	ActWin = nullptr;
 	if ( HaveDoc == 0 )
 	{
 		QString prefsDocDir( PrefsManager::instance()->documentDir() );
@@ -4518,7 +4507,7 @@ bool ScribusMainWindow::doPrint(PrintOptions &options, QString& error)
 	}
 	ScCore->fileWatcher->forceScan();
 	ScCore->fileWatcher->stop();
-	ScPrintEngine* prnEngine = NULL;
+	ScPrintEngine* prnEngine = nullptr;
 #if defined(_WIN32)
 	SHORT shiftState = GetKeyState( VK_SHIFT );
 	bool  forceGDI = ( shiftState & 0x8000 ) ? true : false;
@@ -4619,7 +4608,7 @@ void ScribusMainWindow::slotEditCut()
 		if ((currItem->isSingleSel) && (currItem->isGroup()))
 			return;
 		ScriXmlDoc ss;
-		QString BufferS = ss.WriteElem(doc, doc->m_Selection);
+		QString BufferS = ss.writeElem(doc, doc->m_Selection);
 		if ((m_prefsManager->appPrefs.scrapbookPrefs.doCopyToScrapbook) && (!internalCopy))
 		{
 			scrapbookPalette->ObjFromCopyAction(BufferS, currItem->itemName());
@@ -4627,12 +4616,11 @@ void ScribusMainWindow::slotEditCut()
 		}
 		ScElemMimeData* mimeData = new ScElemMimeData();
 		mimeData->setScribusElem(BufferS);
-		mimeData->setText(BufferS);
 		QApplication::clipboard()->setMimeData(mimeData, QClipboard::Clipboard);
 		for (int i=0; i < doc->m_Selection->count(); ++i)
 		{
 			PageItem* frame = doc->m_Selection->itemAt(i);
-			if (frame->asTextFrame() && frame->prevInChain() == NULL)
+			if (frame->asTextFrame() && frame->prevInChain() == nullptr)
 				frame->clearContents();
 		}
 		doc->itemSelection_DeleteItem();
@@ -4695,7 +4683,7 @@ void ScribusMainWindow::slotEditCopy()
 			*(doc->m_Selection) = tempSelection;
 
 		ScriXmlDoc ss;
-		QString BufferS = ss.WriteElem(doc, doc->m_Selection);
+		QString BufferS = ss.writeElem(doc, doc->m_Selection);
 		if (!internalCopy)
 		{
 			if ((m_prefsManager->appPrefs.scrapbookPrefs.doCopyToScrapbook) && (!internalCopy))
@@ -4705,7 +4693,6 @@ void ScribusMainWindow::slotEditCopy()
 			}
 			ScElemMimeData* mimeData = new ScElemMimeData();
 			mimeData->setScribusElem(BufferS);
-			mimeData->setText(BufferS);
 			QApplication::clipboard()->setMimeData(mimeData, QClipboard::Clipboard);
 		}
 		else
@@ -4728,7 +4715,7 @@ void ScribusMainWindow::slotEditPaste()
 	if (!ScMimeData::clipboardHasScribusData() && (!internalCopy))
 		return;
 	if (UndoManager::undoEnabled())
-		activeTransaction = m_undoManager->beginTransaction(doc->currentPage()->getUName(), 0, Um::Paste, "", Um::IPaste);
+		activeTransaction = m_undoManager->beginTransaction(doc->currentPage()->getUName(), nullptr, Um::Paste, "", Um::IPaste);
 	PageItem* selItem = doc->m_Selection->itemAt(0);
 	if (((doc->appMode == modeEdit) || (doc->appMode == modeEditTable)) && selItem && (selItem->isTextFrame() || selItem->isTable()))
 	{
@@ -4737,7 +4724,7 @@ void ScribusMainWindow::slotEditPaste()
 			currItem = selItem->asTable()->activeCell().textFrame();
 		else
 			currItem = selItem->asTextFrame();
-		assert(currItem != NULL);
+		assert(currItem != nullptr);
 		if (currItem->HasSel)
 		{
 			//removing marks and notes from selected text
@@ -4873,7 +4860,7 @@ void ScribusMainWindow::slotEditPaste()
 			double x0 = (view->contentsX() / view->scale()) + ((view->visibleWidth() / 2.0) / view->scale());
 			double y0 = (view->contentsY() / view->scale()) + ((view->visibleHeight() / 2.0) / view->scale());
 			PageItem *retObj = getVectorFileFromData(doc, bitsBits, ext, x0, y0);
-			if (retObj != NULL)
+			if (retObj != nullptr)
 			{
 				double x = (view->contentsX() / view->scale()) + ((view->visibleWidth() / 2.0) / view->scale()) - (retObj->width() / 2.0);
 				double y = (view->contentsY() / view->scale()) + ((view->visibleHeight() / 2.0) / view->scale()) - (retObj->height() / 2.0);
@@ -5004,7 +4991,7 @@ void ScribusMainWindow::slotEditPaste()
 			double x0 = (view->contentsX() / view->scale()) + ((view->visibleWidth() / 2.0) / view->scale());
 			double y0 = (view->contentsY() / view->scale()) + ((view->visibleHeight() / 2.0) / view->scale());
 			PageItem *retObj = getVectorFileFromData(doc, bitsBits, ext, x0, y0);
-			if (retObj != NULL)
+			if (retObj != nullptr)
 			{
 				double x = (view->contentsX() / view->scale()) + ((view->visibleWidth() / 2.0) / view->scale()) - (retObj->width() / 2.0);
 				double y = (view->contentsY() / view->scale()) + ((view->visibleHeight() / 2.0) / view->scale()) - (retObj->height() / 2.0);
@@ -5099,14 +5086,14 @@ void ScribusMainWindow::SelectAll(bool docWideSelect)
 			currItem = currItem->asTable()->activeCell().textFrame();
 		PageItem *nextItem = currItem;
 		nextItem->itemText.selectAll();
-		while (nextItem != 0)
+		while (nextItem != nullptr)
 		{
-			if (nextItem->prevInChain() != 0)
+			if (nextItem->prevInChain() != nullptr)
 				nextItem = nextItem->prevInChain();
 			else
 				break;
 		}
-		while (nextItem != 0)
+		while (nextItem != nullptr)
 		{
 			nextItem->HasSel = true;
 			nextItem = nextItem->nextInChain();
@@ -5163,7 +5150,7 @@ void ScribusMainWindow::deselectAll()
 			doc->view()->requestMode(modeNormal);
 		}
 	}
-	else if (view != NULL)
+	else if (view != nullptr)
 		view->Deselect(true);
 }
 
@@ -5175,7 +5162,7 @@ void ScribusMainWindow::ClipChange()
 	bool hasExternalData = ScMimeData::clipboardHasKnownData();
 	if (HaveDoc && !doc->m_Selection->isEmpty())
 	{
-		PageItem *currItem = NULL;
+		PageItem *currItem = nullptr;
 		currItem = doc->m_Selection->itemAt(0);
 		textFrameEditMode  = ((doc->appMode == modeEdit) && (currItem->asTextFrame()));
 		tableEditMode = ((doc->appMode == modeEditTable) && (currItem->asTable()));
@@ -5222,7 +5209,7 @@ void ScribusMainWindow::slotOnlineHelp(const QString & jumpToSection, const QStr
 {
 	if (!m_helpBrowser)
 	{
-		m_helpBrowser = new HelpBrowser(0, tr("Scribus Manual"), ScCore->getGuiLanguage(), jumpToSection, jumpToFile);
+		m_helpBrowser = new HelpBrowser(nullptr, tr("Scribus Manual"), ScCore->getGuiLanguage(), jumpToSection, jumpToFile);
 		connect(m_helpBrowser, SIGNAL(closed()), this, SLOT(slotOnlineHelpClosed()));
 	}
 	else //just set the requested page
@@ -5254,7 +5241,7 @@ void ScribusMainWindow::slotResourceManager()
 		resourceManager=new ResourceManager(this);
 		resourceManager->exec();
 		resourceManager->deleteLater();
-		resourceManager=NULL;
+		resourceManager=nullptr;
 	}
 }
 
@@ -5286,7 +5273,7 @@ void ScribusMainWindow::SaveText()
 	}
 }
 
-void ScribusMainWindow::applyNewMaster(QString name)
+void ScribusMainWindow::applyNewMaster(const QString& name)
 {
 	Apply_MasterPage(name, doc->currentPage()->pageNr(), false);
 	view->reformPages();
@@ -5294,7 +5281,7 @@ void ScribusMainWindow::applyNewMaster(QString name)
 	pagePalette->Rebuild();
 }
 
-void ScribusMainWindow::slotNewPageP(int wo, QString templ)
+void ScribusMainWindow::slotNewPageP(int wo, const QString& templ)
 {
 	if (!HaveDoc)
 		return;
@@ -5339,7 +5326,7 @@ void ScribusMainWindow::slotNewPageM()
 	delete dia;
 }
 
-void ScribusMainWindow::addNewPages(int wo, int where, int numPages, double height, double width, int orient, QString siz, bool mov, QStringList* basedOn, bool overrideMasterPageSizing)
+void ScribusMainWindow::addNewPages(int wo, int where, int numPages, double height, double width, int orient, const QString& siz, bool mov, QStringList* basedOn, bool overrideMasterPageSizing)
 {
 	UndoTransaction activeTransaction;
 	if (UndoManager::undoEnabled())
@@ -5351,7 +5338,7 @@ void ScribusMainWindow::addNewPages(int wo, int where, int numPages, double heig
 		ss->set("WHERE", where);
 		ss->set("COUNT", numPages);
 		ss->set("MASTER_PAGE_MODE",  doc->masterPageMode());
-		if (basedOn != NULL)
+		if (basedOn != nullptr)
 			ss->set("BASED", basedOn->join("|"));
 		else
 		{
@@ -5375,7 +5362,7 @@ void ScribusMainWindow::addNewPages(int wo, int where, int numPages, double heig
 	m_undoManager->setUndoEnabled(false);
 
 	QStringList base;
-	if (basedOn != NULL)
+	if (basedOn != nullptr)
 	{
 		base = *basedOn;
 		// #10211 case when restoring page deletion, basedOn contains only masterpage name
@@ -5483,7 +5470,8 @@ void ScribusMainWindow::duplicateToMasterPage()
 	{
 		QStringList locationEntries;
 		QList<PageSet> pageSet(doc->pageSets());
-		for(QStringList::Iterator pNames = pageSet[doc->pagePositioning()].pageNames.begin(); pNames != pageSet[doc->pagePositioning()].pageNames.end(); ++pNames )
+		QStringList pageNames = pageSet[doc->pagePositioning()].pageNames;
+		for (auto pNames = pageNames.cbegin(); pNames != pageNames.cend(); ++pNames)
 		{
 			locationEntries << CommonStrings::translatePageSetLocString(*pNames);
 		}
@@ -5551,7 +5539,7 @@ void ScribusMainWindow::slotZoom(double zoomFactor)
 
 	if (zoomFactor == -200.0)
 		view->rememberOldZoomLocation(qRound(doc->currentPage()->xOffset() + doc->currentPage()->width() / 2.0), h / 2 + y);
-	else if(zoomFactor == -100.0)
+	else if (zoomFactor == -100.0)
 		view->rememberOldZoomLocation(w / 2 + x, qRound(doc->currentPage()->yOffset() + doc->currentPage()->height() / 2.0));
 	else
 		view->rememberOldZoomLocation(w / 2 + x, h / 2 + y);
@@ -5872,10 +5860,11 @@ void ScribusMainWindow::toggleRulerMode()
 	if (doc->m_Selection->count()==1)
 	{
 		PageItem* currItem=doc->m_Selection->itemAt(0);
-		if (currItem!=NULL)
+		if (currItem!=nullptr)
 			currItem->emitAllToGUI();
 	}
 	//TODO emit from selection, handle group widths
+	guidePalette->setupPage();
 	view->DrawNew();
 }
 
@@ -5905,7 +5894,7 @@ void ScribusMainWindow::toggleSnapElements()
 
 void ScribusMainWindow::SetSnapElements(bool b)
 {
-	if(doc && doc->SnapElement != b)
+	if (doc && doc->SnapElement != b)
 		toggleSnapElements();
 }
 
@@ -5922,7 +5911,7 @@ void ScribusMainWindow::toggleNodeEdit()
 
 void ScribusMainWindow::enablePalettes(bool b)
 {
-	if(doc->appMode == modeEdit) //Keep Palettes enabled when editing text
+	if (doc->appMode == modeEdit) //Keep Palettes enabled when editing text
 		return;
 	layerPalette->setEnabled(b);
 	outlinePalette->setEnabled(b);
@@ -5948,8 +5937,8 @@ void ScribusMainWindow::ToggleFrameEdit()
 	nodePalette->MoveNode->setChecked(true);
 	nodePalette->show();
 //	qDebug() << "nodepalette show:" << nodePalette->geometry();
-	connect(view, SIGNAL(HavePoint(bool, bool)), nodePalette, SLOT(HaveNode(bool, bool)));
-	connect(view, SIGNAL(PolyStatus(int, uint)), nodePalette, SLOT(PolyStatus(int, uint)));
+	connect(view, SIGNAL(HavePoint(bool,bool)), nodePalette, SLOT(HaveNode(bool,bool)));
+	connect(view, SIGNAL(PolyStatus(int,uint)), nodePalette, SLOT(PolyStatus(int,uint)));
 	doc->nodeEdit.reset();
 	appModeHelper->setFrameEditMode(true);
 	enablePalettes(false);
@@ -5959,12 +5948,12 @@ void ScribusMainWindow::ToggleFrameEdit()
 	if (!doc->m_Selection->isEmpty())
 	{
 		PageItem *currItem = doc->m_Selection->itemAt(0);
-		nodePalette->EditCont->setEnabled(currItem->ContourLine.size() != 0);
+		nodePalette->EditCont->setEnabled(!currItem->ContourLine.empty());
 		nodePalette->ResetCont->setEnabled(false);
 		nodePalette->ResetContClip->setEnabled(false);
 		nodePalette->PolyStatus(currItem->itemType(), currItem->PoLine.size());
 		nodePalette->setDefaults(currItem);
-		if ((currItem->asImageFrame()) && (currItem->imageClip.size() != 0))
+		if ((currItem->asImageFrame()) && (!currItem->imageClip.empty()))
 		{
 			nodePalette->ResetContClip->setSizePolicy(QSizePolicy(static_cast<QSizePolicy::Policy>(3), static_cast<QSizePolicy::Policy>(3)));
 			nodePalette->ResetContClip->show();
@@ -5991,7 +5980,7 @@ void ScribusMainWindow::NoFrameEdit()
 	disconnect(view, SIGNAL(HavePoint(bool, bool)), nodePalette, SLOT(HaveNode(bool, bool)));
 	disconnect(view, SIGNAL(PolyStatus(int, uint)), nodePalette, SLOT(PolyStatus(int, uint)));
 	actionManager->disconnectModeActions();
-	nodePalette->setDoc(0,0);
+	nodePalette->setDoc(nullptr, nullptr);
 	nodePalette->hide();
 	appModeHelper->setFrameEditMode(false);
 	scrActions["toolsSelect"]->setChecked(true);
@@ -6153,7 +6142,7 @@ void ScribusMainWindow::deletePage(int from, int to)
 	assert( from <= to );
 	assert( to <= static_cast<int>(doc->Pages->count()) );
 	int oldPg = doc->currentPageNumber();
-	guidePalette->setDoc(NULL);
+	guidePalette->setDoc(nullptr);
 	if (UndoManager::undoEnabled())
 		activeTransaction = m_undoManager->beginTransaction(doc->DocName, Um::IDocument,
 														  (from - to == 0) ? Um::DeletePage : Um::DeletePages, "",
@@ -6303,12 +6292,6 @@ void ScribusMainWindow::changePageProperties()
 	doc->updateEndnotesFrames();
 }
 
-void ScribusMainWindow::SetNewFont(const QString& nf)
-{
-	setMainWindowActive();
-	doc->itemSetFont(nf);
-}
-
 void ScribusMainWindow::setItemFontSize(int fontSize)
 {
 	int fs=fontSize;
@@ -6317,7 +6300,7 @@ void ScribusMainWindow::setItemFontSize(int fontSize)
 	else
 	{
 		bool ok = false;
-		Query dia(this, "New", 1, tr("&Size:"), tr("Size"));
+		Query dia(this, "New", true, tr("&Size:"), tr("Size"));
 		if (dia.exec())
 		{
 			fs = qRound(dia.getEditText().toDouble(&ok));
@@ -6328,13 +6311,11 @@ void ScribusMainWindow::setItemFontSize(int fontSize)
 	textPalette->textPal->showFontSize(fs*10);
 }
 
-void ScribusMainWindow::setItemLanguage(QString language)
+void ScribusMainWindow::setItemLanguage(const QString& language)
 {
-	Query dia(this, "New", 1, tr("&Language:"), tr("Language"));
+	Query dia(this, "New", true, tr("&Language:"), tr("Language"));
 	if (dia.exec())
-	{
 		doc->itemSelection_SetLanguage(language);
-	}
 
 	textPalette->textPal->showLanguage(language);
 }
@@ -6502,10 +6483,8 @@ void ScribusMainWindow::editItemsFromOutlines(PageItem *ite)
 		if (ite->imageVisible())
 			view->requestMode(modeEdit);
 	}
-#ifdef HAVE_OSG
 	else if (ite->asOSGFrame())
 		view->requestMode(submodeEditExternal);
-#endif
 	else if ((ite->itemType() == PageItem::Polygon) || (ite->itemType() == PageItem::PolyLine) || (ite->itemType() == PageItem::Group) || (ite->itemType() == PageItem::ImageFrame) || (ite->itemType() == PageItem::PathText))
 	{
 		if (ite->itemType() == PageItem::ImageFrame)
@@ -6592,7 +6571,7 @@ void ScribusMainWindow::selectItemsFromOutlines(PageItem* ite, bool single, int 
 	}
 
 	QPointF point = itemTrans.map(QPointF(xOffset, yOffset));
-	view->SetCCPo(point.x(), point.y());
+	view->setCanvasCenterPos(point.x(), point.y());
 }
 
 void ScribusMainWindow::selectItemFromOutlines(PageItem *ite, bool single, int cPos)
@@ -6841,7 +6820,7 @@ int ScribusMainWindow::ShowSubs()
 				for (int ii = 0; ii < bar->count(); ii++)
 				{
 					QObject *obj = (QObject*)bar->tabData(ii).toULongLong();
-					if (obj != NULL)
+					if (obj != nullptr)
 					{
 						if (obj->objectName() == container->objectName())
 						{
@@ -6862,25 +6841,25 @@ int ScribusMainWindow::ShowSubs()
 #else
 	if (!m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.isEmpty())
 	{
-		for (int a = 0; a < m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.count(); a++)
+		for (int i = 0; i < m_prefsManager->appPrefs.uiPrefs.tabbedPalettes.count(); i++)
 		{
-			QStringList actTab = m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[a].palettes;
+			QStringList actTab = m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[i].palettes;
 			QDockWidget *container = findChild<QDockWidget *>(actTab[0]);
 			QList<QTabBar *> bars = findChildren<QTabBar *>(QString());
 			bool found = false;
-			for (int i = 0; i < bars.count(); ++i)
+			for (int j = 0; j < bars.count(); ++j)
 			{
-				QTabBar *bar = bars[i];
-				for (int ii = 0; ii < bar->count(); ii++)
+				QTabBar *bar = bars[j];
+				for (int k = 0; k < bar->count(); k++)
 				{
-					QObject *obj = (QObject*)bar->tabData(ii).toULongLong();
-					if (obj != NULL)
+					QObject *obj = (QObject*)bar->tabData(k).toULongLong();
+					if (obj != nullptr)
 					{
 						if (obj->objectName() == container->objectName())
 						{
-							if (m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[a].activeTab > -1)
+							if (m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[i].activeTab > -1)
 							{
-								bar->setCurrentIndex(m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[a].activeTab);
+								bar->setCurrentIndex(m_prefsManager->appPrefs.uiPrefs.tabbedPalettes[i].activeTab);
 								found = true;
 								break;
 							}
@@ -6939,14 +6918,7 @@ void ScribusMainWindow::doPrintPreview()
 	prefsManager->appPrefs.printPreviewPrefs.PrPr_Mode = dia->EnableCMYK->isChecked();
 	prefsManager->appPrefs.printPreviewPrefs.PrPr_AntiAliasing = dia->AntiAlias->isChecked();
 	prefsManager->appPrefs.printPreviewPrefs.PrPr_Transparency = dia->AliasTr->isChecked();
-	if ( !ScCore->haveTIFFSep() || !dia->postscriptPreview )
-	{
-		prefsManager->appPrefs.printPreviewPrefs.PrPr_C = dia->EnableCMYK_C->isChecked();
-		prefsManager->appPrefs.printPreviewPrefs.PrPr_M = dia->EnableCMYK_M->isChecked();
-		prefsManager->appPrefs.printPreviewPrefs.PrPr_Y = dia->EnableCMYK_Y->isChecked();
-		prefsManager->appPrefs.printPreviewPrefs.PrPr_K = dia->EnableCMYK_K->isChecked();
-	}
-	else
+	if (ScCore->haveTIFFSep() && dia->postscriptPreview)
 	{
 		prefsManager->appPrefs.printPreviewPrefs.PrPr_C = dia->flagsVisible["Cyan"]->isChecked();
 		prefsManager->appPrefs.printPreviewPrefs.PrPr_M = dia->flagsVisible["Magenta"]->isChecked();
@@ -6976,12 +6948,12 @@ void ScribusMainWindow::printPreview()
 		{
 			if (doc->checkerProfiles()[doc->curCheckProfile()].ignoreErrors)
 			{
-				int t = ScMessageBox::warning(this, CommonStrings::trWarning,
+				int i = ScMessageBox::warning(this, CommonStrings::trWarning,
 											"<qt>"+ tr("Scribus has detected some errors. Consider using the Preflight Verifier to correct them")+"</qt>",
 											QMessageBox::Abort | QMessageBox::Ignore,
 											QMessageBox::NoButton,	// GUI default
 											QMessageBox::Ignore);	// batch default
-				if (t == QMessageBox::Abort)
+				if (i == QMessageBox::Abort)
 					return;
 			}
 			else
@@ -6999,7 +6971,7 @@ void ScribusMainWindow::printPreview()
 	doPrintPreview();
 }
 
-bool ScribusMainWindow::DoSaveAsEps(QString fn, QString& error)
+bool ScribusMainWindow::DoSaveAsEps(const QString& fn, QString& error)
 {
 	QStringList spots;
 	bool return_value = true;
@@ -7014,7 +6986,7 @@ bool ScribusMainWindow::DoSaveAsEps(QString fn, QString& error)
 	PrintOptions options;
 	options.pageNumbers.push_back(doc->currentPage()->pageNr()+1);
 	options.outputSeparations = false;
-	options.separationName = tr("All");
+	options.separationName = "All";
 	options.allSeparations = spots;
 	options.useColor = true;
 	options.mirrorH = false;
@@ -7030,7 +7002,7 @@ bool ScribusMainWindow::DoSaveAsEps(QString fn, QString& error)
 	options.markOffset = 0.0;
 	options.bleeds.set(0, 0, 0, 0);
 	PSLib *pslib = new PSLib(options, false, m_prefsManager->appPrefs.fontPrefs.AvailFonts, ReallyUsed, usedColors, false, true);
-	if (pslib != NULL)
+	if (pslib != nullptr)
 	{
 		qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 		if (pslib->PS_set_file(fn))
@@ -7135,7 +7107,7 @@ void ScribusMainWindow::reallySaveAsEps()
 }
 
 bool ScribusMainWindow::getPDFDriver(const QString &filename, const QString &name, int components, const std::vector<int> & pageNumbers,
-									 const QMap<int,QPixmap> & thumbs, QString& error, bool* cancelled)
+									 const QMap<int, QImage>& thumbs, QString& error, bool* cancelled)
 {
 	ScCore->fileWatcher->forceScan();
 	ScCore->fileWatcher->stop();
@@ -7225,7 +7197,7 @@ void ScribusMainWindow::doSaveAsPDF()
 	QString pageString(dia.getPagesString());
 	std::vector<int> pageNs;
 	uint pageNumbersSize;
-	QMap<int,QPixmap> allThumbs, thumbs;
+	QMap<int, QImage> allThumbs, thumbs;
 	int components = dia.colorSpaceComponents();
 	QString nam(dia.cmsDescriptor());
 	QString fileName = doc->pdfOptions().fileName;
@@ -7249,14 +7221,14 @@ void ScribusMainWindow::doSaveAsPDF()
 	pageNumbersSize = pageNs.size();
 	for (uint i = 0; i < pageNumbersSize; ++i)
 	{
-		QPixmap pm(10, 10);
+		QImage thumb(10, 10, QImage::Format_ARGB32_Premultiplied);
 		if (doc->pdfOptions().Thumbnails)
 		{
 			// No need to load full res images for drawing small thumbnail
-			PageToPixmapFlags flags = Pixmap_DontReloadImages;
-			pm = QPixmap::fromImage(view->PageToPixmap(pageNs[i] - 1, 100, flags));
+			PageToPixmapFlags flags = Pixmap_DontReloadImages | Pixmap_DrawWhiteBackground;
+			thumb = view->PageToPixmap(pageNs[i] - 1, 100, flags);
 		}
-		allThumbs.insert(pageNs[i], pm);
+		allThumbs.insert(pageNs[i], thumb);
 	}
 	if (cmsCorr)
 	{
@@ -7279,10 +7251,10 @@ void ScribusMainWindow::doSaveAsPDF()
 			pageNs2.clear();
 			pageNs2.push_back(pageNs[aa]);
 			pageNumbersSize = pageNs2.size();
-			QPixmap pm(10,10);
+			QImage thumb(10, 10, QImage::Format_ARGB32_Premultiplied);
 			if (doc->pdfOptions().Thumbnails)
-				pm = allThumbs[pageNs[aa]];
-			thumbs.insert(1, pm);
+				thumb = allThumbs[pageNs[aa]];
+			thumbs.insert(1, thumb);
 			QString realName = QDir::toNativeSeparators(path+"/"+name+ tr("-Page%1").arg(pageNs[aa], 3, 10, QChar('0'))+"."+ext);
 			if (!getPDFDriver(realName, nam, components, pageNs2, thumbs, errorMsg, &cancelled))
 			{
@@ -7358,12 +7330,12 @@ void ScribusMainWindow::RestoreBookMarks()
 	if (doc->BookMarks.count() == 0)
 		return;
 	BookMItem* ip;
-	BookMItem* ip2 = NULL;
-	BookMItem* ip3 = NULL;
+	BookMItem* ip2 = nullptr;
+	BookMItem* ip3 = nullptr;
 	BookMItem *ite = new BookMItem(bookmarkPalette->BView, &(*it2));
 	bookmarkPalette->BView->NrItems++;
 	++it2;
-	for( ; it2 != doc->BookMarks.end(); ++it2 )
+	for ( ; it2 != doc->BookMarks.end(); ++it2)
 	{
 		if ((*it2).Parent == 0)
 		{
@@ -7419,7 +7391,7 @@ void ScribusMainWindow::updateLayerMenu()
 {
 	bool b = layerMenu->blockSignals(true);
 	layerMenu->clear();
-	if (doc==NULL)
+	if (doc==nullptr)
 	{
 		layerMenu->blockSignals(b);
 		return;
@@ -7487,13 +7459,13 @@ void ScribusMainWindow::StoreBookmarks()
 	doc->Last = bookmarkPalette->BView->Last;
 }
 
-void ScribusMainWindow::slotElemRead(QString xml, double x, double y, bool art, bool loca, ScribusDoc* docc, ScribusView* vie)
+void ScribusMainWindow::slotElemRead(const QString& xml, double x, double y, bool art, bool loca, ScribusDoc* docc, ScribusView* vie)
 {
 	if (doc == docc && docc->appMode == modeEditClip)
 		view->requestMode(submodeEndNodeEdit);
 
 	ScriXmlDoc ss;
-	if(ss.ReadElem(xml, m_prefsManager->appPrefs.fontPrefs.AvailFonts, docc, x, y, art, loca, m_prefsManager->appPrefs.fontPrefs.GFontSub))
+	if (ss.readElem(xml, m_prefsManager->appPrefs.fontPrefs.AvailFonts, docc, x, y, art, loca, m_prefsManager->appPrefs.fontPrefs.GFontSub))
 	{
 		vie->DrawNew();
 		if (doc == docc)
@@ -7528,9 +7500,9 @@ void ScribusMainWindow::slotChangeUnit(int unitIndex, bool draw)
 void ScribusMainWindow::ManageJava()
 {
 	JavaDocs *dia = new JavaDocs(this, doc, view);
-	connect(dia, SIGNAL(docChanged(bool)), this, SLOT(slotDocCh(bool )));
+	connect(dia, SIGNAL(docChanged(bool)), this, SLOT(slotDocCh(bool)));
 	dia->exec();
-	disconnect(dia, SIGNAL(docChanged(bool)), this, SLOT(slotDocCh(bool )));
+	disconnect(dia, SIGNAL(docChanged(bool)), this, SLOT(slotDocCh(bool)));
 	delete dia;
 }
 
@@ -7540,7 +7512,7 @@ void ScribusMainWindow::editSelectedSymbolStart()
 		editSymbolStart(doc->m_Selection->itemAt(0)->pattern());
 }
 
-void ScribusMainWindow::editSymbolStart(QString temp)
+void ScribusMainWindow::editSymbolStart(const QString& temp)
 {
 	if (!HaveDoc || !doc->docPatterns.contains(temp))
 		return;
@@ -7638,7 +7610,7 @@ void ScribusMainWindow::editInlineStart(int id)
 	if (doc->m_Selection->count() == 1)
 		doc->currentEditedTextframe = doc->m_Selection->itemAt(0);
 	else
-		doc->currentEditedTextframe = NULL;
+		doc->currentEditedTextframe = nullptr;
 	view->Deselect(true);
 	m_storedPageNum = doc->currentPageNumber();
 	m_storedViewXCoor = view->contentsX();
@@ -7679,9 +7651,9 @@ void ScribusMainWindow::editInlineEnd()
 	doc->setCurrentPage(doc->DocPages.at(m_storedPageNum));
 	view->setContentsPos(static_cast<int>(m_storedViewXCoor * m_storedViewScale), static_cast<int>(m_storedViewYCoor * m_storedViewScale));
 	doc->invalidateAll();
-//	if (doc->currentEditedTextframe != NULL)
+//	if (doc->currentEditedTextframe != nullptr)
 //		doc->currentEditedTextframe->invalidateLayout();
-	doc->currentEditedTextframe = NULL;
+	doc->currentEditedTextframe = nullptr;
 	view->DrawNew();
 	pagePalette->Rebuild();
 	propertiesPalette->unsetItem();
@@ -7695,7 +7667,7 @@ void ScribusMainWindow::editInlineEnd()
 	updateActiveWindowCaption(doc->DocName);
 }
 
-void ScribusMainWindow::editMasterPagesStart(QString temp)
+void ScribusMainWindow::editMasterPagesStart(const QString& temp)
 {
 	if (!HaveDoc)
 		return;
@@ -7725,8 +7697,8 @@ void ScribusMainWindow::editMasterPagesStart(QString temp)
 	}
 
 	m_storedPageNum = doc->currentPageNumber();
-	m_storedViewXCoor = view->contentsX();
-	m_storedViewYCoor = view->contentsY();
+	m_storedViewXCoor = view->horizontalScrollBar()->value();
+	m_storedViewYCoor = view->verticalScrollBar()->value();
 	m_storedViewScale = view->scale();
 	doc->stored_minCanvasCoordinate = doc->minCanvasCoordinate;
 	doc->stored_maxCanvasCoordinate = doc->maxCanvasCoordinate;
@@ -7742,9 +7714,9 @@ void ScribusMainWindow::editMasterPagesStart(QString temp)
 
 void ScribusMainWindow::editMasterPagesEnd()
 {
-	view->setScale(m_storedViewScale);
 	doc->minCanvasCoordinate = doc->stored_minCanvasCoordinate;
 	doc->maxCanvasCoordinate = doc->stored_maxCanvasCoordinate;
+	view->setScale(m_storedViewScale);
 	view->hideMasterPage();
 	if (m_WasAutoSave)
 	{
@@ -7770,9 +7742,10 @@ void ScribusMainWindow::editMasterPagesEnd()
 	doc->setCurrentPage(doc->DocPages.at(m_storedPageNum));
 	doc->minCanvasCoordinate = doc->stored_minCanvasCoordinate;
 	doc->maxCanvasCoordinate = doc->stored_maxCanvasCoordinate;
+
 	doc->setLoading(true);
 	view->reformPages(false);
-	view->setContentsPos(static_cast<int>(m_storedViewXCoor * m_storedViewScale), static_cast<int>(m_storedViewYCoor * m_storedViewScale));
+	view->setContentsPos(m_storedViewXCoor, m_storedViewYCoor);
 	doc->setLoading(false);
 	view->DrawNew();
 }
@@ -7827,7 +7800,7 @@ void ScribusMainWindow::ApplyMasterPage()
 	guidePalette->setupPage(false);
 }
 
-void ScribusMainWindow::Apply_MasterPage(QString pageName, int pageNumber, bool reb)
+void ScribusMainWindow::Apply_MasterPage(const QString& pageName, int pageNumber, bool reb)
 {
 	if (!HaveDoc)
 		return;
@@ -7868,7 +7841,7 @@ void ScribusMainWindow::GroupObj(bool showLockDia)
 			msgBox.exec();
 			if (msgBox.clickedButton() == abortButton)
 				return;
-			else if (msgBox.clickedButton() == lockButton)
+			if (msgBox.clickedButton() == lockButton)
 				lockObject = true;
 			modifyLock = true;
 		}
@@ -8079,33 +8052,36 @@ void ScribusMainWindow::StatusPic()
 	PicStatus *dia = new PicStatus(this, doc);
 	connect(dia, SIGNAL(selectPage(int)), this, SLOT(selectPagesFromOutlines(int)));
 	connect(dia, SIGNAL(selectMasterPage(QString)), this, SLOT(editMasterPagesStart(QString)));
-	connect(dia, SIGNAL(selectElementByItem(PageItem *, bool, int )), this, SLOT(selectItemsFromOutlines(PageItem *, bool, int)));
+	connect(dia, SIGNAL(selectElementByItem(PageItem*,bool,int)), this, SLOT(selectItemsFromOutlines(PageItem*,bool,int)));
 	dia->exec();
 	delete dia;
 }
 
-QString ScribusMainWindow::CFileDialog(QString workingDirectory, QString dialogCaption, QString fileFilter, QString defaultFilename, int optionFlags, bool *useCompression, bool *useFonts, bool *useProfiles)
+QString ScribusMainWindow::CFileDialog(const QString& workingDirectory, const QString& dialogCaption, const QString& fileFilter, const QString& defaultFilename, int optionFlags, bool *useCompression, bool *useFonts, bool *useProfiles)
 {
 	// changed from "this" to qApp->activeWindow() to be sure it will be opened
 	// with the current active window as parent. E.g. it won't hide StoryEditor etc. -- PV
 	CustomFDialog *dia = new CustomFDialog(qApp->activeWindow(), workingDirectory, dialogCaption, fileFilter, optionFlags);
 	if (!defaultFilename.isEmpty())
 	{
-		QFileInfo f(defaultFilename);
+		QString tmpFileName = defaultFilename;
+		if (tmpFileName.endsWith(".gz", Qt::CaseInsensitive))
+			tmpFileName.chop(3);
+		QFileInfo f(tmpFileName);
 		dia->setExtension(f.suffix());
 		dia->setZipExtension(f.suffix() + ".gz");
 		dia->setSelection(defaultFilename);
-		if (useCompression != NULL && dia->SaveZip != NULL)
-			dia->SaveZip->setChecked(*useCompression);
+		if (useCompression != nullptr && dia->saveZip != nullptr)
+			dia->saveZip->setChecked(*useCompression);
 	}
 	if (optionFlags & fdDirectoriesOnly)
 	{
-		if (useCompression != NULL && dia->SaveZip != NULL)
-			dia->SaveZip->setChecked(*useCompression);
-		if (useFonts != NULL)
-			dia->WithFonts->setChecked(*useFonts);
-		if (useProfiles != NULL)
-			dia->WithProfiles->setChecked(*useProfiles);
+		if (useCompression != nullptr && dia->saveZip != nullptr)
+			dia->saveZip->setChecked(*useCompression);
+		if (useFonts != nullptr)
+			dia->withFonts->setChecked(*useFonts);
+		if (useProfiles != nullptr)
+			dia->withProfiles->setChecked(*useProfiles);
 	}
 	QString retval("");
 	if (dia->exec() == QDialog::Accepted)
@@ -8113,21 +8089,21 @@ QString ScribusMainWindow::CFileDialog(QString workingDirectory, QString dialogC
 		LoadEnc = "";
 		if (!(optionFlags & fdDirectoriesOnly))
 		{
-			LoadEnc = (optionFlags & fdShowCodecs) ? dia->TxCodeM->currentText() : QString("");
+			LoadEnc = (optionFlags & fdShowCodecs) ? dia->optionCombo->currentText() : QString("");
 			if (optionFlags & fdCompressFile)
 			{
-				if (dia->SaveZip->isChecked())
+				if (dia->saveZip->isChecked())
 					dia->handleCompress();
 			}
 		}
 		else
 		{
-			if (useCompression != NULL && dia->SaveZip != NULL)
-				*useCompression = dia->SaveZip->isChecked();
-			if (useFonts != NULL)
-				*useFonts = dia->WithFonts->isChecked();
-			if (useProfiles != NULL)
-				*useProfiles = dia->WithProfiles->isChecked();
+			if (useCompression != nullptr && dia->saveZip != nullptr)
+				*useCompression = dia->saveZip->isChecked();
+			if (useFonts != nullptr)
+				*useFonts = dia->withFonts->isChecked();
+			if (useProfiles != nullptr)
+				*useProfiles = dia->withProfiles->isChecked();
 		}
 		this->repaint();
 		retval = dia->selectedFile();
@@ -8139,7 +8115,7 @@ QString ScribusMainWindow::CFileDialog(QString workingDirectory, QString dialogC
 
 
 
-void ScribusMainWindow::recalcColors(QProgressBar *dia)
+void ScribusMainWindow::recalcColors()
 {
 	if (!HaveDoc)
 		return;
@@ -8199,17 +8175,17 @@ void ScribusMainWindow::PutScrap(int scID)
 	if (doc->m_Selection->isEmpty())
 		return;
 	ScriXmlDoc ss;
-	QString objectString = ss.WriteElem(doc, doc->m_Selection);
+	QString objectString = ss.writeElem(doc, doc->m_Selection);
 	QDomDocument docu("scridoc");
 	docu.setContent(objectString);
 	QDomElement elem = docu.documentElement();
 	QDomNode DOC = elem.firstChild();
 	bool first = true;
 	DOC = elem.firstChild();
-	while(!DOC.isNull())
+	while (!DOC.isNull())
 	{
 		QDomElement pg = DOC.toElement();
-		if(pg.tagName() == "ITEM")
+		if (pg.tagName() == "ITEM")
 		{
 			if (first)
 				pg.setAttribute("ANNAME", doc->m_Selection->itemAt(0)->itemName());
@@ -8273,7 +8249,7 @@ void ScribusMainWindow::setCurrentPage(int p)
 	if (scriptIsRunning())
 		return;
 	slotSetCurrentPage(p0);
-	doc->view()->SetCPo(doc->currentPage()->xOffset() - 10, doc->currentPage()->yOffset() - 10);
+	doc->view()->setCanvasPos(doc->currentPage()->xOffset() - 10, doc->currentPage()->yOffset() - 10);
 	HaveNewSel();
 	doc->view()->setFocus();
 }
@@ -8472,7 +8448,7 @@ void ScribusMainWindow::emergencySave()
 		fileName = QDir::cleanPath(path + "/" + base + QString("_emergency_%1.sla").arg(dat.toString("dd_MM_yyyy_hh_mm")));
 		std::cout << "Saving: " << fileName.toStdString() << std::endl;
 		FileLoader fl(fileName);
-		fl.saveFile(fileName, doc, 0);
+		fl.saveFile(fileName, doc, nullptr);
 		view->close();
 		int numPages=doc->Pages->count();
 		for (int j=0; j<numPages; ++j)
@@ -8506,8 +8482,6 @@ void ScribusMainWindow::SearchText()
 	view->requestMode(modeEdit);
 	currItem->itemText.setCursorPosition(0);
 	SearchReplace* dia = new SearchReplace(this, doc, currItem);
-	connect(dia, SIGNAL(NewFont(const QString&)), this, SLOT(SetNewFont(const QString&)));
-	connect(dia, SIGNAL(NewAbs(int)), this, SLOT(setAlignmentValue(int)));
 	dia->exec();
 	dia->disconnect();
 	delete dia;
@@ -8599,7 +8573,7 @@ void ScribusMainWindow::getImageInfo()
 		return;
 
 	PageItem *pageItem = doc->m_Selection->itemAt(0);
-	if (pageItem == NULL)
+	if (pageItem == nullptr)
 		return;
 	if (pageItem->itemType() == PageItem::ImageFrame)
 	{
@@ -8615,7 +8589,7 @@ void ScribusMainWindow::objectAttributes()
 		return;
 
 	PageItem *pageItem = doc->m_Selection->itemAt(0);
-	if (pageItem == NULL)
+	if (pageItem == nullptr)
 		return;
 	PageItemAttributes *pageItemAttrs = new PageItemAttributes( this );
 	pageItemAttrs->setup(pageItem->getObjectAttributes(), &doc->itemAttributes());
@@ -8668,16 +8642,16 @@ void ScribusMainWindow::languageChange()
 	LanguageManager::instance()->languageChange();
 	qApp->setLayoutDirection(QLocale(ScCore->getGuiLanguage()).textDirection());
 	//Update actions
-	if (actionManager!=NULL)
+	if (actionManager!=nullptr)
 	{
 		actionManager->languageChange();
 		ScCore->pluginManager->languageChange();
 		initKeyboardShortcuts();
 	}
 	//Update menu texts
-	if (scrMenuMgr!=NULL && !scrMenuMgr->empty())
+	if (scrMenuMgr!=nullptr && !scrMenuMgr->empty())
 		scrMenuMgr->languageChange();
-	if (m_undoManager!=NULL)
+	if (m_undoManager!=nullptr)
 		m_undoManager->languageChange();
 	statusBarLanguageChange();
 	viewToolBar->languageChange();
@@ -8716,7 +8690,7 @@ void ScribusMainWindow::closeActiveWindowMasterPageEditor()
 {
 	if (!HaveDoc)
 		return;
-	if(!doc->masterPageMode())
+	if (!doc->masterPageMode())
 		return;
 	editMasterPagesEnd();
 	qApp->processEvents();
@@ -8736,7 +8710,7 @@ void ScribusMainWindow::dragEnterEvent ( QDragEnterEvent* e)
 	{
 		QString fileUrl;
 		QList<QUrl> fileUrls = e->mimeData()->urls();
-		for( int i = 0; i < fileUrls.count(); ++i )
+		for (int i = 0; i < fileUrls.count(); ++i)
 		{
 			fileUrl = fileUrls[i].toLocalFile().toLower();
 			if (fileUrl.endsWith(".sla") || fileUrl.endsWith(".sla.gz") || fileUrl.endsWith(".shape") || fileUrl.endsWith(".sce"))
@@ -8744,17 +8718,14 @@ void ScribusMainWindow::dragEnterEvent ( QDragEnterEvent* e)
 				accepted = true;
 				break;
 			}
-			else
+			QUrl url( fileUrls[i] );
+			FileLoader *fileLoader = new FileLoader(url.path());
+			int testResult = fileLoader->testFile();
+			delete fileLoader;
+			if ((testResult != -1) && (testResult >= FORMATID_FIRSTUSER))
 			{
-				QUrl url( fileUrls[i] );
-				FileLoader *fileLoader = new FileLoader(url.path());
-				int testResult = fileLoader->testFile();
-				delete fileLoader;
-				if ((testResult != -1) && (testResult >= FORMATID_FIRSTUSER))
-				{
-					accepted = true;
-					break;
-				}
+				accepted = true;
+				break;
 			}
 		}
 	}
@@ -8801,7 +8772,7 @@ void ScribusMainWindow::dropEvent ( QDropEvent * e)
 					data = QString::fromUtf8(cf.data());
 					double gx, gy, gw, gh;
 					ScriXmlDoc ss;
-					if (ss.ReadElemHeader(data, false, &gx, &gy, &gw, &gh))
+					if (ss.readElemHeader(data, false, &gx, &gy, &gw, &gh))
 					{
 						doFileNew(gw, gh, 0, 0, 0, 0, 0, 0, false, false, 0, false, 0, 1, "Custom", true);
 						HaveNewDoc();
@@ -8839,7 +8810,7 @@ void ScribusMainWindow::dropEvent ( QDropEvent * e)
 			{
 				double gx, gy, gw, gh;
 				ScriXmlDoc ss;
-				if (ss.ReadElemHeader(text, false, &gx, &gy, &gw, &gh))
+				if (ss.readElemHeader(text, false, &gx, &gy, &gw, &gh))
 				{
 					doFileNew(gw, gh, 0, 0, 0, 0, 0, 0, false, false, 0, false, 0, 1, "Custom", true);
 					HaveNewDoc();
@@ -8858,8 +8829,8 @@ void ScribusMainWindow::dropEvent ( QDropEvent * e)
 
 void ScribusMainWindow::slotEditCopyContents()
 {
-	PageItem *currItem = NULL;
-	if (!HaveDoc || (currItem = doc->m_Selection->itemAt(0)) == NULL)
+	PageItem *currItem = nullptr;
+	if (!HaveDoc || (currItem = doc->m_Selection->itemAt(0)) == nullptr)
 		return;
 	if (currItem->itemType() != PageItem::ImageFrame)
 		return;
@@ -8887,21 +8858,21 @@ void ScribusMainWindow::slotEditPasteContents(int absolute)
 {
 	if (!HaveDoc || contentsBuffer.contentsFileName.isEmpty())
 		return;
-	PageItem *currItem = NULL;
-	if ((currItem = doc->m_Selection->itemAt(0)) == NULL)
+	PageItem *currItem = nullptr;
+	if ((currItem = doc->m_Selection->itemAt(0)) == nullptr)
 		return;
 	if (contentsBuffer.sourceType != PageItem::ImageFrame || currItem->itemType() != PageItem::ImageFrame)
 		return;
 
 	PageItem_ImageFrame* imageItem=currItem->asImageFrame();
-	int t=QMessageBox::Yes;
+	int i=QMessageBox::Yes;
 	if (imageItem->imageIsAvailable)
-		t = ScMessageBox::warning(this, CommonStrings::trWarning,
+		i = ScMessageBox::warning(this, CommonStrings::trWarning,
 								tr("Do you really want to replace your existing image?"),
 								QMessageBox::Yes | QMessageBox::No,
 								QMessageBox::No,	// GUI default
 								QMessageBox::Yes);	// batch default
-	if (t != QMessageBox::Yes)
+	if (i != QMessageBox::Yes)
 		return;
 
 	imageItem->EmProfile = "";
@@ -8975,7 +8946,7 @@ void ScribusMainWindow::slotItemTransform()
 	}
 }
 
-void ScribusMainWindow::PutToInline(QString buffer)
+void ScribusMainWindow::PutToInline(const QString& buffer)
 {
 	if (!HaveDoc)
 		return;
@@ -9355,20 +9326,20 @@ void ScribusMainWindow::manageColorsAndFills()
 				s_doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 				s_doc->setPage(100, 100, 0, 0, 0, 0, 0, 0, false, false);
 				s_doc->addPage(0);
-				s_doc->setGUI(false, this, 0);
+				s_doc->setGUI(false, this, nullptr);
 				s_doc->PageColors = dia->m_colorList;
 				s_doc->setGradients(dia->dialogGradients);
 				s_doc->setPatterns(dia->dialogPatterns);
-				fmt->setupTargets(s_doc, 0, this, mainWindowProgressBar, &(PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts));
+				fmt->setupTargets(s_doc, nullptr, this, mainWindowProgressBar, &(PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts));
 				fmt->savePalette(Cpfad);
 				delete s_doc;
 			}
 			m_prefsManager->setColorSetName(dia->getColorSetName());
-			doc = NULL;
+			doc = nullptr;
 		}
 	}
 	if (!HaveDoc)
-		doc = NULL;
+		doc = nullptr;
 	delete dia;
 	m_undoManager->setUndoEnabled(true);
 }
@@ -9431,7 +9402,7 @@ void ScribusMainWindow::insertMark(MarkType mType)
 		//inserting mark replace some selected text
 		currItem->asTextFrame()->deleteSelectedTextFromFrame();
 	}
-	ScItemsState* is = NULL;
+	ScItemsState* is = nullptr;
 	if (insertMarkDialog(currItem->asTextFrame(), mType, is))
 	{
 		Mark* mrk = currItem->itemText.mark(currItem->itemText.cursorPosition() -1);
@@ -9447,7 +9418,7 @@ void ScribusMainWindow::insertMark(MarkType mType)
 			nsEditor->setNotesStyle(mrk->getNotePtr()->notesStyle());
 		}
 		doc->changed();
-		if (is != NULL)
+		if (is != nullptr)
 			is->set("label", mrk->label);
 		view->updatesOn(true);
 		view->DrawNew();
@@ -9526,7 +9497,7 @@ void ScribusMainWindow::slotInsertMarkNote()
 			label += " in " + currItem->firstInChain()->itemName();
 		else if (nStyle->range() == NSRframe)
 			label += " in frame" + currItem->itemName();
-		if (doc->getMark(label + "_1", MARKNoteMasterType) != NULL)
+		if (doc->getMark(label + "_1", MARKNoteMasterType) != nullptr)
 			getUniqueName(label,doc->marksLabelsList(MARKNoteMasterType), "_"); //FIX ME here user should be warned that inserted mark`s label was changed
 		else
 			label = label + "_1";
@@ -9571,7 +9542,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 		//avoid inserting in master pages other marks than Variable Text
 		return false;
 	
-	MarkInsert* insertMDialog = NULL;
+	MarkInsert* insertMDialog = nullptr;
 	switch (mrkType)
 	{
 	case MARKAnchorType:
@@ -9584,7 +9555,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 		insertMDialog = (MarkInsert*) new Mark2Item(this);
 		break;
 	case MARK2MarkType:
-		insertMDialog = (MarkInsert*) new Mark2Mark(doc->marksList(), NULL, this);
+		insertMDialog = (MarkInsert*) new Mark2Mark(doc->marksList(), nullptr, this);
 		break;
 	case MARKNoteMasterType:
 		insertMDialog = (MarkInsert*) new MarkNote(doc->m_docNotesStylesList, this);
@@ -9594,7 +9565,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 	default:
 		break;
 	}
-	if (insertMDialog == NULL)
+	if (insertMDialog == nullptr)
 	{
 		qDebug() << "Dialog not implemented for such marks type " << mrkType;
 		return false;
@@ -9604,13 +9575,13 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 	insertMDialog->setWindowTitle(tr("Insert new ") + insertMDialog->windowTitle());
 	if (insertMDialog->exec())
 	{
-		Mark* mrk = NULL;
+		Mark* mrk = nullptr;
 		Mark oldMark;
 		MarkData markdata;
-		if (currItem != NULL)
+		if (currItem != nullptr)
 			markdata.itemName = currItem->itemName();
 		QString label = "", text = "";
-		NotesStyle* NStyle = NULL;
+		NotesStyle* NStyle = nullptr;
 		bool insertExistedMark = false;
 		switch (mrkType)
 		{
@@ -9623,7 +9594,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 			break;
 		case MARKVariableTextType:
 			mrk = insertMDialog->values(label, text);
-			if ((mrk == NULL) && (text.isEmpty()))
+			if ((mrk == nullptr) && (text.isEmpty()))
 				return false; //FIX ME here user should be warned that inserting of mark fails and why
 			if (label.isEmpty())
 				label = tr("Mark with <%1> variable text").arg(text);
@@ -9631,7 +9602,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 			break;
 		case MARK2ItemType:
 			insertMDialog->values(label, markdata.itemPtr);
-			if (markdata.itemPtr == NULL)
+			if (markdata.itemPtr == nullptr)
 				return false; //FIX ME here user should be warned that inserting of mark fails and why
 			if (label.isEmpty())
 				label = tr("Mark to %1 item").arg(markdata.itemPtr->itemName());
@@ -9641,7 +9612,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 			//gets pointer to referenced mark
 			Mark* mrkPtr;
 			insertMDialog->values(label, mrkPtr);
-			if (mrkPtr == NULL)
+			if (mrkPtr == nullptr)
 				return false; //FIX ME here user should be warned that inserting of mark fails and why
 			if (label.isEmpty())
 				label = tr("Mark to %1 mark").arg(mrkPtr->label);
@@ -9652,7 +9623,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 		case MARKNoteMasterType:
 			//gets pointer to chosen notes style
 			NStyle = insertMDialog->values();
-			if (NStyle == NULL)
+			if (NStyle == nullptr)
 				return false;
 
 			markdata.notePtr = doc->newNote(NStyle);
@@ -9673,12 +9644,12 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 				return false;
 			break;
 		}
-		if (mrk == NULL)
+		if (mrk == nullptr)
 		{
 			//check if label for new mark can be used as is
 			if (mrkType == MARKNoteMasterType)
 			{
-				if (doc->getMark(label + "_1", mrkType) != NULL)
+				if (doc->getMark(label + "_1", mrkType) != nullptr)
 					getUniqueName(label,doc->marksLabelsList(mrkType), "_"); //FIX ME here user should be warned that inserted mark`s label was changed
 				else
 					label = label + "_1";
@@ -9765,7 +9736,7 @@ bool ScribusMainWindow::insertMarkDialog(PageItem_TextFrame* currItem, MarkType 
 
 bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 {
-	MarkInsert* editMDialog = NULL;
+	MarkInsert* editMDialog = nullptr;
 	switch (mrk->getType())
 	{
 		case MARKAnchorType:
@@ -9773,7 +9744,7 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 			editMDialog->setValues(mrk->label);
 			break;
 		case MARKVariableTextType:
-			if (currItem == NULL)
+			if (currItem == nullptr)
 				//invoked from Marks Manager
 				editMDialog = dynamic_cast<MarkInsert*>(new MarkVariableText(mrk, this));
 			else
@@ -9800,7 +9771,7 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 				//invoking editing note mark from master text
 				//so we go to edit note
 				TextNote* note = mrk->getNotePtr();
-				if (note == NULL)
+				if (note == nullptr)
 				{
 					qFatal("ScribusMainWindow::editMarkDlg - found note master mark with null pointer to note");
 					return false;
@@ -9814,7 +9785,7 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 				//invoking editing mark from note frame
 				//so we go to master text
 				TextNote* note = mrk->getNotePtr();
-				if (note == NULL)
+				if (note == nullptr)
 				{
 					qFatal("ScribusMainWindow::editMarkDlg - found note frame mark with null pointer to note");
 					return false;
@@ -9829,7 +9800,8 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 		default:
 			break;
 	}
-	if (editMDialog == NULL) return false;
+	if (editMDialog == nullptr)
+		return false;
 
 	bool docWasChanged = false;
 
@@ -9837,9 +9809,9 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 	if (editMDialog->exec())
 	{
 		Mark oldMark = *mrk;
-		Mark* Mrk = NULL;
+		Mark* Mrk = nullptr;
 		MarkData markdata;
-		if (currItem != NULL)
+		if (currItem != nullptr)
 			markdata.itemName = currItem->itemName();
 		QString label, text;
 		QString oldStr = mrk->getString();
@@ -9865,7 +9837,7 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 					return false; //FIX ME here user should be warned that editing of mark fails and why
 				if (label.isEmpty())
 					label = tr("Mark with <%1> variable text").arg(text);
-				if (Mrk != NULL)
+				if (Mrk != nullptr)
 				{
 					if (Mrk != mrk)
 					{
@@ -9899,7 +9871,7 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 				break;
 			case MARK2ItemType:
 				editMDialog->values(label, markdata.itemPtr);
-				if (markdata.itemPtr == NULL)
+				if (markdata.itemPtr == nullptr)
 					return false; //FIX ME here user should be warned that inserting of mark fails and why
 				if (label.isEmpty())
 					label = tr("Mark to %1 item").arg(markdata.itemPtr->itemName());
@@ -9918,9 +9890,9 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 			case MARK2MarkType:
 				{
 					//gets pointer to referenced mark
-					Mark* mrkPtr = NULL;
+					Mark* mrkPtr = nullptr;
 					editMDialog->values(label, mrkPtr);
-					if (mrkPtr == NULL)
+					if (mrkPtr == nullptr)
 						return false; //FIX ME here user should be warned that inserting of mark fails and why
 					if (label.isEmpty())
 						label = tr("Mark to %1 mark").arg(mrkPtr->label);
@@ -9948,13 +9920,13 @@ bool ScribusMainWindow::editMarkDlg(Mark *mrk, PageItem_TextFrame* currItem)
 		}
 		if (UndoManager::undoEnabled())
 		{
-			ScItemsState* is = NULL;
+			ScItemsState* is = nullptr;
 			if (newMark || replaceMark)
 				is = new ScItemsState(UndoManager::InsertMark);
 			else
 				is = new ScItemsState(UndoManager::EditMark);
 			is->set("ETEA", mrk->label);
-			if (currItem != NULL)
+			if (currItem != nullptr)
 			{
 				is->set("at", currItem->itemText.cursorPosition()-1);
 				if (currItem->isNoteFrame())

@@ -12,7 +12,7 @@ Mark::Mark(const Mark& other)
 
 }
 
-void Mark::setValues(const QString& l, int p, MarkType t, MarkData d)
+void Mark::setValues(const QString& l, int p, MarkType t, const MarkData& d)
 {
 	label = l;
 	OwnPage = p;
@@ -37,7 +37,7 @@ const QString Mark::getString()
 	return data.strtxt;
 }
 
-void Mark::setString(const QString str)
+void Mark::setString(const QString& str)
 {
 	data.strtxt = str;
 }
@@ -49,7 +49,7 @@ void Mark::setNotePtr(TextNote* note)
 
 bool Mark::hasItemPtr()
 {
-	return data.itemPtr != NULL;
+	return data.itemPtr != nullptr;
 }
 
 bool Mark::hasString()
@@ -78,7 +78,6 @@ bool Mark::isType(const MarkType t)
 }
 
 BulNumMark::BulNumMark()
-	: Mark()
 {
 	label = "BullNumMark";
 	typ = MARKBullNumType;

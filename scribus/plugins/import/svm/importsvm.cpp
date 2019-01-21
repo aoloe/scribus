@@ -281,18 +281,16 @@ for which a new license (GPL+exception) is in place.
 #define   U_RNDT_Empty                  0x10000002
 #define   U_RNDT_Infinite               0x10000003
 
-extern SCRIBUS_API ScribusQApp * ScQApp;
-
 SvmPlug::SvmPlug(ScribusDoc* doc, int flags)
 {
 	tmpSel=new Selection(this, false);
 	m_Doc=doc;
 	importerFlags = flags;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
-	progressDialog = NULL;
+	progressDialog = nullptr;
 }
 
-QImage SvmPlug::readThumbnail(QString fName)
+QImage SvmPlug::readThumbnail(const QString& fName)
 {
 	QFileInfo fi = QFileInfo(fName);
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
@@ -311,12 +309,12 @@ QImage SvmPlug::readThumbnail(QString fName)
 	docY = y;
 	baseX = 0;
 	baseY = 0;
-	progressDialog = NULL;
+	progressDialog = nullptr;
 	m_Doc = new ScribusDoc();
 	m_Doc->setup(0, 1, 1, 1, 1, "Custom", "Custom");
 	m_Doc->setPage(docWidth, docHeight, 0, 0, 0, 0, 0, 0, false, false);
 	m_Doc->addPage(0);
-	m_Doc->setGUI(false, ScCore->primaryMainWindow(), 0);
+	m_Doc->setGUI(false, ScCore->primaryMainWindow(), nullptr);
 	baseX = m_Doc->currentPage()->xOffset();
 	baseY = m_Doc->currentPage()->yOffset();
 	Elements.clear();
@@ -382,26 +380,22 @@ QImage SvmPlug::readThumbnail(QString fName)
 		delete m_Doc;
 		return tmpImage;
 	}
-	else
-	{
-		QDir::setCurrent(CurDirP);
-		m_Doc->DoDrawing = true;
-		m_Doc->scMW()->setScriptRunning(false);
-		delete m_Doc;
-	}
+	QDir::setCurrent(CurDirP);
+	m_Doc->DoDrawing = true;
+	m_Doc->scMW()->setScriptRunning(false);
+	delete m_Doc;
 	return QImage();
 }
 
-bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
+bool SvmPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
-	QString fName = fNameIn;
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
 	importerFlags = flags;
 	cancel = false;
 	double x, y, b, h;
 	bool ret = false;
-	QFileInfo fi = QFileInfo(fName);
+	QFileInfo fi = QFileInfo(fNameIn);
 	if ( !ScCore->usingGUI() )
 	{
 		interactive = false;
@@ -410,7 +404,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 	baseFile = QDir::cleanPath(QDir::toNativeSeparators(fi.absolutePath()+"/"));
 	if ( showProgress )
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		progressDialog = new MultiProgressDialog( tr("Importing: %1").arg(fi.fileName()), CommonStrings::tr_Cancel, mw );
 		QStringList barNames, barTexts;
 		barNames << "GI";
@@ -426,7 +420,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		qApp->processEvents();
 	}
 	else
-		progressDialog = NULL;
+		progressDialog = nullptr;
 /* Set default Page to size defined in Preferences */
 	x = 0.0;
 	y = 0.0;
@@ -437,7 +431,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		progressDialog->setOverallProgress(1);
 		qApp->processEvents();
 	}
-	parseHeader(fName, x, y, b, h);
+	parseHeader(fNameIn, x, y, b, h);
 	if (b == 0.0)
 		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
@@ -493,18 +487,18 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 			m_Doc->setPageOrientation(0);
 		m_Doc->setPageSize("Custom");
 	}
-	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != NULL))
+	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != nullptr))
 		m_Doc->view()->Deselect();
 	Elements.clear();
 	m_Doc->setLoading(true);
 	m_Doc->DoDrawing = false;
-	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != NULL))
+	if ((!(flags & LoadSavePlugin::lfLoadAsPattern)) && (m_Doc->view() != nullptr))
 		m_Doc->view()->updatesOn(false);
 	m_Doc->scMW()->setScriptRunning(true);
 	qApp->setOverrideCursor(QCursor(Qt::WaitCursor));
 	QString CurDirP = QDir::currentPath();
 	QDir::setCurrent(fi.path());
-	if (convert(fName))
+	if (convert(fNameIn))
 	{
 		tmpSel->clear();
 		QDir::setCurrent(CurDirP);
@@ -531,14 +525,14 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 					}
 					m_Doc->m_Selection->delaySignalsOff();
 					m_Doc->m_Selection->setGroupRect();
-					if (m_Doc->view() != NULL)
+					if (m_Doc->view() != nullptr)
 						m_Doc->view()->updatesOn(true);
 				}
 			}
 			else
 			{
 				m_Doc->DragP = true;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 				m_Doc->m_Selection->delaySignalsOn();
 				for (int dre=0; dre<Elements.count(); ++dre)
@@ -546,7 +540,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 					tmpSel->addItem(Elements.at(dre), true);
 				}
 				tmpSel->setGroupRect();
-				ScElemMimeData* md = ScriXmlDoc::WriteToMimeData(m_Doc, tmpSel);
+				ScElemMimeData* md = ScriXmlDoc::writeToMimeData(m_Doc, tmpSel);
 				m_Doc->itemSelection_DeleteItem(tmpSel);
 				m_Doc->view()->updatesOn(true);
 				if (importedColors.count() != 0)
@@ -569,7 +563,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 				TransactionSettings* transacSettings = new TransactionSettings(trSettings);
 				m_Doc->view()->handleObjectImport(md, transacSettings);
 				m_Doc->DragP = false;
-				m_Doc->DraggedElem = 0;
+				m_Doc->DraggedElem = nullptr;
 				m_Doc->DragElements.clear();
 			}
 		}
@@ -587,7 +581,7 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 		QDir::setCurrent(CurDirP);
 		m_Doc->DoDrawing = true;
 		m_Doc->scMW()->setScriptRunning(false);
-		if (m_Doc->view() != NULL)
+		if (m_Doc->view() != nullptr)
 			m_Doc->view()->updatesOn(true);
 		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
 	}
@@ -605,12 +599,11 @@ bool SvmPlug::import(QString fNameIn, const TransactionSettings& trSettings, int
 
 SvmPlug::~SvmPlug()
 {
-	if (progressDialog)
-		delete progressDialog;
+	delete progressDialog;
 	delete tmpSel;
 }
 
-void SvmPlug::parseHeader(QString fName, double &x, double &y, double &b, double &h)
+void SvmPlug::parseHeader(const QString& fName, double &x, double &y, double &b, double &h)
 {
 	QFile f(fName);
 	if (f.open(QIODevice::ReadOnly))
@@ -648,7 +641,7 @@ void SvmPlug::parseHeader(QString fName, double &x, double &y, double &b, double
 	}
 }
 
-bool SvmPlug::convert(QString fn)
+bool SvmPlug::convert(const QString& fn)
 {
 	importedColors.clear();
 	importedPatterns.clear();
@@ -695,7 +688,7 @@ bool SvmPlug::convert(QString fn)
 	m_currObjSize = 0;
 	emfStyleMapEMP.clear();
 	seen_XGRAD_SEQ_BEGIN = false;
-	if(progressDialog)
+	if (progressDialog)
 	{
 		progressDialog->setOverallProgress(2);
 		progressDialog->setLabel("GI", tr("Generating Items"));
@@ -1300,10 +1293,10 @@ void SvmPlug::finishItem(PageItem* ite, bool fill)
 							points.setMarker();
 							continue;
 						}
-						FPoint base = gpath.point(a);
-						FPoint c1 = gpath.point(a+1);
-						FPoint base2 =  gpath.point(a+2);
-						FPoint c2 = gpath.point(a+3);
+						const FPoint& base = gpath.point(a);
+						const FPoint& c1 = gpath.point(a+1);
+						const FPoint& base2 =  gpath.point(a+2);
+						const FPoint& c2 = gpath.point(a+3);
 						FPoint cn1 = (1.0 - nearT) * base + nearT * c1;
 						FPoint cn2 = (1.0 - nearT) * cn1 + nearT * ((1.0 - nearT) * c1 + nearT * c2);
 						FPoint cn3 = (1.0 - nearT) * ((1.0 - nearT) * c1 + nearT * c2) + nearT * ((1.0 - nearT) * c2 + nearT * base2);
@@ -1684,12 +1677,12 @@ void SvmPlug::handleArcTo(QDataStream &ds)
 		if (enlin.angleTo(stlin) > 180)
 		{
 		//	currentDC.Coords.svgMoveTo(st.x(), st.y());
-			currentDC.Coords.svgArcTo(BoxDev.width() / 2.0, BoxDev.height() / 2.0, 0, enlin.angleTo(stlin) < 180 ? 1 : 0, stlin.angleTo(enlin) > 180 ? 1 : 0, en.x(), en.y());
+			currentDC.Coords.svgArcTo(BoxDev.width() / 2.0, BoxDev.height() / 2.0, 0, enlin.angleTo(stlin) < 180, stlin.angleTo(enlin) > 180, en.x(), en.y());
 		}
 		else
 		{
 		//	currentDC.Coords.svgMoveTo(st.x(), st.y());
-			currentDC.Coords.svgArcTo(BoxDev.width() / 2.0, BoxDev.height() / 2.0, 0, enlin.angleTo(stlin) > 180 ? 1 : 0, stlin.angleTo(enlin) > 180 ? 1 : 0, en.x(), en.y());
+			currentDC.Coords.svgArcTo(BoxDev.width() / 2.0, BoxDev.height() / 2.0, 0, enlin.angleTo(stlin) > 180, stlin.angleTo(enlin) > 180, en.x(), en.y());
 		}
 		currentDC.currentPoint = en;
 	}
@@ -1928,7 +1921,7 @@ void SvmPlug::handleSmallText(QDataStream &ds)
 	else if (currentDC.textAlignment == ALIGN_BOTTOM)
 		painterPath.translate(0, fm.descent());
 	textPath.fromQPainterPath(painterPath);
-	if (textPath.size() > 0)
+	if (!textPath.empty())
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, baseX, baseY, 10, 10, 0, currentDC.CurrColorText, CommonStrings::None);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -2024,7 +2017,7 @@ void SvmPlug::handleText(QDataStream &ds, quint16 version)
 		painterPath.translate(0, fm.descent());
 	FPointArray textPath;
 	textPath.fromQPainterPath(painterPath);
-	if (textPath.size() > 0)
+	if (!textPath.empty())
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, baseX, baseY, 10, 10, 0, currentDC.CurrColorText, CommonStrings::None);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -2401,7 +2394,7 @@ void SvmPlug::commonGradient(QDataStream &ds, PageItem* ite)
 	}
 }
 
-QString SvmPlug::handleColor(QColor col)
+QString SvmPlug::handleColor(const QColor& col)
 {
 	ScColor tmp;
 	tmp.setRgbColor(col.red(), col.green(), col.blue());
@@ -3832,7 +3825,7 @@ void SvmPlug::handleEMFPDrawDriverString(QDataStream &ds, quint8 flagsL, quint8 
 	}
 	FPointArray textPath;
 	textPath.fromQPainterPath(painterPath);
-	if (textPath.size() > 0)
+	if (!textPath.empty())
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, baseX, baseY, 10, 10, 0, currentDC.CurrColorFill, CommonStrings::None);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -3927,7 +3920,7 @@ void SvmPlug::handleEMFPDrawString(QDataStream &ds, quint8 flagsL, quint8 flagsH
 	painterPath = bm.map(painterPath);
 	painterPath.translate(rect[0].x(), rect[0].y());
 	textPath.fromQPainterPath(painterPath);
-	if (textPath.size() > 0)
+	if (!textPath.empty())
 	{
 		int z = m_Doc->itemAdd(PageItem::Polygon, PageItem::Unspecified, baseX, baseY, 10, 10, 0, currentDC.CurrColorFill, CommonStrings::None);
 		PageItem* ite = m_Doc->Items->at(z);
@@ -4563,7 +4556,7 @@ void SvmPlug::handleEMFPDrawImageData(QPointF p1, QPointF p2, QPointF p3, quint8
 		if (emfStyleMapEMP[flagsH].imageType < U_MDT_Emf)
 			ext = "wmf";
 		PageItem* ite = getVectorFileFromData(m_Doc, emfStyleMapEMP[flagsH].imageData, ext, baseX + p1.x(), baseY + p1.y(), QLineF(p1, p2).length(), QLineF(p1, p3).length());
-		if (ite != NULL)
+		if (ite != nullptr)
 		{
 			if (QLineF(p1, p2).angle() != 0)
 				ite->setRotation(-QLineF(p1, p2).angle(), true);

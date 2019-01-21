@@ -61,7 +61,7 @@ void Prefs_DocumentItemAttributes::tableItemChanged( int row, int col )
 	case 1:
 		{
 			QComboBox* qcti=dynamic_cast<QComboBox*>(attributesTable->cellWidget(row,col));
-			if (qcti!=NULL)
+			if (qcti!=nullptr)
 			{
 				int index=qcti->currentIndex();
 				if (index<typesData.count())
@@ -78,7 +78,7 @@ void Prefs_DocumentItemAttributes::tableItemChanged( int row, int col )
 	case 4:
 		{
 			QComboBox* qcti=dynamic_cast<QComboBox*>(attributesTable->cellWidget(row,col));
-			if (qcti!=NULL)
+			if (qcti!=nullptr)
 			{
 				int index=qcti->currentIndex();
 				if (index<relationshipsData.count())
@@ -92,7 +92,7 @@ void Prefs_DocumentItemAttributes::tableItemChanged( int row, int col )
 	case 6:
 		{
 			QComboBox* qcti=dynamic_cast<QComboBox*>(attributesTable->cellWidget(row,col));
-			if (qcti!=NULL)
+			if (qcti!=nullptr)
 			{
 				int index=qcti->currentIndex();
 				if (index<autoAddToData.count())
@@ -121,7 +121,7 @@ void Prefs_DocumentItemAttributes::updateTable()
 {
 	attributesTable->setRowCount(localAttributes.count());
 
-	for(int row = 0; row < localAttributes.count(); ++row)
+	for (int row = 0; row < localAttributes.count(); ++row)
 	{
 		uint col = 0;
 		ObjectAttribute& objAttr = localAttributes[row];
@@ -176,7 +176,7 @@ void Prefs_DocumentItemAttributes::updateTable()
 		item7->setCurrentIndex(index2);
 
 		QTableWidgetItem *t=attributesTable->verticalHeaderItem(row);
-		if (t!=NULL)
+		if (t!=nullptr)
 			t->setText(QString("%1").arg(row));
 	}
 	deleteButton->setEnabled(localAttributes.count()!=0);
@@ -191,7 +191,7 @@ void Prefs_DocumentItemAttributes::deleteEntry()
 	bool found=false;
 	ObjAttrVector::Iterator it;
 	int count=0;
-	for(it = localAttributes.begin(); it!= localAttributes.end(); ++it)
+	for (it = localAttributes.begin(); it!= localAttributes.end(); ++it)
 	{
 		if(count==currRow)
 		{
@@ -221,7 +221,7 @@ void Prefs_DocumentItemAttributes::copyEntry()
 	bool found=false;
 	ObjAttrVector::Iterator it;
 	int count=0;
-	for(it = localAttributes.begin(); it!= localAttributes.end(); ++it)
+	for (it = localAttributes.begin(); it!= localAttributes.end(); ++it)
 	{
 		if(count==currRow)
 		{
@@ -240,7 +240,7 @@ void Prefs_DocumentItemAttributes::copyEntry()
 QStringList Prefs_DocumentItemAttributes::getDocAttributesNames()
 {
 	QStringList nameList;
-	for(ObjAttrVector::Iterator it = localAttributes.begin(); it!= localAttributes.end(); ++it)
+	for (ObjAttrVector::Iterator it = localAttributes.begin(); it!= localAttributes.end(); ++it)
 		nameList.append((*it).name);
 	return nameList;
 }

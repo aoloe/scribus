@@ -155,7 +155,7 @@ bool Selection::connectItemToGUI()
 	if (m_SelList.count() == 1)
 	{
 		QPointer<PageItem> pi=m_SelList.first();
-		//Quick check to see if the pointer is NULL, if its NULL, we should remove it from the list now
+		//Quick check to see if the pointer is nullptr, if its nullptr, we should remove it from the list now
 		if (pi.isNull())
 		{
 			m_SelList.removeAll(pi);
@@ -192,7 +192,7 @@ bool Selection::disconnectAllItemsFromGUI()
 
 bool Selection::addItem(PageItem *item, bool /*ignoreGUI*/)
 {
-	if (item==NULL)
+	if (item==nullptr)
 		return false;
 	bool listWasEmpty = m_SelList.isEmpty();
 	if (listWasEmpty || !m_SelList.contains(item))
@@ -212,7 +212,7 @@ bool Selection::addItem(PageItem *item, bool /*ignoreGUI*/)
 
 bool Selection::prependItem(PageItem *item, bool /*doEmit*/)
 {
-	if (item==NULL)
+	if (item==nullptr)
 		return false;
 	if (!m_SelList.contains(item))
 	{
@@ -236,13 +236,13 @@ PageItem *Selection::itemAt_(int index)
 	if (!m_SelList.isEmpty() && index<m_SelList.count())
 	{
 		QPointer<PageItem> pi=m_SelList[index];
-		//If not NULL return it, otherwise remove from the list and return NULL
+		//If not nullptr return it, otherwise remove from the list and return nullptr
 		if (!pi.isNull())
 			return pi;
 //		SelectionList::Iterator it=m_SelList.at(index);
 		m_SelList.removeAt(index);
 	}
-	return NULL;
+	return nullptr;
 }
 
 QList<PageItem*> Selection::items() const
@@ -320,7 +320,7 @@ PageItem* Selection::takeItem(int itemIndex)
 			return item;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 QStringList Selection::getSelectedItemsByName() const
@@ -500,7 +500,7 @@ bool Selection::itemsAreSameType() const
 	return true;
 }
 
-int Selection::objectsLayer(void) const
+int Selection::objectsLayer() const
 {
 	if (m_SelList.isEmpty())
 		return -1;
@@ -516,7 +516,7 @@ int Selection::objectsLayer(void) const
 	return layerID;
 }
 
-bool Selection::objectsHaveSameParent(void) const
+bool Selection::objectsHaveSameParent() const
 {
 	int selectedItemCount = m_SelList.count();
 	if (selectedItemCount <= 1)
@@ -535,17 +535,17 @@ bool Selection::objectsHaveSameParent(void) const
 	return haveSameParent;
 }
 
-bool Selection::signalsDelayed(void)
+bool Selection::signalsDelayed()
 {
 	return (m_isGUISelection && (m_delaySignals > 0));
 }
 
-void Selection::delaySignalsOn(void)
+void Selection::delaySignalsOn()
 {
 	++m_delaySignals;
 }
 
-void Selection::delaySignalsOff(void)
+void Selection::delaySignalsOff()
 {
 	--m_delaySignals;
 	if (m_delaySignals <= 0)

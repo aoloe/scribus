@@ -35,10 +35,7 @@ bool CxfTristimulusSpec::isSupported() const
 
 bool CxfTristimulusSpec::parse(QDomElement& elem)
 {
-	bool convOk = false;
 	bool parsingError = false;
-	QString txt;
-
 	reset();
 
 	QDomNodeList childNodes = elem.childNodes();

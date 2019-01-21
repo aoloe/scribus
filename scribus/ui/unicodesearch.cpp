@@ -15,7 +15,7 @@ for which a new license (GPL+exception) is in place.
 
 UnicodeChooseButton::UnicodeChooseButton(QWidget * parent)
 	: QPushButton(parent),
-	m_searchDialog(0)
+	m_searchDialog(nullptr)
 {
 	languageChange();
 	setCheckable(true);
@@ -88,7 +88,6 @@ void UnicodeChooseButton::self_toggled(bool state)
 // }
 
 UnicodeSearchModel::UnicodeSearchModel(QObject * /*parent*/)
-	: QAbstractTableModel()
 {
 	setObjectName("UnicodeSearchModel");
 
@@ -117,12 +116,12 @@ UnicodeSearchModel::~UnicodeSearchModel()
 {
 }
 
-QString UnicodeSearchModel::descriptionFromHex(const QString& hex)
+QString UnicodeSearchModel::descriptionFromHex(const QString& hex) const
 {
-	foreach( UnicodeStruct I, m_unicode )
+	for (const UnicodeStruct& uni : m_unicode)
 	{
-		if ( I.hex == hex )
-			return I.description;
+		if (uni.hex == hex)
+			return uni.description;
 	}
 	return QString();
 }
@@ -141,14 +140,11 @@ QVariant UnicodeSearchModel::data(const QModelIndex & index, int role) const
 {
 	if (!index.isValid())
 		return QVariant();
-	if (role == Qt::DisplayRole)
-	{
-		if (index.column() == 0)
-			return m_unicode.at(index.row()).hex;
-		else
-			return m_unicode.at(index.row()).description;
-	}
-	return QVariant();
+	if (role != Qt::DisplayRole)
+		return QVariant();
+	if (index.column() == 0)
+		return m_unicode.at(index.row()).hex;
+	return m_unicode.at(index.row()).description;
 }
 
 QString UnicodeSearchModel::hexData(const QModelIndex & index)

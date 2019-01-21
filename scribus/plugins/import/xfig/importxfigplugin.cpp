@@ -39,7 +39,7 @@ void importxfig_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ImportXfigPlugin::ImportXfigPlugin() : LoadSavePlugin(),
+ImportXfigPlugin::ImportXfigPlugin() :
 	importAction(new ScrAction(ScrAction::DLL, "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do it in one
@@ -114,7 +114,7 @@ bool ImportXfigPlugin::import(QString fileName, int flags)
 {
 	if (!checkFlags(flags))
 		return false;
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 	{
 		flags |= lfInteractive;
 		PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("importxfig");
@@ -130,7 +130,7 @@ bool ImportXfigPlugin::import(QString fileName, int flags)
 	}
 	m_Doc=ScCore->primaryMainWindow()->doc;
 	UndoTransaction activeTransaction;
-	bool emptyDoc = (m_Doc == NULL);
+	bool emptyDoc = (m_Doc == nullptr);
 	bool hasCurrentPage = (m_Doc && m_Doc->currentPage());
 	TransactionSettings trSettings;
 	trSettings.targetName   = hasCurrentPage ? m_Doc->currentPage()->getUName() : "";
@@ -155,10 +155,10 @@ bool ImportXfigPlugin::import(QString fileName, int flags)
 
 QImage ImportXfigPlugin::readThumbnail(const QString& fileName)
 {
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 		return QImage();
 	UndoManager::instance()->setUndoEnabled(false);
-	m_Doc = NULL;
+	m_Doc = nullptr;
 	XfigPlug *dia = new XfigPlug(m_Doc, lfCreateThumbnail);
 	Q_CHECK_PTR(dia);
 	QImage ret = dia->readThumbnail(fileName);

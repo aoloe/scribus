@@ -19,32 +19,28 @@ QObject* getQObjectFromPyArg(PyObject* arg)
 		// It's a string. Look for a pageItem by that name. Do NOT accept a
 		// selection.
 		return getPageItemByName(QString::fromUtf8(PyString_AsString(arg)));
-	else if (PyCObject_Check(arg))
+	if (PyCObject_Check(arg))
 	{
-		// It's a PyCObject, ie a wrapped pointer. Check it's not NULL
+		// It's a PyCObject, ie a wrapped pointer. Check it's not nullptr
 		// and return it.
 		// FIXME: Try to check that its a pointer to a QObject instance
 		QObject* tempObject = (QObject*)PyCObject_AsVoidPtr(arg);
 		if (!tempObject)
 		{
-			PyErr_SetString(PyExc_TypeError, "INTERNAL: Passed NULL PyCObject");
-			return NULL;
+			PyErr_SetString(PyExc_TypeError, "INTERNAL: Passed nullptr PyCObject");
+			return nullptr;
 		}
-		else
-			return tempObject;
+		return tempObject;
 	}
-	else
-	{
-		// It's not a type we know what to do with
-		PyErr_SetString(PyExc_TypeError, QObject::tr("Argument must be page item name, or PyCObject instance").toLocal8Bit().constData());
-		return NULL;
-	}
+	// It's not a type we know what to do with
+	PyErr_SetString(PyExc_TypeError, QObject::tr("Argument must be page item name, or PyCObject instance").toLocal8Bit().constData());
+	return nullptr;
 }
 
 
 PyObject* wrapQObject(QObject* obj)
 {
-	return PyCObject_FromVoidPtr((void*)obj, NULL);
+	return PyCObject_FromVoidPtr((void*)obj, nullptr);
 }
 
 
@@ -53,10 +49,10 @@ const char* getpropertytype(QObject* obj, const char* propname, bool includesupe
 	const QMetaObject* objmeta = obj->metaObject();
 	int i = objmeta->indexOfProperty(propname);
 	if (i == -1)
-		return NULL;
+		return nullptr;
 	QMetaProperty propmeta = objmeta->property(i);
 	if (!propmeta.isValid())
-		return NULL;
+		return nullptr;
 	const char* type = propmeta.typeName();
 	return type;
 }
@@ -64,29 +60,29 @@ const char* getpropertytype(QObject* obj, const char* propname, bool includesupe
 
 PyObject* scribus_propertyctype(PyObject* /*self*/, PyObject* args, PyObject* kw)
 {
-	PyObject* objArg = NULL;
-	char* propertyname = NULL;
+	PyObject* objArg = nullptr;
+	char* propertyname = nullptr;
 	int includesuper = 1;
 	char* kwargs[] = {const_cast<char*>("object"),
 					  const_cast<char*>("property"),
 					  const_cast<char*>("includesuper"),
-					  NULL};
+					  nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "Oes|i", kwargs,
 				&objArg, "ascii", &propertyname, &includesuper))
-		return NULL;
+		return nullptr;
 
 	// Get the QObject* the object argument refers to
 	QObject* obj = getQObjectFromPyArg(objArg);
 	if (!obj)
-		return NULL;
-	objArg = NULL; // no need to decref, it's borrowed
+		return nullptr;
+	objArg = nullptr; // no need to decref, it's borrowed
 
 	// Look up the property and retrive its type information
 	const char* type = getpropertytype( (QObject*)obj, propertyname, includesuper);
-	if (type == NULL)
+	if (type == nullptr)
 	{
 		PyErr_SetString(PyExc_KeyError, QObject::tr("Property not found").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 	return PyString_FromString(type);
 }
@@ -95,11 +91,11 @@ PyObject* convert_QStringList_to_PyListObject(QStringList& origlist)
 {
 	PyObject* resultList = PyList_New(0);
 	if (!resultList)
-		return NULL;
+		return nullptr;
 
 	for ( QStringList::Iterator it = origlist.begin(); it != origlist.end(); ++it )
 		if (PyList_Append(resultList, PyString_FromString((*it).toUtf8().data())) == -1)
-			return NULL;
+			return nullptr;
 
 	return resultList;
 }
@@ -109,9 +105,9 @@ PyObject* convert_QObjectList_to_PyListObject(QObjectList* origlist)
 {
 	PyObject* resultList = PyList_New(0);
 	if (!resultList)
-		return NULL;
+		return nullptr;
 
-	PyObject* objPtr = NULL;
+	PyObject* objPtr = nullptr;
 	// Loop over the objects in the list and add them to the python
 	// list wrapped in PyCObjects .
 	for (int i = 0; i < origlist->count(); ++i)
@@ -122,11 +118,11 @@ PyObject* convert_QObjectList_to_PyListObject(QObjectList* origlist)
 		{
 			// Failed to wrap the object. An exception is already set.
 			Py_DECREF(resultList);
-			return NULL;
+			return nullptr;
 		}
 		// and add it to the list
 		if (PyList_Append(resultList, (PyObject*)objPtr) == -1)
-			return NULL;
+			return nullptr;
 	}
 	return resultList;
 }
@@ -135,9 +131,9 @@ PyObject* convert_QObjectList_to_PyListObject(QObjectList* origlist)
 
 PyObject* scribus_getchildren(PyObject* , PyObject* args, PyObject* kw)
 {
-	PyObject* objArg = NULL;
-	char* ofclass = NULL;
-	char* ofname = NULL;
+	PyObject* objArg = nullptr;
+	char* ofclass = nullptr;
+	char* ofname = nullptr;
 	int recursive = 0;
 	int regexpmatch = 0;
 	char* kwnames[] = {const_cast<char*>("object"),
@@ -145,16 +141,16 @@ PyObject* scribus_getchildren(PyObject* , PyObject* args, PyObject* kw)
 					   const_cast<char*>("ofname"),
 					   const_cast<char*>("regexpmatch"),
 					   const_cast<char*>("recursive"),
-					   NULL};
+					   nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "O|esesii", kwnames,
 				&objArg, "ascii", &ofclass, "ascii", &ofname, &regexpmatch, &recursive))
-		return NULL;
+		return nullptr;
 
 	// Get the QObject* the object argument refers to
 	QObject* obj = getQObjectFromPyArg(objArg);
 	if (!obj)
-		return NULL;
-	objArg = NULL; // no need to decref, it's borrowed
+		return nullptr;
+	objArg = nullptr; // no need to decref, it's borrowed
 
 	// Our job is to return a Python list containing the children of this
 	// widget (as PyCObjects).
@@ -171,33 +167,33 @@ PyObject* scribus_getchildren(PyObject* , PyObject* args, PyObject* kw)
 // select class.
 PyObject* scribus_getchild(PyObject* , PyObject* args, PyObject* kw)
 {
-	PyObject* objArg = NULL;
-	char* childname = NULL;
-	char* ofclass = NULL;
+	PyObject* objArg = nullptr;
+	char* childname = nullptr;
+	char* ofclass = nullptr;
 	bool recursive = true;
 	char* kwnames[] = {const_cast<char*>("object"),
 					   const_cast<char*>("childname"),
 					   const_cast<char*>("ofclass"),
 					   const_cast<char*>("recursive"),
-					   NULL};
+					   nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "Oes|esi", kwnames,
 				&objArg, "ascii", &childname, "ascii", &ofclass, &recursive))
-		return NULL;
+		return nullptr;
 
 	// Get the QObject* the object argument refers to
 	QObject* obj = getQObjectFromPyArg(objArg);
 	if (!obj)
-		return NULL;
-	objArg = NULL; // no need to decref, it's borrowed
+		return nullptr;
+	objArg = nullptr; // no need to decref, it's borrowed
 
 	// Search for the child, possibly restricting the search to children
 	// of a particular type, and possibly recursively searching through
 	// grandchildren etc.
 	QObject* child = obj->child(childname, ofclass, recursive);
-	if (child == NULL)
+	if (child == nullptr)
 	{
 		PyErr_SetString(PyExc_KeyError, QObject::tr("Child not found").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 
 	return wrapQObject(child);
@@ -206,30 +202,30 @@ PyObject* scribus_getchild(PyObject* , PyObject* args, PyObject* kw)
 
 PyObject* scribus_getpropertynames(PyObject* /*self*/, PyObject* args, PyObject* kw)
 {
-	PyObject* objArg = NULL;
+	PyObject* objArg = nullptr;
 	int includesuper = 1;
 	char* kwargs[] = {const_cast<char*>("object"),
 					  const_cast<char*>("includesuper"),
-					  NULL};
+					  nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "O|i", kwargs,
 				&objArg, &includesuper))
-		return NULL;
+		return nullptr;
 
 	// Get the QObject* the object argument refers to
 	QObject* obj = getQObjectFromPyArg(objArg);
 	if (!obj)
-		return NULL;
-	objArg = NULL; // no need to decref, it's borrowed
+		return nullptr;
+	objArg = nullptr; // no need to decref, it's borrowed
 
 	// Retrive the object's meta object so we can query it
 	const QMetaObject* objmeta = obj->metaObject();
 	if (!objmeta)
-		return NULL;
+		return nullptr;
 
 	// Return the list of properties
 	QStringList propertyNames;
 	int propertyOffset = includesuper ? 0 : objmeta->propertyOffset();
-	for(int i = propertyOffset; i < objmeta->propertyCount(); ++i)
+	for (int i = propertyOffset; i < objmeta->propertyCount(); ++i)
 	{
 		QString propName = objmeta->property(i).name();
 		propertyNames << QString::fromLatin1(objmeta->property(i).name());
@@ -240,20 +236,20 @@ PyObject* scribus_getpropertynames(PyObject* /*self*/, PyObject* args, PyObject*
 
 PyObject* scribus_getproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 {
-	PyObject* objArg = NULL;
-	char* propertyName = NULL;
+	PyObject* objArg = nullptr;
+	char* propertyName = nullptr;
 	char* kwargs[] = {const_cast<char*>("object"),
 					  const_cast<char*>("property"),
-					  NULL};
+					  nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "Oes", kwargs,
 				&objArg, "ascii", &propertyName))
-		return NULL;
+		return nullptr;
 
 	// Get the QObject* the object argument refers to
 	QObject* obj = getQObjectFromPyArg(objArg);
 	if (!obj)
-		return NULL;
-	objArg = NULL; // no need to decref, it's borrowed
+		return nullptr;
+	objArg = nullptr; // no need to decref, it's borrowed
 
 	// Get the QMetaProperty for the property, so we can check
 	// if it's a set/enum and do name/value translation.
@@ -263,7 +259,7 @@ PyObject* scribus_getproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 	{
 		PyErr_SetString(PyExc_ValueError,
 				QObject::tr("Property not found").toLocal8Bit().data());
-		return NULL;
+		return nullptr;
 	}
 
 	QMetaProperty propmeta = objmeta->property(i);
@@ -271,14 +267,14 @@ PyObject* scribus_getproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 	{
 		PyErr_SetString(PyExc_ValueError,
 				QObject::tr("Invalid property").toLocal8Bit().data());
-		return NULL;
+		return nullptr;
 	}
 
 	// Get the property value as a variant type
 	QVariant prop = obj->property(propertyName);
 
 	// Convert the property to an instance of the closest matching Python type.
-	PyObject* resultobj = NULL;
+	PyObject* resultobj = nullptr;
 	// NUMERIC TYPES
 	if (prop.type() == QVariant::Int)
 		resultobj = PyLong_FromLong(prop.toInt());
@@ -321,30 +317,29 @@ PyObject* scribus_getproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 	}
 
 	// Return the resulting Python object
-	if (resultobj == NULL)
+	if (resultobj == nullptr)
 	{
 		// An exception was set while assigning to resultobj
 		assert(PyErr_Occurred());
-		return NULL;
+		return nullptr;
 	}
-	else
-		return resultobj;
+	return resultobj;
 }
 
 
 
 PyObject* scribus_setproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 {
-	PyObject* objArg = NULL;
-	char* propertyName = NULL;
-	PyObject* objValue = NULL;
+	PyObject* objArg = nullptr;
+	char* propertyName = nullptr;
+	PyObject* objValue = nullptr;
 	char* kwargs[] = {const_cast<char*>("object"),
 					  const_cast<char*>("property"),
 					  const_cast<char*>("value"),
-					  NULL};
+					  nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "OesO", kwargs,
 				&objArg, "ascii", &propertyName, &objValue))
-		return NULL;
+		return nullptr;
 
 	// We're going to hang on to the value object for a while, so
 	// claim a reference to it.
@@ -353,12 +348,12 @@ PyObject* scribus_setproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 	// Get the QObject* the object argument refers to
 	QObject* obj = getQObjectFromPyArg(objArg);
 	if (!obj)
-		return NULL;
-	objArg = NULL; // no need to decref, it's borrowed
+		return nullptr;
+	objArg = nullptr; // no need to decref, it's borrowed
 
 	const char* propertyTypeName = getpropertytype(obj, propertyName, true);
-	if (propertyTypeName == NULL)
-		return NULL;
+	if (propertyTypeName == nullptr)
+		return nullptr;
 	QString propertyType = QString::fromLatin1(propertyTypeName);
 
 	// Did we know how to convert the value argument to the right type?
@@ -452,7 +447,7 @@ PyObject* scribus_setproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 		Py_DECREF(objValue);
 		PyErr_SetString(PyExc_TypeError,
 				QObject::tr("Property type '%1' not supported").arg(propertyType).toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 
 	// If `matched' is false, we recognised the C type but weren't able to
@@ -463,15 +458,14 @@ PyObject* scribus_setproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 		PyObject* objRepr = PyObject_Repr(objValue);
 		Py_DECREF(objValue); // We're done with it now
 		if (!objRepr)
-			return NULL;
+			return nullptr;
 		// Extract the repr() string
 		QString reprString = QString::fromUtf8(PyString_AsString(objRepr));
 		Py_DECREF(objRepr);
 
 		// And return an error
-		PyErr_SetString(PyExc_TypeError,
-				QObject::tr("Couldn't convert '%1' to property type '%2'").arg(reprString).arg(propertyType).toLocal8Bit().constData());
-		return NULL;
+		PyErr_SetString(PyExc_TypeError, QObject::tr("Couldn't convert '%1' to property type '%2'").arg(reprString, propertyType).toLocal8Bit().constData());
+		return nullptr;
 	}
 
 	// `success' is the return value of the setProperty() call
@@ -479,12 +473,10 @@ PyObject* scribus_setproperty(PyObject* /*self*/, PyObject* args, PyObject* kw)
 	{
 		Py_DECREF(objValue);
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Types matched, but setting property failed.").toLocal8Bit().constData());
-		return NULL;
+		return nullptr;
 	}
 
 	Py_DECREF(objValue);
-//	Py_INCREF(Py_None);
-//	return Py_None;
 	Py_RETURN_NONE;
 }
 

@@ -62,8 +62,7 @@ QString LineStyle::displayName() const
 		return name();
 //	else if ( inheritsAll() )
 //		return parent()->displayName();
-	else 
-		return parentStyle()->displayName() + "+";
+	return parentStyle()->displayName() + "+";
 }
 
 
@@ -129,7 +128,7 @@ void LineStyle::getNamedResources(ResourceCollection& lists) const
 	QList<LineStyle>::const_iterator it, itend = m_Sublines.constEnd();
 
 	lists.collectColor(color());
-	for (const BaseStyle* sty = parentStyle(); sty != NULL; sty = sty->parentStyle())
+	for (const BaseStyle* sty = parentStyle(); sty != nullptr; sty = sty->parentStyle())
 		lists.collectLineStyle(sty->name());
 	for (it = m_Sublines.begin(); it != itend; ++it)
 		(*it).getNamedResources(lists);
@@ -250,7 +249,7 @@ using namespace desaxe;
 
 const Xml_string LineStyle::saxxDefaultElem("linestyle");
 
-void LineStyle::desaxeRules(const Xml_string& prefixPattern, Digester& ruleset, Xml_string elemtag)
+void LineStyle::desaxeRules(const Xml_string& prefixPattern, Digester& ruleset, const Xml_string& elemtag)
 {
 	Xml_string stylePrefix(Digester::concat(prefixPattern, elemtag));
 	ruleset.addRule(stylePrefix, Factory<LineStyle>());

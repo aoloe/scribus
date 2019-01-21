@@ -30,11 +30,11 @@ for which a new license (GPL+exception) is in place.
 
 PropertiesPalette_Image::PropertiesPalette_Image( QWidget* parent) : QWidget(parent)
 {
-	m_ScMW = 0;
-	m_doc  = 0;
+	m_ScMW = nullptr;
+	m_doc  = nullptr;
 	m_haveDoc    = false;
 	m_haveItem   = false;
-	m_item       = 0;
+	m_item       = nullptr;
 	m_unitRatio  = 1.0;
 	m_unitIndex  = 0;
 
@@ -154,7 +154,7 @@ void PropertiesPalette_Image::setDoc(ScribusDoc *d)
 	}
 
 	m_doc  = d;
-	m_item = NULL;
+	m_item = nullptr;
 	m_unitRatio   = m_doc->unitRatio();
 	m_unitIndex   = m_doc->unitIndex();
 	int precision = unitGetPrecisionFromIndex(m_unitIndex);
@@ -188,8 +188,8 @@ void PropertiesPalette_Image::unsetDoc()
 
 	m_haveDoc  = false;
 	m_haveItem = false;
-	m_doc   = NULL;
-	m_item  = NULL;
+	m_doc   = nullptr;
+	m_item  = nullptr;
 
 	setEnabled(false);
 }
@@ -197,13 +197,13 @@ void PropertiesPalette_Image::unsetDoc()
 void PropertiesPalette_Image::unsetItem()
 {
 	m_haveItem = false;
-	m_item     = NULL;
+	m_item     = nullptr;
 	handleSelectionChanged();
 }
 
 PageItem* PropertiesPalette_Image::currentItemFromSelection()
 {
-	PageItem *currentItem = NULL;
+	PageItem *currentItem = nullptr;
 
 	if (m_doc)
 	{
@@ -222,7 +222,7 @@ PageItem* PropertiesPalette_Image::currentItemFromSelection()
 
 void PropertiesPalette_Image::installSniffer(ScrSpinBox *spinBox)
 {
-	const QList<QObject*> list = spinBox->children();
+	const QList<QObject*>& list = spinBox->children();
 	if (!list.isEmpty())
 	{
 		QListIterator<QObject*> it(list);
@@ -237,7 +237,7 @@ void PropertiesPalette_Image::installSniffer(ScrSpinBox *spinBox)
 
 void PropertiesPalette_Image::installSniffer(QSpinBox *spinBox)
 {
-	const QList<QObject*> list = spinBox->children();
+	const QList<QObject*>& list = spinBox->children();
 	if (!list.isEmpty())
 	{
 		QListIterator<QObject*> it(list);
@@ -396,7 +396,7 @@ void PropertiesPalette_Image::handleSelectionChanged()
 		case PageItem::ImageFrame:
 		case PageItem::LatexFrame:
 		case PageItem::OSGFrame:
-			setEnabled(currItem->asOSGFrame() == NULL);
+			setEnabled(currItem->asOSGFrame() == nullptr);
 			break;
 		case PageItem::TextFrame:
 			setEnabled(false);
@@ -443,7 +443,7 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 	//CB We shouldn't really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
 	//set some status if so.
-	//FIXME: This won't work until when a canvas deselect happens, m_item must be NULL.
+	//FIXME: This won't work until when a canvas deselect happens, m_item must be nullptr.
 	//if (m_item == i)
 	//	return;
 

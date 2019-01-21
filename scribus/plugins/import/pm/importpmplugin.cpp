@@ -39,7 +39,7 @@ void importpm_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ImportPmPlugin::ImportPmPlugin() : LoadSavePlugin(),
+ImportPmPlugin::ImportPmPlugin() :
 	importAction(new ScrAction(ScrAction::DLL, QPixmap(), QPixmap(), "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do it in one
@@ -115,7 +115,7 @@ bool ImportPmPlugin::import(QString fileName, int flags)
 {
 	if (!checkFlags(flags))
 		return false;
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 	{
 		flags |= lfInteractive;
 		PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("importpm");
@@ -130,8 +130,8 @@ bool ImportPmPlugin::import(QString fileName, int flags)
 			return true;
 	}
 	m_Doc=ScCore->primaryMainWindow()->doc;
-	UndoTransaction* activeTransaction = NULL;
-	bool emptyDoc = (m_Doc == NULL);
+	UndoTransaction* activeTransaction = nullptr;
+	bool emptyDoc = (m_Doc == nullptr);
 	bool hasCurrentPage = (m_Doc && m_Doc->currentPage());
 	TransactionSettings trSettings;
 	trSettings.targetName   = hasCurrentPage ? m_Doc->currentPage()->getUName() : "";
@@ -150,7 +150,7 @@ bool ImportPmPlugin::import(QString fileName, int flags)
 	{
 		activeTransaction->commit();
 		delete activeTransaction;
-		activeTransaction = NULL;
+		activeTransaction = nullptr;
 	}
 	if (emptyDoc || !(flags & lfInteractive) || !(flags & lfScripted))
 		UndoManager::instance()->setUndoEnabled(true);
@@ -160,10 +160,10 @@ bool ImportPmPlugin::import(QString fileName, int flags)
 
 QImage ImportPmPlugin::readThumbnail(const QString& fileName)
 {
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 		return QImage();
 	UndoManager::instance()->setUndoEnabled(false);
-	m_Doc = NULL;
+	m_Doc = nullptr;
 	PmPlug *dia = new PmPlug(m_Doc, lfCreateThumbnail);
 	Q_CHECK_PTR(dia);
 	QImage ret = dia->readThumbnail(fileName);

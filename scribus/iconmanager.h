@@ -51,16 +51,16 @@ class SCRIBUS_API IconManager : public QObject
 		*/
 		static void deleteInstance();
 		bool setup();
-		QCursor loadCursor(const QString nam, int hotX = -1, int hotY = -1, bool forceUseColor=false);
-		QIcon loadIcon(const QString nam, bool forceUseColor=false);
-		QPixmap loadPixmap(const QString nam, bool forceUseColor=false, bool rtlFlip=false);
-		QString pathForIcon(const QString nam);
-		QStringList pathList();
-		QStringList nameList(QString language);
+		QCursor loadCursor(const QString& nam, int hotX = -1, int hotY = -1, bool forceUseColor=false);
+		QIcon loadIcon(const QString& nam, bool forceUseColor=false);
+		QPixmap loadPixmap(const QString& nam, bool forceUseColor=false, bool rtlFlip=false);
+		QString pathForIcon(const QString& nam);
+		QStringList pathList() const;
+		QStringList nameList(const QString& language) const;
 		void iconToGrayscale(QPixmap *pm);
-		bool setActiveFromPrefs(QString prefsSet);
+		bool setActiveFromPrefs(const QString& prefsSet);
 		QString activeSetBasename() { return m_activeSetBasename; }
-		QString baseNameForTranslation(QString transName);
+		QString baseNameForTranslation(const QString& transName) const;
 
 	public slots:
 		void languageChange();

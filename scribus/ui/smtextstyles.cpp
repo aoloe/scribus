@@ -39,8 +39,8 @@ for which a new license (GPL+exception) is in place.
 #include "util.h"
 
 
-SMParagraphStyle::SMParagraphStyle(SMCharacterStyle* cstyleItem) : StyleItem(),
-m_pwidget(0), m_cstyleItem(cstyleItem), m_doc(0), m_selectionIsDirty(false), m_unitRatio(1.0)
+SMParagraphStyle::SMParagraphStyle(SMCharacterStyle* cstyleItem) :
+	m_pwidget(nullptr), m_cstyleItem(cstyleItem), m_doc(nullptr), m_selectionIsDirty(false), m_unitRatio(1.0)
 {
 	Q_ASSERT(m_cstyleItem);
 	m_cstyles = m_cstyleItem->tmpStyles();
@@ -78,7 +78,7 @@ void SMParagraphStyle::setCurrentDoc(ScribusDoc *doc)
 	else
 	{
 		if (m_pwidget)
-			m_pwidget->setDoc(0);
+			m_pwidget->setDoc(nullptr);
 		removeConnections();
 		m_selection.clear();
 		m_tmpStyles.clear();
@@ -1930,7 +1930,7 @@ void SMParagraphStyle::slotBaselineOffset()
 	}
 }
 
-void SMParagraphStyle::slotFont(QString s)
+void SMParagraphStyle::slotFont(const QString& s)
 {
 	if (m_pwidget->cpage->fontFace_->useParentFont())
 		for (int i = 0; i < m_selection.count(); ++i)
@@ -1954,7 +1954,7 @@ void SMParagraphStyle::slotParentChanged(const QString &parent)
 	Q_ASSERT(!parent.isNull());
 
 	bool  loop = false, parentLoop = false;
-	const BaseStyle* parentStyle = (!parent.isEmpty()) ? m_tmpStyles.resolve(parent) : NULL;
+	const BaseStyle* parentStyle = (!parent.isEmpty()) ? m_tmpStyles.resolve(parent) : nullptr;
 	QStringList sel;
 
 	for (int i = 0; i < m_selection.count(); ++i)
@@ -1969,7 +1969,7 @@ void SMParagraphStyle::slotParentChanged(const QString &parent)
 				loop = parentLoop = true;
 				break;
 			}
-			pStyle = pStyle->hasParent() ? pStyle->parentStyle() : NULL;
+			pStyle = pStyle->hasParent() ? pStyle->parentStyle() : nullptr;
 		}
 		if (!loop)
 		{
@@ -2080,13 +2080,13 @@ void SMParagraphStyle::slotCharStylesDeleted(const QList<RemoveItem> &removeList
 SMParagraphStyle::~SMParagraphStyle()
 {
 	delete m_pwidget;
-	m_pwidget = 0;
+	m_pwidget = nullptr;
 }
 
 /******************************************************************************/
 /******************************************************************************/
 
-SMCharacterStyle::SMCharacterStyle() : StyleItem(), m_widget(0), m_page(0), m_doc(0), m_selectionIsDirty(false)
+SMCharacterStyle::SMCharacterStyle() : m_widget(nullptr), m_page(nullptr), m_doc(nullptr), m_selectionIsDirty(false)
 {
 	m_widget = new QTabWidget();
 	Q_CHECK_PTR(m_widget);
@@ -3015,7 +3015,7 @@ void SMCharacterStyle::slotSmallestWord()
 	}
 }
 
-void SMCharacterStyle::slotFont(QString s)
+void SMCharacterStyle::slotFont(const QString& s)
 {
 	if (m_page->fontFace_->useParentFont())
 		for (int i = 0; i < m_selection.count(); ++i)
@@ -3039,7 +3039,7 @@ void SMCharacterStyle::slotParentChanged(const QString &parent)
 	Q_ASSERT(!parent.isNull());
 
 	bool  loop = false, parentLoop = false;
-	const BaseStyle* parentStyle = (!parent.isEmpty()) ? m_tmpStyles.resolve(parent) : NULL;
+	const BaseStyle* parentStyle = (!parent.isEmpty()) ? m_tmpStyles.resolve(parent) : nullptr;
 	QStringList  sel;
 
 	for (int i = 0; i < m_selection.count(); ++i)
@@ -3054,7 +3054,7 @@ void SMCharacterStyle::slotParentChanged(const QString &parent)
 				loop = parentLoop = true;
 				break;
 			}
-			pStyle = pStyle->hasParent() ? pStyle->parentStyle() : NULL;
+			pStyle = pStyle->hasParent() ? pStyle->parentStyle() : nullptr;
 		}
 		if (!loop)
 		{
@@ -3099,7 +3099,7 @@ SMCharacterStyle::~SMCharacterStyle()
 {
 	delete m_page;
 	delete m_widget;
-	m_page = 0;
-	m_widget = 0;
+	m_page = nullptr;
+	m_widget = nullptr;
 }
 

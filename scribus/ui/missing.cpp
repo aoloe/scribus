@@ -21,7 +21,7 @@ for which a new license (GPL+exception) is in place.
 #include "scribusdoc.h"
 #include "util.h"
 
-MissingFont::MissingFont( QWidget* parent, QString fon, ScribusDoc* doc ) : QDialog( parent )
+MissingFont::MissingFont( QWidget* parent, const QString& fon, ScribusDoc* doc ) : QDialog( parent )
 {
 	setModal(true);
 	setWindowTitle( tr("Missing Font"));
@@ -40,7 +40,7 @@ MissingFont::MissingFont( QWidget* parent, QString fon, ScribusDoc* doc ) : QDia
 	useLabel = new QLabel( tr( "Use" ), this );
 	missingFontGridLayout->addWidget( useLabel, 1, 1 );
 	replaceFontCombo = new FontComboH(this);
-	replaceFontCombo->setCurrentFont(doc == NULL ? PrefsManager::instance()->appPrefs.itemToolPrefs.textFont : doc->itemToolPrefs().textFont);
+	replaceFontCombo->setCurrentFont(doc == nullptr ? PrefsManager::instance()->appPrefs.itemToolPrefs.textFont : doc->itemToolPrefs().textFont);
 	replacementFont = replaceFontCombo->currentFont();
 	missingFontGridLayout->addWidget( replaceFontCombo, 1, 2 );
 	insteadLabel = new QLabel( tr( "instead" ), this );

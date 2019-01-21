@@ -39,7 +39,7 @@ void importpct_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ImportPctPlugin::ImportPctPlugin() : LoadSavePlugin(),
+ImportPctPlugin::ImportPctPlugin() :
 	importAction(new ScrAction(ScrAction::DLL, "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do it in one
@@ -114,7 +114,7 @@ bool ImportPctPlugin::import(QString fileName, int flags)
 {
 	if (!checkFlags(flags))
 		return false;
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 	{
 		flags |= lfInteractive;
 		PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("importpct");
@@ -128,10 +128,10 @@ bool ImportPctPlugin::import(QString fileName, int flags)
 		else
 			return true;
 	}
-	if (m_Doc == 0)
+	if (m_Doc == nullptr)
 		m_Doc=ScCore->primaryMainWindow()->doc;
 	UndoTransaction activeTransaction;
-	bool emptyDoc = (m_Doc == NULL);
+	bool emptyDoc = (m_Doc == nullptr);
 	bool hasCurrentPage = (m_Doc && m_Doc->currentPage());
 	TransactionSettings trSettings;
 	trSettings.targetName   = hasCurrentPage ? m_Doc->currentPage()->getUName() : "";
@@ -156,10 +156,10 @@ bool ImportPctPlugin::import(QString fileName, int flags)
 
 QImage ImportPctPlugin::readThumbnail(const QString& fileName)
 {
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 		return QImage();
 	UndoManager::instance()->setUndoEnabled(false);
-	m_Doc = NULL;
+	m_Doc = nullptr;
 	PctPlug *dia = new PctPlug(m_Doc, lfCreateThumbnail);
 	Q_CHECK_PTR(dia);
 	QImage ret = dia->readThumbnail(fileName);

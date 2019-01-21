@@ -451,7 +451,7 @@ void ScPainterEx_Cairo::fillPathHelper()
 {
 	cairo_save( m_cr );
 	cairo_set_operator(m_cr, CAIRO_OPERATOR_OVER);
-	if( m_fillRule )
+	if (m_fillRule)
 		cairo_set_fill_rule (m_cr, CAIRO_FILL_RULE_EVEN_ODD);
 	else
 		cairo_set_fill_rule (m_cr, CAIRO_FILL_RULE_WINDING);
@@ -495,22 +495,22 @@ void ScPainterEx_Cairo::strokePathHelper()
 	cairo_save( m_cr );
 	cairo_set_operator(m_cr, CAIRO_OPERATOR_OVER);
 	cairo_set_line_width( m_cr, m_lineWidth );
-	if( m_array.count() > 0 )
+	if (m_array.count() > 0)
 		cairo_set_dash( m_cr, m_array.data(), m_array.count(), m_offset);
 	else
-		cairo_set_dash( m_cr, NULL, 0, 0 );
+		cairo_set_dash( m_cr, nullptr, 0, 0 );
 	cairo_set_operator(m_cr, CAIRO_OPERATOR_OVER);
-	if( m_lineEnd == Qt::RoundCap )
+	if (m_lineEnd == Qt::RoundCap)
 		cairo_set_line_cap (m_cr, CAIRO_LINE_CAP_ROUND);
-	else if( m_lineEnd == Qt::SquareCap )
+	else if (m_lineEnd == Qt::SquareCap)
 		cairo_set_line_cap (m_cr, CAIRO_LINE_CAP_SQUARE);
-	else if( m_lineEnd == Qt::FlatCap )
+	else if (m_lineEnd == Qt::FlatCap)
 		cairo_set_line_cap (m_cr, CAIRO_LINE_CAP_BUTT);
-	if( m_lineJoin == Qt::RoundJoin )
+	if (m_lineJoin == Qt::RoundJoin)
 		cairo_set_line_join( m_cr, CAIRO_LINE_JOIN_ROUND );
-	else if( m_lineJoin == Qt::BevelJoin )
+	else if (m_lineJoin == Qt::BevelJoin)
 		cairo_set_line_join( m_cr, CAIRO_LINE_JOIN_BEVEL );
-	else if( m_lineJoin == Qt::MiterJoin )
+	else if (m_lineJoin == Qt::MiterJoin)
 		cairo_set_line_join( m_cr, CAIRO_LINE_JOIN_MITER );
 	if (m_strokeMode == 3)
 	{
@@ -658,10 +658,10 @@ void ScPainterEx_Cairo::drawLinearGradient( VGradientEx& gradient, const QRect& 
 	int index = 0;
 	double r, g, b;
 	QList<VColorStopEx*> colorStops = gradient.colorStops();
-	VColorStopEx* stop = NULL;
+	VColorStopEx* stop = nullptr;
 	QColor color;
 
-	if ( gradient.Stops() < 2 )
+	if ( gradient.stops() < 2 )
 		return;
 
 	double x1 = gradient.origin().x();
@@ -674,7 +674,7 @@ void ScPainterEx_Cairo::drawLinearGradient( VGradientEx& gradient, const QRect& 
 
 	bool   isFirst  = true;
 	double lastStop = 0.0;
-	for( uint index = 0 ; index < gradient.Stops(); index++)
+	for (int index = 0 ; index < gradient.stops(); index++)
 	{
 		stop  = colorStops.at(index);
 		if ((lastStop == stop->rampPoint) && (!isFirst))
@@ -708,7 +708,7 @@ void ScPainterEx_Cairo::drawCircularGradient( VGradientEx& gradient, const QRect
 	int offset = 0;
 	double r, g, b;
 	QList<VColorStopEx*> colorStops = gradient.colorStops();
-	VColorStopEx* stop = NULL;
+	VColorStopEx* stop = nullptr;
 	QColor color;
 
 	double x1  = gradient.origin().x();
@@ -725,7 +725,7 @@ void ScPainterEx_Cairo::drawCircularGradient( VGradientEx& gradient, const QRect
 
 	bool   isFirst  = true;
 	double lastStop = 0.0;
-	for( uint index = 0 ; index < gradient.Stops() ; index++)
+	for (int index = 0 ; index < gradient.stops() ; index++)
 	{
 		stop  = colorStops.at(index);
 		if ((lastStop == stop->rampPoint) && (!isFirst))
@@ -756,10 +756,10 @@ void ScPainterEx_Cairo::drawCircularGradient( VGradientEx& gradient, const QRect
 
 void ScPainterEx_Cairo::drawFourColorGradient( const QRect& rect )
 {
-	cairo_pattern_t *pat = NULL;
-	cairo_surface_t *img = NULL;
-	cairo_t *cr = NULL;
-	cairo_pattern_t *mpat = NULL;
+	cairo_pattern_t *pat = nullptr;
+	cairo_surface_t *img = nullptr;
+	cairo_t *cr = nullptr;
+	cairo_pattern_t *mpat = nullptr;
 	QColor color;
 
 	double p1x = m_gradPatchP1.x();
@@ -833,11 +833,11 @@ void ScPainterEx_Cairo::drawFourColorGradient( const QRect& rect )
 
 void ScPainterEx_Cairo::drawDiamondGradient( VGradientEx& gradient, const QRect& rect )
 {
-	cairo_pattern_t *pat = NULL;
-	cairo_surface_t *img = NULL;
-	cairo_t *cr = NULL;
-	cairo_pattern_t *mpat = NULL;
-	VColorStopEx* stop = NULL;
+	cairo_pattern_t *pat = nullptr;
+	cairo_surface_t *img = nullptr;
+	cairo_t *cr = nullptr;
+	cairo_pattern_t *mpat = nullptr;
+	VColorStopEx* stop = nullptr;
 	QColor color;
 
 	double p1x = m_gradControlP1.x();
@@ -858,7 +858,7 @@ void ScPainterEx_Cairo::drawDiamondGradient( VGradientEx& gradient, const QRect&
 	QList<QColor> qStopColors;
 	QList<double> qStopRampPoints;
 	QColor qStopColor;
-	for( int offset = 0 ; offset < colorStops.count() ; offset++ )
+	for (int offset = 0 ; offset < colorStops.count() ; offset++)
 	{
 		stop = colorStops.at(offset);
 		qStopColor = transformColor( ScColorShade(stop->color, stop->shade), 1.0);
@@ -903,7 +903,7 @@ void ScPainterEx_Cairo::drawDiamondGradient( VGradientEx& gradient, const QRect&
 	cairo_fill(cr);
 	cairo_set_operator(cr, CAIRO_OPERATOR_ADD);
 	mpat = cairo_pattern_create_mesh();
-	for( int offset = 1 ; offset <  qStopRampPoints.count() ; offset++ )
+	for (int offset = 1 ; offset <  qStopRampPoints.count() ; offset++)
 	{
 		QLineF e1 = edge1;
 		QLineF e1s = edge1;
@@ -1057,11 +1057,11 @@ void ScPainterEx_Cairo::drawDiamondGradient( VGradientEx& gradient, const QRect&
 
 void ScPainterEx_Cairo::drawMeshGradient( const QRect& rect )
 {
-	cairo_pattern_t *pat = NULL;
-	cairo_surface_t *img = NULL;
-	cairo_t *cr = NULL;
-	cairo_pattern_t *mpat = NULL;
-	VColorStopEx* stop = NULL;
+	cairo_pattern_t *pat = nullptr;
+	cairo_surface_t *img = nullptr;
+	cairo_t *cr = nullptr;
+	cairo_pattern_t *mpat = nullptr;
+	VColorStopEx* stop = nullptr;
 	QColor color;
 
 	double p3x = m_gradPatchP3.x();
@@ -1135,11 +1135,11 @@ void ScPainterEx_Cairo::drawMeshGradient( const QRect& rect )
 
 void ScPainterEx_Cairo::drawFreeMeshGradient( const QRect& rect )
 {
-	cairo_pattern_t *pat = NULL;
-	cairo_surface_t *img = NULL;
-	cairo_t *cr = NULL;
-	cairo_pattern_t *mpat = NULL;
-	VColorStopEx* stop = NULL;
+	cairo_pattern_t *pat = nullptr;
+	cairo_surface_t *img = nullptr;
+	cairo_t *cr = nullptr;
+	cairo_pattern_t *mpat = nullptr;
+	VColorStopEx* stop = nullptr;
 	QColor color;
 
 	double p3x = m_gradPatchP3.x();
@@ -1221,7 +1221,7 @@ void ScPainterEx_Cairo::strokeGradient(VGradientEx& gradient)
 
 void ScPainterEx_Cairo::strokeLinearGradient(VGradientEx& gradient)
 {
-	cairo_pattern_t *pat = NULL;
+	cairo_pattern_t *pat = nullptr;
 	double r, g, b, lastPoint = 0.0;
 	double x1 = gradient.origin().x();
 	double y1 = gradient.origin().y();
@@ -1230,7 +1230,7 @@ void ScPainterEx_Cairo::strokeLinearGradient(VGradientEx& gradient)
 	double fx = gradient.focalPoint().x();
 	double fy = gradient.focalPoint().y();
 	QList<VColorStopEx*> colorStops = gradient.colorStops();
-	VColorStopEx* stop = NULL;
+	VColorStopEx* stop = nullptr;
 	QColor color;
 
 	cairo_push_group(m_cr);
@@ -1241,7 +1241,7 @@ void ScPainterEx_Cairo::strokeLinearGradient(VGradientEx& gradient)
 
 	bool   isFirst  = true;
 	double lastStop = 0.0;
-	for( uint index = 0 ; index < gradient.Stops(); index++)
+	for (int index = 0 ; index < gradient.stops(); index++)
 	{
 		stop  = colorStops.at(index);
 		if ((lastStop == stop->rampPoint) && (!isFirst))
@@ -1273,7 +1273,7 @@ void ScPainterEx_Cairo::strokeLinearGradient(VGradientEx& gradient)
 
 void ScPainterEx_Cairo::strokeCircularGradient(VGradientEx& gradient)
 {
-	cairo_pattern_t *pat = NULL;
+	cairo_pattern_t *pat = nullptr;
 	double r, g, b, lastPoint = 0.0;
 	double x1 = gradient.origin().x();
 	double y1 = gradient.origin().y();
@@ -1282,7 +1282,7 @@ void ScPainterEx_Cairo::strokeCircularGradient(VGradientEx& gradient)
 	double fx = gradient.focalPoint().x();
 	double fy = gradient.focalPoint().y();
 	QList<VColorStopEx*> colorStops = gradient.colorStops();
-	VColorStopEx* stop = NULL;
+	VColorStopEx* stop = nullptr;
 	QColor color;
 
 	cairo_push_group(m_cr);
@@ -1293,7 +1293,7 @@ void ScPainterEx_Cairo::strokeCircularGradient(VGradientEx& gradient)
 
 	bool   isFirst  = true;
 	double lastStop = 0.0;
-	for( uint index = 0 ; index < gradient.Stops(); index++)
+	for (int index = 0 ; index < gradient.stops(); index++)
 	{
 		stop  = colorStops.at(index);
 		if ((lastStop == stop->rampPoint) && (!isFirst))

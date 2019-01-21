@@ -45,12 +45,12 @@ for which a new license (GPL+exception) is in place.
 #include "selection.h"
 #include "undomanager.h"
 
-QString getLoremLocation(QString fname)
+QString getLoremLocation(const QString& fname)
 {
 	return QDir::toNativeSeparators(ScPaths::instance().shareDir() + "/loremipsum/" + fname);
 }
 
-LoremParser::LoremParser(QString fname)
+LoremParser::LoremParser(const QString& fname)
 {
 	name = author = url = "n/a";
 	correct = false;
@@ -68,10 +68,10 @@ LoremParser::LoremParser(QString fname)
 	QDomElement docElement = doc.documentElement();
 
 	QDomNode node = docElement.firstChild();
-	while(!node.isNull())
+	while (!node.isNull())
 	{
 		QDomElement element = node.toElement();
-		if(!element.isNull())
+		if (!element.isNull())
 		{
 			if (element.tagName() == "name")
 				name = element.text();
@@ -277,7 +277,7 @@ void LoremManager::languageChange()
 	loremList->setToolTip( tr( "List of languages available to insert sample text in" ) );
 }
 
-void LoremManager::insertLoremIpsum(QString name, int paraCount, bool random)
+void LoremManager::insertLoremIpsum(const QString& name, int paraCount, bool random)
 {
 	//CB: Avox please make insertText for text frame to nuke all this
 	// is it really applied?
@@ -286,7 +286,7 @@ void LoremManager::insertLoremIpsum(QString name, int paraCount, bool random)
 	for (int i = 0; i < m_Doc->m_Selection->count(); ++i)
 	{
 		PageItem* currItem = m_Doc->m_Selection->itemAt(i);
-		if (currItem == NULL)
+		if (currItem == nullptr)
 			continue;
 		//do not insert lorem ipsum text into notes frames
 		if (currItem->isNoteFrame())
@@ -316,9 +316,9 @@ void LoremManager::insertLoremIpsum(QString name, int paraCount, bool random)
 				continue;
 		}
 		LoremParser *lp = new LoremParser(name);
-		if (lp == NULL)
+		if (lp == nullptr)
 		{
-			qDebug("LoremManager::okButton_clicked() *lp == NULL");
+			qDebug("LoremManager::okButton_clicked() *lp == nullptr");
 			return;
 		}
 		
@@ -366,7 +366,7 @@ bool LoremManager::randomize()
 QString LoremManager::getName()
 {
 	QTreeWidgetItem *li;
-	if (loremList->currentItem()->parent() == 0)
+	if (loremList->currentItem()->parent() == nullptr)
 		li = loremList->currentItem();
 	else
 		li = loremList->currentItem()->parent();

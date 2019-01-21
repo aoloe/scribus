@@ -17,7 +17,7 @@ for which a new license (GPL+exception) is in place.
 
 CharSelectEnhanced::CharSelectEnhanced(QWidget* parent)
 		: ScrPaletteBase(parent, "CharSelectEnhanced"),
-		m_doc(0),
+		m_doc(nullptr),
 		m_characterClass(0)
 {
 	setupUi(this);
@@ -34,7 +34,7 @@ CharSelectEnhanced::CharSelectEnhanced(QWidget* parent)
 	// signals and slots connections
 	connect(deleteButton, SIGNAL(clicked()), this, SLOT(delEdit()));
 	connect(insertButton, SIGNAL(clicked()), this, SLOT(insChar()));
-	connect(m_charTable, SIGNAL(selectChar(uint, QString)), this, SLOT(newChar(uint, QString)));
+	connect(m_charTable, SIGNAL(selectChar(uint,QString)), this, SLOT(newChar(uint,QString)));
 	connect(fontSelector, SIGNAL(activated(int)), this, SLOT(newFont(int)));
 	connect(rangeSelector, SIGNAL(activated(int)), this, SLOT(newCharClass(int)));
 	connect(hexLineEdit, SIGNAL(returnPressed()), this, SLOT(hexLineEdit_returnPressed()));
@@ -107,8 +107,7 @@ void CharSelectEnhanced::scanFont()
 	charactersHebrew.clear();
 	ScFace::FaceEncoding glyphs;
 	(*m_doc->AllFonts)[m_fontInUse].glyphNames(glyphs);
-	for (ScFace::FaceEncoding::iterator it=glyphs.begin();
-	        it != glyphs.end(); ++it)
+	for (auto it = glyphs.begin(); it != glyphs.end(); ++it)
 	{
 		charcode = it.value().charcode;
 		gname = it.value().glyphName;
@@ -413,7 +412,7 @@ void CharSelectEnhanced::newFont(int font)
 //     tDebug("newFont end");
 }
 
-void CharSelectEnhanced::newChar(uint i, QString)
+void CharSelectEnhanced::newChar(uint i, const QString&)
 {
 	chToIns.append(i);
 	sample->setPixmap(FontSample((*m_doc->AllFonts)[m_fontInUse], 28, chToIns, palette().color(QPalette::Window), true));

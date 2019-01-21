@@ -59,7 +59,7 @@ void CalligraphicMode::drawControls(QPainter* /*p*/)
 inline bool CalligraphicMode::GetItem(PageItem** pi)
 { 
 	*pi = m_doc->m_Selection->itemAt(0); 
-	return (*pi) != NULL; 
+	return (*pi) != nullptr;
 }
 
 void CalligraphicMode::enterEvent(QEvent *)
@@ -104,7 +104,6 @@ void CalligraphicMode::mouseMoveEvent(QMouseEvent *m)
 	
 	double newX, newY;
 	PageItem *currItem;
-	QPoint np, np2, mop;
 	FPoint npf, npf2;
 //	QRect tx;
 	m->accept();
@@ -117,7 +116,7 @@ void CalligraphicMode::mouseMoveEvent(QMouseEvent *m)
 	{
 		double newXF = mousePointDoc.x(); //m_view->translateToDoc(m->x(), m->y()).x();
 		double newYF = mousePointDoc.y(); //m_view->translateToDoc(m->x(), m->y()).y();
-		if (RecordP.size() > 0)
+		if (!RecordP.empty())
 		{
 			if (FPoint(newXF, newYF) != RecordP.point(RecordP.size()-1))
 				RecordP.addPoint(FPoint(newXF, newYF));
@@ -156,9 +155,9 @@ void CalligraphicMode::mouseMoveEvent(QMouseEvent *m)
 				setModeCursor();
 				return;
 			}
-			for (int a = 0; a < m_doc->m_Selection->count(); ++a)
+			for (int i = 0; i < m_doc->m_Selection->count(); ++i)
 			{
-				currItem = m_doc->m_Selection->itemAt(a);
+				currItem = m_doc->m_Selection->itemAt(i);
 				if (currItem->locked())
 					break;
 				setModeCursor();
@@ -315,14 +314,14 @@ void CalligraphicMode::mouseReleaseEvent(QMouseEvent *m)
 		m_doc->m_Selection->itemAt(i)->checkChanges(true);
 
 	//Commit drag created items to undo manager.
-	if (m_doc->m_Selection->itemAt(0)!=NULL)
+	if (m_doc->m_Selection->itemAt(0)!=nullptr)
 	{
 		m_doc->itemAddCommit(m_doc->m_Selection->itemAt(0));
 	}
 	//Make sure the Zoom spinbox and page selector don't have focus if we click on the canvas
 	m_view->m_ScMW->zoomSpinBox->clearFocus();
 	m_view->m_ScMW->pageSelector->clearFocus();
-	if (m_doc->m_Selection->itemAt(0) != 0) // is there the old clip stored for the undo action
+	if (m_doc->m_Selection->itemAt(0) != nullptr) // is there the old clip stored for the undo action
 	{
 		currItem = m_doc->m_Selection->itemAt(0);
 		m_doc->nodeEdit.finishTransaction(currItem);

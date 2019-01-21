@@ -19,8 +19,7 @@ QString TableStyle::displayName() const
 		return CommonStrings::trDefaultTableStyle;
 	if (hasName() || !hasParent() || !m_context)
 		return name();
-	else 
-		return parentStyle()->displayName() + "+";
+	return parentStyle()->displayName() + "+";
 }
 
 bool TableStyle::equiv(const BaseStyle& other) const
@@ -63,7 +62,7 @@ void TableStyle::update(const StyleContext* context)
 
 void TableStyle::getNamedResources(ResourceCollection& lists) const
 {
-	for (const BaseStyle* style = parentStyle(); style != NULL; style = style->parentStyle())
+	for (const BaseStyle* style = parentStyle(); style != nullptr; style = style->parentStyle())
 		lists.collectCellStyle(style->name());
 	lists.collectColor(fillColor());
 	// TODO: Collect colors of borders.

@@ -10,10 +10,9 @@ for which a new license (GPL+exception) is in place.
 #include "units.h"
 
 
-GuidesModel::GuidesModel(QObject * /*parent*/)
-	: QAbstractTableModel(),
-		m_docUnitIndex(0),
-		m_docUnitDecimals(0)
+GuidesModel::GuidesModel(QObject * /*parent*/) :
+	m_docUnitIndex(0),
+	m_docUnitDecimals(0)
 {
 	m_rule = 0.0;
 	// debug
@@ -55,6 +54,8 @@ QVariant GuidesModel::data(const QModelIndex & index, int role) const
 	}
 	if (role == Qt::EditRole)
 		return pts2value(m_values.at(index.row()) - m_rule, m_docUnitIndex);
+	if (role == Qt::UserRole)
+		return m_values.at(index.row());
 
 	if (role == Qt::BackgroundColorRole && m_values.at(index.row()) == 0.0)
 		return QVariant(QColor(Qt::red));
@@ -88,11 +89,11 @@ QVariant GuidesModel::headerData(int /*section*/, Qt::Orientation orientation, i
 	return "";
 }
 
-void GuidesModel::removeValues(const Guides & v)
+void GuidesModel::removeValues(const Guides & guides)
 {
 	beginResetModel();
-	foreach(double i, v)
-		m_values.removeAll(value2pts(i, m_docUnitIndex));
+	for (double d : guides)
+		m_values.removeAll(d);
 	endResetModel();
 }
 
@@ -128,7 +129,7 @@ void GuidesModel::insertRow()
 	endResetModel();
 }
 
-void GuidesModel::setValues(Guides values)
+void GuidesModel::setValues(const Guides& values)
 {
 	beginResetModel();
 	m_values = values;

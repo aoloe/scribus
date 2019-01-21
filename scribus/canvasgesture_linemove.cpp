@@ -43,7 +43,7 @@ void LineMove::prepare(QPointF start, QPointF end)
 
 void LineMove::prepare(PageItem_Line* line, bool useOriginAsEndpoint)
 {
-	m_haveLineItem = (line != NULL);
+	m_haveLineItem = (line != nullptr);
 	if (!m_haveLineItem)
 		return;
 	m_useOriginAsEndpoint = useOriginAsEndpoint;
@@ -65,8 +65,7 @@ double LineMove::rotation() const
 	double rot = xy2Deg(m_bounds.width(), m_bounds.height());
 	if (rot < 0.0)
 		return 360 + rot;
-	else
-		return rot;
+	return rot;
 }
 
 
@@ -122,7 +121,7 @@ void LineMove::drawControls(QPainter* p)
 
 void LineMove::mousePressEvent(QMouseEvent *m)
 {
-	PageItem_Line* line = m_doc->m_Selection->count() == 1 ? m_doc->m_Selection->itemAt(0)->asLine() : NULL;
+	PageItem_Line* line = m_doc->m_Selection->count() == 1 ? m_doc->m_Selection->itemAt(0)->asLine() : nullptr;
 	if (line)
 	{
 		bool hitsOrigin = m_canvas->hitsCanvasPoint(m->globalPos(), line->xyPos());

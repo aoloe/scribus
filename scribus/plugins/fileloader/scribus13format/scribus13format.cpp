@@ -43,8 +43,7 @@ for which a new license (GPL+exception) is in place.
 // Please don't implement the functionality of your plugin here; do that
 // in scribus13formatimpl.h and scribus13formatimpl.cpp .
 
-Scribus13Format::Scribus13Format() :
-	LoadSavePlugin()
+Scribus13Format::Scribus13Format()
 {
 	// Set action info in languageChange, so we only have to do
 	// it in one place. This includes registering file formats.
@@ -127,9 +126,7 @@ bool Scribus13Format::fileSupported(QIODevice* /* file */, const QString & fileN
 		// Not gzip encoded, just load it
 		loadRawText(fileName, docBytes);
 	}
-	if (docBytes.left(16) == "<SCRIBUSUTF8NEW " && !docBytes.left(35).contains("Version=\"1.3.4"))
-		return true;
-	return false;
+	return docBytes.left(16) == "<SCRIBUSUTF8NEW " && !docBytes.left(35).contains("Version=\"1.3.4");
 }
 
 QString Scribus13Format::readSLA(const QString & fileName)
@@ -169,9 +166,9 @@ void Scribus13Format::getReplacedFontData(bool & getNewReplacement, QMap<QString
 
 bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* fmt */, int /* flags */, int /* index */)
 {
-	if (m_Doc==0 || m_AvailableFonts==0)
+	if (m_Doc==nullptr || m_AvailableFonts==nullptr)
 	{
-		Q_ASSERT(m_Doc==0 || m_AvailableFonts==0);
+		Q_ASSERT(m_Doc==nullptr || m_AvailableFonts==nullptr);
 		return false;
 	}
 	ReplacedFonts.clear();
@@ -225,7 +222,7 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 	if (elem.tagName() != "SCRIBUSUTF8NEW")
 		return false;
 	QDomNode DOC=elem.firstChild();
-	if (m_mwProgressBar!=0)
+	if (m_mwProgressBar!=nullptr)
 	{
 		m_mwProgressBar->setMaximum(DOC.childNodes().count());
 		m_mwProgressBar->setValue(0);
@@ -452,13 +449,13 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 			m_Doc->clearCheckerProfiles();
 			m_Doc->setCurCheckProfile(dc.attribute("currentProfile"));
 		}
-		m_Doc->LastAuto = 0;
+		m_Doc->LastAuto = nullptr;
 		QDomNode PAGE=DOC.firstChild();
 		counter = 0;
 		while (!PAGE.isNull())
 		{
 			ObCount++;
-			if (m_mwProgressBar!=0)
+			if (m_mwProgressBar!=nullptr)
 				m_mwProgressBar->setValue(ObCount);
 			QDomElement pg=PAGE.toElement();
 			if (pg.tagName()=="PageSets")
@@ -932,7 +929,7 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 					IT=IT.nextSibling();
 				}
 				delete last;
-				if (Neu->fill_gradient.Stops() == 0)
+				if (Neu->fill_gradient.stops() == 0)
 				{
 					const ScColor& col1 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeFillColor];
 					const ScColor& col2 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeLineColor];
@@ -1009,19 +1006,19 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 			if (ta->TopLinkID != -1)
 				ta->TopLink = FrameItems.at(TableIDF[ta->TopLinkID]);
 			else
-				ta->TopLink = 0;
+				ta->TopLink = nullptr;
 			if (ta->LeftLinkID != -1)
 				ta->LeftLink = FrameItems.at(TableIDF[ta->LeftLinkID]);
 			else
-				ta->LeftLink = 0;
+				ta->LeftLink = nullptr;
 			if (ta->RightLinkID != -1)
 				ta->RightLink = FrameItems.at(TableIDF[ta->RightLinkID]);
 			else
-				ta->RightLink = 0;
+				ta->RightLink = nullptr;
 			if (ta->BottomLinkID != -1)
 				ta->BottomLink = FrameItems.at(TableIDF[ta->BottomLinkID]);
 			else
-				ta->BottomLink = 0;
+				ta->BottomLink = nullptr;
 		}
 	}
 	if (TableItemsM.count() != 0)
@@ -1032,19 +1029,19 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 			if (ta->TopLinkID != -1)
 				ta->TopLink = m_Doc->MasterItems.at(TableIDM[ta->TopLinkID]);
 			else
-				ta->TopLink = 0;
+				ta->TopLink = nullptr;
 			if (ta->LeftLinkID != -1)
 				ta->LeftLink = m_Doc->MasterItems.at(TableIDM[ta->LeftLinkID]);
 			else
-				ta->LeftLink = 0;
+				ta->LeftLink = nullptr;
 			if (ta->RightLinkID != -1)
 				ta->RightLink = m_Doc->MasterItems.at(TableIDM[ta->RightLinkID]);
 			else
-				ta->RightLink = 0;
+				ta->RightLink = nullptr;
 			if (ta->BottomLinkID != -1)
 				ta->BottomLink = m_Doc->MasterItems.at(TableIDM[ta->BottomLinkID]);
 			else
-				ta->BottomLink = 0;
+				ta->BottomLink = nullptr;
 		}
 	}
 	if (TableItems.count() != 0)
@@ -1055,19 +1052,19 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 			if (ta->TopLinkID != -1)
 				ta->TopLink = m_Doc->Items->at(TableID[ta->TopLinkID]);
 			else
-				ta->TopLink = 0;
+				ta->TopLink = nullptr;
 			if (ta->LeftLinkID != -1)
 				ta->LeftLink = m_Doc->Items->at(TableID[ta->LeftLinkID]);
 			else
-				ta->LeftLink = 0;
+				ta->LeftLink = nullptr;
 			if (ta->RightLinkID != -1)
 				ta->RightLink = m_Doc->Items->at(TableID[ta->RightLinkID]);
 			else
-				ta->RightLink = 0;
+				ta->RightLink = nullptr;
 			if (ta->BottomLinkID != -1)
 				ta->BottomLink = m_Doc->Items->at(TableID[ta->BottomLinkID]);
 			else
-				ta->BottomLink = 0;
+				ta->BottomLink = nullptr;
 		}
 	}
 	m_Doc->setMasterPageMode(false);
@@ -1100,12 +1097,12 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 		{
 			if (itemRemap[lc.value()] >= 0)
 			{
-				PageItem *Its(0), *Itn(0);
+				PageItem *Its(nullptr), *Itn(nullptr);
 				if (lc.key() < m_Doc->Items->count())
 					Its = m_Doc->Items->at(lc.key());
 				if (itemRemap[lc.value()] < m_Doc->Items->count())
 					Itn = m_Doc->Items->at(itemRemap[lc.value()]);
-				if (!Its || !Itn || !Its->testLinkCandidate(Itn))
+				if (!Its || !Itn || !Its->canBeLinkedTo(Itn))
 				{
 					qDebug("scribus13format: corruption in linked textframes detected");
 					continue;
@@ -1129,19 +1126,19 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 	for (int i = 0; i < m_Doc->DocItems.count(); ++i)
 	{
 		PageItem* item = m_Doc->DocItems.at(i);
-		if (item->prevInChain() == 0 && item->itemText.length() > 0)
+		if (item->prevInChain() == nullptr && item->itemText.length() > 0)
 			item->itemText.fixLegacyFormatting();
 	}
 	for (int i = 0; i < m_Doc->MasterItems.count(); ++i)
 	{
 		PageItem* item = m_Doc->MasterItems.at(i);
-		if (item->prevInChain() == 0 && item->itemText.length() > 0)
+		if (item->prevInChain() == nullptr && item->itemText.length() > 0)
 			item->itemText.fixLegacyFormatting();
 	}
-	for (QHash<int, PageItem*>::iterator itf = m_Doc->FrameItems.begin(); itf != m_Doc->FrameItems.end(); ++itf)
+	for (auto itf = m_Doc->FrameItems.begin(); itf != m_Doc->FrameItems.end(); ++itf)
 	{
 		PageItem *item = itf.value();
-		if (item->prevInChain() == 0 && item->itemText.length() > 0)
+		if (item->prevInChain() == nullptr && item->itemText.length() > 0)
 			item->itemText.fixLegacyFormatting();
 	}
 	for (int i = 0; i < m_Doc->DocItems.count(); ++i)
@@ -1158,9 +1155,9 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 			if (gItem->isGroup() && gItem->groupItemList[0]->isTableItem)
 			{
 				if (gItem->isGroupChild())
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &(gItem->asGroupFrame()->groupItemList));
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &(gItem->asGroupFrame()->groupItemList));
 				else
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &m_Doc->DocItems);
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &m_Doc->DocItems);
 			}
 		}
 		allItems.clear();
@@ -1179,9 +1176,9 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 			if (gItem->isGroup() && gItem->groupItemList[0]->isTableItem)
 			{
 				if (gItem->isGroupChild())
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &(gItem->asGroupFrame()->groupItemList));
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &(gItem->asGroupFrame()->groupItemList));
 				else
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &m_Doc->MasterItems);
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &m_Doc->MasterItems);
 			}
 		}
 		allItems.clear();
@@ -1192,7 +1189,7 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 		m_Doc->restartAutoSaveTimer();
 //		m_Doc->autoSaveTimer->start(m_Doc->autoSaveTime());
 
-	if (m_mwProgressBar!=0)
+	if (m_mwProgressBar!=nullptr)
 		m_mwProgressBar->setValue(DOC.childNodes().count());
 
 	ScMessageBox::warning(ScCore->primaryMainWindow(),
@@ -1503,7 +1500,7 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 	handleOldColorShade(doc, Pcolor, Pshade);
 	handleOldColorShade(doc, Pcolor2, Pshade2);
 	QColor tmpc;
-	PageItem *currItem=NULL;
+	PageItem *currItem=nullptr;
 	QString tmp;
 	double xf, yf, xf2;
 	QString clPath;
@@ -1747,7 +1744,7 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 			IT=IT.nextSibling();
 		}
 	}
-	if (tbValues.size() > 0)
+	if (!tbValues.empty())
 		pstyle.setTabValues(tbValues);
 	//FIXME: what if linked frames have different styles?
 	currItem->itemText.setDefaultStyle(pstyle);
@@ -1794,8 +1791,8 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 	currItem->annotation().setToolTip(obj->attribute("ANTOOLTIP",""));
 	currItem->annotation().setRollOver(obj->attribute("ANROLL",""));
 	currItem->annotation().setDown(obj->attribute("ANDOWN",""));
-	currItem->annotation().setBwid(obj->attribute("ANBWID", "1").toInt());
-	currItem->annotation().setBsty(obj->attribute("ANBSTY", "0").toInt());
+	currItem->annotation().setBorderWidth(obj->attribute("ANBWID", "1").toInt());
+	currItem->annotation().setBorderStyle(obj->attribute("ANBSTY", "0").toInt());
 	currItem->annotation().setFeed(obj->attribute("ANFEED", "1").toInt());
 	currItem->annotation().setFlag(obj->attribute("ANFLAG", "0").toInt());
 	currItem->annotation().setFont(obj->attribute("ANFONT", "4").toInt());
@@ -2025,18 +2022,18 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 	return currItem;
 }
 
-bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mpage, QString renamedPageName)
+bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mpage, const QString& renamedPageName)
 {
 // 	qDebug() << QString("loading page %2 from file '%1' from 1.3.3.x plugin").arg(fileName).arg(pageNumber);
-	if (m_Doc==0 || m_AvailableFonts==0)
+	if (m_Doc==nullptr || m_AvailableFonts==nullptr)
 	{
-		Q_ASSERT(m_Doc==0 || m_AvailableFonts==0);
+		Q_ASSERT(m_Doc==nullptr || m_AvailableFonts==nullptr);
 		return false;
 	}
 	ParagraphStyle vg;
 	struct ScribusDoc::BookMa bok;
 	PageItem *Neu;
-	ScPage* Apage = NULL;
+	ScPage* Apage = nullptr;
 	FrameItems.clear();
 	itemRemap.clear();
 	itemNext.clear();
@@ -2113,7 +2110,7 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 			}
 			if (pg.tagName()=="STYLE")
 			{
-				GetStyle(&pg, &vg, NULL, m_Doc, true);
+				GetStyle(&pg, &vg, nullptr, m_Doc, true);
 				VorLFound = true;
 			}
 			if (pg.tagName()=="JAVA")
@@ -2337,7 +2334,7 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 						IT=IT.nextSibling();
 					}
 					delete last;
-					if (Neu->fill_gradient.Stops() == 0)
+					if (Neu->fill_gradient.stops() == 0)
 					{
 						const ScColor& col1 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeFillColor];
 						const ScColor& col2 = m_Doc->PageColors[m_Doc->itemToolPrefs().shapeLineColor];
@@ -2403,19 +2400,19 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 			if (ta->TopLinkID != -1)
 				ta->TopLink = m_Doc->Items->at(TableID[ta->TopLinkID]);
 			else
-				ta->TopLink = 0;
+				ta->TopLink = nullptr;
 			if (ta->LeftLinkID != -1)
 				ta->LeftLink = m_Doc->Items->at(TableID[ta->LeftLinkID]);
 			else
-				ta->LeftLink = 0;
+				ta->LeftLink = nullptr;
 			if (ta->RightLinkID != -1)
 				ta->RightLink = m_Doc->Items->at(TableID[ta->RightLinkID]);
 			else
-				ta->RightLink = 0;
+				ta->RightLink = nullptr;
 			if (ta->BottomLinkID != -1)
 				ta->BottomLink = m_Doc->Items->at(TableID[ta->BottomLinkID]);
 			else
-				ta->BottomLink = 0;
+				ta->BottomLink = nullptr;
 		}
 	}
 	// reestablish textframe links
@@ -2426,12 +2423,12 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 		{
 			if (itemRemap[lc.value()] >= 0)
 			{
-				PageItem *Its(0), *Itn(0);
+				PageItem *Its(nullptr), *Itn(nullptr);
 				if (lc.key() < m_Doc->Items->count())
 					Its = m_Doc->Items->at(lc.key());
 				if (itemRemap[lc.value()] < m_Doc->Items->count())
 					Itn = m_Doc->Items->at(itemRemap[lc.value()]);
-				if (!Its || !Itn || !Its->testLinkCandidate(Itn))
+				if (!Its || !Itn || !Its->canBeLinkedTo(Itn))
 				{
 					qDebug("scribus13format: corruption in linked textframes detected");
 					continue;
@@ -2455,19 +2452,19 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 	for (int i = 0; i < m_Doc->DocItems.count(); ++i)
 	{
 		PageItem* item = m_Doc->DocItems.at(i);
-		if (item->prevInChain() == 0 && item->itemText.length() > 0)
+		if (item->prevInChain() == nullptr && item->itemText.length() > 0)
 			item->itemText.fixLegacyFormatting();
 	}
 	for (int i = 0; i < m_Doc->MasterItems.count(); ++i)
 	{
 		PageItem* item = m_Doc->MasterItems.at(i);
-		if (item->prevInChain() == 0 && item->itemText.length() > 0)
+		if (item->prevInChain() == nullptr && item->itemText.length() > 0)
 			item->itemText.fixLegacyFormatting();
 	}
-	for (QHash<int, PageItem*>::iterator itf = m_Doc->FrameItems.begin(); itf != m_Doc->FrameItems.end(); ++itf)
+	for (auto itf = m_Doc->FrameItems.begin(); itf != m_Doc->FrameItems.end(); ++itf)
 	{
 		PageItem *item = itf.value();
-		if (item->prevInChain() == 0 && item->itemText.length() > 0)
+		if (item->prevInChain() == nullptr && item->itemText.length() > 0)
 			item->itemText.fixLegacyFormatting();
 	}
 	for (int i = 0; i < m_Doc->DocItems.count(); ++i)
@@ -2484,9 +2481,9 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 			if (gItem->isGroup() && gItem->groupItemList[0]->isTableItem)
 			{
 				if (gItem->isGroupChild())
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &(gItem->asGroupFrame()->groupItemList));
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &(gItem->asGroupFrame()->groupItemList));
 				else
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &m_Doc->DocItems);
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &m_Doc->DocItems);
 			}
 		}
 		allItems.clear();
@@ -2505,9 +2502,9 @@ bool Scribus13Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 			if (gItem->isGroup() && gItem->groupItemList[0]->isTableItem)
 			{
 				if (gItem->isGroupChild())
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &(gItem->asGroupFrame()->groupItemList));
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &(gItem->asGroupFrame()->groupItemList));
 				else
-					convertOldTable(m_Doc, gItem, gItem->groupItemList, NULL, &m_Doc->MasterItems);
+					convertOldTable(m_Doc, gItem, gItem->groupItemList, nullptr, &m_Doc->MasterItems);
 			}
 		}
 		allItems.clear();
@@ -2576,7 +2573,7 @@ void Scribus13Format::GetStyle(QDomElement *pg, ParagraphStyle *vg, StyleSet<Par
 	}
 }
 
-QString Scribus13Format::AskForFont(QString fStr, ScribusDoc *doc)
+QString Scribus13Format::AskForFont(const QString& fStr, ScribusDoc *doc)
 {
 	PrefsManager *prefsManager=PrefsManager::instance();
 //	QFont fo;
@@ -2586,7 +2583,7 @@ QString Scribus13Format::AskForFont(QString fStr, ScribusDoc *doc)
 		if ((!prefsManager->appPrefs.fontPrefs.GFontSub.contains(tmpf)) || (!(*m_AvailableFonts)[prefsManager->appPrefs.fontPrefs.GFontSub[tmpf]].usable()))
 		{
 			qApp->setOverrideCursor(QCursor(Qt::ArrowCursor));
-			MissingFont *dia = new MissingFont(0, tmpf, doc);
+			MissingFont *dia = new MissingFont(nullptr, tmpf, doc);
 			dia->exec();
 			tmpf = dia->getReplacementFont();
 			delete dia;

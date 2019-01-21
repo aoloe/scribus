@@ -523,14 +523,11 @@ void SearchReplace::slotDoSearch()
 				m_replStart = a;
 				break;
 			}
-			else
+			if (SText->isChecked())
 			{
-				if (SText->isChecked())
-				{
-					for (int xx = m_replStart; xx < a+1; ++xx)
-						m_item->itemText.select(qMin(xx, maxChar), 1, false);
-					m_item->HasSel = false;
-				}
+				for (int xx = m_replStart; xx < a+1; ++xx)
+					m_item->itemText.select(qMin(xx, maxChar), 1, false);
+				m_item->HasSel = false;
 			}
 		}
 		if ((!found) || (a == m_item->itemText.length()))
@@ -544,7 +541,7 @@ void SearchReplace::slotDoSearch()
 			m_notFound = false;
 		}
 	}
-	else if (m_doc->scMW()->CurrStED != NULL)
+	else if (m_doc->scMW()->CurrStED != nullptr)
 	{
 		found = false;
 		SEditor* storyTextEdit = m_doc->scMW()->CurrStED->Editor;
@@ -780,7 +777,7 @@ void SearchReplace::slotDoReplace()
 		}
 		m_item->itemText.deselectAll();
 	}
-	else if (m_doc->scMW()->CurrStED != NULL)
+	else if (m_doc->scMW()->CurrStED != nullptr)
 	{
 		StoryEditor* se = m_doc->scMW()->CurrStED;
 		if (RText->isChecked())
@@ -1059,7 +1056,7 @@ void SearchReplace::updateReplaceButtonsState()
 	replaceEnabled |= RText->isChecked();
 	if (m_itemMode)
 		replaceEnabled &= (m_item->itemText.lengthOfSelection() > 0);
-	else if (m_doc->scMW()->CurrStED != NULL)
+	else if (m_doc->scMW()->CurrStED != nullptr)
 		replaceEnabled &= m_doc->scMW()->CurrStED->Editor->textCursor().hasSelection();
 	else
 		replaceEnabled = false;

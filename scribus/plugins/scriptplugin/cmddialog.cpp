@@ -38,12 +38,12 @@ PyObject *scribus_filedia(PyObject* /* self */, PyObject* args, PyObject* kw)
 	char* kwargs[] = {const_cast<char*>("caption"), const_cast<char*>("filter"),
 						const_cast<char*>("defaultname"), const_cast<char*>("haspreview"),
 						const_cast<char*>("issave"), const_cast<char*>("isdir"),
-						NULL};
+						nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "es|esesiii", kwargs,
 									 "utf-8", &caption, "utf-8", &filter, "utf-8", &defName,
 									 &haspreview, &issave, &isdir))
 	{
-		return NULL;
+		return nullptr;
 	}
 	QApplication::changeOverrideCursor(QCursor(Qt::ArrowCursor));
 	/* nobool = Nothing doing boolean for CFileDialog last attrs.
@@ -78,13 +78,13 @@ PyObject *scribus_messdia(PyObject* /* self */, PyObject* args, PyObject* kw)
 	uint result;
 	QMessageBox::Icon ico = QMessageBox::NoIcon;
 	int butt[3] = { QMessageBox::Ok|QMessageBox::Default, QMessageBox::NoButton, QMessageBox::NoButton };
-	QMessageBox::StandardButtons buttons = QMessageBox::StandardButtons(0);
+	QMessageBox::StandardButtons buttons = QMessageBox::StandardButtons(nullptr);
 	enum QMessageBox::StandardButton defaultButton = QMessageBox::NoButton;
 	char* kwargs[] = {const_cast<char*>("caption"), const_cast<char*>("message"),
 						const_cast<char*>("icon"), const_cast<char*>("button1"),
-						const_cast<char*>("button2"), const_cast<char*>("button3"), NULL};
+						const_cast<char*>("button2"), const_cast<char*>("button3"), nullptr};
 	if (!PyArg_ParseTupleAndKeywords(args, kw, "eses|iiii", kwargs, "utf-8", &caption, "utf-8", &message, &ico, &butt[0], &butt[1], &butt[2]))
-		return NULL;
+		return nullptr;
 	QApplication::changeOverrideCursor(QCursor(Qt::ArrowCursor));
 	// ScMessageBox mb(ico, butt1, butt2, butt3, ScCore->primaryMainWindow());
 	for (int bi = 0; bi < 3; bi++) {
@@ -112,7 +112,7 @@ PyObject *scribus_valdialog(PyObject* /* self */, PyObject* args)
 	char *message = const_cast<char*>("");
 	char *value = const_cast<char*>("");
 	if (!PyArg_ParseTuple(args, "eses|es", "utf-8", &caption, "utf-8", &message, "utf-8", &value))
-		return NULL;
+		return nullptr;
 	QApplication::changeOverrideCursor(QCursor(Qt::ArrowCursor));
 	QString txt = QInputDialog::getText(ScCore->primaryMainWindow(),
 										QString::fromUtf8(caption),
@@ -125,8 +125,8 @@ PyObject *scribus_valdialog(PyObject* /* self */, PyObject* args)
 
 PyObject *scribus_newstyledialog(PyObject*, PyObject* args)
 {
-	if(!checkHaveDocument())
-		return NULL;
+	if (!checkHaveDocument())
+		return nullptr;
 
 	ScribusDoc *d = ScCore->primaryMainWindow()->doc;
 	bool ok;
@@ -145,8 +145,7 @@ PyObject *scribus_newstyledialog(PyObject*, PyObject* args)
 		ScCore->primaryMainWindow()->styleMgr()->setDoc(d);
 		return PyString_FromString(s.toUtf8());
 	}
-	else
-		Py_RETURN_NONE;
+	Py_RETURN_NONE;
 }
 
 /*! HACK: this removes "warning: 'blash' defined but not used" compiler warnings

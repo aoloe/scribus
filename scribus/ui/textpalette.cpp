@@ -41,11 +41,11 @@ for which a new license (GPL+exception) is in place.
 #include "undomanager.h"
 
 
-TextPalette::TextPalette( QWidget* parent) : ScDockPalette( parent, "TextPalette", 0)
+TextPalette::TextPalette( QWidget* parent) : ScDockPalette( parent, "TextPalette", nullptr)
 {
 	undoManager = UndoManager::instance();
-	m_ScMW=0;
-	m_doc=0;
+	m_ScMW=nullptr;
+	m_doc=nullptr;
 	m_haveDoc = false;
 	m_haveItem = false;
 	m_unitRatio = 1.0;
@@ -101,7 +101,7 @@ void TextPalette::setDoc(ScribusDoc *d)
 	}
 
 	m_doc = d;
-	m_item = NULL;
+	m_item = nullptr;
 	setEnabled(!m_doc->drawAsPreview);
 
 	m_unitRatio = m_doc->unitRatio();
@@ -131,8 +131,8 @@ void TextPalette::unsetDoc()
 	setEnabled(true);
 	m_haveDoc = false;
 	m_haveItem = false;
-	m_doc=NULL;
-	m_item = NULL;
+	m_doc=nullptr;
+	m_item = nullptr;
 
 	textPal->unsetItem();
 	textPal->unsetDoc();
@@ -143,14 +143,14 @@ void TextPalette::unsetDoc()
 void TextPalette::unsetItem()
 {
 	m_haveItem = false;
-	m_item     = NULL;
+	m_item     = nullptr;
 	textPal->unsetItem();
 	handleSelectionChanged();
 }
 
 PageItem* TextPalette::currentItemFromSelection()
 {
-	PageItem *currentItem = NULL;
+	PageItem *currentItem = nullptr;
 
 	if (m_doc)
 	{
@@ -200,7 +200,7 @@ void TextPalette::setCurrentItem(PageItem *i)
 	//CB We shouldn't really need to process this if our item is the same one
 	//maybe we do if the item has been changed by scripter.. but that should probably
 	//set some status if so.
-	//FIXME: This won't work until when a canvas deselect happens, m_item must be NULL.
+	//FIXME: This won't work until when a canvas deselect happens, m_item must be nullptr.
 	//if (m_item == i)
 	//	return;
 

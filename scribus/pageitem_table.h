@@ -83,8 +83,7 @@ public:
 
 public:
 	/// Construct a new table item with @a numRows rows and @a numColumns columns.
-	PageItem_Table(ScribusDoc *pa, double x, double y, double w, double h, double w2,
-		QString fill, QString outline, int numRows = 1, int numColumns = 1);
+	PageItem_Table(ScribusDoc *pa, double x, double y, double w, double h, double w2, const QString& fill, const QString& outline, int numRows = 1, int numColumns = 1);
 
 	/// Destructor.
 	~PageItem_Table();
@@ -178,7 +177,7 @@ public:
 	/**
 	 * Returns the list of row heights for the table.
 	 */
-	QList<double> rowHeights() const { return m_rowHeights; }
+	const QList<double>& rowHeights() const { return m_rowHeights; }
 
 	/**
 	 * Resizes @a row to @a height using resize strategy @a strategy.
@@ -205,7 +204,7 @@ public:
 	/**
 	 * Returns the list of row positions for the table.
 	 */
-	QList<double> rowPositions() const { return m_rowPositions; }
+	const QList<double>& rowPositions() const { return m_rowPositions; }
 
 	/**
 	 * Inserts @a numColumns columns before the column at @a index.
@@ -233,7 +232,7 @@ public:
 	/**
 	 * Returns the list of column widths for the table.
 	 */
-	QList<double> columnWidths() const { return m_columnWidths; }
+	const QList<double>& columnWidths() const { return m_columnWidths; }
 
 	/**
 	 * Resizes @a column to @a width using resize strategy @a strategy.
@@ -260,7 +259,7 @@ public:
 	/**
 	 * Returns the list of column positions for the table.
 	 */
-	QList<double> columnPositions() const { return m_columnPositions; }
+	const QList<double>& columnPositions() const { return m_columnPositions; }
 
 	/**
 	 * Merges the cell at the specified @a row and @a column with the adjacent cells into
@@ -284,7 +283,7 @@ public:
 	/**
 	 * Returns the set of selected cells.
 	 */
-	QSet<TableCell> selectedCells() const { return m_selection; }
+	const QSet<TableCell>& selectedCells() const { return m_selection; }
 
 	/**
 	 * Returns the set of selected rows.
@@ -319,9 +318,28 @@ public:
 	void selectCells(int startRow, int startColumn, int endRow, int endColumn);
 
 	/**
+	 * Adds the cells in specified column to the selection.
+	 *
+	 * If specified column is outside the table, this function does nothing.
+	 */
+	void selectColumn(int column);
+
+	/**
+	* Adds the cells in specified row to the selection.
+	*
+	* If specified row is outside the table, this function does nothing.
+	*/
+	void selectRow(int row);
+
+	/**
 	 * Clears the cell selection.
 	 */
 	void clearSelection();
+
+	/**
+	 * Test if item has an active cell selection
+	 */
+	bool hasSelection() const { return m_selection.count() > 0; }
 
 	/**
 	 * Returns the cell at @a row, @a column.
@@ -480,13 +498,13 @@ public:
 	virtual void applicableActions(QStringList& actionList);
 
 	/// Returns a textual description of this item.
-	virtual QString infoDescription() { return QString(); }
+	virtual QString infoDescription() const { return QString(); }
 
 	/// Returns the Cell Areas from this table
-	QList<CellArea> cellAreas() const { return m_cellAreas; }
+	const QList<CellArea>& cellAreas() const { return m_cellAreas; }
 
 	/// Returns the rows of the table for writing to SLA
-	QList<QList<TableCell> > cellRows() const { return m_cellRows; }
+	const QList<QList<TableCell> >& cellRows() const { return m_cellRows; }
 
 	/// Set the layer for the item
 	virtual void setLayer(int layerId);

@@ -7,11 +7,6 @@ for which a new license (GPL+exception) is in place.
 #ifndef IMPORTPDF_H
 #define IMPORTPDF_H
 
-
-#include "pluginapi.h"
-#include "pageitem.h"
-#include "sccolor.h"
-#include "fpointarray.h"
 #include <QList>
 #include <QTransform>
 #include <QMultiMap>
@@ -26,6 +21,11 @@ for which a new license (GPL+exception) is in place.
 #include <QPen>
 #include <QImage>
 
+#include "fpointarray.h"
+#include "importpdfconfig.h"
+#include "pluginapi.h"
+#include "pageitem.h"
+#include "sccolor.h"
 
 class QColor;
 class QMatrix;
@@ -66,8 +66,8 @@ public:
 	\param showProgress if progress must be displayed
 	\retval bool true if import was ok
 	 */
-	bool import(QString fn, const TransactionSettings& trSettings, int flags, bool showProgress = true);
-	QImage readThumbnail(QString fn);
+	bool import(const QString& fn, const TransactionSettings& trSettings, int flags, bool showProgress = true);
+	QImage readThumbnail(const QString& fn);
 	QImage readPreview(int pgNum, int width, int height, int box);
 	enum PDF_Box_Type
 	{
@@ -81,7 +81,7 @@ public:
 private:
 	bool convert(const QString& fn);
 	QRectF getCBox(int box, int pgNum);
-	QString UnicodeParsedString(GooString *s1);
+	QString UnicodeParsedString(POPPLER_CONST GooString *s1);
 	
 	QList<PageItem*> Elements;
 	double baseX, baseY;

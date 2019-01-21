@@ -14,17 +14,17 @@ PDFlib::~PDFlib()
 }
 
 bool PDFlib::doExport(const QString& fn, const QString& nam, int Components,
-			  const std::vector<int> & pageNs, const QMap<int,QPixmap> & thumbs)
+			  const std::vector<int> & pageNs, const QMap<int, QImage>& thumbs)
 {
 	return static_cast<PDFLibCore*>(m_impl)->doExport(fn, nam, Components, pageNs, thumbs);
 }
 
-const QString& PDFlib::errorMessage(void)
+const QString& PDFlib::errorMessage()
 {
 	return static_cast<PDFLibCore*>(m_impl)->errorMessage();
 }
 
-bool PDFlib::exportAborted(void)
+bool PDFlib::exportAborted()
 {
 	return static_cast<PDFLibCore*>(m_impl)->exportAborted();
 }

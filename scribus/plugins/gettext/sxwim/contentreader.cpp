@@ -32,19 +32,19 @@ for which a new license (GPL+exception) is in place.
 #include "scribusstructs.h"
 #include <QByteArray>
 
-ContentReader* ContentReader::creader = NULL;
+ContentReader* ContentReader::creader = nullptr;
 
 extern xmlSAXHandlerPtr cSAXHandler;
 
-ContentReader::ContentReader(QString documentName, StyleReader *s, gtWriter *w, bool textOnly)
+ContentReader::ContentReader(const QString& documentName, StyleReader *s, gtWriter *w, bool textOnly)
 {
 	creader = this;
 	docname = documentName;
 	sreader = s;
 	writer  = w;
 	importTextOnly = textOnly;
-	defaultStyle = NULL;
-	currentStyle = NULL;
+	defaultStyle = nullptr;
+	currentStyle = nullptr;
 	inList = false;
 	inNote = false;
 	inNoteBody = false;
@@ -211,7 +211,7 @@ bool ContentReader::endElement(const QString&, const QString&, const QString &na
 		--append;
 		if (inList || inNote || inNoteBody)
 		{
-			if (styleNames.size() != 0)
+			if (!styleNames.empty())
 				styleNames.pop_back();
 		}
 		else
@@ -221,7 +221,7 @@ bool ContentReader::endElement(const QString&, const QString&, const QString &na
 	{
 		inSpan = false;
 		currentStyle = pstyle;
-		if (styleNames.size() != 0)
+		if (!styleNames.empty())
 			styleNames.pop_back();	
 		currentStyle = sreader->getStyle(getName());
 	}
@@ -270,7 +270,7 @@ void ContentReader::write(const QString& text)
 	lastStyle = currentStyle;
 }
 
-void ContentReader::parse(QString fileName)
+void ContentReader::parse(const QString& fileName)
 {
 	sreader->parse(fileName);
 #if defined(_WIN32)
@@ -283,40 +283,40 @@ void ContentReader::parse(QString fileName)
 }
 
 xmlSAXHandler cSAXHandlerStruct = {
-	NULL, // internalSubset,
-	NULL, // isStandalone,
-	NULL, // hasInternalSubset,
-	NULL, // hasExternalSubset,
-	NULL, // resolveEntity,
-	NULL, // getEntity,
-	NULL, // entityDecl,
-	NULL, // notationDecl,
-	NULL, // attributeDecl,
-	NULL, // elementDecl,
-	NULL, // unparsedEntityDecl,
-	NULL, // setDocumentLocator,
-	NULL, // startDocument,
-	NULL, // endDocument,
+	nullptr, // internalSubset,
+	nullptr, // isStandalone,
+	nullptr, // hasInternalSubset,
+	nullptr, // hasExternalSubset,
+	nullptr, // resolveEntity,
+	nullptr, // getEntity,
+	nullptr, // entityDecl,
+	nullptr, // notationDecl,
+	nullptr, // attributeDecl,
+	nullptr, // elementDecl,
+	nullptr, // unparsedEntityDecl,
+	nullptr, // setDocumentLocator,
+	nullptr, // startDocument,
+	nullptr, // endDocument,
 	ContentReader::startElement,
 	ContentReader::endElement,
-	NULL, // reference,
+	nullptr, // reference,
 	ContentReader::characters,
-	NULL, // ignorableWhitespace,
-	NULL, // processingInstruction,
-	NULL, // comment,
-	NULL, // warning,
-	NULL, // error,
-	NULL, // fatalError,
-	NULL, // getParameterEntity,
-	NULL, // cdata,
-	NULL,
+	nullptr, // ignorableWhitespace,
+	nullptr, // processingInstruction,
+	nullptr, // comment,
+	nullptr, // warning,
+	nullptr, // error,
+	nullptr, // fatalError,
+	nullptr, // getParameterEntity,
+	nullptr, // cdata,
+	nullptr,
 	1
 #ifdef HAVE_XML26
 	,
-	NULL,
-	NULL,
-	NULL,
-	NULL
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr
 #endif
 };
 
@@ -328,10 +328,10 @@ void ContentReader::startElement(void*, const xmlChar *fullname, const xmlChar *
 	QXmlAttributes attrs;
 	if (atts)
 	{
-		for(const xmlChar** cur = atts; cur && *cur; cur += 2)
-			attrs.append(QString((char*)*cur), NULL, QString((char*)*cur), QString((char*)*(cur + 1)));
+		for (const xmlChar** cur = atts; cur && *cur; cur += 2)
+			attrs.append(QString((char*)*cur), nullptr, QString((char*)*cur), QString((char*)*(cur + 1)));
 	}
-	creader->startElement(NULL, NULL, name, attrs);
+	creader->startElement(nullptr, nullptr, name, attrs);
 }
 
 void ContentReader::characters(void*, const xmlChar *ch, int len)
@@ -343,7 +343,7 @@ void ContentReader::characters(void*, const xmlChar *ch, int len)
 void ContentReader::endElement(void*, const xmlChar *name)
 {
 	QString nname(QString((const char*) name).toLower());
-	creader->endElement(NULL, NULL, nname);
+	creader->endElement(nullptr, nullptr, nname);
 }
 
 QString ContentReader::getName()
@@ -356,12 +356,12 @@ QString ContentReader::getName()
 
 void ContentReader::getStyle()
 {
-	gtStyle *style = NULL, *tmp = NULL;
-	if (styleNames.size() == 0)
+	gtStyle *style = nullptr, *tmp = nullptr;
+	if (styleNames.empty())
 		style = sreader->getStyle("default-style");
 	else
 		style = sreader->getStyle(styleNames[0]);
-	assert (style != NULL);
+	assert (style != nullptr);
 	gtParagraphStyle* par = dynamic_cast<gtParagraphStyle*>(style);
 	if (par)
 		tmp = new gtParagraphStyle(*par);
@@ -379,7 +379,7 @@ void ContentReader::getStyle()
 
 ContentReader::~ContentReader()
 {
-	creader = NULL;
+	creader = nullptr;
 	delete defaultStyle;
 }
 

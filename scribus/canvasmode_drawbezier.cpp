@@ -79,7 +79,7 @@ void BezierMode::drawControls(QPainter* p)
 inline bool BezierMode::GetItem(PageItem** pi)
 { 
 	*pi = m_doc->m_Selection->itemAt(0); 
-	return (*pi) != NULL; 
+	return (*pi) != nullptr;
 }
 
 void BezierMode::finalizeItem(PageItem* currItem)
@@ -148,7 +148,7 @@ void BezierMode::deactivate(bool flag)
 			Selection tempSelection(m_doc, false);
 			tempSelection.addItem(currItem);
 			m_doc->itemSelection_DeleteItem(&tempSelection, true);
-			currItem = 0;
+			currItem = nullptr;
 		}
 	}
 
@@ -183,13 +183,13 @@ void BezierMode::mouseDoubleClickEvent(QMouseEvent *m)
 	m_canvas->resetRenderMode();
 	mousePressEvent(m);
 	mouseReleaseEvent(m);
-	PageItem *currItem = NULL;
+	PageItem *currItem = nullptr;
 	if (m_doc->appMode == modeDrawBezierLine)
 	{
 		m_view->stopGesture();
 		undoManager->setUndoEnabled(true);
 		currItem = m_doc->m_Selection->itemAt(0);
-		if (currItem != 0)
+		if (currItem != nullptr)
 			finalizeItem(currItem);
 		if (!PrefsManager::instance()->appPrefs.uiPrefs.stickyTools)
 			m_view->requestMode(modeNormal);
@@ -213,7 +213,7 @@ void BezierMode::mouseDoubleClickEvent(QMouseEvent *m)
 	//Make sure the Zoom spinbox and page selector don't have focus if we click on the canvas
 	m_view->m_ScMW->zoomSpinBox->clearFocus();
 	m_view->m_ScMW->pageSelector->clearFocus();
-	if (m_doc->m_Selection->itemAt(0) != 0) // is there the old clip stored for the undo action
+	if (m_doc->m_Selection->itemAt(0) != nullptr) // is there the old clip stored for the undo action
 	{
 		currItem = m_doc->m_Selection->itemAt(0);
 		m_doc->nodeEdit.finishTransaction(currItem);
@@ -227,7 +227,6 @@ void BezierMode::mouseMoveEvent(QMouseEvent *m)
 	
 	double newX, newY;
 	PageItem *currItem;
-	QPoint np, np2, mop;
 	FPoint npf, npf2;
 //	QRect tx;
 	m->accept();
@@ -444,7 +443,7 @@ void BezierMode::mouseReleaseEvent(QMouseEvent *m)
 	{
 		undoManager->setUndoEnabled(true);
 		currItem = m_doc->m_Selection->itemAt(0);
-		if (currItem != 0)
+		if (currItem != nullptr)
 		{
 			finalizeItem(currItem);
 		}
@@ -481,14 +480,14 @@ void BezierMode::mouseReleaseEvent(QMouseEvent *m)
 //???		m_doc->m_Selection->itemAt(i)->checkChanges(true);
 
 //	//Commit drag created items to undo manager.
-//	if (m_doc->m_Selection->itemAt(0)!=NULL)
+//	if (m_doc->m_Selection->itemAt(0)!=nullptr)
 //	{
 //		m_doc->itemAddCommit(m_doc->m_Selection->itemAt(0)->ItemNr);
 //	}
 	//Make sure the Zoom spinbox and page selector don't have focus if we click on the canvas
 	m_view->m_ScMW->zoomSpinBox->clearFocus();
 	m_view->m_ScMW->pageSelector->clearFocus();
-	if (m_doc->m_Selection->itemAt(0) != 0) // is there the old clip stored for the undo action
+	if (m_doc->m_Selection->itemAt(0) != nullptr) // is there the old clip stored for the undo action
 	{
 		currItem = m_doc->m_Selection->itemAt(0);
 		m_doc->nodeEdit.finishTransaction(currItem);

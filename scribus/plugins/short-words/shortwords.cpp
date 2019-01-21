@@ -58,7 +58,7 @@ void scribusshortwords_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ShortWordsPlugin::ShortWordsPlugin() : ScActionPlugin()
+ShortWordsPlugin::ShortWordsPlugin()
 {
 	// Set action info in languageChange, so we only have to do
 	// it in one place.
@@ -113,9 +113,9 @@ void ShortWordsPlugin::deleteAboutData(const AboutData* about) const
 	delete about;
 }
 
-bool ShortWordsPlugin::run(ScribusDoc* doc, QString target)
+bool ShortWordsPlugin::run(ScribusDoc* doc, const QString& target)
 {
-	if (doc==NULL)
+	if (doc==nullptr)
 		return false;
 	Q_ASSERT(target.isEmpty());
 

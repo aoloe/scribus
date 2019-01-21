@@ -57,11 +57,11 @@ MergeDoc::MergeDoc(QWidget* parent, bool importMasterPages, int targetDocPageCou
 	importPageLabel = new QLabel( tr( "&Import Page(s):" ), this );
 	fromInfoLayout->addWidget( importPageLabel, 1, 0 );
 
-	fromLabel = NULL;
-	pageNumberData = NULL;
-	createPageData = NULL;
-	importWhereData = NULL;
-	importWherePageData = NULL;
+	fromLabel = nullptr;
+	pageNumberData = nullptr;
+	createPageData = nullptr;
+	importWhereData = nullptr;
+	importWherePageData = nullptr;
 	if (masterPages)
 	{
 		importPageLabel->setText( tr("&Import Master Page") );
@@ -75,7 +75,7 @@ MergeDoc::MergeDoc(QWidget* parent, bool importMasterPages, int targetDocPageCou
 		pageNumberData = new QLineEdit( this );
 		pageNumberData->setEnabled(false);
 		importPageLabel->setBuddy( pageNumberData );
-		masterPageNameData = 0;
+		masterPageNameData = nullptr;
 		pageNumberData->setToolTip( "<qt>" + tr( "Insert a comma separated list of tokens import where "
 									"a token can be * for all the pages, 1-5 for "
 									"a range of pages or a single page number") + "</qt>");

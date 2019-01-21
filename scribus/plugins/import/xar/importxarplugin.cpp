@@ -39,7 +39,7 @@ void importxar_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ImportXarPlugin::ImportXarPlugin() : LoadSavePlugin(),
+ImportXarPlugin::ImportXarPlugin() :
 	importAction(new ScrAction(ScrAction::DLL, QPixmap(), QPixmap(), "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do it in one
@@ -115,7 +115,7 @@ bool ImportXarPlugin::import(QString fileName, int flags)
 {
 	if (!checkFlags(flags))
 		return false;
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 	{
 		flags |= lfInteractive;
 		PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("importxar");
@@ -131,7 +131,7 @@ bool ImportXarPlugin::import(QString fileName, int flags)
 	}
 	m_Doc=ScCore->primaryMainWindow()->doc;
 	UndoTransaction activeTransaction;
-	bool emptyDoc = (m_Doc == NULL);
+	bool emptyDoc = (m_Doc == nullptr);
 	bool hasCurrentPage = (m_Doc && m_Doc->currentPage());
 	TransactionSettings trSettings;
 	trSettings.targetName   = hasCurrentPage ? m_Doc->currentPage()->getUName() : "";
@@ -156,7 +156,7 @@ bool ImportXarPlugin::import(QString fileName, int flags)
 
 QImage ImportXarPlugin::readThumbnail(const QString& fileName)
 {
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 		return QImage();
 	UndoManager::instance()->setUndoEnabled(false);
 	m_Doc = ScCore->primaryMainWindow()->doc;
@@ -170,10 +170,10 @@ QImage ImportXarPlugin::readThumbnail(const QString& fileName)
 
 bool ImportXarPlugin::readColors(const QString& fileName, ColorList &colors)
 {
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 		return false;
 	UndoManager::instance()->setUndoEnabled(false);
-	m_Doc = NULL;
+	m_Doc = nullptr;
 	XarPlug *dia = new XarPlug(m_Doc, lfCreateThumbnail);
 	Q_CHECK_PTR(dia);
 	bool ret = dia->readColors(fileName, colors);

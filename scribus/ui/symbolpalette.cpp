@@ -45,7 +45,7 @@ SymbolView::SymbolView(QWidget* parent) : QListWidget(parent)
 	delegate = new ScListWidgetDelegate(this, this);
 	setItemDelegate(delegate);
 	setIconSize(QSize(48, 48));
-	connect(this, SIGNAL(customContextMenuRequested (const QPoint &)), this, SLOT(HandleContextMenu(QPoint)));
+	connect(this, SIGNAL(customContextMenuRequested (const QPoint&)), this, SLOT(HandleContextMenu(QPoint)));
 }
 
 void SymbolView::HandleContextMenu(QPoint p)
@@ -105,13 +105,13 @@ void SymbolView::dropEvent(QDropEvent *e)
 
 bool SymbolView::viewportEvent(QEvent *event)
 {
-	if (event != NULL)
+	if (event != nullptr)
 	{
 		if (event->type() == QEvent::ToolTip)
 		{
 			QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
 			QListWidgetItem* it = itemAt(helpEvent->pos());
-			if (it != NULL)
+			if (it != nullptr)
 			{
 				event->accept();
 				QString tipText = it->text();
@@ -150,7 +150,7 @@ bool SymbolView::viewportEvent(QEvent *event)
 	clearSelection();
 }
 
-SymbolPalette::SymbolPalette( QWidget* parent) : ScDockPalette( parent, "Symb", 0)
+SymbolPalette::SymbolPalette( QWidget* parent) : ScDockPalette( parent, "Symb", nullptr)
 {
 	setMinimumSize( QSize( 220, 240 ) );
 	setObjectName(QString::fromLocal8Bit("Symb"));
@@ -160,11 +160,11 @@ SymbolPalette::SymbolPalette( QWidget* parent) : ScDockPalette( parent, "Symb", 
 	setWidget( SymbolViewWidget );
 
 	unsetDoc();
-	m_scMW  = NULL;
+	m_scMW  = nullptr;
 	editItemNames.clear();
 	languageChange();
-	m_item = NULL;
-	connect(SymbolViewWidget, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this, SLOT(handleDoubleClick(QListWidgetItem *)));
+	m_item = nullptr;
+	connect(SymbolViewWidget, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(handleDoubleClick(QListWidgetItem*)));
 	connect(SymbolViewWidget, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(handleContextMenue(QPoint)));
 	connect(SymbolViewWidget, SIGNAL(objectDropped()), this, SIGNAL(objectDropped()));
 }
@@ -195,16 +195,16 @@ void SymbolPalette::handleDoubleClick(QListWidgetItem *item)
 
 void SymbolPalette::handleEditItem()
 {
-	if (m_item != NULL)
+	if (m_item != nullptr)
 	{
 		emit startEdit(m_item->text());
-		m_item = NULL;
+		m_item = nullptr;
 	}
 }
 
 void SymbolPalette::handleDeleteItem()
 {
-	if (m_item != NULL)
+	if (m_item != nullptr)
 	{
 		if (m_doc->docPatterns.contains(m_item->text()))
 		{
@@ -212,7 +212,7 @@ void SymbolPalette::handleDeleteItem()
 			updateSymbolList();
 			m_doc->regionsChanged()->update(QRect());
 		}
-		m_item = NULL;
+		m_item = nullptr;
 	}
 }
 
@@ -223,7 +223,7 @@ void SymbolPalette::editingStart(QStringList names)
 	{
 		QList<QListWidgetItem*> items = SymbolViewWidget->findItems(names[a], Qt::MatchExactly);
 		if (items.count() > 0)
-			items[0]->setFlags(0);
+			items[0]->setFlags(Qt::NoItemFlags);
 	}
 }
 
@@ -236,7 +236,7 @@ void SymbolPalette::editingFinished()
 void SymbolPalette::setMainWindow(ScribusMainWindow *mw)
 {
 	m_scMW = mw;
-	if (m_scMW == NULL)
+	if (m_scMW == nullptr)
 	{
 		SymbolViewWidget->clear();
 		disconnect(m_scMW, SIGNAL(UpdateRequest(int)), this, SLOT(handleUpdateRequest(int)));
@@ -247,11 +247,11 @@ void SymbolPalette::setMainWindow(ScribusMainWindow *mw)
 
 void SymbolPalette::setDoc(ScribusDoc *newDoc)
 {
-	if (m_scMW == NULL)
-		m_doc = NULL;
+	if (m_scMW == nullptr)
+		m_doc = nullptr;
 	else
 		m_doc = newDoc;
-	if (m_doc == NULL)
+	if (m_doc == nullptr)
 	{
 		SymbolViewWidget->clear();
 		setEnabled(true);
@@ -265,7 +265,7 @@ void SymbolPalette::setDoc(ScribusDoc *newDoc)
 
 void SymbolPalette::unsetDoc()
 {
-	m_doc = NULL;
+	m_doc = nullptr;
 	SymbolViewWidget->clear();
 	setEnabled(true);
 }
@@ -301,7 +301,7 @@ void SymbolPalette::updateSymbolList()
 		p.end();
 		QListWidgetItem *item = new QListWidgetItem(pm2, patK[a], SymbolViewWidget);
 		if (editItemNames.contains(patK[a]))
-			item->setFlags(0);
+			item->setFlags(Qt::NoItemFlags);
 		else
 			item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsDragEnabled);
 	}
@@ -332,7 +332,7 @@ void SymbolPalette::keyPressEvent(QKeyEvent* e)
 		case Qt::Key_Delete:
 			{
 				QListWidgetItem* it = SymbolViewWidget->currentItem();
-				if (it != NULL)
+				if (it != nullptr)
 				{
 					if (m_doc->docPatterns.contains(it->text()))
 					{

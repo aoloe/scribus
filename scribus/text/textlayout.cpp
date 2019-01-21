@@ -49,7 +49,7 @@ TextLayout::~TextLayout()
 uint TextLayout::lines() const
 {
 	uint count = 0;
-	foreach (const Box *box, m_box->boxes())
+	for (const Box *box : m_box->boxes())
 	{
 		count += box->boxes().count();
 	}
@@ -59,14 +59,14 @@ uint TextLayout::lines() const
 const LineBox* TextLayout::line(uint i) const
 {
 	uint count = 0;
-	foreach (const Box *box, m_box->boxes())
+	for (const Box *box : m_box->boxes())
 	{
 		if (i < count + box->boxes().count())
 			return dynamic_cast<const LineBox*>(box->boxes()[i - count]);
 		count += box->boxes().count();
 	}
 	assert(false);
-	return NULL;
+	return nullptr;
 }
 
 const Box* TextLayout::box() const
@@ -111,14 +111,14 @@ void TextLayout::removeLastLine ()
 		column->removeBox(lineCount - 1);
 }
 
-void TextLayout::render(ScreenPainter *p, ITextContext *ctx)
+void TextLayout::render(ScreenPainter *p, ITextContext *ctx) const
 {
 	p->save();
 	m_box->render(p, ctx);
 	p->restore();
 }
 
-void TextLayout::renderBackground(TextLayoutPainter *p)
+void TextLayout::renderBackground(TextLayoutPainter *p) const
 {
 	QString backColor, lastColor;
 	double backShade, lastShade = 100;
@@ -127,7 +127,7 @@ void TextLayout::renderBackground(TextLayoutPainter *p)
 	p->save();
 	p->translate(m_box->x(), m_box->y());
 
-	foreach (const Box* column, m_box->boxes())
+	for (const Box* column : m_box->boxes())
 	{
 		const QList<const Box*>& lineBoxes = column->boxes();
 		QRectF colBBox = column->bbox();
@@ -182,7 +182,7 @@ void TextLayout::renderBackground(TextLayoutPainter *p)
 	p->restore();
 }
 
-void TextLayout::render(TextLayoutPainter *p)
+void TextLayout::render(TextLayoutPainter *p) const
 {
 	p->save();
 	m_box->render(p);
@@ -337,7 +337,7 @@ int TextLayout::endOfFrame() const
 	const QList<Box*>& boxes = m_box->boxes();
 
 	// Beware of columns hidden by other objects
-	const GroupBox* column = 0;
+	const GroupBox* column = nullptr;
 	int columnIndex = boxes.count() - 1;
 	do
 	{
@@ -378,7 +378,7 @@ QLineF TextLayout::positionToPoint(int pos) const
 			if (column->boxes().count() > 0)
 			{
 				Box* line = column->boxes().last();
-				Box* glyph = line->boxes().empty() ? NULL : line->boxes().last();
+				Box* glyph = line->boxes().empty() ? nullptr : line->boxes().last();
 				QChar ch = story()->text(line->lastChar());
 				if (ch == SpecialChars::PARSEP || ch == SpecialChars::LINEBREAK)
 				{
@@ -393,7 +393,7 @@ QLineF TextLayout::positionToPoint(int pos) const
 				else
 				{
 					// draw the cursor at the end of last line.
-					if (isRTL || glyph == NULL)
+					if (isRTL || glyph == nullptr)
 						x = line->x();
 					else
 						x = line->x() + glyph->x() + glyph->width();

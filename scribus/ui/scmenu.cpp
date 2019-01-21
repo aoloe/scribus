@@ -30,7 +30,7 @@ for which a new license (GPL+exception) is in place.
 #include "iconmanager.h"
 
 
-ScrPopupMenu::ScrPopupMenu ( QWidget * parent, const QString pMenuName, const QString pMenuText, const QString parentName, bool pCheckable ) : QObject(parent)
+ScrPopupMenu::ScrPopupMenu ( QWidget * parent, const QString& pMenuName, const QString& pMenuText, const QString& parentName, bool pCheckable ) : QObject(parent)
 {
 	parentMenuName=parentName;
 	parentMenuID=-1;
@@ -54,7 +54,7 @@ const QString ScrPopupMenu::getMenuText()
 	return menuText;
 }
 
-void ScrPopupMenu::setText(const QString pMenuText)
+void ScrPopupMenu::setText(const QString& pMenuText)
 {
 	menuText=pMenuText;
 	localPopupMenu->menuAction()->setText(menuText);
@@ -65,7 +65,7 @@ const QIcon ScrPopupMenu::getMenuIcon()
 	return menuIcon;
 }
 
-void ScrPopupMenu::setMenuIcon(const QIcon pMenuIcon)
+void ScrPopupMenu::setMenuIcon(const QIcon& pMenuIcon)
 {
 	menuIcon=pMenuIcon;
 }
@@ -122,8 +122,7 @@ bool ScrPopupMenu::insertSubMenu(ScrPopupMenu* newSubMenu)
 			m->setText(newSubMenu->getMenuText());
 		return true;
 	}
-	else
-		return false;
+	return false;
 }
 
 bool ScrPopupMenu::removeSubMenu(ScrPopupMenu* subMenu)
@@ -152,15 +151,14 @@ bool ScrPopupMenu::insertMenuItem(ScrAction *newMenuAction)
 			if (menuItemListClassName == "ScrAction")
 			{
 				ScrAction * act = dynamic_cast<ScrAction *>(menuItem);
-				if (act!=NULL)
+				if (act!=nullptr)
 					menuListHasNoIcons = act->icon().isNull();
 				break;
 			}
-
-			else if (menuItemListClassName == "ScrPopupMenu")
+			if (menuItemListClassName == "ScrPopupMenu")
 			{
 				ScrPopupMenu * men = dynamic_cast<ScrPopupMenu *>(menuItem);
-				if (men!=NULL)
+				if (men!=nullptr)
 					menuListHasNoIcons = men->getMenuIcon().isNull();
 				break;
 			}
@@ -173,8 +171,7 @@ bool ScrPopupMenu::insertMenuItem(ScrAction *newMenuAction)
 		localPopupMenu->addAction(newMenuAction);
 		return true;
 	}
-	else 
-		return false;
+	return false;
 }
 
 /* Qt4
@@ -182,7 +179,7 @@ bool ScrPopupMenu::insertMenuItem(QWidget *widget)
 {
 	if (widget)
 	{
-		ScrAction *widgetAction = new ScrAction( NULL, "widget_action" );
+		ScrAction *widgetAction = new ScrAction( nullptr, "widget_action" );
 		menuItemList.append(widgetAction);
 		localPopupMenu->insertItem(widget);
 		return true;
@@ -278,7 +275,7 @@ bool ScrPopupMenu::repopulateLocalMenu()
 	while (menuItemListIt!=menuItemList.end())
 	{
 		QObject *listObj=(*menuItemListIt);
-		if (listObj==NULL)
+		if (listObj==nullptr)
 		{
 			QList< QPointer<QObject> >::Iterator menuItemListItToDelete = menuItemListIt;
 			++menuItemListIt;
@@ -290,7 +287,7 @@ bool ScrPopupMenu::repopulateLocalMenu()
 		if (menuItemListClassName=="ScrAction")
 		{
 			ScrAction * act = dynamic_cast<ScrAction *>(listObj);
-			if (act!=NULL)
+			if (act!=nullptr)
 				localPopupMenu->addAction(act);
 		}
 		else 
@@ -298,7 +295,7 @@ bool ScrPopupMenu::repopulateLocalMenu()
 			if (menuItemListClassName=="ScrPopupMenu")
 			{
 				ScrPopupMenu * men = dynamic_cast<ScrPopupMenu *>(listObj);
-				if (men!=NULL)
+				if (men!=nullptr)
 				{
 					//qDebug()<<men->localPopupMenu->title()<<men->localPopupMenu->;
 // 					localPopupMenu->insertItem(men->getMenuIcon(), men->getMenuText(), men->getLocalPopupMenu());
@@ -321,7 +318,7 @@ bool ScrPopupMenu::generateEntryList(QStringList *actNames)
 	while (menuItemListIt!=menuItemList.end())
 	{
 		QObject *listObj=(*menuItemListIt);
-		if (listObj==NULL)
+		if (listObj==nullptr)
 		{
 			QList< QPointer<QObject> >::Iterator menuItemListItToDelete = menuItemListIt;
 			++menuItemListIt;
@@ -333,16 +330,16 @@ bool ScrPopupMenu::generateEntryList(QStringList *actNames)
 		if (menuItemListClassName=="ScrAction")
 		{
 			ScrAction *sca=dynamic_cast<ScrAction *>(listObj);
-			if (sca!=NULL)
+			if (sca!=nullptr)
 				actNames->append(sca->objectName());
 		}
-		else 
-		if (menuItemListClassName=="ScrPopupMenu")
-		{
-			ScrPopupMenu *scp=dynamic_cast<ScrPopupMenu *>(listObj);
-			if (scp!=NULL)
-				scp->generateEntryList(actNames);
-		}
+		else
+			if (menuItemListClassName=="ScrPopupMenu")
+			{
+				ScrPopupMenu *scp=dynamic_cast<ScrPopupMenu *>(listObj);
+				if (scp!=nullptr)
+					scp->generateEntryList(actNames);
+			}
 		++menuItemListIt;
 	}
 	return true;
@@ -358,7 +355,7 @@ bool ScrPopupMenu::clear()
 
 bool ScrPopupMenu::insertMenuSeparator()
 {
-	ScrAction *sepAction = new ScrAction( NULL );
+	ScrAction *sepAction = new ScrAction( nullptr );
 	sepAction->setSeparator(true);
 	menuItemList.append(sepAction);
 	localPopupMenu->addSeparator();

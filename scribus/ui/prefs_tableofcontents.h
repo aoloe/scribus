@@ -24,7 +24,7 @@ class SCRIBUS_API Prefs_TableOfContents : public Prefs_Pane, Ui::Prefs_TableOfCo
 	Q_OBJECT
 
 	public:
-		Prefs_TableOfContents(QWidget* parent, ScribusDoc* doc=NULL);
+		Prefs_TableOfContents(QWidget* parent, ScribusDoc* doc=nullptr);
 		~Prefs_TableOfContents();
 		virtual void restoreDefaults(struct ApplicationPrefs *prefsData);
 		virtual void saveGuiToPrefs(struct ApplicationPrefs *prefsData) const;
@@ -36,7 +36,7 @@ class SCRIBUS_API Prefs_TableOfContents : public Prefs_Pane, Ui::Prefs_TableOfCo
 
 //		virtual void setup( ToCSetupVector * tocsetups, ScribusDoc * doc );
 		virtual void generatePageItemList();
-		virtual void setupItemAttrs( QStringList newNames );
+		virtual void setupItemAttrs(const QStringList& newNames );
 		virtual void selectToC( int numberSelected );
 		virtual void addToC();
 		virtual void updateToCListBox();

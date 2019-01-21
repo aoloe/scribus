@@ -72,7 +72,7 @@ for which a new license (GPL+exception) is in place.
 
 using namespace std;
 
-PageItem_TextFrame::PageItem_TextFrame(ScribusDoc *pa, double x, double y, double w, double h, double w2, QString fill, QString outline)
+PageItem_TextFrame::PageItem_TextFrame(ScribusDoc *pa, double x, double y, double w, double h, double w2, const QString& fill, const QString& outline)
 	: PageItem(pa, PageItem::TextFrame, x, y, w, h, w2, fill, outline)
 {
 	init();
@@ -95,7 +95,7 @@ void PageItem_TextFrame::init()
 	verticalAlign = 0;
 	incompleteLines = 0;
 	maxY = 0.0;
-	connect(&itemText,SIGNAL(changed(int, int)), this, SLOT(slotInvalidateLayout(int, int)));
+	connect(&itemText,SIGNAL(changed(int,int)), this, SLOT(slotInvalidateLayout(int,int)));
 }
 
 static QRegion itemShape(PageItem* docItem, double xOffset, double yOffset)
@@ -117,13 +117,13 @@ static QRegion itemShape(PageItem* docItem, double xOffset, double yOffset)
 		}
 		res = QRegion(bb.toRect());
 	}
-	else if ((docItem->textFlowUsesImageClipping()) && (docItem->imageClip.size() != 0))
+	else if ((docItem->textFlowUsesImageClipping()) && (!docItem->imageClip.empty()))
 	{
 		QList<uint> Segs;
 		QPolygon Clip2 = FlattenPath(docItem->imageClip, Segs);
 		res = QRegion(pp.map(Clip2)).intersected(QRegion(pp.map(docItem->Clip)));
 	}
-	else if ((docItem->textFlowUsesContourLine()) && (docItem->ContourLine.size() != 0))
+	else if ((docItem->textFlowUsesContourLine()) && (!docItem->ContourLine.empty()))
 	{
 		QList<uint> Segs;
 		QPolygon Clip2 = FlattenPath(docItem->ContourLine, Segs);
@@ -207,9 +207,9 @@ QRegion PageItem_TextFrame::calcAvailableRegion()
 
 		int LayerLev = m_Doc->layerLevelFromID(LayerID);
 		int docItemsCount = m_Doc->Items->count();
-		ScPage* Mp=0;
-		ScPage* Dp=0;
-		PageItem* docItem=0;
+		ScPage* Mp=nullptr;
+		ScPage* Dp=nullptr;
+		PageItem* docItem=nullptr;
 		int LayerLevItem;
 		QList<PageItem*> thisList;
 		if (!OnMasterPage.isEmpty())
@@ -1102,7 +1102,7 @@ struct LineControl {
 		result->setWidth(lineData.width);
 		result->setAscent(lineData.ascent);
 		result->setDescent(lineData.descent);
-		foreach (const GlyphCluster& run, ShapedTextFeed::putInVisualOrder(glyphs,   0, lineData.lastCluster - lineData.firstCluster + 1))
+		for (const GlyphCluster& run : ShapedTextFeed::putInVisualOrder(glyphs,   0, lineData.lastCluster - lineData.firstCluster + 1))
 		{
 			addBox(result, run);
 //			qDebug() << "cluster" << run.firstChar() << ".." << run.lastChar() << "@" << run.visualIndex();
@@ -1158,10 +1158,9 @@ static int allowedCJKBreakBefore(QChar ch) {
 }
 
 static bool implicitBreak(QChar f, QChar s) {
-	if (SpecialChars::isCJK(f.unicode()) && SpecialChars::isCJK(s.unicode())) {
+	if (SpecialChars::isCJK(f.unicode()) && SpecialChars::isCJK(s.unicode()))
 		return allowedCJKBreakAfter(f) && allowedCJKBreakBefore(s);
-	} else
-		return false;
+	return false;
 }
 
 static double findRealOverflowEnd(const QRegion& shape, QRect pt, double maxX)
@@ -1309,9 +1308,9 @@ void PageItem_TextFrame::layout()
 {
 //	qDebug()<<"==Layout==" << itemName() ;
 // 	printBacktrace(24);
-	if (BackBox != NULL) {
+	if (BackBox != nullptr) {
 //		qDebug("textframe: len=%d, going back", itemText.length());
-		PageItem_TextFrame* firstInvalid = NULL;
+		PageItem_TextFrame* firstInvalid = nullptr;
 		PageItem_TextFrame* prevInChain  = dynamic_cast<PageItem_TextFrame*>(BackBox);
 		while (prevInChain)
 		{
@@ -1333,7 +1332,7 @@ void PageItem_TextFrame::layout()
 //		qDebug() << QString("textframe: len=%1, invalid=%2 OnMasterPage=%3: no relayout").arg(itemText.length()).arg(invalid).arg(OnMasterPage);
 		return;
 	}
-	if (invalid && BackBox == NULL)
+	if (invalid && BackBox == nullptr)
 		firstChar = 0;
 
 //	qDebug() << QString("textframe(%1,%2): len=%3, start relayout at %4").arg(m_xPos).arg(m_yPos).arg(itemText.length()).arg(firstInFrame());
@@ -1351,7 +1350,7 @@ void PageItem_TextFrame::layout()
 	TabControl tabs;
 	tabs.active    = false;     // RTab
 	tabs.status    = TabNONE;   // TabCode
-	tabs.tabGlyph  = 0;         // was int charIndex ~ StartRT
+	tabs.tabGlyph  = nullptr;         // was int charIndex ~ StartRT
 	tabs.xPos      = 0;         // RTabX
 
 	QList<ParagraphStyle::TabRecord> tTabValues;
@@ -1396,7 +1395,7 @@ void PageItem_TextFrame::layout()
 	if (itLen == 0 || firstInFrame() == itLen)
 	{
 		PageItem_TextFrame * next = this;
-		while (next != NULL)
+		while (next != nullptr)
 		{
 			next->invalid = false;
 			next->firstChar = itLen;
@@ -1411,7 +1410,7 @@ void PageItem_TextFrame::layout()
 		{ //if notes are used
 			UndoManager::instance()->setUndoEnabled(false);
 			QList<PageItem_NoteFrame*> delList;
-			foreach (PageItem_NoteFrame* nF, m_notesFramesMap.keys())
+			for (PageItem_NoteFrame* nF : m_notesFramesMap.keys())
 			{
 				if (nF->notesList().isEmpty() && !nF->isAutoNoteFrame())
 					delList.append(nF);
@@ -1423,7 +1422,7 @@ void PageItem_TextFrame::layout()
 		return;
 	}
 
-	if ((itLen != 0)) // || (NextBox != 0))
+	if ((itLen != 0)) // || (NextBox != nullptr))
 	{
 		// determine layout area
 		m_availableRegion = calcAvailableRegion();
@@ -1613,8 +1612,7 @@ void PageItem_TextFrame::layout()
 					current.glyphs[currentIndex].setFlag(ScLayout_SuppressSpace);
 					continue;
 				}
-				else
-					current.glyphs[currentIndex].clearFlag(ScLayout_SuppressSpace);
+				current.glyphs[currentIndex].clearFlag(ScLayout_SuppressSpace);
 			}
 			else // from 134 on use NBSPACE for this effect
 			{
@@ -1623,8 +1621,7 @@ void PageItem_TextFrame::layout()
 					current.glyphs[currentIndex].setFlag(ScLayout_SuppressSpace);
 					continue;
 				}
-				else
-					current.glyphs[currentIndex].clearFlag(ScLayout_SuppressSpace);
+				current.glyphs[currentIndex].clearFlag(ScLayout_SuppressSpace);
 			}
 			if (current.isEmpty)
 			{
@@ -1644,7 +1641,7 @@ void PageItem_TextFrame::layout()
 				if (current.startOfCol && !current.afterOverflow && current.recalculateY)
 					current.yPos = qMax(current.yPos, m_textDistanceMargins.top());
 				// more about par gap and dropcaps
-				if ((a > firstInFrame() && itemText.isBlockStart(a)) || (a == 0 && BackBox == 0 && current.startOfCol))
+				if ((a > firstInFrame() && itemText.isBlockStart(a)) || (a == 0 && BackBox == nullptr && current.startOfCol))
 				{
 					if (!current.afterOverflow && current.recalculateY && !current.startOfCol)
 						current.yPos += style.gapBefore();
@@ -1670,18 +1667,20 @@ void PageItem_TextFrame::layout()
 				//text height, width, ascent and descent should be calculated for whole text provided by ScText in current position
 				//and that may be more than one char (variable text for example)
 				double realCharHeight = 0.0, realCharAscent = 0.0;
-				foreach (const GlyphLayout& gl, current.glyphs[currentIndex].glyphs()) {
-					GlyphMetrics gm = font.glyphBBox(gl.glyph);
+				const QList<GlyphLayout>& glyphs = current.glyphs[currentIndex].glyphs();
+				for (const GlyphLayout& gl : glyphs) {
+					GlyphMetrics gm = font.glyphBBox(gl.glyph, style.charStyle().fontSize() / 10.0);
 					realCharHeight = qMax(realCharHeight, gm.ascent + gm.descent);
 					realCharAscent = qMax(realCharAscent, gm.ascent);
 				}
-				double fontAscent = font.ascent(style.charStyle().fontSize() / 10.0);
 				if (realCharHeight == 0.0)
 					realCharHeight = font.height(style.charStyle().fontSize() / 10.0);
 				if (realCharAscent == 0.0)
-					realCharAscent = fontAscent;
-				chsd = (10 * ((DropCapDrop + fontAscent) / realCharHeight));
-				chs  = (10 * ((DropCapDrop + fontAscent) / realCharAscent));
+					realCharAscent = font.ascent(style.charStyle().fontSize() / 10.0);
+				if (current.startOfCol && (m_firstLineOffset == FLOPFontAscent))
+					realCharAscent = font.ascent(hlcsize10);
+				chsd = ((DropCapDrop + realCharAscent) / realCharHeight) * style.charStyle().fontSize();
+				chs  = ((DropCapDrop + realCharAscent) / realCharAscent) * style.charStyle().fontSize();
 				current.glyphs[currentIndex].setFlag(ScLayout_DropCap);
 				if (HasObject)
 				{
@@ -1747,12 +1746,13 @@ void PageItem_TextFrame::layout()
 				}
 				else
 				{
-					double realCharHeight = 0.0;
+					double realCharHeight = 0.0, realCharAscent = 0.0;
 					wide = 0.0; realAsce = 0.0;
-					foreach (const GlyphLayout& gl, glyphCluster.glyphs()) {
-						GlyphMetrics gm;
-						gm = font.glyphBBox(gl.glyph, charStyle.fontSize() / 10.0);
+					const QList<GlyphLayout>& glyphs = glyphCluster.glyphs();
+					for (const GlyphLayout& gl : glyphs) {
+						GlyphMetrics gm = font.glyphBBox(gl.glyph, charStyle.fontSize() / 10.0);
 						realCharHeight = qMax(realCharHeight, gm.ascent + gm.descent);
+						realCharAscent = qMax(realCharAscent, gm.ascent);
 						gm = font.glyphBBox(gl.glyph, chsd / 10.0);
 						realAsce = qMax(realAsce, gm.ascent + gm.descent);
 						wide += gm.width;
@@ -1761,7 +1761,11 @@ void PageItem_TextFrame::layout()
 					realAsce = realAsce  * scaleV + offset;
 					if (realCharHeight == 0)
 						realCharHeight = font.height(style.charStyle().fontSize() / 10.0);
-					asce = font.ascent(hlcsize10);
+					if (realCharAscent == 0)
+						realCharAscent = font.ascent(style.charStyle().fontSize() / 10.0);
+					asce = realCharAscent;
+					if (current.startOfCol && (m_firstLineOffset == FLOPFontAscent))
+						asce = font.ascent(hlcsize10);
 					glyphCluster.setScaleH(glyphCluster.scaleH() / glyphCluster.scaleV());
 					glyphCluster.setScaleV(realAsce / realCharHeight);
 					glyphCluster.setScaleH(glyphCluster.scaleH() * glyphCluster.scaleV());
@@ -1786,7 +1790,8 @@ void PageItem_TextFrame::layout()
 				{
 					if (itemText.text(a) != SpecialChars::OBJECT)
 					{
-						foreach (const GlyphLayout& gl, current.glyphs[currentIndex].glyphs())
+						const QList<GlyphLayout>& glyphs = current.glyphs[currentIndex].glyphs();
+						for (const GlyphLayout& gl : glyphs)
 						{
 							GlyphMetrics gm = font.glyphBBox(gl.glyph, hlcsize10);
 							realDesc = qMax(realDesc, gm.descent * scaleV - offset);
@@ -1810,7 +1815,8 @@ void PageItem_TextFrame::layout()
 						realAsce = asce * scaleV + offset;
 					else
 					{
-						foreach (const GlyphLayout& gl, current.glyphs[currentIndex].glyphs())
+						const QList<GlyphLayout>& glyphs = current.glyphs[currentIndex].glyphs();
+						for (const GlyphLayout& gl : glyphs)
 							realAsce = qMax(realAsce, font.glyphBBox(gl.glyph, hlcsize10).ascent * scaleV + offset);
 					}
 				}
@@ -1895,7 +1901,7 @@ void PageItem_TextFrame::layout()
 				}
 			}
 			current.recalculateY = true;
-			maxYAsc = 0.0, maxYDesc = 0.0;
+			maxYAsc = maxYDesc = 0.0;
 			double addAsce = 0.0;
 			if (current.startOfCol)
 			{
@@ -2038,11 +2044,8 @@ void PageItem_TextFrame::layout()
 							newColumn = true;
 							break;
 						}
-						else
-						{
-							MaxChars = a;
-							goto NoRoom;
-						}
+						MaxChars = a;
+						goto NoRoom;
 					}
 				}
 				if (newColumn)
@@ -2203,7 +2206,8 @@ void PageItem_TextFrame::layout()
 			if (DropCmode)
 			{
 				double yoffset = 0.0;
-				foreach (const GlyphLayout& gl, current.glyphs[currentIndex].glyphs())
+				const QList<GlyphLayout>& glyphs = current.glyphs[currentIndex].glyphs();
+				for (const GlyphLayout& gl : glyphs)
 					yoffset = qMax(yoffset, font.glyphBBox(gl.glyph, chsd / 10.0).descent);
 				current.glyphs[currentIndex].yoffset -= yoffset;
 			}
@@ -2864,11 +2868,8 @@ void PageItem_TextFrame::layout()
 						i = current.restartLine(false,true);
 						continue;
 					}
-					else
-					{
-//						qDebug() << "breakline B no more text @" << i;
-						current.breakLine(i);
-					}
+//					qDebug() << "breakline B no more text @" << i;
+					current.breakLine(i);
 				}
 			}
 		}
@@ -3009,7 +3010,7 @@ void PageItem_TextFrame::layout()
 		}
 		UndoManager::instance()->setUndoEnabled(true);
 	}
-	if (NextBox != NULL)
+	if (NextBox != nullptr)
 	{
 		PageItem_TextFrame * nextFrame = dynamic_cast<PageItem_TextFrame*>(NextBox);
 		while (nextFrame)
@@ -3063,7 +3064,7 @@ NoRoom:
 	}
 
 	PageItem_TextFrame * next = dynamic_cast<PageItem_TextFrame*>(NextBox);
-	if (next != NULL)
+	if (next != nullptr)
 	{
 		if (itemText.cursorPosition() > signed(MaxChars))
 		{
@@ -3089,13 +3090,13 @@ void PageItem_TextFrame::invalidateLayout(bool wholeChain)
 	if (wholeChain)
 	{
 		PageItem *prevFrame = this->prevInChain();
-		while (prevFrame != 0)
+		while (prevFrame != nullptr)
 		{
 			prevFrame->invalid = true;
 			prevFrame = prevFrame->prevInChain();
 		}
 		PageItem *nextFrame = this->nextInChain();
-		while (nextFrame != 0)
+		while (nextFrame != nullptr)
 		{
 			nextFrame->invalid = true;
 			nextFrame = nextFrame->nextInChain();
@@ -3130,11 +3131,11 @@ bool PageItem_TextFrame::isValidChainFromBegin()
 {
 	if (invalid)
 		return false;
-	if (BackBox == NULL)
+	if (BackBox == nullptr)
 		return !invalid;
 
 	PageItem* prev = prevInChain();
-	while (prev != NULL)
+	while (prev != nullptr)
 	{
 		if (prev->invalid)
 			return false;
@@ -3208,61 +3209,63 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 			}
 		}
 		p->save();
-		if ((annotation().Bwid() > 0) && (annotation().borderColor() != CommonStrings::None) && (annotation().Type() != Annotation::Text))
+		if ((annotation().borderWidth() > 0) && (annotation().borderColor() != CommonStrings::None) && (annotation().Type() != Annotation::Text))
 		{
 			QColor tmp;
 			SetQColor(&tmp, annotation().borderColor(), 100);
-			int BStyle = annotation().Bsty();
+			int borderStyle = annotation().borderStyle();
 			if (annotation().IsOn())
 			{
 				if (annotation().Feed() == 2)
 					tmp = QColor(255 - tmp.red(), 255 - tmp.green(), 255 - tmp.blue(), tmp.alpha());
 				if (annotation().Feed() == 3)
-					BStyle = 4;
+					borderStyle = 4;
 			}
 			if (annotation().Type() == Annotation::RadioButton)
 			{
-				double bwh = annotation().Bwid() / 2.0;
+				double bwh = annotation().borderWidth() / 2.0;
 				if (annotation().IsOn())
 				{
-					if (BStyle == 4)
-						BStyle = 3;
+					if (borderStyle == 4)
+						borderStyle = 3;
 					else
-						BStyle = 4;
+						borderStyle = 4;
 				}
-				if ((BStyle == 0) || (BStyle == 1))
+				if ((borderStyle == 0) || (borderStyle == 1))
 				{
 					QPainterPath clp;
-					clp.addEllipse(QRectF(bwh, bwh, m_width - annotation().Bwid(), m_height - annotation().Bwid()));
+					clp.addEllipse(QRectF(bwh, bwh, m_width - annotation().borderWidth(), m_height - annotation().borderWidth()));
 					FPointArray clpArr;
 					clpArr.fromQPainterPath(clp);
 					p->setupPolygon(&clpArr);
-					p->setPen(tmp, annotation().Bwid(), BStyle == 0 ? Qt::SolidLine : Qt::DashLine, Qt::FlatCap, Qt::MiterJoin);
+					p->setPen(tmp, annotation().borderWidth(), borderStyle == 0 ? Qt::SolidLine : Qt::DashLine, Qt::FlatCap, Qt::MiterJoin);
 					p->setFillMode(ScPainter::None);
 					p->setStrokeMode(ScPainter::Solid);
 					p->strokePath();
 				}
-				else if (BStyle == 3)
-					p->drawShadeCircle(QRectF(0, 0, m_width, m_height), tmp, false, annotation().Bwid());
-				else if (BStyle == 4)
-					p->drawShadeCircle(QRectF(0, 0, m_width, m_height), tmp, true, annotation().Bwid());
+				else if (borderStyle == 3)
+					p->drawShadeCircle(QRectF(0, 0, m_width, m_height), tmp, false, annotation().borderWidth());
+				else if (borderStyle == 4)
+					p->drawShadeCircle(QRectF(0, 0, m_width, m_height), tmp, true, annotation().borderWidth());
 			}
 			else
 			{
 				if ((annotation().Type() == Annotation::Checkbox) && annotation().IsOn())
 				{
-					if (BStyle == 4)
-						BStyle = 3;
+					if (borderStyle == 4)
+						borderStyle = 3;
 					else
-						BStyle = 4;
+						borderStyle = 4;
 				}
-				if (BStyle == 3)
-					p->drawShadePanel(QRectF(0, 0, m_width, m_height), tmp, false, annotation().Bwid());
-				else if (BStyle == 4)
-					p->drawShadePanel(QRectF(0, 0, m_width, m_height), tmp, true, annotation().Bwid());
+				if (borderStyle == 2)
+					p->drawUnderlinedRect(QRectF(0, 0, m_width, m_height), tmp, annotation().borderWidth());
+				else if (borderStyle == 3)
+					p->drawShadePanel(QRectF(0, 0, m_width, m_height), tmp, false, annotation().borderWidth());
+				else if (borderStyle == 4)
+					p->drawShadePanel(QRectF(0, 0, m_width, m_height), tmp, true, annotation().borderWidth());
 				else
 				{
-					p->setPen(tmp, annotation().Bwid(), BStyle == 0 ? Qt::SolidLine : Qt::DashLine, Qt::FlatCap, Qt::MiterJoin);
+					p->setPen(tmp, annotation().borderWidth(), borderStyle == 0 ? Qt::SolidLine : Qt::DashLine, Qt::FlatCap, Qt::MiterJoin);
 					p->setStrokeMode(ScPainter::Solid);
 					p->drawRect(0, 0, m_width, m_height);
 				}
@@ -3270,7 +3273,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 		}
 		if (annotation().Type() == Annotation::Button)
 		{
-			int wdt = annotation().Bwid();
+			int wdt = annotation().borderWidth();
 			QPainterPath clp;
 			clp.addRect(QRectF(wdt, wdt, m_width - (2 * wdt), m_height - (2 * wdt)));
 			FPointArray clpArr;
@@ -3302,9 +3305,9 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 			p->restore();
 			return;
 		}
-		else if (annotation().Type() == Annotation::Textfield)
+		if (annotation().Type() == Annotation::Textfield)
 		{
-			int wdt = annotation().Bwid();
+			int wdt = annotation().borderWidth();
 			m_textDistanceMargins.set(wdt, wdt, wdt, wdt);
 			invalid = true;
 			layout();
@@ -3449,7 +3452,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 		}
 		else if (annotation().Type() == Annotation::Combobox)
 		{
-			int wdt = annotation().Bwid();
+			int wdt = annotation().borderWidth();
 			if (m_width > 2 * wdt + 15)
 			{
 				if (!bmUtf16.isEmpty())
@@ -3471,7 +3474,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 				p->setStrokeMode(ScPainter::None);
 				p->setBrush(QColor(200, 200, 200));
 				QRectF bi;
-				if ((annotation().Bsty() == 3) || (annotation().Bsty() == 4))
+				if ((annotation().borderStyle() == 3) || (annotation().borderStyle() == 4))
 					bi = QRectF(m_width - wdt - 15, wdt, 15, m_height - (2 * wdt));
 				else
 					bi = QRectF(m_width - (wdt / 2.0) - 15, wdt / 2.0, 15, m_height - wdt);
@@ -3493,7 +3496,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 		}
 		else if (annotation().Type() == Annotation::Listbox)
 		{
-			int wdt = annotation().Bwid();
+			int wdt = annotation().borderWidth();
 			if (m_width > 2 * wdt + 15)
 			{
 				if (!bmUtf16.isEmpty())
@@ -3685,7 +3688,7 @@ void PageItem_TextFrame::DrawObj_Post(ScPainter *p)
 						gradientStrokeVal = "";
 					if (!(gradientStrokeVal.isEmpty()) && (m_Doc->docGradients.contains(gradientStrokeVal)))
 						stroke_gradient = m_Doc->docGradients[gradientStrokeVal];
-					if (stroke_gradient.Stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
+					if (stroke_gradient.stops() < 2) // fall back to solid stroking if there are not enough colorstops in the gradient.
 					{
 						if (lineColor() != CommonStrings::None)
 						{
@@ -3751,7 +3754,7 @@ void PageItem_TextFrame::DrawObj_Post(ScPainter *p)
 
 void PageItem_TextFrame::DrawObj_Decoration(ScPainter *p)
 {
-	//#12405 if (isAnnotation() && ((annotation().Type() > 1) && (annotation().Type() < 7)) && (annotation().Bwid() > 0))
+	//#12405 if (isAnnotation() && ((annotation().Type() > 1) && (annotation().Type() < 7)) && (annotation().borderWidth() > 0))
 	//	return;
 	p->save();
 //	p->setAntialiasing(false);
@@ -3766,7 +3769,7 @@ void PageItem_TextFrame::DrawObj_Decoration(ScPainter *p)
 			p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameNormColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if ((isBookmark) || (m_isAnnotation))
 				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameAnnotationColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
-			if ((BackBox != 0) || (NextBox != 0))
+			if ((BackBox != nullptr) || (NextBox != nullptr))
 				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameLinkColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if (m_Locked)
 				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameLockColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
@@ -3775,7 +3778,7 @@ void PageItem_TextFrame::DrawObj_Decoration(ScPainter *p)
 			p->setupSharpPolygon(&PoLine);
 			p->strokePath();
 		}
-		if ((m_Doc->guidesPrefs().framesShown) && textFlowUsesContourLine() && (ContourLine.size() != 0))
+		if ((m_Doc->guidesPrefs().framesShown) && textFlowUsesContourLine() && (!ContourLine.empty()))
 		{
 			p->setPen(Qt::darkGray, 0, Qt::DotLine, Qt::FlatCap, Qt::MiterJoin);
 			p->setupSharpPolygon(&ContourLine);
@@ -3830,7 +3833,7 @@ void PageItem_TextFrame::clearContents()
 		return;
 
 	PageItem *nextItem = this;
-	while (nextItem->prevInChain() != 0)
+	while (nextItem->prevInChain() != nullptr)
 		nextItem = nextItem->prevInChain();
 
 	ParagraphStyle defaultStyle = nextItem->itemText.defaultStyle();
@@ -3843,7 +3846,7 @@ void PageItem_TextFrame::clearContents()
 		nextItem->itemText.setDefaultStyle(defaultStyle);
 	}
 
-	while (nextItem != 0)
+	while (nextItem != nullptr)
 	{
 		nextItem->invalid = true;
 		nextItem = nextItem->nextInChain();
@@ -3852,7 +3855,7 @@ void PageItem_TextFrame::clearContents()
 
 void PageItem_TextFrame::truncateContents()
 {
-	if ((this->nextInChain() == NULL) && frameOverflows())
+	if ((this->nextInChain() == nullptr) && frameOverflows())
 	{
 		ParagraphStyle defaultStyle = this->itemText.defaultStyle();
 		int pos = itemText.cursorPosition();
@@ -3997,7 +4000,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 					conv = 32;
 				if (UndoManager::undoEnabled())
 				{
-					ScItemState<ParagraphStyle> *ip = 0;
+					ScItemState<ParagraphStyle> *ip = nullptr;
 					SimpleState *ss = dynamic_cast<SimpleState*>(undoManager->getLastUndo());
 					UndoObject *undoTarget = this;
 					int cursorPos = itemText.cursorPosition();
@@ -4121,7 +4124,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 					ExpandSel(oldPos);
 				}
 				else
-					if ((textLayout.lines() > 0) && (oldPos >= textLayout.line(textLayout.lines()-1)->firstChar()) && (itemText.cursorPosition() >= lastInFrame()) && (NextBox != 0))
+					if ((textLayout.lines() > 0) && (oldPos >= textLayout.line(textLayout.lines()-1)->firstChar()) && (itemText.cursorPosition() >= lastInFrame()) && (NextBox != nullptr))
 					{
 						if (NextBox->frameDisplays(itemText.cursorPosition()))
 						{
@@ -4134,7 +4137,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			}
 			else
 			{
-				if (NextBox != 0)
+				if (NextBox != nullptr)
 				{
 					if (NextBox->frameDisplays(lastInFrame()+1))
 					{
@@ -4172,7 +4175,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 					ExpandSel(oldPos);
 				}
 				else
-					if ((textLayout.lines() > 0) && (oldPos <= textLayout.line(0)->lastChar()) && (itemText.cursorPosition()  == firstInFrame()) && (BackBox != 0))
+					if ((textLayout.lines() > 0) && (oldPos <= textLayout.line(0)->lastChar()) && (itemText.cursorPosition()  == firstInFrame()) && (BackBox != nullptr))
 					{
 						view->Deselect(true);
 						// TODO position at the right place in previous frame
@@ -4183,7 +4186,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			else
 			{
 				itemText.setCursorPosition( firstInFrame() );
-				if (BackBox != 0)
+				if (BackBox != nullptr)
 				{
 					view->Deselect(true);
 					BackBox->itemText.setCursorPosition( BackBox->lastInFrame() );
@@ -4196,7 +4199,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		m_Doc->scMW()->setTBvals(this);
 		break;
 	case Qt::Key_PageUp:
-		if (itemText.cursorPosition() == firstInFrame() && BackBox != 0)
+		if (itemText.cursorPosition() == firstInFrame() && BackBox != nullptr)
 		{
 			view->Deselect(true);
 			BackBox->itemText.setCursorPosition( BackBox->firstInFrame() );
@@ -4210,7 +4213,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		m_Doc->scMW()->setTBvals(this);
 		break;
 	case Qt::Key_PageDown:
-		if (!frameDisplays(itemText.length()-1) && itemText.cursorPosition() >= lastInFrame() && NextBox != 0)
+		if (!frameDisplays(itemText.length()-1) && itemText.cursorPosition() >= lastInFrame() && NextBox != nullptr)
 		{
 			view->Deselect(true);
 			itemText.setCursorPosition( NextBox->lastInFrame() );
@@ -4241,7 +4244,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			if (itemText.cursorPosition() < firstInFrame())
 			{
 				itemText.setCursorPosition( firstInFrame() );
-				if (BackBox != 0)
+				if (BackBox != nullptr)
 				{
 					view->Deselect(true);
 					BackBox->itemText.setCursorPosition( BackBox->lastInFrame() );
@@ -4281,7 +4284,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			{
 //				--CPos;
 				itemText.setCursorPosition(lastInFrame() + 1);
-				if (NextBox != 0)
+				if (NextBox != nullptr)
 				{
 					if (NextBox->frameDisplays(itemText.cursorPosition()))
 					{
@@ -4342,7 +4345,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		else
 		{
 			layout();
-			if (oldLast != lastInFrame() && NextBox != 0 && NextBox->invalid)
+			if (oldLast != lastInFrame() && NextBox != nullptr && NextBox->invalid)
 				NextBox->updateLayout();
 		}
 //		Tinput = false;
@@ -4399,13 +4402,13 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		else
 		{
 			layout();
-			if (oldLast != lastInFrame() && NextBox != 0 && NextBox->invalid)
+			if (oldLast != lastInFrame() && NextBox != nullptr && NextBox->invalid)
 				NextBox->updateLayout();
 		}
 		if (itemText.cursorPosition() < firstInFrame())
 		{
 			itemText.setCursorPosition( firstInFrame() );
-			if (BackBox != 0)
+			if (BackBox != nullptr)
 			{
 				view->Deselect(true);
 				if (BackBox->invalid)
@@ -4488,7 +4491,7 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		{
 			if (UndoManager::undoEnabled())
 			{
-				ScItemState<ParagraphStyle> *ip = 0;
+				ScItemState<ParagraphStyle> *ip = nullptr;
 				SimpleState *ss = dynamic_cast<SimpleState*>(undoManager->getLastUndo());
 				UndoObject *undoTarget = this;
 				int cursorPos = itemText.cursorPosition();
@@ -4566,12 +4569,12 @@ void PageItem_TextFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 			}
 			else
 				update();
-			if (oldLast != lastInFrame() && NextBox != 0 && NextBox->invalid)
+			if (oldLast != lastInFrame() && NextBox != nullptr && NextBox->invalid)
 				NextBox->updateLayout();
 		}
 		//check if cursor need to jump to next linked frame
 		//but not for notes frames can`t be updated as may disapper during update
-		if ((itemText.cursorPosition() > lastInFrame() + 1) && (lastInFrame() < (itemText.length() - 2)) && NextBox != 0)
+		if ((itemText.cursorPosition() > lastInFrame() + 1) && (lastInFrame() < (itemText.length() - 2)) && NextBox != nullptr)
 		{
 			view->Deselect(true);
 			NextBox->update();
@@ -4602,9 +4605,9 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 		int lastPos = start;
 		CharStyle lastParent = itemText.charStyle(start);
 		UndoState* state = undoManager->getLastUndo();
-		ScItemState<ParagraphStyle> *ip = NULL;
-		ScItemState<CharStyle> *is = NULL;
-		TransactionState *ts = NULL;
+		ScItemState<ParagraphStyle> *ip = nullptr;
+		ScItemState<CharStyle> *is = nullptr;
+		TransactionState *ts = nullptr;
 		bool added = false;
 		bool lastIsDelete = false;
 		while (state && state->isTransaction()) {
@@ -4639,7 +4642,7 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 		//delete text
 		for (int i=start; i <= stop; ++i)
 		{
-			Mark* mark = i < itemText.length() && itemText.hasMark(i) ? itemText.mark(i) : NULL;
+			Mark* mark = i < itemText.length() && itemText.hasMark(i) ? itemText.mark(i) : nullptr;
 			const CharStyle& curParent = itemText.charStyle(i);
 			bool needParaAction = ((i < stop) && (itemText.text(i) == SpecialChars::PARSEP));
 			if (i==stop || !curParent.equiv(lastParent) || (mark && mark->isType(MARKNoteFrameType)) || needParaAction)
@@ -4670,7 +4673,7 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 				if (!added)
 				{
 					UndoObject * undoTarget = this;
-					is = NULL;
+					is = nullptr;
 					if (i - lastPos > 0)
 					{
 						is = new ScItemState<CharStyle>(Um::DeleteText, "", Um::IDelete);
@@ -4690,7 +4693,7 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 						for (int ii = notes2DEL.count() -1; ii >= 0; --ii)
 						{
 							TextNote* note = notes2DEL.at(ii).first;
-							Q_ASSERT(note != NULL);
+							Q_ASSERT(note != nullptr);
 							if (note->textLen > 0)
 							{
 								itemText.deselectAll();
@@ -4702,7 +4705,7 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 						for (int ii = notes2DEL.count() -1; ii >= 0; --ii)
 						{
 							TextNote* note = notes2DEL.at(ii).first;
-							Q_ASSERT(note != NULL);
+							Q_ASSERT(note != nullptr);
 							m_Doc->setUndoDelNote(note);
 							if (note->isEndNote())
 								m_Doc->flag_updateEndNotes = true;
@@ -4712,7 +4715,7 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 						{
 							if (!ts || !lastIsDelete) {
 								undoManager->action(undoTarget, is);
-								ts = NULL;
+								ts = nullptr;
 							}
 							else
 								ts->pushBack(undoTarget, is);
@@ -4723,7 +4726,7 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 					{
 						if (!ts || !lastIsDelete) {
 							undoManager->action(undoTarget, is);
-							ts = NULL;
+							ts = nullptr;
 						}
 						else
 							ts->pushBack(undoTarget, is);
@@ -4746,15 +4749,15 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 				if (lastPos < itemText.length())
 					lastParent = itemText.charStyle(lastPos);
 				QString etea;
-				SimpleState* ss = ts ? dynamic_cast<SimpleState*>(ts->last()) : NULL;
+				SimpleState* ss = ts ? dynamic_cast<SimpleState*>(ts->last()) : nullptr;
 				if (ss)
 					etea = ss->get("ETEA");
 				if (ts && ((etea == "delete_frametext") || (etea == "delete_framepara")))
 					ts->pushBack(undoTarget, ip);
 				else
 					undoManager->action(undoTarget, ip);
-				is = NULL;
-				ts = NULL;
+				is = nullptr;
+				ts = nullptr;
 			}
 		}
 		if (trans)
@@ -4809,7 +4812,7 @@ void PageItem_TextFrame::updateBulletsNum()
 	for (int index = 0; index < itemText.length(); ++index)
 	{
 		Mark* mark = itemText.mark(index);
-		if ((mark != NULL) && (itemText.hasMark(index)))
+		if ((mark != nullptr) && (itemText.hasMark(index)))
 		{
 			mark->OwnPage = this->OwnPage;
 			//itemPtr and itemName set to this frame only if mark type is different than MARK2ItemType
@@ -4827,11 +4830,11 @@ void PageItem_TextFrame::updateBulletsNum()
 			if (mark->isNoteType())
 			{
 				TextNote* note = mark->getNotePtr();
-				if (note == NULL)
+				if (note == nullptr)
 					continue;
 				mark->setItemPtr(this);
 				NotesStyle* nStyle = note->notesStyle();
-				Q_ASSERT(nStyle != NULL);
+				Q_ASSERT(nStyle != nullptr);
 				QString chsName = nStyle->marksChStyle();
 				CharStyle currStyle(itemText.charStyle(index));
 				if (!chsName.isEmpty())
@@ -4875,7 +4878,7 @@ void PageItem_TextFrame::updateBulletsNum()
 			if (style.hasBullet() || style.hasNum())
 			{
 				bullet = true;
-				if (mark == NULL || !mark->isType(MARKBullNumType))
+				if (mark == nullptr || !mark->isType(MARKBullNumType))
 				{
 					itemText.insertMark(new BulNumMark(), index);
 					index--;
@@ -4961,10 +4964,10 @@ void PageItem_TextFrame::deselectAll()
 	{
 		itemText.deselectAll();
 		PageItem *item = this;
-		while( item->prevInChain() )
-			item=item->prevInChain();
+		while (item->prevInChain())
+			item = item->prevInChain();
 
-		while ( item )
+		while (item)
 		{
 			item->HasSel = false;
 			item = item->nextInChain();
@@ -4999,7 +5002,7 @@ void PageItem_TextFrame::drawOverflowMarker(ScPainter *p)
 	QColor color(PrefsManager::instance()->appPrefs.displayPrefs.frameNormColor);
 	if ((isBookmark) || (m_isAnnotation))
 		color = PrefsManager::instance()->appPrefs.displayPrefs.frameAnnotationColor;
-	if ((BackBox != 0) || (NextBox != 0))
+	if ((BackBox != nullptr) || (NextBox != nullptr))
 		color = PrefsManager::instance()->appPrefs.displayPrefs.frameLinkColor;
 	if (m_Locked)
 		color = PrefsManager::instance()->appPrefs.displayPrefs.frameLockColor;
@@ -5036,7 +5039,7 @@ void PageItem_TextFrame::drawColumnBorders(ScPainter *p)
 		p->drawSharpLine(FPoint(m_textDistanceMargins.left() + lineCorr, m_textDistanceMargins.top() + lineCorr), FPoint(m_width - m_textDistanceMargins.right() - lineCorr, m_textDistanceMargins.top() + lineCorr));
 	if (m_textDistanceMargins.bottom() + lineCorr!=0.0)
 		p->drawSharpLine(FPoint(m_textDistanceMargins.left() + lineCorr, m_height - m_textDistanceMargins.bottom() - lineCorr), FPoint(m_width - m_textDistanceMargins.right() - lineCorr, m_height - m_textDistanceMargins.bottom() - lineCorr));
-	while(curCol < Cols)
+	while (curCol < Cols)
 	{
 		colLeft=(colWidth + ColGap) * curCol + m_textDistanceMargins.left() + lineCorr;
 		if (colLeft != 0.0)
@@ -5067,7 +5070,7 @@ bool PageItem_TextFrame::createInfoGroup(QFrame *infoGroup, QGridLayout *infoGro
 	QLabel *charCT = new QLabel(infoGroup);
 	QLabel *charT = new QLabel(infoGroup);
 
-	if ((nextInChain() != 0) || (prevInChain() != 0))
+	if ((nextInChain() != nullptr) || (prevInChain() != nullptr))
 		infoCT->setText(tr("Linked Text"));
 	else
 		infoCT->setText(tr("Text Frame"));
@@ -5152,7 +5155,7 @@ void PageItem_TextFrame::applicableActions(QStringList & actionList)
 		else
 			actionList << "itemPDFFieldProps";
 	}
-	if ((prevInChain() == 0) && (nextInChain() == 0))
+	if ((prevInChain() == nullptr) && (nextInChain() == nullptr))
 	{
 		actionList << "itemConvertToImageFrame";
 		actionList << "itemConvertToPolygon";
@@ -5161,7 +5164,7 @@ void PageItem_TextFrame::applicableActions(QStringList & actionList)
 	if (textLayout.lines() != 0)
 	{
 		actionList << "editClearContents";
-		if ((this->nextInChain() == NULL) && frameOverflows())
+		if ((this->nextInChain() == nullptr) && frameOverflows())
 			actionList << "editTruncateContents";
 		actionList << "itemAdjustFrameHeightToText";
 	}
@@ -5506,7 +5509,7 @@ void PageItem_TextFrame::setTextAnnotationOpen(bool open)
 	}
 }
 
-QString PageItem_TextFrame::infoDescription()
+QString PageItem_TextFrame::infoDescription() const
 {
 	return QString();
 }
@@ -5516,7 +5519,7 @@ bool PageItem_TextFrame::hasNoteMark(NotesStyle *NS)
 	if (isNoteFrame())
 		return (asNoteFrame()->notesStyle() == NS);
 
-	if (NS == NULL)
+	if (NS == nullptr)
 	{
 		//find any mark
 		if (!m_notesFramesMap.isEmpty())
@@ -5532,7 +5535,7 @@ bool PageItem_TextFrame::hasNoteMark(NotesStyle *NS)
 			if (itemText.hasMark(pos))
 			{
 				TextNote* note = itemText.mark(pos)->getNotePtr();
-				if (note != NULL && (note->notesStyle() == NS))
+				if (note != nullptr && (note->notesStyle() == NS))
 					return true;
 			}
 		}
@@ -5546,27 +5549,24 @@ bool PageItem_TextFrame::hasNoteFrame(NotesStyle *NS, bool inChain)
 		return false;
 	if (m_notesFramesMap.isEmpty())
 		return false;
-	if (NS == NULL)
+	if (NS == nullptr)
 	{ //check if any notes are in frame or whole chain
 		if (!inChain)
 			return !m_notesFramesMap.isEmpty();
-		else
+		PageItem* item = this;
+		item = firstInChain();
+		while (item != nullptr)
 		{
-			PageItem* item = this;
-			item = firstInChain();
-			while (item != NULL)
-			{
-				if (item->asTextFrame()->hasNoteFrame(NULL, false))
-					return true;
-				item = item->nextInChain();
-			}
-			return false;
+			if (item->asTextFrame()->hasNoteFrame(nullptr, false))
+				return true;
+			item = item->nextInChain();
 		}
+		return false;
 	}
 	PageItem* item = this;
 	if (inChain)
 		item = firstInChain();
-	while (item != NULL)
+	while (item != nullptr)
 	{
 		NotesInFrameMap::iterator it = m_notesFramesMap.begin();
 		NotesInFrameMap::iterator end = m_notesFramesMap.end();
@@ -5588,7 +5588,7 @@ void PageItem_TextFrame::delAllNoteFrames(bool doUpdate)
 	int oldItemsCount = m_Doc->Items->count();
 
 	QList<PageItem_NoteFrame*> delList;
-	foreach (PageItem_NoteFrame* nF, m_notesFramesMap.keys())
+	for (PageItem_NoteFrame* nF : m_notesFramesMap.keys())
 	{
 		if (nF->notesList().isEmpty() && !nF->isAutoNoteFrame())
 			delList.append(nF);
@@ -5630,7 +5630,7 @@ Mark* PageItem_TextFrame::selectedMark(bool onlySelection)
 				start = itemText.cursorPosition();
 				stop = start + 1;
 				if (stop > itemText.length())
-					return NULL;
+					return nullptr;
 			}
 			else
 			{
@@ -5638,7 +5638,7 @@ Mark* PageItem_TextFrame::selectedMark(bool onlySelection)
 				start = firstInFrame();
 				stop = lastInFrame();
 				if (start == stop)
-					return NULL;
+					return nullptr;
 			}
 		}
 
@@ -5658,7 +5658,7 @@ Mark* PageItem_TextFrame::selectedMark(bool onlySelection)
 			return mark;
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 TextNote* PageItem_TextFrame::selectedNoteMark(int &foundPos, bool onlySelection)
@@ -5674,7 +5674,7 @@ TextNote* PageItem_TextFrame::selectedNoteMark(int &foundPos, bool onlySelection
 			stop = start + itemText.lengthOfSelection();
 		}
 		else
-			return NULL;
+			return nullptr;
 	}
 	MarkType typ = isNoteFrame()? MARKNoteFrameType : MARKNoteMasterType;
 	for (int pos = start; pos < stop; ++pos)
@@ -5685,7 +5685,7 @@ TextNote* PageItem_TextFrame::selectedNoteMark(int &foundPos, bool onlySelection
 			return itemText.mark(pos)->getNotePtr();
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 TextNote* PageItem_TextFrame::selectedNoteMark(bool onlySelection)
@@ -5709,8 +5709,8 @@ NotesInFrameMap PageItem_TextFrame::updateNotesFrames(QMap<int, Mark*> noteMarks
 			mark->setItemName(itemName());
 
 			TextNote* note = mark->getNotePtr();
-			Q_ASSERT(note != NULL);
-			if (note == NULL)
+			Q_ASSERT(note != nullptr);
+			if (note == nullptr)
 			{
 				qWarning() << "note mark without valid note pointer";
 				note = m_Doc->newNote(m_Doc->m_docNotesStylesList.at(0));
@@ -5718,12 +5718,12 @@ NotesInFrameMap PageItem_TextFrame::updateNotesFrames(QMap<int, Mark*> noteMarks
 				mark->setNotePtr(note);
 			}
 			NotesStyle* NS = note->notesStyle();
-			PageItem_NoteFrame* nF = NULL;
+			PageItem_NoteFrame* nF = nullptr;
 			if (NS->isEndNotes())
 				nF = m_Doc->endNoteFrame(NS, this);
 			else
 				nF = itemNoteFrame(NS);
-			if (nF == NULL)
+			if (nF == nullptr)
 			{
 				//creating new noteframe
 				if (NS->isEndNotes())
@@ -5739,7 +5739,7 @@ NotesInFrameMap PageItem_TextFrame::updateNotesFrames(QMap<int, Mark*> noteMarks
 					switch (NS->range())
 					{ //insert pointer to endnoteframe into m_Doc->m_endNotesFramesMap
 						case NSRdocument:
-							m_Doc->setEndNoteFrame(nF, (void*) NULL);
+							m_Doc->setEndNoteFrame(nF, (void*) nullptr);
 							break;
 						case NSRsection:
 							m_Doc->setEndNoteFrame(nF, m_Doc->getSectionKeyForPageIndex(OwnPage));
@@ -5806,14 +5806,14 @@ void PageItem_TextFrame::updateNotesMarks(NotesInFrameMap notesMap)
 //	QList<PageItem_NoteFrame*> old_endNotesList;
 
 
-//	foreach(PageItem_NoteFrame* nF, notesMap.keys())
+//	for (PageItem_NoteFrame* nF : notesMap.keys())
 //	{
 //		if (nF->isEndNotesFrame())
 //			curr_endNotesList.append(nF);
 //		else if (!notesMap.value(nF).isEmpty())
 //			curr_footNotesList.append(nF);
 //	}
-//	foreach(PageItem_NoteFrame* nF, m_notesFramesMap.keys())
+//	for (PageItem_NoteFrame* nF : m_notesFramesMap.keys())
 //	{
 //		if (nF->isEndNotesFrame())
 //			old_endNotesList.append(nF);
@@ -5821,7 +5821,7 @@ void PageItem_TextFrame::updateNotesMarks(NotesInFrameMap notesMap)
 //			old_footNotesList.append(nF);
 //	}
 //	//check for endnotes marks change in current frame
-//	foreach (PageItem_NoteFrame* nF, old_endNotesList)
+//	for (PageItem_NoteFrame* nF : old_endNotesList)
 //	{
 //		if (nF->deleteIt)
 //		{
@@ -5835,7 +5835,7 @@ void PageItem_TextFrame::updateNotesMarks(NotesInFrameMap notesMap)
 //		}
 //	}
 	//check if some notes frames are not used anymore
-	foreach (PageItem_NoteFrame* nF, m_notesFramesMap.keys())
+	for (PageItem_NoteFrame* nF : m_notesFramesMap.keys())
 	{
 		if (nF->deleteIt || (nF->isAutoNoteFrame() && !notesMap.keys().contains(nF)))
 		{
@@ -5857,7 +5857,7 @@ void PageItem_TextFrame::updateNotesMarks(NotesInFrameMap notesMap)
 	if (m_notesFramesMap != notesMap)
 	{
 		docWasChanged = true;
-		foreach (PageItem_NoteFrame* nF, m_notesFramesMap.keys())
+		for (PageItem_NoteFrame* nF : m_notesFramesMap.keys())
 		{
 			if (notesMap.contains(nF))
 			{
@@ -5878,9 +5878,9 @@ void PageItem_TextFrame::updateNotesMarks(NotesInFrameMap notesMap)
 
 void PageItem_TextFrame::notesFramesLayout()
 {
-	foreach (PageItem_NoteFrame* nF, m_notesFramesMap.keys())
+	for (PageItem_NoteFrame* nF : m_notesFramesMap.keys())
 	{
-		if (nF == NULL)
+		if (nF == nullptr)
 			continue;
 		if (nF->deleteIt)
 			continue;
@@ -5897,7 +5897,7 @@ int PageItem_TextFrame::removeMarksFromText(bool doUndo)
 	if (!isNoteFrame())
 	{
 		TextNote* note = selectedNoteMark(true);
-		while (note != NULL)
+		while (note != nullptr)
 		{
 			if (doUndo && UndoManager::undoEnabled())
 				m_Doc->setUndoDelNote(note);
@@ -5910,7 +5910,7 @@ int PageItem_TextFrame::removeMarksFromText(bool doUndo)
 	}
 
 	Mark* mrk = selectedMark(true);
-	while (mrk != NULL)
+	while (mrk != nullptr)
 	{
 		if (!mrk->isType(MARKBullNumType))
 		{
@@ -5932,10 +5932,10 @@ int PageItem_TextFrame::removeMarksFromText(bool doUndo)
 
 PageItem_NoteFrame *PageItem_TextFrame::itemNoteFrame(NotesStyle *nStyle)
 {
-	foreach (PageItem_NoteFrame* nF, m_notesFramesMap.keys())
+	for (PageItem_NoteFrame* nF : m_notesFramesMap.keys())
 		if (nF->notesStyle() == nStyle)
 			return nF;
-	return NULL;
+	return nullptr;
 }
 
 void PageItem_TextFrame::setNoteFrame(PageItem_NoteFrame *nF)
@@ -5956,7 +5956,7 @@ void PageItem_TextFrame::setTextFrameHeight()
 	if (textLayout.lines() <= 0)
 		return;
 
-	if (NextBox == 0) // Vertical alignment is not used inside a text chain
+	if (NextBox == nullptr) // Vertical alignment is not used inside a text chain
 	{
 		textLayout.box()->moveTo(textLayout.box()->x(), 0);
 		double newHeight = textLayout.box()->naturalHeight();

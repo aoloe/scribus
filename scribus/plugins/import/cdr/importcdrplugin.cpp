@@ -41,7 +41,7 @@ void importcdr_freePlugin(ScPlugin* plugin)
 	delete plug;
 }
 
-ImportCdrPlugin::ImportCdrPlugin() : LoadSavePlugin(),
+ImportCdrPlugin::ImportCdrPlugin() :
 	importAction(new ScrAction(ScrAction::DLL, QPixmap(), QPixmap(), "", QKeySequence(), this))
 {
 	// Set action info in languageChange, so we only have to do it in one
@@ -118,7 +118,7 @@ bool ImportCdrPlugin::import(QString fileName, int flags)
 {
 	if (!checkFlags(flags))
 		return false;
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 	{
 		flags |= lfInteractive;
 		PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("importcdr");
@@ -134,7 +134,7 @@ bool ImportCdrPlugin::import(QString fileName, int flags)
 	}
 	m_Doc=ScCore->primaryMainWindow()->doc;
 	UndoTransaction activeTransaction;
-	bool emptyDoc = (m_Doc == NULL);
+	bool emptyDoc = (m_Doc == nullptr);
 	bool hasCurrentPage = (m_Doc && m_Doc->currentPage());
 	TransactionSettings trSettings;
 	trSettings.targetName   = hasCurrentPage ? m_Doc->currentPage()->getUName() : "";
@@ -150,7 +150,7 @@ bool ImportCdrPlugin::import(QString fileName, int flags)
 	Q_CHECK_PTR(dia);
 	if (!dia->import(fileName, trSettings, flags, !(flags & lfScripted)))
 	{
-		ScribusMainWindow* mw=(m_Doc==0) ? ScCore->primaryMainWindow() : m_Doc->scMW();
+		ScribusMainWindow* mw=(m_Doc==nullptr) ? ScCore->primaryMainWindow() : m_Doc->scMW();
 		//Import per Uniconverter
 		qDebug() << "ERROR: Parsing with libcdr failed! Trying now Uniconverter.";
 		const FileFormat *fmt = LoadSavePlugin::getFormatByExt("cdt");
@@ -180,10 +180,10 @@ bool ImportCdrPlugin::import(QString fileName, int flags)
 
 QImage ImportCdrPlugin::readThumbnail(const QString& fileName)
 {
-	if( fileName.isEmpty() )
+	if (fileName.isEmpty())
 		return QImage();
 	UndoManager::instance()->setUndoEnabled(false);
-	m_Doc = NULL;
+	m_Doc = nullptr;
 	CdrPlug *dia = new CdrPlug(m_Doc, lfCreateThumbnail);
 	Q_CHECK_PTR(dia);
 	QImage ret = dia->readThumbnail(fileName);

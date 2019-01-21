@@ -47,18 +47,18 @@ for which a new license (GPL+exception) is in place.
 
 OutlineTreeItem::OutlineTreeItem(OutlineTreeItem* parent, OutlineTreeItem* after) : QTreeWidgetItem(parent, after)
 {
-	PageObject = NULL;
-	PageItemObject = NULL;
-	DocObject = NULL;
+	PageObject = nullptr;
+	PageItemObject = nullptr;
+	DocObject = nullptr;
 	type = -1;
 	LayerID = -1;
 }
 
 OutlineTreeItem::OutlineTreeItem(QTreeWidget* parent, OutlineTreeItem* after) : QTreeWidgetItem(parent, after)
 {
-	PageObject = NULL;
-	PageItemObject = NULL;
-	DocObject = NULL;
+	PageObject = nullptr;
+	PageItemObject = nullptr;
+	DocObject = nullptr;
 	type = -1;
 	LayerID = -1;
 }
@@ -68,7 +68,7 @@ OutlineWidget::OutlineWidget(QWidget* parent) : QTreeWidget(parent)
 	setDragDropMode(QAbstractItemView::InternalMove);
 }
 
-void OutlineWidget::selectItems(QList<QTreeWidgetItem*> items)
+void OutlineWidget::selectItems(const QList<QTreeWidgetItem*>& items)
 {
 	QItemSelection itemSelection;
 	for (int i = 0; i < items.count(); ++i)
@@ -92,8 +92,8 @@ void OutlineWidget::dropEvent(QDropEvent *e)
 	for (int i = 0; i < idxs.count(); ++i)
 	{
 		id = idxs.at(i);
-		QTreeWidgetItem* it = id.isValid() ? itemFromIndex(id) : 0;
-		OutlineTreeItem *itemPar = it ? dynamic_cast<OutlineTreeItem*>(it->parent()) : 0;
+		QTreeWidgetItem* it = id.isValid() ? itemFromIndex(id) : nullptr;
+		OutlineTreeItem *itemPar = it ? dynamic_cast<OutlineTreeItem*>(it->parent()) : nullptr;
 		while (itemPar && (itemPar->type != 2))
 		{
 			if (itemPar->type == 5)
@@ -110,7 +110,7 @@ void OutlineWidget::dropEvent(QDropEvent *e)
 	for (int i = 0; i < its.count(); ++i)
 	{
 		QTreeWidgetItem* it = its.at(i);
-		if (it == NULL)
+		if (it == nullptr)
 			continue;
 		OutlineTreeItem *itemPar = itemPars.at(i);
 		OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(it);
@@ -268,186 +268,181 @@ void OutlineWidget::dropEvent(QDropEvent *e)
 
 void OutlineWidget::keyPressEvent(QKeyEvent *e)
 {
-	if (e->key() == Qt::Key_Backspace || e->key() == Qt::Key_Delete)
+	if (e->key() != Qt::Key_Backspace && e->key() != Qt::Key_Delete)
+		return;
+
+	foreach (QTreeWidgetItem * twItem, selectedItems())
 	{
-		foreach (QTreeWidgetItem * twItem, selectedItems())
+		if (!twItem)
+			continue;
+		OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(twItem);
+		if (!item)
+			continue;
+		switch (item->type)
 		{
-			if (twItem != 0)
-			{
-				OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(twItem);
-				if (item)
+			case 1: //PageItem on master page
 				{
-					switch (item->type)
-					{
-						case 1: //PageItem on master page
-							{
-								PageItem* pageItem = item->PageItemObject;
-								if (!pageItem->isGroupChild())
-									item->DocObject->itemSelection_DeleteItem();
-							}
-							break;
-						case 3: //PageItem on normal page
-							{
-								PageItem* pageItem = item->PageItemObject;
-								if (!pageItem->isGroupChild())
-									item->DocObject->itemSelection_DeleteItem();
-							}
-							break;
-						default:
-							{
-								//qDebug()<<item->type;
-							}
-							break;
-					}
+					PageItem* pageItem = item->PageItemObject;
+					if (!pageItem->isGroupChild())
+						item->DocObject->itemSelection_DeleteItem();
 				}
-			}
+				break;
+			case 3: //PageItem on normal page
+				{
+					PageItem* pageItem = item->PageItemObject;
+					if (!pageItem->isGroupChild())
+						item->DocObject->itemSelection_DeleteItem();
+				}
+				break;
+			default:
+				{
+					//qDebug()<<item->type;
+				}
+				break;
 		}
 	}
 }
 
 bool OutlineWidget::viewportEvent(QEvent *event)
 {
-	if (event->type() == QEvent::ToolTip)
+	if (event->type() != QEvent::ToolTip)
+		return QTreeWidget::viewportEvent(event);
+
+	QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
+	QTreeWidgetItem* it = itemAt(helpEvent->pos());
+	if (!it)
+		return QTreeWidget::viewportEvent(event);
+
+	OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(it);
+	if (!item)
+		return QTreeWidget::viewportEvent(event);
+
+ 	QString tipText("");
+	if (item->type == 5)
 	{
-		QHelpEvent *helpEvent = static_cast<QHelpEvent *>(event);
-		QTreeWidgetItem* it = itemAt(helpEvent->pos());
- 		if (it != 0)
- 		{
-			OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(it);
- 			if (item != NULL)
- 			{
- 				QString tipText("");
-				if (item->type == 5)
-				{
-					tipText += "<b>" + tr("Layer is:") + "</b><br><br>";
-					if (item->DocObject->activeLayer() == item->LayerID)
-						tipText += tr("active") + "<br>";
-					if (item->DocObject->layerVisible(item->LayerID))
-						tipText += tr("visible") + "<br>";
-					else
-						tipText += tr("invisible") + "<br>";
-					if (item->DocObject->layerPrintable(item->LayerID))
-						tipText += tr("printing");
-					else
-						tipText += tr("non printing");
-					if (item->DocObject->layerLocked(item->LayerID))
-						tipText += "<br>" + tr("locked");
-				}
-				else if ((item->type == 1) || (item->type == 3) || (item->type == 4))
- 				{
-					PageItem *pgItem = item->PageItemObject;
-					QPainter p;
-					QImage pm = QImage(80, 80, QImage::Format_ARGB32_Premultiplied);
-					QBrush b(QColor(205,205,205), IconManager::instance()->loadPixmap("testfill.png"));
-					p.begin(&pm);
-					p.fillRect(QRectF(0, 0, 80, 80), b);
-					QImage thumb = pgItem->DrawObj_toImage(80);
-					p.drawImage((80 - thumb.width()) / 2, (80 - thumb.height()) / 2, thumb);
-					p.end();
-					QBuffer buffer;
-					buffer.open(QIODevice::WriteOnly);
-					pm.save(&buffer, "PNG");
-					QByteArray ba = buffer.buffer().toBase64();
-					buffer.close();
-					tipText = "<p align=\"center\"><img src=\"data:image/png;base64," + QString(ba) + "\"></p><p>";
- 					switch (pgItem->itemType())
- 					{
- 						case PageItem::ImageFrame:
- 							if (pgItem->asLatexFrame())
-								tipText += CommonStrings::itemType_LatexFrame;
-#ifdef HAVE_OSG
- 							else if (pgItem->asOSGFrame())
-								tipText += CommonStrings::itemType_OSGFrame;
-#endif
- 							else
-								tipText += CommonStrings::itemType_ImageFrame;
- 							break;
- 						case PageItem::TextFrame:
- 							switch (pgItem->annotation().Type())
- 							{
-								case Annotation::Button:
-									tipText += CommonStrings::itemSubType_PDF_PushButton;
- 									break;
-								case Annotation::Textfield:
-									tipText += CommonStrings::itemSubType_PDF_TextField;
- 									break;
-								case Annotation::Checkbox:
-									tipText += CommonStrings::itemSubType_PDF_CheckBox;
- 									break;
-								case Annotation::Combobox:
-									tipText += CommonStrings::itemSubType_PDF_ComboBox;
- 									break;
-								case Annotation::Listbox:
-									tipText += CommonStrings::itemSubType_PDF_ListBox;
- 									break;
-								case Annotation::Text:
-									tipText += CommonStrings::itemSubType_PDF_TextAnnotation;
- 									break;
-								case Annotation::Link:
-									tipText += CommonStrings::itemSubType_PDF_LinkAnnotation;
-									break;
-								case Annotation::RadioButton:
-									tipText += CommonStrings::itemSubType_PDF_RadioButton;
- 									break;
- 								default:
-									tipText += CommonStrings::itemType_TextFrame;
- 									break;
- 							}
- 							break;
- 						case PageItem::Line:
-							tipText += CommonStrings::itemType_Line;
- 							break;
- 						case PageItem::Arc:
-							tipText += CommonStrings::itemType_Arc;
-							break;
- 						case PageItem::Polygon:
-							tipText += CommonStrings::itemType_Polygon;
-							break;
-						case PageItem::RegularPolygon:
-							tipText += CommonStrings::itemType_RegularPolygon;
- 							break;
- 						case PageItem::PolyLine:
-							tipText += CommonStrings::itemType_Polyline;
-							break;
-						case PageItem::Spiral:
-							tipText += CommonStrings::itemType_Spiral;
- 							break;
- 						case PageItem::PathText:
-							tipText += CommonStrings::itemType_PathText;
- 							break;
- 						case PageItem::Symbol:
-							tipText += CommonStrings::itemType_Symbol;
- 							break;
-						case PageItem::Group:
-							tipText += CommonStrings::itemType_Group;
-							break;
-						case PageItem::Table:
-							tipText += CommonStrings::itemType_Table;
-							break;
- 						default:
- 							break;
-					}
-					tipText +="<br>" + tr("X-Pos:") + " ";
-					if (pgItem->OwnPage != -1)
-						tipText += value2String(pgItem->xPos() - item->PageObject->xOffset(), pgItem->doc()->unitIndex(), true, true);
-					else
-						tipText += value2String(pgItem->xPos(), pgItem->doc()->unitIndex(), true, true);
-					tipText +="<br>" + tr("Y-Pos:") + " ";
-					if (pgItem->OwnPage != -1)
-						tipText += value2String(pgItem->yPos() - item->PageObject->yOffset(), pgItem->doc()->unitIndex(), true, true);
-					else
-						tipText += value2String(pgItem->yPos(), pgItem->doc()->unitIndex(), true, true);
-					tipText += "</p>";
-				}
-				QToolTip::showText(helpEvent->globalPos(), tipText, this);
-				return true;
-			}
-		}
+		tipText += "<b>" + tr("Layer is:") + "</b><br><br>";
+		if (item->DocObject->activeLayer() == item->LayerID)
+			tipText += tr("active") + "<br>";
+		if (item->DocObject->layerVisible(item->LayerID))
+			tipText += tr("visible") + "<br>";
+		else
+			tipText += tr("invisible") + "<br>";
+		if (item->DocObject->layerPrintable(item->LayerID))
+			tipText += tr("printing");
+		else
+			tipText += tr("non printing");
+		if (item->DocObject->layerLocked(item->LayerID))
+			tipText += "<br>" + tr("locked");
 	}
-	return QTreeWidget::viewportEvent(event);
+	else if ((item->type == 1) || (item->type == 3) || (item->type == 4))
+ 	{
+		PageItem *pgItem = item->PageItemObject;
+		QPainter p;
+		QImage pm = QImage(80, 80, QImage::Format_ARGB32_Premultiplied);
+		QBrush b(QColor(205,205,205), IconManager::instance()->loadPixmap("testfill.png"));
+		p.begin(&pm);
+		p.fillRect(QRectF(0, 0, 80, 80), b);
+		QImage thumb = pgItem->DrawObj_toImage(80);
+		p.drawImage((80 - thumb.width()) / 2, (80 - thumb.height()) / 2, thumb);
+		p.end();
+		QBuffer buffer;
+		buffer.open(QIODevice::WriteOnly);
+		pm.save(&buffer, "PNG");
+		QByteArray ba = buffer.buffer().toBase64();
+		buffer.close();
+		tipText = "<p align=\"center\"><img src=\"data:image/png;base64," + QString(ba) + "\"></p><p>";
+ 		switch (pgItem->itemType())
+ 		{
+ 			case PageItem::ImageFrame:
+ 				if (pgItem->asLatexFrame())
+					tipText += CommonStrings::itemType_LatexFrame;
+ 				else if (pgItem->asOSGFrame())
+					tipText += CommonStrings::itemType_OSGFrame;
+ 				else
+					tipText += CommonStrings::itemType_ImageFrame;
+ 				break;
+ 			case PageItem::TextFrame:
+ 				switch (pgItem->annotation().Type())
+ 				{
+					case Annotation::Button:
+						tipText += CommonStrings::itemSubType_PDF_PushButton;
+ 						break;
+					case Annotation::Textfield:
+						tipText += CommonStrings::itemSubType_PDF_TextField;
+ 						break;
+					case Annotation::Checkbox:
+						tipText += CommonStrings::itemSubType_PDF_CheckBox;
+ 						break;
+					case Annotation::Combobox:
+						tipText += CommonStrings::itemSubType_PDF_ComboBox;
+ 						break;
+					case Annotation::Listbox:
+						tipText += CommonStrings::itemSubType_PDF_ListBox;
+ 						break;
+					case Annotation::Text:
+						tipText += CommonStrings::itemSubType_PDF_TextAnnotation;
+ 						break;
+					case Annotation::Link:
+						tipText += CommonStrings::itemSubType_PDF_LinkAnnotation;
+						break;
+					case Annotation::RadioButton:
+						tipText += CommonStrings::itemSubType_PDF_RadioButton;
+ 						break;
+ 					default:
+						tipText += CommonStrings::itemType_TextFrame;
+ 						break;
+ 				}
+ 				break;
+ 			case PageItem::Line:
+				tipText += CommonStrings::itemType_Line;
+ 				break;
+ 			case PageItem::Arc:
+				tipText += CommonStrings::itemType_Arc;
+				break;
+ 			case PageItem::Polygon:
+				tipText += CommonStrings::itemType_Polygon;
+				break;
+			case PageItem::RegularPolygon:
+				tipText += CommonStrings::itemType_RegularPolygon;
+ 				break;
+ 			case PageItem::PolyLine:
+				tipText += CommonStrings::itemType_Polyline;
+				break;
+			case PageItem::Spiral:
+				tipText += CommonStrings::itemType_Spiral;
+ 				break;
+ 			case PageItem::PathText:
+				tipText += CommonStrings::itemType_PathText;
+ 				break;
+ 			case PageItem::Symbol:
+				tipText += CommonStrings::itemType_Symbol;
+ 				break;
+			case PageItem::Group:
+				tipText += CommonStrings::itemType_Group;
+				break;
+			case PageItem::Table:
+				tipText += CommonStrings::itemType_Table;
+				break;
+ 			default:
+ 				break;
+		}
+		tipText +="<br>" + tr("X-Pos:") + " ";
+		if (pgItem->OwnPage != -1)
+			tipText += value2String(pgItem->xPos() - item->PageObject->xOffset(), pgItem->doc()->unitIndex(), true, true);
+		else
+			tipText += value2String(pgItem->xPos(), pgItem->doc()->unitIndex(), true, true);
+		tipText +="<br>" + tr("Y-Pos:") + " ";
+		if (pgItem->OwnPage != -1)
+			tipText += value2String(pgItem->yPos() - item->PageObject->yOffset(), pgItem->doc()->unitIndex(), true, true);
+		else
+			tipText += value2String(pgItem->yPos(), pgItem->doc()->unitIndex(), true, true);
+		tipText += "</p>";
+	}
+	QToolTip::showText(helpEvent->globalPos(), tipText, this);
+	return true;
 }
 
-OutlinePalette::OutlinePalette( QWidget* parent) : ScDockPalette( parent, "Tree", 0)
+OutlinePalette::OutlinePalette( QWidget* parent) : ScDockPalette( parent, "Tree", nullptr)
 {
 //	resize( 220, 240 );
 	setMinimumSize( QSize( 220, 240 ) );
@@ -504,10 +499,10 @@ OutlinePalette::OutlinePalette( QWidget* parent) : ScDockPalette( parent, "Tree"
 	annotLinkIcon = im->loadPixmap("goto.png");
 	annot3DIcon = im->loadPixmap("22/annot3d.png");
 	selectionTriggered = false;
-	m_MainWindow  = NULL;
-	freeObjects   = NULL;
-	rootObject    = NULL;
-	currentObject = NULL;
+	m_MainWindow  = nullptr;
+	freeObjects   = nullptr;
+	rootObject    = nullptr;
+	currentObject = nullptr;
 	languageChange();
 	// signals and slots connections
 	connect(reportDisplay, SIGNAL(customContextMenuRequested (const QPoint &)), this, SLOT(slotRightClick(QPoint)));
@@ -521,30 +516,30 @@ OutlinePalette::OutlinePalette( QWidget* parent) : ScDockPalette( parent, "Tree"
 void OutlinePalette::setMainWindow(ScribusMainWindow *mw)
 {
 	m_MainWindow=mw;
-	if (m_MainWindow==NULL)
+	if (m_MainWindow==nullptr)
 		clearPalette();
 }
 
 void OutlinePalette::setDoc(ScribusDoc *newDoc)
 {
-	if (m_MainWindow==NULL)
-		currDoc=NULL;
+	if (m_MainWindow==nullptr)
+		currDoc=nullptr;
 	else
 		currDoc=newDoc;
-	if (currDoc==NULL)
+	if (currDoc==nullptr)
 		clearPalette();
 }
 
 void OutlinePalette::unsetDoc()
 {
-	currDoc=NULL;
+	currDoc=nullptr;
 	clearPalette();
 }
 
 void OutlinePalette::setPaletteShown(bool visible)
 {
 	ScDockPalette::setPaletteShown(visible);
-	if ((visible) && (currDoc != NULL))
+	if ((visible) && (currDoc != nullptr))
 		BuildTree();
 }
 
@@ -553,71 +548,71 @@ void OutlinePalette::slotRightClick(QPoint point)
 	if (!m_MainWindow || m_MainWindow->scriptIsRunning())
 		return;
 	QTreeWidgetItem *ite = reportDisplay->itemAt(point);
-	if (ite == NULL)
+	if (ite == nullptr)
 		return;
 	if (!ite->isSelected())
 		slotMultiSelect();
 	if (currDoc->drawAsPreview)
 		return;
+
 	OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(ite);
+	if (!item)
+		return;
 	
-	if (item != NULL)
+	if ((item->type == 0) || (item->type == 2))
+		createContextMenu(nullptr, point.x(), point.y());
+	else if ((item->type == 1) || (item->type == 3) || (item->type == 4))
 	{
-		if ((item->type == 0) || (item->type == 2))
-			createContextMenu(NULL, point.x(), point.y());
-		else if ((item->type == 1) || (item->type == 3) || (item->type == 4))
+		PageItem *currItem = item->PageItemObject;
+		if (currItem!=nullptr)
 		{
-			PageItem *currItem = item->PageItemObject;
-			if (currItem!=NULL)
-			{
-				currentObject = ite;
-				createContextMenu(currItem, point.x(), point.y());
-			}
+			currentObject = ite;
+			createContextMenu(currItem, point.x(), point.y());
 		}
-		else if (item->type == 5)
+	}
+	else if (item->type == 5)
+	{
+		QMenu *pmenu = new QMenu();
+		QAction *actVis;
+		QAction *actPrint;
+		QAction *actLock;
+		if (item->DocObject->activeLayer() != item->LayerID)
 		{
-			QMenu *pmenu = new QMenu();
-			QAction *actVis;
-			QAction *actPrint;
-			QAction *actLock;
-			if (item->DocObject->activeLayer() != item->LayerID)
-			{
-				QAction *actActive;
-				QSignalMapper *signalMapper = new QSignalMapper(this);
-				actActive = pmenu->addAction( tr("Active"));
-				actActive->setCheckable(true);
-				actActive->setChecked(false);
-				signalMapper->setMapping(actActive, item->LayerID);
-				connect(actActive, SIGNAL(triggered()), signalMapper, SLOT(map()));
-				connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(setActiveLayer(int)));
-			}
-			QSignalMapper *signalMapper2 = new QSignalMapper(this);
-			actVis = pmenu->addAction( tr("Visible"));
-			actVis->setCheckable(true);
-			actVis->setChecked(item->DocObject->layerVisible(item->LayerID));
-			signalMapper2->setMapping(actVis, item->LayerID);
-			connect(actVis, SIGNAL(triggered()), signalMapper2, SLOT(map()));
-			connect(signalMapper2, SIGNAL(mapped(int)), this, SLOT(setLayerVisible(int)));
-
-			QSignalMapper *signalMapper3 = new QSignalMapper(this);
-			actPrint = pmenu->addAction( tr("Printing"));
-			actPrint->setCheckable(true);
-			actPrint->setChecked(item->DocObject->layerPrintable(item->LayerID));
-			signalMapper3->setMapping(actPrint, item->LayerID);
-			connect(actPrint, SIGNAL(triggered()), signalMapper3, SLOT(map()));
-			connect(signalMapper3, SIGNAL(mapped(int)), this, SLOT(setLayerPrintable(int)));
-
-			QSignalMapper *signalMapper4 = new QSignalMapper(this);
-			actLock = pmenu->addAction( tr("Locked"));
-			actLock->setCheckable(true);
-			actLock->setChecked(item->DocObject->layerLocked(item->LayerID));
-			signalMapper4->setMapping(actLock, item->LayerID);
-			connect(actLock, SIGNAL(triggered()), signalMapper4, SLOT(map()));
-			connect(signalMapper4, SIGNAL(mapped(int)), this, SLOT(setLayerLocked(int)));
-	//		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
-			pmenu->exec(QCursor::pos());
-			delete pmenu;
+			QAction *actActive;
+			QSignalMapper *signalMapper = new QSignalMapper(this);
+			actActive = pmenu->addAction( tr("Active"));
+			actActive->setCheckable(true);
+			actActive->setChecked(false);
+			signalMapper->setMapping(actActive, item->LayerID);
+			connect(actActive, SIGNAL(triggered()), signalMapper, SLOT(map()));
+			connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(setActiveLayer(int)));
 		}
+		QSignalMapper *signalMapper2 = new QSignalMapper(this);
+		actVis = pmenu->addAction( tr("Visible"));
+		actVis->setCheckable(true);
+		actVis->setChecked(item->DocObject->layerVisible(item->LayerID));
+		signalMapper2->setMapping(actVis, item->LayerID);
+		connect(actVis, SIGNAL(triggered()), signalMapper2, SLOT(map()));
+		connect(signalMapper2, SIGNAL(mapped(int)), this, SLOT(setLayerVisible(int)));
+
+		QSignalMapper *signalMapper3 = new QSignalMapper(this);
+		actPrint = pmenu->addAction( tr("Printing"));
+		actPrint->setCheckable(true);
+		actPrint->setChecked(item->DocObject->layerPrintable(item->LayerID));
+		signalMapper3->setMapping(actPrint, item->LayerID);
+		connect(actPrint, SIGNAL(triggered()), signalMapper3, SLOT(map()));
+		connect(signalMapper3, SIGNAL(mapped(int)), this, SLOT(setLayerPrintable(int)));
+
+		QSignalMapper *signalMapper4 = new QSignalMapper(this);
+		actLock = pmenu->addAction( tr("Locked"));
+		actLock->setCheckable(true);
+		actLock->setChecked(item->DocObject->layerLocked(item->LayerID));
+		signalMapper4->setMapping(actLock, item->LayerID);
+		connect(actLock, SIGNAL(triggered()), signalMapper4, SLOT(map()));
+		connect(signalMapper4, SIGNAL(mapped(int)), this, SLOT(setLayerLocked(int)));
+//		qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
+		pmenu->exec(QCursor::pos());
+		delete pmenu;
 	}
 }
 
@@ -662,7 +657,7 @@ void OutlinePalette::slotDoRename(QTreeWidgetItem *ite , int col)
 		return;
 	disconnect(reportDisplay, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(slotDoRename(QTreeWidgetItem*, int)));
 	OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(ite);
-	if (item != NULL)
+	if (item != nullptr)
 	{
 		if ((item->type == 1) || (item->type == 3) || (item->type == 4))
 		{
@@ -716,11 +711,11 @@ void OutlinePalette::slotDoRename(QTreeWidgetItem *ite , int col)
 
 QTreeWidgetItem* OutlinePalette::getListItem(int SNr, PageItem *Nr)
 {
-	OutlineTreeItem *item = 0;
-	QTreeWidgetItem *retVal = 0;
+	OutlineTreeItem *item = nullptr;
+	QTreeWidgetItem *retVal = nullptr;
 	if (currDoc->masterPageMode())
 	{
-		if (Nr == NULL)
+		if (Nr == nullptr)
 		{
 			QTreeWidgetItemIterator it( reportDisplay );
 			while ( (*it) )
@@ -751,7 +746,7 @@ QTreeWidgetItem* OutlinePalette::getListItem(int SNr, PageItem *Nr)
 	}
 	else
 	{
-		if (Nr == NULL)
+		if (Nr == nullptr)
 		{
 			QTreeWidgetItemIterator it( reportDisplay );
 			while ( (*it) )
@@ -789,7 +784,7 @@ void OutlinePalette::slotShowSelect(int SNr, PageItem *Nr)
 {
 	if (!m_MainWindow || m_MainWindow->scriptIsRunning())
 		return;
-	if (currDoc==NULL)
+	if (currDoc==nullptr)
 		return;
 	if (currDoc->isLoading())
 		return;
@@ -805,7 +800,7 @@ void OutlinePalette::slotShowSelect(int SNr, PageItem *Nr)
 		{
 			PageItem *item = currDoc->m_Selection->itemAt(i);
 			QTreeWidgetItem *retVal = getListItem(item->OwnPage, item);
-			if (retVal != 0 && !retVal->isHidden())
+			if (retVal != nullptr && !retVal->isHidden())
 				itemSelection.append(retVal);
 		}
 		reportDisplay->selectItems(itemSelection);
@@ -813,7 +808,7 @@ void OutlinePalette::slotShowSelect(int SNr, PageItem *Nr)
 	else
 	{
 		QTreeWidgetItem *retVal = getListItem(SNr, Nr);
-		if (retVal != 0 && !retVal->isHidden())
+		if (retVal != nullptr && !retVal->isHidden())
 			retVal->setSelected(true);
 	}
 	QList<QTreeWidgetItem *> items = reportDisplay->selectedItems();
@@ -829,10 +824,8 @@ void OutlinePalette::setItemIcon(QTreeWidgetItem *item, PageItem *pgItem)
 	case PageItem::ImageFrame:
  		if (pgItem->asLatexFrame())
 			item->setIcon( 0, latexIcon );
-#ifdef HAVE_OSG
 		else if (pgItem->asOSGFrame())
 			item->setIcon( 0, annot3DIcon );
-#endif
  		else
 			item->setIcon( 0, imageIcon );
 		break;
@@ -904,7 +897,7 @@ void OutlinePalette::reopenTree()
 		return;
 	if (currDoc->OpenNodes.count() == 0)
 		return;
-	OutlineTreeItem *item = 0;
+	OutlineTreeItem *item = nullptr;
 	QTreeWidgetItemIterator it( reportDisplay );
 	while ( (*it) )
 	{
@@ -939,7 +932,7 @@ void OutlinePalette::buildReopenVals()
 	if (reportDisplay->model()->rowCount() == 0)
 		return;
 	currDoc->OpenNodes.clear();
-	OutlineTreeItem *item = 0;
+	OutlineTreeItem *item = nullptr;
 	QTreeWidgetItemIterator it( reportDisplay );
 	while ( (*it) )
 	{
@@ -961,7 +954,7 @@ void OutlinePalette::slotMultiSelect()
 {
 	if (!m_MainWindow || m_MainWindow->scriptIsRunning())
 		return;
-	if (currDoc==NULL)
+	if (currDoc==nullptr)
 		return;
 	disconnect(reportDisplay, SIGNAL(itemSelectionChanged()), this, SLOT(slotMultiSelect()));
 	selectionTriggered = true;
@@ -980,7 +973,7 @@ void OutlinePalette::slotMultiSelect()
 			OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(ite);
 			if (!item)
 				qFatal("OutlineWidget::slotMultiSelect !item");
-			PageItem *pgItem = NULL;
+			PageItem *pgItem = nullptr;
 			switch (item->type)
 			{
 				case 0:
@@ -1019,7 +1012,7 @@ void OutlinePalette::slotSelect(QTreeWidgetItem* ite, int)
 	OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(ite);
 	if (!item)
 		qFatal("OutlineWidget::slotSelect !item");
-	PageItem *pgItem = NULL;
+	PageItem *pgItem = nullptr;
 	switch (item->type)
 	{
 		case 0:
@@ -1078,7 +1071,7 @@ void OutlinePalette::slotDoubleClick(QTreeWidgetItem* ite, int)
 	OutlineTreeItem *item = dynamic_cast<OutlineTreeItem*>(ite);
 	if (!item)
 		qFatal("OutlinePalette::slotDoubleClick !item");
-	PageItem *pgItem = NULL;
+	PageItem *pgItem = nullptr;
 	switch (item->type)
 	{
 		case 1:
@@ -1104,7 +1097,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 {
 	if (!m_MainWindow || m_MainWindow->scriptIsRunning())
 		return;
-	if (currDoc==NULL)
+	if (currDoc==nullptr)
 		return;
 	if (selectionTriggered)
 		return;
@@ -1114,13 +1107,13 @@ void OutlinePalette::BuildTree(bool storeVals)
 	if (storeVals)
 		buildReopenVals();
 	clearPalette();
-	OutlineTreeItem * item = new OutlineTreeItem( reportDisplay, 0 );
+	OutlineTreeItem * item = new OutlineTreeItem( reportDisplay, nullptr );
 	rootObject = item;
 	item->setText( 0, currDoc->DocName.section( '/', -1 ) );
 	item->type = -2;
 	item->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
-	OutlineTreeItem * pagep = 0;
-	freeObjects = 0;
+	OutlineTreeItem * pagep = nullptr;
+	freeObjects = nullptr;
 	PageItem* pgItem;
 	QString tmp;
 	if (currDoc->symbolEditMode() || currDoc->inlineEditMode())
@@ -1135,7 +1128,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 			pgItem = currDoc->Items->at(b);
 			if (!pgItem->isGroup())
 			{
-				OutlineTreeItem *object = new OutlineTreeItem( page, 0 );
+				OutlineTreeItem *object = new OutlineTreeItem( page, nullptr );
 				object->PageItemObject = pgItem;
 				object->PageObject = currDoc->DocPages.at(0);
 				object->DocObject = currDoc;
@@ -1146,7 +1139,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 			}
 			else
 			{
-				OutlineTreeItem *object = new OutlineTreeItem( page, 0 );
+				OutlineTreeItem *object = new OutlineTreeItem( page, nullptr );
 				object->PageItemObject = pgItem;
 				object->PageObject = currDoc->DocPages.at(0);
 				object->DocObject = currDoc;
@@ -1179,7 +1172,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 				{
 					if (!pgItem->isGroup())
 					{
-						OutlineTreeItem *object = new OutlineTreeItem( page, 0 );
+						OutlineTreeItem *object = new OutlineTreeItem( page, nullptr );
 						object->PageItemObject = pgItem;
 						object->PageObject = currDoc->MasterPages.at(a);
 						object->DocObject = currDoc;
@@ -1190,7 +1183,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 					}
 					else
 					{
-						OutlineTreeItem * object = new OutlineTreeItem( page, 0 );
+						OutlineTreeItem * object = new OutlineTreeItem(page, nullptr);
 						object->PageItemObject = pgItem;
 						object->PageObject = currDoc->MasterPages.at(a);
 						object->DocObject = currDoc;
@@ -1229,7 +1222,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 				for (int layerLevel = 0; layerLevel < layerCount; ++layerLevel)
 				{
 					currDoc->Layers.levelToLayer(layer, layerLevel);
-					OutlineTreeItem *ObjLayer = new OutlineTreeItem( page, 0 );
+					OutlineTreeItem *ObjLayer = new OutlineTreeItem(page, nullptr);
 					ObjLayer->type = 5;
 					ObjLayer->LayerID = layer.ID;
 					ObjLayer->DocObject = currDoc;
@@ -1242,7 +1235,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 							continue;
 						if (!pgItem->isGroup())
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( ObjLayer, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(ObjLayer, nullptr);
 							object->PageItemObject = pgItem;
 							object->PageObject = currDoc->DocPages.at(a);
 							object->DocObject = currDoc;
@@ -1253,7 +1246,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 						}
 						else
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( ObjLayer, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(ObjLayer, nullptr);
 							object->PageItemObject = pgItem;
 							object->PageObject = currDoc->DocPages.at(a);
 							object->DocObject = currDoc;
@@ -1277,7 +1270,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 					{
 						if (!pgItem->isGroup())
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( page, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(page, nullptr);
 							object->PageItemObject = pgItem;
 							object->PageObject = currDoc->DocPages.at(a);
 							object->DocObject = currDoc;
@@ -1288,7 +1281,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 						}
 						else
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( page, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(page, nullptr);
 							object->PageItemObject = pgItem;
 							object->PageObject = currDoc->DocPages.at(a);
 							object->DocObject = currDoc;
@@ -1325,7 +1318,7 @@ void OutlinePalette::BuildTree(bool storeVals)
 				for (int layerLevel = 0; layerLevel < layerCount; ++layerLevel)
 				{
 					currDoc->Layers.levelToLayer(layer, layerLevel);
-					OutlineTreeItem *ObjLayer = new OutlineTreeItem( page, 0 );
+					OutlineTreeItem *ObjLayer = new OutlineTreeItem(page, nullptr);
 					ObjLayer->type = 5;
 					ObjLayer->LayerID = layer.ID;
 					ObjLayer->DocObject = currDoc;
@@ -1338,9 +1331,9 @@ void OutlinePalette::BuildTree(bool storeVals)
 							continue;
 						if (!pgItem->isGroup())
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( ObjLayer, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(ObjLayer, nullptr);
 							object->PageItemObject = pgItem;
-							object->PageObject = NULL;
+							object->PageObject = nullptr;
 							object->DocObject = currDoc;
 							object->type = 4;
 							object->setText(0, pgItem->itemName());
@@ -1349,15 +1342,15 @@ void OutlinePalette::BuildTree(bool storeVals)
 						}
 						else
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( ObjLayer, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(ObjLayer, nullptr);
 							object->PageItemObject = pgItem;
-							object->PageObject = NULL;
+							object->PageObject = nullptr;
 							object->DocObject = currDoc;
 							object->type = 4;
 							object->setText(0, pgItem->itemName());
 							object->setIcon( 0, groupIcon );
 							object->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-							parseSubGroup(object, &pgItem->groupItemList, 4, NULL);
+							parseSubGroup(object, &pgItem->groupItemList, 4, nullptr);
 						}
 					}
 				}
@@ -1371,9 +1364,9 @@ void OutlinePalette::BuildTree(bool storeVals)
 					{
 						if (!pgItem->isGroup())
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( page, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(page, nullptr);
 							object->PageItemObject = pgItem;
-							object->PageObject = NULL;
+							object->PageObject = nullptr;
 							object->DocObject = currDoc;
 							object->type = 4;
 							object->setText(0, pgItem->itemName());
@@ -1382,15 +1375,15 @@ void OutlinePalette::BuildTree(bool storeVals)
 						}
 						else
 						{
-							OutlineTreeItem *object = new OutlineTreeItem( page, 0 );
+							OutlineTreeItem *object = new OutlineTreeItem(page, nullptr);
 							object->PageItemObject = pgItem;
-							object->PageObject = NULL;
+							object->PageObject = nullptr;
 							object->DocObject = currDoc;
 							object->type = 4;
 							object->setText(0, pgItem->itemName());
 							object->setIcon( 0, groupIcon );
 							object->setFlags(Qt::ItemIsSelectable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-							parseSubGroup(object, &pgItem->groupItemList, 4, NULL);
+							parseSubGroup(object, &pgItem->groupItemList, 4, nullptr);
 						}
 					}
 				}
@@ -1404,20 +1397,20 @@ void OutlinePalette::BuildTree(bool storeVals)
 	setUpdatesEnabled(true);
 	filterTree();
 	if (currDoc->m_Selection->count() > 0)
-		slotShowSelect(0, NULL);
+		slotShowSelect(0, nullptr);
 	update();
 	connect(reportDisplay, SIGNAL(itemSelectionChanged()), this, SLOT(slotMultiSelect()));
-	connect(reportDisplay, SIGNAL(itemChanged(QTreeWidgetItem*, int)), this, SLOT(slotDoRename(QTreeWidgetItem*, int)));
+	connect(reportDisplay, SIGNAL(itemChanged(QTreeWidgetItem*,int)), this, SLOT(slotDoRename(QTreeWidgetItem*,int)));
 }
 
 void OutlinePalette::filterTree(const QString& keyword)
 {
-	OutlineTreeItem *item = NULL;
+	OutlineTreeItem *item = nullptr;
 	QTreeWidgetItemIterator it( reportDisplay );
 	while ( (*it) )
 	{
 		item = dynamic_cast<OutlineTreeItem*>(*it);
-		if (item != NULL)
+		if (item != nullptr)
 		{
 			if ((item->type == 1) || (item->type == 3) || (item->type == 4))
 			{
@@ -1447,7 +1440,7 @@ void OutlinePalette::parseSubGroup(OutlineTreeItem* object, QList<PageItem*> *su
 		pgItem = subGroupList->at(b);
 		if (!pgItem->isGroup())
 		{
-			OutlineTreeItem *grp = new OutlineTreeItem( object, 0 );
+			OutlineTreeItem *grp = new OutlineTreeItem(object, nullptr);
 			grp->PageItemObject = pgItem;
 			grp->PageObject = a;
 			grp->DocObject = currDoc;
@@ -1461,7 +1454,7 @@ void OutlinePalette::parseSubGroup(OutlineTreeItem* object, QList<PageItem*> *su
 		}
 		else
 		{
-			OutlineTreeItem *grp = new OutlineTreeItem( object, 0 );
+			OutlineTreeItem *grp = new OutlineTreeItem(object, nullptr);
 			grp->PageItemObject = pgItem;
 			grp->PageObject = a;
 			grp->DocObject = currDoc;
@@ -1499,11 +1492,11 @@ void OutlinePalette::clearPalette()
 
 void OutlinePalette::createContextMenu(PageItem * currItem, double /*mx*/, double /*my*/)
 {
-	if (m_MainWindow==NULL || currDoc==NULL)
+	if (m_MainWindow==nullptr || currDoc==nullptr)
 		return;
-	ContextMenu* cmen=NULL;
+	ContextMenu* cmen=nullptr;
 //	qApp->changeOverrideCursor(QCursor(Qt::ArrowCursor));
-	if(currItem!=NULL)
+	if (currItem!=nullptr)
 		cmen = new ContextMenu(*(currDoc->m_Selection), m_MainWindow, currDoc);
 	else
 		cmen = new ContextMenu(m_MainWindow, currDoc, currDoc->currentPage()->xOffset(), currDoc->currentPage()->yOffset());

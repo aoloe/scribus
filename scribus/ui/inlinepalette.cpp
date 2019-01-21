@@ -101,7 +101,7 @@ void InlineView::dropEvent(QDropEvent *e)
 	clearSelection();
 }
 
-InlinePalette::InlinePalette( QWidget* parent) : ScDockPalette( parent, "Inline", 0)
+InlinePalette::InlinePalette( QWidget* parent) : ScDockPalette( parent, "Inline", nullptr)
 {
 	setMinimumSize( QSize( 220, 240 ) );
 	setObjectName(QString::fromLocal8Bit("Inline"));
@@ -111,7 +111,7 @@ InlinePalette::InlinePalette( QWidget* parent) : ScDockPalette( parent, "Inline"
 	setWidget( InlineViewWidget );
 
 	unsetDoc();
-	m_scMW  = NULL;
+	m_scMW  = nullptr;
 	currentEditedItem = -1;
 	languageChange();
 	connect(InlineViewWidget, SIGNAL(itemDoubleClicked(QListWidgetItem *)), this, SLOT(handleDoubleClick(QListWidgetItem *)));
@@ -196,7 +196,7 @@ void InlinePalette::editingStart(int itemID)
 	{
 		QListWidgetItem* item = InlineViewWidget->item(a);
 		if (item)
-			item->setFlags(0);
+			item->setFlags(Qt::NoItemFlags);
 	}
 }
 
@@ -209,7 +209,7 @@ void InlinePalette::editingFinished()
 void InlinePalette::setMainWindow(ScribusMainWindow *mw)
 {
 	m_scMW = mw;
-	if (m_scMW == NULL)
+	if (m_scMW == nullptr)
 	{
 		InlineViewWidget->clear();
 		disconnect(m_scMW, SIGNAL(UpdateRequest(int)), this, SLOT(handleUpdateRequest(int)));
@@ -220,11 +220,11 @@ void InlinePalette::setMainWindow(ScribusMainWindow *mw)
 
 void InlinePalette::setDoc(ScribusDoc *newDoc)
 {
-	if (m_scMW == NULL)
-		m_doc = NULL;
+	if (m_scMW == nullptr)
+		m_doc = nullptr;
 	else
 		m_doc = newDoc;
-	if (m_doc == NULL)
+	if (m_doc == nullptr)
 	{
 		InlineViewWidget->clear();
 		setEnabled(true);
@@ -238,7 +238,7 @@ void InlinePalette::setDoc(ScribusDoc *newDoc)
 
 void InlinePalette::unsetDoc()
 {
-	m_doc = NULL;
+	m_doc = nullptr;
 	InlineViewWidget->clear();
 	setEnabled(true);
 }
@@ -255,7 +255,7 @@ void InlinePalette::updateItemList()
 	InlineViewWidget->setWordWrap(true);
 	if (!m_doc)
 		return;
-	for (QHash<int, PageItem*>::iterator it = m_doc->FrameItems.begin(); it != m_doc->FrameItems.end(); ++it)
+	for (auto it = m_doc->FrameItems.begin(); it != m_doc->FrameItems.end(); ++it)
 	{
 		PageItem *currItem = it.value();
 		QPixmap pm = QPixmap::fromImage(currItem->DrawObj_toImage(48));

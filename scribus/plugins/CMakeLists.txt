@@ -26,6 +26,7 @@ add_subdirectory(shapes)
 add_subdirectory(scribusAPI)
 add_subdirectory(applyStyle)
 # add_subdirectory(runCommand)
+add_subdirectory(actionSearch)
 add_subdirectory(tableOfContents)
 # add_subdirectory(projectSummary)
 

@@ -223,6 +223,7 @@ void  ContentPalette::handleSelectionChanged()
 	if (currentPanel != newPanel)
 	{
 		stackedWidget->setCurrentIndex((int) newPanel);
+		updatePanelTitle();
 	}
 	updateGeometry();
 	ScDockPalette::update();
@@ -270,10 +271,25 @@ void ContentPalette::changeEvent(QEvent *e)
 	ScDockPalette::changeEvent(e);
 }
 
+void ContentPalette::updatePanelTitle()
+{
+	switch ((Panel) stackedWidget->currentIndex())
+	{
+		case Panel::empty:
+			setWindowTitle( tr("Content Properties"));
+			break;
+		case Panel::text:
+			setWindowTitle( tr("Text Properties"));
+			break;
+		case Panel::image:
+			setWindowTitle( tr("Image Properties"));
+			break;
+	}
+}
+
 void ContentPalette::languageChange()
 {
-	setWindowTitle( tr("Content Properties"));
-
+	updatePanelTitle();
 	textPal->languageChange();
 	imagePal->languageChange();
 }

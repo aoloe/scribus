@@ -41,7 +41,7 @@ Todo:
 
 - [x] remove the textpalette.h|cpp and imagepalette.h|cpp
 - [x] use enums for the pane indexes (in scribusstructs or in ContentProperties?)
-- [ ] Change the title of the content palette according to the what is selected (Content Properties, Text Properties, Image Properties)
+- [x] Change the title of the content palette according to the what is selected (Content Properties, Text Properties, Image Properties)
 - [ ] What to put in the empty pane? (keep an empty one when no files are selected... or even then...)
 - [x] Move to the empty pane when selecting a table (or another "unsupported" item)
 - [ ] Rename "Group" in the PP to "Shape" or "Group Shape" and only show one of "Shape" and "Group" according to the selection.

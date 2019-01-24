@@ -67,6 +67,8 @@ class SCRIBUS_API ContentPalette : public ScDockPalette
 		QStackedWidget* stackedWidget;
 		PropertiesPalette_Text* textPal;
 		PropertiesPalette_Image* imagePal;
+
+		void updatePanelTitle();
 		
 		// the order must match the insertion of the widgets in the constructor
 		enum class Panel {

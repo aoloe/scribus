@@ -32,7 +32,7 @@ ContentPalette::ContentPalette(QWidget* parent) :
 
 	textPal = new PropertiesPalette_Text(this);
 	stackedWidget->addWidget(textPal);
-    
+
 	imagePal = new PropertiesPalette_Image(this);
 	stackedWidget->addWidget(imagePal);
 
@@ -41,11 +41,6 @@ ContentPalette::ContentPalette(QWidget* parent) :
 	stackedWidget->setCurrentIndex(0);
 
 	languageChange();
-
-	// TODO: check which signals should be setup by the constructor
-
-	// TODO: deactivate the first panel / all the panels
-
 }
 
 void ContentPalette::setMainWindow(ScribusMainWindow *mw)
@@ -55,7 +50,7 @@ void ContentPalette::setMainWindow(ScribusMainWindow *mw)
 	textPal->setMainWindow(mw);
 	imagePal->setMainWindow(mw);
 
-	connect(m_ScMW->appModeHelper, SIGNAL(AppModeChanged(int,int)), this, SLOT(AppModeChanged()));
+	connect(m_ScMW->appModeHelper, &AppModeHelper::AppModeChanged, this, &ContentPalette::AppModeChanged);
 }
 
 void ContentPalette::setDoc(ScribusDoc *doc)
@@ -97,6 +92,7 @@ void ContentPalette::unsetDoc()
 		disconnect(m_doc->m_Selection, &Selection::selectionChanged, this, &ContentPalette::handleSelectionChanged);
 		disconnect(m_doc, &ScribusDoc::docChanged, this, &ContentPalette::handleSelectionChanged);
 	}
+
 	setEnabled(true);
 	m_haveDoc = false;
 	m_haveItem = false;
@@ -114,7 +110,7 @@ void ContentPalette::unsetDoc()
 void ContentPalette::unsetItem()
 {
 	m_haveItem = false;
-	m_item     = nullptr;
+	m_item = nullptr;
 
 	imagePal->unsetItem();
 	textPal->unsetItem();
@@ -136,6 +132,7 @@ void ContentPalette::AppModeChanged()
 {
 	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
+
 	if ((m_haveDoc) && (m_haveItem))
 	{
 		if (m_item->isTable())

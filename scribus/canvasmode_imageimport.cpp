@@ -36,7 +36,6 @@
 #include "scribusview.h"
 #include "selection.h"
 #include "ui/contentpalette.h"
-#include "ui/propertiespalette_image.h"
 
 CanvasMode_ImageImport::CanvasMode_ImageImport(ScribusView *view) : CanvasMode(view), m_ScMW(view->m_ScMW)
 {

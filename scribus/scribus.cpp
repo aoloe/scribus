@@ -223,10 +223,8 @@ for which a new license (GPL+exception) is in place.
 #include "ui/printdialog.h"
 #include "ui/contentpalette.h"
 #include "ui/propertiespalette.h"
-#include "ui/propertiespalette_image.h"
 #include "ui/propertiespalette_line.h"
 #include "ui/propertiespalette_shape.h"
-#include "ui/propertiespalette_text.h"
 #include "ui/propertiespalette_xyz.h"
 #include "ui/query.h"
 #include "ui/recoverdialog.h"
@@ -2663,7 +2661,7 @@ void ScribusMainWindow::SwitchWin()
 {
 	updateActiveWindowCaption(doc->DocName);
 	propertiesPalette->setDoc(doc);
-    contentPalette->setDoc(doc);
+	contentPalette->setDoc(doc);
 	marksManager->setDoc(doc);
 	nsEditor->setDoc(doc);
 	pagePalette->setView(view);

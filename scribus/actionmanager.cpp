@@ -792,9 +792,9 @@ void ActionManager::initToolsMenuActions()
 {
 	QString name;
 	//Tool menu
-	name="toolsContent";
-	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="toolsProperties";
+	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
+	name="toolsContent";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="toolsOutline";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
@@ -901,8 +901,8 @@ void ActionManager::initToolsMenuActions()
 	scrActions->insert(name, new ScrAction(ScrAction::DataInt, im->loadPixmap("16/annot3d.png"), im->loadPixmap("22/annot3d.png"), "", defaultKey(name), mainWindow, modeInsertPDF3DAnnotation));
 #endif
 	//Set the applicaton wide palette shortcuts
-	(*scrActions)["toolsContent"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsProperties"]->setShortcutContext(Qt::ApplicationShortcut);
+	(*scrActions)["toolsContent"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsScrapbook"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsLayers"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsPages"]->setShortcutContext(Qt::ApplicationShortcut);
@@ -915,8 +915,8 @@ void ActionManager::initToolsMenuActions()
 	(*scrActions)["toolsInline"]->setShortcutContext(Qt::ApplicationShortcut);
 
 
-	(*scrActions)["toolsContent"]->setToggleAction(true);
 	(*scrActions)["toolsProperties"]->setToggleAction(true);
+	(*scrActions)["toolsContent"]->setToggleAction(true);
 	(*scrActions)["toolsOutline"]->setToggleAction(true);
 	(*scrActions)["toolsScrapbook"]->setToggleAction(true);
 	(*scrActions)["toolsLayers"]->setToggleAction(true);
@@ -1680,8 +1680,8 @@ void ActionManager::languageChange()
 //	(*scrActions)["viewNewView"]->setTexts( tr("New View"));
 
 	//Tool menu
-	(*scrActions)["toolsContent"]->setTexts( tr("&Content Properties"));
 	(*scrActions)["toolsProperties"]->setTexts( tr("&Properties"));
+	(*scrActions)["toolsContent"]->setTexts( tr("&Content Properties"));
 	(*scrActions)["toolsOutline"]->setTexts( tr("&Outline", "Document Outline Palette"));
 	(*scrActions)["toolsScrapbook"]->setTexts( tr("&Scrapbook"));
 	(*scrActions)["toolsLayers"]->setTexts( tr("&Layers"));
@@ -1947,8 +1947,8 @@ void ActionManager::createDefaultShortcuts()
 	defKeys.insert("viewShowContextMenu", Qt::Key_Menu); //Context menu key on Windows. Do we have one to use on Linux/OSX? Super_L ?
 
 	//Tool menu
-	defKeys.insert("toolsContent", Qt::Key_F3);
 	defKeys.insert("toolsProperties", Qt::Key_F2);
+	defKeys.insert("toolsContent", Qt::Key_F3);
 	defKeys.insert("toolsLayers", Qt::Key_F6);
 
 	//toolbar only items
@@ -2353,8 +2353,8 @@ void ActionManager::createDefaultMenus()
 	itmenu->second
 		<< "windowsCascade"
 		<< "windowsTile"
-		<< "toolsContent"
 		<< "toolsProperties"
+		<< "toolsContent"
 		<< "toolsOutline"
 		<< "toolsScrapbook"
 		<< "toolsLayers"

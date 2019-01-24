@@ -47,5 +47,4 @@ Todo:
 - [ ] Move to the empty pane when selecting a table (or another "unsupported" item)
 - [ ] Rename "Group" in the PP to "Shape" or "Group Shape" and only show one of "Shape" and "Group" according to the selection.
 - [ ] Store the state (expanded or not) of the tabs in the text pane.
-
 ... and implement the new tab of the font prefs with the rejected fonts...

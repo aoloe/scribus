@@ -3087,7 +3087,7 @@ void ScribusMainWindow::doPasteRecent(const QString& data)
 		b->OldB2 = b->width();
 		b->OldH2 = b->height();
 		b->updateClip();
-		b->AdjustPictScale();
+		b->adjustPictScale();
 	}
 	else
 	{
@@ -3891,80 +3891,80 @@ bool ScribusMainWindow::postLoadDoc()
 // do with file->open for a LONG time. It's used for get text / get picture.
 void ScribusMainWindow::slotGetContent()
 {
-	if (!doc->m_Selection->isEmpty())
+	if (doc->m_Selection->isEmpty())
+		return;
+
+	PageItem *currItem = doc->m_Selection->itemAt(0);
+	if (currItem->itemType() == PageItem::ImageFrame)
 	{
-		PageItem *currItem = doc->m_Selection->itemAt(0);
-		if (currItem->itemType() == PageItem::ImageFrame)
+		QString formatD(FormatsManager::instance()->fileDialogFormatList(FormatsManager::IMAGESIMGFRAME));
+
+		QString docDir = ".";
+		QString prefsDocDir=m_prefsManager->documentDir();
+		if (!prefsDocDir.isEmpty())
+			docDir = m_prefsManager->prefsFile->getContext("dirs")->get("images", prefsDocDir);
+		else
+			docDir = m_prefsManager->prefsFile->getContext("dirs")->get("images", ".");
+
+		QStringList fileNames;
+		fileNames.clear();
+		CustomFDialog *dia = new CustomFDialog(qApp->activeWindow(), docDir, tr("Open"), formatD, fdShowPreview | fdExistingFilesI | fdDisableOk);
+		if (dia->exec() == QDialog::Accepted)
+			fileNames = dia->fileDialog->selectedFiles();
+		delete dia;
+		//QStringList fileNames = CFileDialog( docDir, tr("Open"), formatD, "", fdShowPreview | fdExistingFiles);
+		if (!fileNames.isEmpty())
 		{
-			QString formatD(FormatsManager::instance()->fileDialogFormatList(FormatsManager::IMAGESIMGFRAME));
-
-			QString docDir = ".";
-			QString prefsDocDir=m_prefsManager->documentDir();
-			if (!prefsDocDir.isEmpty())
-				docDir = m_prefsManager->prefsFile->getContext("dirs")->get("images", prefsDocDir);
-			else
-				docDir = m_prefsManager->prefsFile->getContext("dirs")->get("images", ".");
-
-			QStringList fileNames;
-			fileNames.clear();
-			CustomFDialog *dia = new CustomFDialog(qApp->activeWindow(), docDir, tr("Open"), formatD, fdShowPreview | fdExistingFilesI | fdDisableOk);
-			if (dia->exec() == QDialog::Accepted)
-				fileNames = dia->fileDialog->selectedFiles();
-			delete dia;
-			//QStringList fileNames = CFileDialog( docDir, tr("Open"), formatD, "", fdShowPreview | fdExistingFiles);
-			if (!fileNames.isEmpty())
-			{
-				m_prefsManager->prefsFile->getContext("dirs")->set("images", fileNames[0].left(fileNames[0].lastIndexOf("/")));
-				view->requestMode(modeImportImage);
-				CanvasMode_ImageImport* cii=dynamic_cast<CanvasMode_ImageImport*>(view->canvasMode());
-				if (cii)
-					cii->setImageList(fileNames);
-			}
+			m_prefsManager->prefsFile->getContext("dirs")->set("images", fileNames[0].left(fileNames[0].lastIndexOf("/")));
+			view->requestMode(modeImportImage);
+			CanvasMode_ImageImport* cii=dynamic_cast<CanvasMode_ImageImport*>(view->canvasMode());
+			if (cii)
+				cii->setImageList(fileNames);
 		}
-		else if (currItem->asTextFrame())
+	}
+	else if (currItem->asTextFrame())
+	{
+		gtGetText* gt = new gtGetText(doc);
+		ImportSetup impsetup=gt->run();
+		if (impsetup.runDialog)
 		{
-			gtGetText* gt = new gtGetText(doc);
-			ImportSetup impsetup=gt->run();
-			if (impsetup.runDialog)
+			if (currItem->itemText.length() != 0)
 			{
-				if (currItem->itemText.length() != 0)
+				int t = ScMessageBox::warning(this, CommonStrings::trWarning, tr("Do you really want to clear all your text?"),
+							QMessageBox::Yes | QMessageBox::No,
+							QMessageBox::No,	// GUI default
+							QMessageBox::Yes);	// batch default
+				if (t == QMessageBox::No)
 				{
-					int t = ScMessageBox::warning(this, CommonStrings::trWarning, tr("Do you really want to clear all your text?"),
-								QMessageBox::Yes | QMessageBox::No,
-								QMessageBox::No,	// GUI default
-								QMessageBox::Yes);	// batch default
-					if (t == QMessageBox::No)
-					{
-						delete gt;
-						return;
-					}
+					delete gt;
+					return;
 				}
-				gt->launchImporter(impsetup.importer, impsetup.filename, impsetup.textOnly, impsetup.encoding, false, impsetup.prefixNames);
 			}
-			delete gt;
-			if (doc->docHyphenator->AutoCheck)
-				doc->docHyphenator->slotHyphenate(currItem);
-			for (int a = 0; a < doc->Items->count(); ++a)
-			{
-				if (doc->Items->at(a)->isBookmark)
-					bookmarkPalette->BView->changeText(doc->Items->at(a));
-			}
-			if (!impsetup.textOnly)
-				doc->flag_NumUpdateRequest = true;
-			view->DrawNew();
-			slotDocCh();
-			m_styleManager->setDoc(doc);
-			marksManager->setDoc(doc);
-			nsEditor->setDoc(doc);
-			inlinePalette->unsetDoc();
-			inlinePalette->setDoc(doc);
-			if (outlinePalette->isVisible())
-				outlinePalette->BuildTree();
-			propertiesPalette->updateColorList();
-			textPalette->updateColorList();
-			emit UpdateRequest(reqArrowStylesUpdate | reqLineStylesUpdate | reqStyleComboDocUpdate | reqInlinePalUpdate);
-			symbolPalette->updateSymbolList();
+			gt->launchImporter(impsetup.importer, impsetup.filename, impsetup.textOnly, impsetup.encoding, false, impsetup.prefixNames);
 		}
+		delete gt;
+		if (doc->docHyphenator->AutoCheck)
+			doc->docHyphenator->slotHyphenate(currItem);
+		for (int a = 0; a < doc->Items->count(); ++a)
+		{
+			if (doc->Items->at(a)->isBookmark)
+				bookmarkPalette->BView->changeText(doc->Items->at(a));
+		}
+		if (!impsetup.textOnly)
+			doc->flag_NumUpdateRequest = true;
+		view->DrawNew();
+		slotDocCh();
+		m_styleManager->setDoc(doc);
+		marksManager->setDoc(doc);
+		nsEditor->setDoc(doc);
+		inlinePalette->unsetDoc();
+		inlinePalette->setDoc(doc);
+		if (outlinePalette->isVisible())
+			outlinePalette->BuildTree();
+		propertiesPalette->updateColorList();
+		textPalette->updateColorList();
+		emit UpdateRequest(reqArrowStylesUpdate | reqLineStylesUpdate | reqStyleComboDocUpdate | reqInlinePalUpdate);
+		symbolPalette->updateSymbolList();
 	}
 }
 
@@ -4007,50 +4007,65 @@ void ScribusMainWindow::slotGetContent2() // kk2006
 
 void ScribusMainWindow::slotGetClipboardImage()
 {
-	if (HaveDoc && (!doc->m_Selection->isEmpty()) && (QApplication::clipboard()->mimeData()->hasImage()))
+	if (!HaveDoc || doc->m_Selection->isEmpty())
+		return;
+	if (!QApplication::clipboard()->mimeData()->hasImage())
+		return;
+
+	PageItem *currItem = doc->m_Selection->itemAt(0);
+	if (currItem->itemType() != PageItem::ImageFrame)
+		return;
+
+	int t = QMessageBox::Yes;
+	if (currItem->imageIsAvailable)
+		t = ScMessageBox::warning(this, CommonStrings::trWarning, tr("Do you really want to replace your existing image?"),
+					QMessageBox::Yes | QMessageBox::No,
+					QMessageBox::No,	// GUI default
+					QMessageBox::Yes);	// batch default
+	if (t != QMessageBox::Yes)
+		return;
+
+	QImage img = QApplication::clipboard()->image();
+	if (img.isNull())
+		return;
+
+	QTemporaryFile *tempFile = new QTemporaryFile(QDir::tempPath() + "/scribus_temp_XXXXXX.png");
+	tempFile->setAutoRemove(false);
+	if (!tempFile->open())
 	{
-		PageItem *currItem = doc->m_Selection->itemAt(0);
-		if (currItem->itemType() == PageItem::ImageFrame)
-		{
-			int t = QMessageBox::Yes;
-			if (currItem->imageIsAvailable)
-				t = ScMessageBox::warning(this, CommonStrings::trWarning, tr("Do you really want to replace your existing image?"),
-							QMessageBox::Yes | QMessageBox::No,
-							QMessageBox::No,	// GUI default
-							QMessageBox::Yes);	// batch default
-			if (t == QMessageBox::Yes)
-			{
-				QImage img = QApplication::clipboard()->image();
-				if (!img.isNull())
-				{
-					currItem->EmProfile = "";
-					currItem->pixm.imgInfo.isRequest = false;
-					currItem->UseEmbedded = true;
-					currItem->IProfile = doc->cmsSettings().DefaultImageRGBProfile;
-					currItem->IRender = doc->cmsSettings().DefaultIntentImages;
-					qApp->setOverrideCursor( QCursor(Qt::WaitCursor) );
-					qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-					QTemporaryFile *tempFile = new QTemporaryFile(QDir::tempPath() + "/scribus_temp_XXXXXX.png");
-					tempFile->setAutoRemove(false);
-					tempFile->open();
-					QString fileName = getLongPathName(tempFile->fileName());
-					tempFile->close();
-					delete tempFile;
-					currItem->isInlineImage = true;
-					currItem->isTempFile = true;
-					currItem->Pfile = fileName;
-					img.save(fileName, "PNG");
-					doc->loadPict(fileName, currItem, false, true);
-					propertiesPalette->imagePal->showScaleAndOffset(currItem->imageXScale(), currItem->imageYScale(), currItem->imageXOffset(), currItem->imageYOffset());
-					qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
-					view->DrawNew();
-					emit UpdateRequest(reqColorsUpdate | reqCmsOptionsUpdate);
-					currItem->emitAllToGUI();
-					qApp->restoreOverrideCursor();
-				}
-			}
-		}
+		delete tempFile;
+		return;
 	}
+	QString fileName = getLongPathName(tempFile->fileName());
+	tempFile->close();
+	delete tempFile;
+
+	if (!img.save(fileName, "PNG"))
+	{
+		QFile::remove(fileName);
+		return;
+	}
+
+	currItem->EmProfile = "";
+	currItem->pixm.imgInfo.isRequest = false;
+	currItem->UseEmbedded = true;
+	currItem->IProfile = doc->cmsSettings().DefaultImageRGBProfile;
+	currItem->IRender = doc->cmsSettings().DefaultIntentImages;
+	qApp->setOverrideCursor( QCursor(Qt::WaitCursor) );
+	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+	
+	currItem->isInlineImage = true;
+	currItem->isTempFile = true;
+	currItem->Pfile = fileName;
+	doc->loadPict(fileName, currItem, false, true);
+	// Call to showScaleAndOffset() is now very likely unnecessary
+	// due to mecanisms used to update properties in PP in 1.5.x+
+	//propertiesPalette->imagePal->showScaleAndOffset(currItem->imageXScale(), currItem->imageYScale(), currItem->imageXOffset(), currItem->imageYOffset());
+	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+	view->DrawNew();
+	emit UpdateRequest(reqColorsUpdate | reqCmsOptionsUpdate);
+	currItem->emitAllToGUI();
+	qApp->restoreOverrideCursor();
 }
 
 void ScribusMainWindow::toogleInlineState()
@@ -8383,8 +8398,7 @@ void ScribusMainWindow::docCheckToggle(bool visible)
 
 bool ScribusMainWindow::scanDocument()
 {
-	DocumentChecker dc;
-	return dc.checkDocument(doc);
+	return DocumentChecker::checkDocument(doc);
 }
 
 void ScribusMainWindow::slotStoryEditor(bool fromTable)

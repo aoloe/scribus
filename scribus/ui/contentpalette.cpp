@@ -38,7 +38,7 @@ ContentPalette::ContentPalette(QWidget* parent) :
 
 	setWidget(stackedWidget);
 
-	stackedWidget->setCurrentIndex(0);
+	stackedWidget->setCurrentIndex((int) Panel::empty);
 
 	languageChange();
 }
@@ -104,7 +104,7 @@ void ContentPalette::unsetDoc()
 	imagePal->unsetItem();
 	imagePal->unsetDoc();
 
-	stackedWidget->setCurrentIndex(0);
+	stackedWidget->setCurrentIndex((int) Panel::empty);
 }
 
 void ContentPalette::unsetItem()
@@ -184,19 +184,19 @@ void  ContentPalette::handleSelectionChanged()
 	if (!m_haveDoc || !m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 
-	int currentPane = stackedWidget->currentIndex();
-	int newPane{currentPane};
+	auto currentPanel = (Panel) stackedWidget->currentIndex();
+	auto newPanel{currentPanel};
 
 	PageItem* currItem = currentItemFromSelection();
 
 	// TODO: should me move this to setCurrentIndex()?
 	if (!currItem)
 	{
-		stackedWidget->setCurrentIndex(0);
+		newPanel = Panel::empty;
 		m_haveItem = false;
 	} else if (m_doc->m_Selection->count() > 1)
 	{
-		stackedWidget->setCurrentIndex(0);
+		newPanel = Panel::empty;
 	}
 	else
 	{
@@ -205,28 +205,24 @@ void  ContentPalette::handleSelectionChanged()
 		switch (currItem->itemType())
 		{
 		case PageItem::ImageFrame:
-			newPane = 2;
+			newPanel = Panel::image;
 			break;
 		case PageItem::TextFrame:
-			newPane = 1;
-			break;
 		case PageItem::PathText:
-			newPane = 1;
+			newPanel = Panel::text;
 			break;
 		case PageItem::Table:
-			if (m_doc->appMode == modeEditTable)
-			{
-				newPane = 1;
-			}
+			newPanel = m_doc->appMode == modeEditTable ? Panel::text : Panel::empty;
 			break;
 		default:
+			newPanel = Panel::empty;
 			break;
 		}
 		setCurrentItem(currItem);
 	}
-	if (currentPane != newPane)
+	if (currentPanel != newPanel)
 	{
-		stackedWidget->setCurrentIndex(newPane);
+		stackedWidget->setCurrentIndex((int) newPanel);
 	}
 	updateGeometry();
 	ScDockPalette::update();

@@ -4,8 +4,6 @@ Second try at creating a Content palette with
 
 - Text properties
 - Image properties
-- Group properties
-- ...
 
 ## Implementation
 
@@ -42,10 +40,10 @@ Second try at creating a Content palette with
 Todo:
 
 - [x] remove the textpalette.h|cpp and imagepalette.h|cpp
-- [ ] use enums for the pane indexes (in scribusstructs or in ContentProperties?)
+- [x] use enums for the pane indexes (in scribusstructs or in ContentProperties?)
 - [ ] Change the title of the content palette according to the what is selected (Content Properties, Text Properties, Image Properties)
 - [ ] What to put in the empty pane? (keep an empty one when no files are selected... or even then...)
-- [ ] Move to the empty pane when selecting a table (or another "unsupported" item)
+- [x] Move to the empty pane when selecting a table (or another "unsupported" item)
 - [ ] Rename "Group" in the PP to "Shape" or "Group Shape" and only show one of "Shape" and "Group" according to the selection.
 - [ ] Store the state (expanded or not) of the tabs in the text pane.
 ... and implement the new tab of the font prefs with the rejected fonts...

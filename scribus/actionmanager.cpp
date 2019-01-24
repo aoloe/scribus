@@ -789,8 +789,6 @@ void ActionManager::initToolsMenuActions()
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="toolsProperties";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
-	name="toolsText";
-	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="toolsOutline";
 	scrActions->insert(name, new ScrAction("", defaultKey(name), mainWindow));
 	name="toolsScrapbook";
@@ -898,7 +896,6 @@ void ActionManager::initToolsMenuActions()
 	//Set the applicaton wide palette shortcuts
 	(*scrActions)["toolsContent"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsProperties"]->setShortcutContext(Qt::ApplicationShortcut);
-	(*scrActions)["toolsText"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsScrapbook"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsLayers"]->setShortcutContext(Qt::ApplicationShortcut);
 	(*scrActions)["toolsPages"]->setShortcutContext(Qt::ApplicationShortcut);
@@ -913,7 +910,6 @@ void ActionManager::initToolsMenuActions()
 
 	(*scrActions)["toolsContent"]->setToggleAction(true);
 	(*scrActions)["toolsProperties"]->setToggleAction(true);
-	(*scrActions)["toolsText"]->setToggleAction(true);
 	(*scrActions)["toolsOutline"]->setToggleAction(true);
 	(*scrActions)["toolsScrapbook"]->setToggleAction(true);
 	(*scrActions)["toolsLayers"]->setToggleAction(true);
@@ -1679,7 +1675,6 @@ void ActionManager::languageChange()
 	//Tool menu
 	(*scrActions)["toolsContent"]->setTexts( tr("&Content Properties"));
 	(*scrActions)["toolsProperties"]->setTexts( tr("&Properties"));
-	(*scrActions)["toolsText"]->setTexts( tr("Text Properties"));
 	(*scrActions)["toolsOutline"]->setTexts( tr("&Outline", "Document Outline Palette"));
 	(*scrActions)["toolsScrapbook"]->setTexts( tr("&Scrapbook"));
 	(*scrActions)["toolsLayers"]->setTexts( tr("&Layers"));
@@ -2353,7 +2348,6 @@ void ActionManager::createDefaultMenus()
 		<< "windowsTile"
 		<< "toolsContent"
 		<< "toolsProperties"
-		<< "toolsText"
 		<< "toolsOutline"
 		<< "toolsScrapbook"
 		<< "toolsLayers"

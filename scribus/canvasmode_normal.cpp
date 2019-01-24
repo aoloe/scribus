@@ -1175,7 +1175,6 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 			m_doc->m_Selection->delaySignalsOn();
 			// loop over all items and select
 			bool altPressed = m->modifiers() & Qt::AltModifier;
-			bool shiftPressed = m->modifiers() & Qt::ShiftModifier;
 
 			for (int a = 0; a < docItemCount; ++a)
 			{

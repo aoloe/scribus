@@ -34,7 +34,6 @@ class ColorCombo;
 class Cpalette;
 class NameWidget;
 class PropertiesPalette_Group;
-class PropertiesPalette_Image;
 class PropertiesPalette_Line;
 class PropertiesPalette_Shadow;
 class PropertiesPalette_Shape;
@@ -71,7 +70,6 @@ public:
                          // commmited
 
 	PropertiesPalette_Group* groupPal;
-	PropertiesPalette_Image* imagePal;
 	PropertiesPalette_Line*  linePal;
 	PropertiesPalette_Shadow* shadowPal;
 	PropertiesPalette_Shape* shapePal;

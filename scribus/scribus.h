@@ -108,6 +108,7 @@ class StoryEditor;
 class StyleManager;
 class SymbolPalette;
 class TextPalette;
+class ImagePalette;
 class TOCGenerator;
 class UndoManager;
 class UndoPalette;
@@ -234,6 +235,7 @@ public:
 	ContentPalette *contentPalette;
 	PropertiesPalette *propertiesPalette;
 	TextPalette *textPalette;
+	ImagePalette *imagePalette;
 	MarksManager *marksManager;
 	NotesStylesEditor *nsEditor;
 	NodePalette *nodePalette;

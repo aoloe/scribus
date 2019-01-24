@@ -42,7 +42,6 @@ for which a new license (GPL+exception) is in place.
 #include "dasheditor.h"
 #include "pageitem_table.h"
 #include "propertiespalette_group.h"
-#include "propertiespalette_image.h"
 #include "propertiespalette_line.h"
 #include "propertiespalette_shadow.h"
 #include "propertiespalette_shape.h"
@@ -88,9 +87,6 @@ PropertiesPalette::PropertiesPalette( QWidget* parent) : ScDockPalette( parent, 
 
 	groupPal = new PropertiesPalette_Group( this );
 	idGroupItem = TabStack->addItem(groupPal, "Groups");
-
-	imagePal = new PropertiesPalette_Image(this);
-	idImageItem=TabStack->addItem( imagePal, "&Image" );
 
 	linePal = new PropertiesPalette_Line(this);
 	idLineItem=TabStack->addItem( linePal, "&Line" );
@@ -161,7 +157,6 @@ void PropertiesPalette::setMainWindow(ScribusMainWindow* mw)
 	this->shadowPal->setMainWindow(mw);
 	this->shapePal->setMainWindow(mw);
 	this->groupPal->setMainWindow(mw);
-	this->imagePal->setMainWindow(mw);
 	this->linePal->setMainWindow(mw);
 	this->tablePal->setMainWindow(mw);
 
@@ -232,7 +227,6 @@ void PropertiesPalette::setDoc(ScribusDoc *d)
 	shadowPal->setDoc(m_doc);
 	shapePal->setDoc(m_doc);
 	groupPal->setDoc(m_doc);
-	imagePal->setDoc(m_doc);
 	linePal->setDoc(m_doc);
 	tablePal->setDocument(m_doc);
 
@@ -258,7 +252,6 @@ void PropertiesPalette::unsetDoc()
 	m_doc=nullptr;
 	m_item = nullptr;
 
-	imagePal->unsetItem();
 	xyzPal->unsetDoc();
 	shadowPal->unsetItem();
 	shadowPal->unsetDoc();
@@ -266,8 +259,6 @@ void PropertiesPalette::unsetDoc()
 	shapePal->unsetDoc();
 	groupPal->unsetItem();
 	groupPal->unsetDoc();
-	imagePal->unsetItem();
-	imagePal->unsetDoc();
 	linePal->unsetItem();
 	linePal->unsetDoc();
 	tablePal->unsetItem();
@@ -291,12 +282,10 @@ void PropertiesPalette::unsetItem()
 	m_item     = nullptr;
 	Cpal->setCurrentItem(nullptr);
 	Tpal->setCurrentItem(nullptr);
-	imagePal->unsetItem();
 	tablePal->unsetItem();
 	shapePal->unsetItem();
 	groupPal->unsetItem();
 	shadowPal->unsetItem();
-	imagePal->unsetItem();
 	linePal->unsetItem();
 	handleSelectionChanged();
 }
@@ -317,20 +306,6 @@ PageItem* PropertiesPalette::currentItemFromSelection()
 	{
 		if (m_doc->m_Selection->count() > 0)
 			currentItem = m_doc->m_Selection->itemAt(0);
-	/*	if (m_doc->m_Selection->count() > 1)
-		{
-			int lowestItem = 999999;
-			for (int a=0; a<m_doc->m_Selection->count(); ++a)
-			{
-				currentItem = m_doc->m_Selection->itemAt(a);
-				lowestItem = qMin(lowestItem, m_doc->Items->indexOf(currentItem));
-			}
-			currentItem = m_doc->Items->at(lowestItem);
-		}
-		else if (m_doc->m_Selection->count() == 1)
-		{
-			currentItem = m_doc->m_Selection->itemAt(0);
-		} */
 	}
 
 	return currentItem;
@@ -420,7 +395,6 @@ void PropertiesPalette::setCurrentItem(PageItem *i)
 		shadowPal->handleSelectionChanged();
 		shapePal->handleSelectionChanged();
 		groupPal->handleSelectionChanged();
-		imagePal->handleSelectionChanged();
 		linePal->handleSelectionChanged();
 		tablePal->handleSelectionChanged();
 		Cpal->handleSelectionChanged();
@@ -606,7 +580,6 @@ void PropertiesPalette::unitChange()
 	shadowPal->unitChange();
 	shapePal->unitChange();
 	groupPal->unitChange();
-	imagePal->unitChange();
 	linePal->unitChange();
 
 	Cpal->unitChange(oldRatio, m_unitRatio, m_doc->unitIndex());
@@ -858,10 +831,7 @@ void PropertiesPalette::updateColorList()
 
 bool PropertiesPalette::userActionOn()
 {
-	bool userActionOn = false;
-	userActionOn  = xyzPal->userActionOn();
-	userActionOn |= imagePal->userActionOn();
-	return userActionOn;
+	return xyzPal->userActionOn();
 }
 
 void PropertiesPalette::changeEvent(QEvent *e)
@@ -892,7 +862,6 @@ void PropertiesPalette::languageChange()
 	shadowPal->languageChange();
 	shapePal->languageChange();
 	groupPal->languageChange();
-	imagePal->languageChange();
 	Cpal->languageChange();
 	linePal->languageChange();
 	tablePal->languageChange();

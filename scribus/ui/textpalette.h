@@ -17,7 +17,6 @@ class QToolBox;
 class QVBoxLayout;
 class QWidget;
 
-
 #include "pageitem.h"
 #include "scdockpalette.h"
 #include "scribusapi.h"

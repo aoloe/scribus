@@ -35,7 +35,7 @@
 #include "scribusdoc.h"
 #include "scribusview.h"
 #include "selection.h"
-#include "ui/propertiespalette.h"
+#include "ui/contentpalette.h"
 #include "ui/propertiespalette_image.h"
 
 CanvasMode_ImageImport::CanvasMode_ImageImport(ScribusView *view) : CanvasMode(view), m_ScMW(view->m_ScMW)
@@ -236,7 +236,7 @@ void CanvasMode_ImageImport::setImage(PageItem *currItem)
 	currItem->IRender = m_doc->cmsSettings().DefaultIntentImages;
 	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 	m_doc->loadPict(fileName, currItem, false, true);
-	m_ScMW->propertiesPalette->imagePal->showScaleAndOffset(currItem->imageXScale(), currItem->imageYScale(), currItem->imageXOffset(), currItem->imageYOffset());
+	m_ScMW->contentPalette->update(currItem->asImageFrame());
 	m_ScMW->repaint();
 	qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
 	m_view->DrawNew();

@@ -9780,30 +9780,6 @@ void PageItem::adjustPictScale()
 		m_imageXScale = xs;
 		m_imageYScale = ys;
 	}
-	// Disable broken code. Code must be independent from doc in that function
-	/*switch (m_Doc->RotMode)
-	{
-		case 0:
-			LocalX = 0;
-			LocalY = 0;
-			break;
-		case 1:
-			LocalX = (Width - static_cast<double>(OrigW) * LocalScX) / LocalScX;
-			LocalY = 0;
-			break;
-		case 2:
-			LocalX = ((Width - static_cast<double>(OrigW) * LocalScX) / LocalScX) / 2.0;
-			LocalY = ((Height - static_cast<double>(OrigH) * LocalScY) / LocalScY) / 2.0;
-			break;
-		case 3:
-			LocalX = 0;
-			LocalY = (Height - static_cast<double>(OrigH) * LocalScY) / LocalScY;
-			break;
-		case 4:
-			LocalX = (Width - static_cast<double>(OrigW) * LocalScX) / LocalScX;
-			LocalY = (Height - static_cast<double>(OrigH) * LocalScY) / LocalScY;
-			break;
-	}*/
 	if (m_Doc && m_Doc->isLoading())
 	{
 		m_imageXOffset = imgXOffs;
@@ -10164,51 +10140,43 @@ void PageItem::updateConstants()
 	m_Doc->constants().insert("height", m_height);
 }
 
-//CB Old ScribusView MoveItemI
-void PageItem::moveImageInFrame(double newX, double newY)
+/**
+ * Apply the mouse movements for moving image in the frame.
+ * If the image fits the frame, constraint the movements
+ * and make sure that the frame is filled.
+ */
+void PageItem::moveImageInFrame(double dX, double dY)
 {
 	if (m_ItemType!=PageItem::ImageFrame)
 		return;
-	if (locked())// || (!ScaleType))
+	if (locked())
 		return;
+
+	if (imageFlippedH())
+		dX = -dX;
+	if (imageFlippedV())
+		dY = -dY;
+
 	if (!ScaleType)
 	{
-		qDebug() << "w     " << m_width;
-		qDebug() << "xoff  " << m_imageXOffset;
-		qDebug() << "o w   " << OrigW;
-		qDebug() << "scale " << m_imageXScale;
-		qDebug() << "p ww  " << pixm.width() ;
-		// double xs = m_width / static_cast<double>(OrigW);
-		// m_imageXScale = qMin(xs, ys);
-		// oldLocalScX = m_imageXScale = 72.0 / xres;
-
 		if (!AspectRatio)
 			return;
 		if (isImageFittingHorizontal())
-			newX = 0;
+			dX = 0;
 		if (isImageFittingVertical())
-			newY = 0;
-		if (m_imageXOffset + newX < 0)
-			newX = -m_imageXOffset;
-		if (m_imageYOffset + newY < 0)
-			newY = -m_imageYOffset;
-		/*
-		if (m_imageXOffset / 10 + static_cast<double>(OrigW) * m_imageXScale > m_width)
-			newX = 0;
-		if (m_imageYOffset / 10 + static_cast<double>(OrigH) * m_imageYScale > m_height)
-			newY = 0;
-		*/
+			dY = 0;
+		if (m_imageXOffset + dX < 0)
+			dX = -m_imageXOffset;
+		if (m_imageYOffset + dY < 0)
+			dY = -m_imageYOffset;
+		if (dX > 0 && m_imageXOffset + OrigW >= m_width / m_imageXScale)
+			dX = 0;
+		if (dY > 0 && m_imageYOffset + OrigH >= m_height / m_imageYScale)
+			dY = 0;
 	}
-	double dX=0.0, dY=0.0;
-	if (imageFlippedH())
-		dX=-newX;
-	else
-		dX=newX;
-	if (imageFlippedV())
-		dY=-newY;
-	else
-		dY=newY;
+
 	moveImageXYOffsetBy(dX, dY);
+
 	if (!imageClip.empty())
 	{
 		imageClip = pixm.imgInfo.PDSpathData[pixm.imgInfo.usedPath].copy();

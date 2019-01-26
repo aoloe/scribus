@@ -417,13 +417,17 @@ void CanvasMode_Edit::mouseMoveEvent(QMouseEvent *m)
 			{
 				if (m->modifiers() & Qt::ShiftModifier)
 				{
-					m_view->setCursor(IconManager::instance()->loadCursor("Rotieren2.png"));
-					QTransform p = currItem->getTransform();
-					p.translate(currItem->imageXOffset()*currItem->imageXScale(), currItem->imageYOffset()*currItem->imageYScale());
-					QPointF rotP = p.map(QPointF(0.0, 0.0));
-					double itemRotation = xy2Deg(mousePointDoc.x() - rotP.x(), mousePointDoc.y() - rotP.y());
-					currItem->setImageRotation(itemRotation);
-					m_canvas->displayRotHUD(m->globalPos(), itemRotation);
+					// only rotate if free scale
+					if (currItem->ScaleType)
+					{
+						m_view->setCursor(IconManager::instance()->loadCursor("Rotieren2.png"));
+						QTransform p = currItem->getTransform();
+						p.translate(currItem->imageXOffset()*currItem->imageXScale(), currItem->imageYOffset()*currItem->imageYScale());
+						QPointF rotP = p.map(QPointF(0.0, 0.0));
+						double itemRotation = xy2Deg(mousePointDoc.x() - rotP.x(), mousePointDoc.y() - rotP.y());
+						currItem->setImageRotation(itemRotation);
+						m_canvas->displayRotHUD(m->globalPos(), itemRotation);
+					}
 				}
 				else
 				{

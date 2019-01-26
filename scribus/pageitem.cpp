@@ -4248,11 +4248,18 @@ void PageItem::setImageScalingMode(bool freeScale, bool keepRatio)
 				ss->set("OLD_IMAGEYOFFSET", m_imageYOffset);
 				ss->set("OLD_IMAGEXSCALE", m_imageXScale);
 				ss->set("OLD_IMAGEYSCALE", m_imageYScale);
+				ss->set("OLD_IMAGEROTATION", m_imageRotation);
 			}
 		}
 		if (keepRatio != AspectRatio)
 			ss->set("ASPECT_RATIO", keepRatio);
 		undoManager->action(this, ss);
+	}
+	if (!freeScale)
+	{
+		m_imageXOffset = 0.0;
+		m_imageYOffset = 0.0;
+		m_imageRotation = 0;
 	}
 	ScaleType = freeScale;
 	AspectRatio = keepRatio;
@@ -7110,10 +7117,12 @@ void PageItem::restoreImageScaleMode(SimpleState *state, bool isUndo)
 			double oscy = state->getDouble("OLD_IMAGEYSCALE");
 			double ox = state->getDouble("OLD_IMAGEXOFFSET");
 			double oy = state->getDouble("OLD_IMAGEYOFFSET");
+			double orot = state->getInt("OLD_IMAGEROTATION");
 			Selection tempSelection(this, false);
 			tempSelection.addItem(this, true);
 			m_Doc->itemSelection_SetImageScale(oscx, oscy, &tempSelection);
 			m_Doc->itemSelection_SetImageOffset(ox, oy, &tempSelection);
+			m_Doc->itemSelection_SetImageRotation(orot, &tempSelection);
 		}
 		else
 		{
@@ -7121,6 +7130,7 @@ void PageItem::restoreImageScaleMode(SimpleState *state, bool isUndo)
 			state->set("OLD_IMAGEYOFFSET", m_imageYOffset);
 			state->set("OLD_IMAGEXSCALE", m_imageXScale);
 			state->set("OLD_IMAGEYSCALE", m_imageYScale);
+			state->set("OLD_IMAGEROTATION", m_imageRotation);
 		}
 	}
 
@@ -10161,6 +10171,34 @@ void PageItem::moveImageInFrame(double newX, double newY)
 		return;
 	if (locked())// || (!ScaleType))
 		return;
+	if (!ScaleType)
+	{
+		qDebug() << "w     " << m_width;
+		qDebug() << "xoff  " << m_imageXOffset;
+		qDebug() << "o w   " << OrigW;
+		qDebug() << "scale " << m_imageXScale;
+		qDebug() << "p ww  " << pixm.width() ;
+		// double xs = m_width / static_cast<double>(OrigW);
+		// m_imageXScale = qMin(xs, ys);
+		// oldLocalScX = m_imageXScale = 72.0 / xres;
+
+		if (!AspectRatio)
+			return;
+		if (isImageFittingHorizontal())
+			newX = 0;
+		if (isImageFittingVertical())
+			newY = 0;
+		if (m_imageXOffset + newX < 0)
+			newX = -m_imageXOffset;
+		if (m_imageYOffset + newY < 0)
+			newY = -m_imageYOffset;
+		/*
+		if (m_imageXOffset / 10 + static_cast<double>(OrigW) * m_imageXScale > m_width)
+			newX = 0;
+		if (m_imageYOffset / 10 + static_cast<double>(OrigH) * m_imageYScale > m_height)
+			newY = 0;
+		*/
+	}
 	double dX=0.0, dY=0.0;
 	if (imageFlippedH())
 		dX=-newX;
@@ -10180,6 +10218,23 @@ void PageItem::moveImageInFrame(double newX, double newY)
 		cl.scale(imageXScale(), imageYScale());
 		imageClip.map(cl);
 	}
+}
+
+bool PageItem::isImageFittingHorizontal()
+{
+	// a <= b -> a - b <= 0.1
+	return (m_width / m_height - 
+		(double) pixm.width() / (double) pixm.height()
+		<= 0.1);
+
+}
+
+bool PageItem::isImageFittingVertical()
+{
+	// a >= b -> a - b >= -0.1
+	return (m_width / m_height -
+		(double) pixm.width() / (double) pixm.height()
+		>= -0.1);
 }
 
 void PageItem::convertClip()

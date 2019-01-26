@@ -369,6 +369,9 @@ public: // Start public functions
 	 * @todo Move to PageItem_ImageFrame
 	 */
 	void moveImageInFrame(double newX, double newY);
+	bool isImageFittingHorizontal();
+	bool isImageFittingVertical();
+
 	ObjAttrVector* getObjectAttributes();
 	/*!
 	 * brief Returns a list of attributes with specified name

@@ -506,15 +506,35 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 			keepImageWHRatioButton->setChecked(m_item->AspectRatio);
 			keepImageDPIRatioButton->setChecked(m_item->AspectRatio);
 		}
-//CB Why do we need this? Setting it too much here
-// 		if (setter == true)
-// 		{
-// 			keepImageWHRatioButton->setChecked(setter);
-// 			keepImageDPIRatioButton->setChecked(setter);
-// 		}
-		//imageXOffsetSpinBox->setEnabled(setter);
-		//imageYOffsetSpinBox->setEnabled(setter);
-		//imageRotation->setEnabled(setter);
+
+		bool xEnabled{true};
+		bool yEnabled{true};
+		bool rotationEnabled{true};
+		double rangeMin{-16777215};
+		double rangeMax{16777215 * m_unitRatio};
+		if (!setter)
+		{
+			if (m_item->AspectRatio)
+			{
+				xEnabled = !m_item->isImageFittingHorizontal();
+				yEnabled = !m_item->isImageFittingVertical();
+			}
+			else
+			{
+				xEnabled = false;
+				yEnabled = false;
+			}
+			rotationEnabled = false;
+			rangeMin = 0.0;
+			// rangeMax = 0.0;
+		}
+		imageXOffsetSpinBox->setEnabled(xEnabled);
+		if (xEnabled)
+			imageXOffsetSpinBox->setValues(rangeMin, rangeMax, unitGetPrecisionFromIndex(m_unitIndex), 0);
+		imageYOffsetSpinBox->setEnabled(yEnabled);
+		if (yEnabled)
+			imageYOffsetSpinBox->setValues(rangeMin, rangeMax, unitGetPrecisionFromIndex(m_unitIndex), 0);
+		imageRotation->setEnabled(rotationEnabled);
 
 		imageXScaleSpinBox->blockSignals(false);
 		imageYScaleSpinBox->blockSignals(false);
@@ -596,36 +616,10 @@ void PropertiesPalette_Image::handleScaling()
 	if (!m_ScMW || m_ScMW->scriptIsRunning())
 		return;
 
-	if (freeScale == sender())
-	{
-		frameScale->setChecked(false);
-		freeScale->setChecked(true);
-		cbProportional->setEnabled(false);
-//		imageXOffsetSpinBox->setEnabled(true);
-//		imageYOffsetSpinBox->setEnabled(true);
-		imageXScaleSpinBox->setEnabled(true);
-		imageYScaleSpinBox->setEnabled(true);
-		imgDpiX->setEnabled(true);
-		imgDpiY->setEnabled(true);
-//		imageRotation->setEnabled(true);
-		keepImageWHRatioButton->setEnabled(true);
-		keepImageDPIRatioButton->setEnabled(true);
-	}
-	if (frameScale == sender())
-	{
-		frameScale->setChecked(true);
-		freeScale->setChecked(false);
-		cbProportional->setEnabled(true);
-//		imageXOffsetSpinBox->setEnabled(false);
-//		imageYOffsetSpinBox->setEnabled(false);
-		imageXScaleSpinBox->setEnabled(false);
-		imageYScaleSpinBox->setEnabled(false);
-		imgDpiX->setEnabled(false);
-		imgDpiY->setEnabled(false);
-//		imageRotation->setEnabled(false);
-		keepImageWHRatioButton->setEnabled(false);
-		keepImageDPIRatioButton->setEnabled(false);
-	}
+	// here there was code setting which widgets are enabled
+	// when the scaling type changes. but, finally,
+	// handleSelectionChanged() and setCurItem() get called
+	// and overwrite what has been done here.
 
 	if ((m_haveDoc) && (m_haveItem))
 	{

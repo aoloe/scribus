@@ -511,7 +511,8 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 		bool yEnabled{true};
 		bool rotationEnabled{true};
 		double rangeMin{-16777215};
-		double rangeMax{16777215 * m_unitRatio};
+		double rangeMaxX{16777215 * m_unitRatio};
+		double rangeMaxY{16777215 * m_unitRatio};
 		if (!setter)
 		{
 			if (m_item->AspectRatio)
@@ -526,14 +527,15 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 			}
 			rotationEnabled = false;
 			rangeMin = 0.0;
-			// rangeMax = 0.0;
+			rangeMaxX = (m_item->width() - m_item->OrigW * m_item->imageXScale()) * m_unitRatio;
+			rangeMaxY = (m_item->height() - m_item->OrigH * m_item->imageYScale()) * m_unitRatio;
 		}
 		imageXOffsetSpinBox->setEnabled(xEnabled);
 		if (xEnabled)
-			imageXOffsetSpinBox->setValues(rangeMin, rangeMax, unitGetPrecisionFromIndex(m_unitIndex), 0);
+			imageXOffsetSpinBox->setValues(rangeMin, rangeMaxX, unitGetPrecisionFromIndex(m_unitIndex), 0);
 		imageYOffsetSpinBox->setEnabled(yEnabled);
 		if (yEnabled)
-			imageYOffsetSpinBox->setValues(rangeMin, rangeMax, unitGetPrecisionFromIndex(m_unitIndex), 0);
+			imageYOffsetSpinBox->setValues(rangeMin, rangeMaxY, unitGetPrecisionFromIndex(m_unitIndex), 0);
 		imageRotation->setEnabled(rotationEnabled);
 
 		imageXScaleSpinBox->blockSignals(false);

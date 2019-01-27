@@ -1323,8 +1323,8 @@ public:	// Start public variables
 	bool OverrideCompressionQuality;
 	int CompressionQualityIndex;
 	bool imageIsAvailable; ///< Flag to hold image file availability
-	int OrigW;
-	int OrigH;
+	int OrigW; // width of the image in pixels
+	int OrigH; // height of the image in pixels
 	double BBoxX; ///< Bounding Box-X
 	double BBoxH; ///< Bounding Box-H
 	double CurX; ///< Zeichen X-Position
@@ -1852,8 +1852,8 @@ protected: // Start protected variables
 	bool m_isSelected; ///< Is the item selected?
 	double m_imageXScale; ///< Scaling X Factor for images
 	double m_imageYScale; ///< Scaling Y Factor for images
-	double m_imageXOffset; ///< Image X Offset to frame
-	double m_imageYOffset; ///< Image Y Offset to frame
+	double m_imageXOffset; ///< Horizontal offset in the frame in "unscaled" pixels
+	double m_imageYOffset; ///< Vertical offset in the frame in "unscaled" pixels
 	double m_imageRotation; ///< Image rotation in frame
 	FirstLineOffsetPolicy m_firstLineOffset;
 	bool m_groupClips;

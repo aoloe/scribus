@@ -10141,9 +10141,9 @@ void PageItem::updateConstants()
 }
 
 /**
- * Apply the mouse movements for moving image in the frame.
+ * Apply the mouse movements for moving an image in the frame.
  * If the image fits the frame, constraint the movements
- * and make sure that the frame is filled.
+ * and make sure that the image does not overflow the frame.
  */
 void PageItem::moveImageInFrame(double dX, double dY)
 {
@@ -10165,14 +10165,10 @@ void PageItem::moveImageInFrame(double dX, double dY)
 			dX = 0;
 		if (isImageFittingVertical())
 			dY = 0;
-		if (m_imageXOffset + dX < 0)
-			dX = -m_imageXOffset;
-		if (m_imageYOffset + dY < 0)
-			dY = -m_imageYOffset;
-		if (dX > 0 && m_imageXOffset + OrigW >= m_width / m_imageXScale)
-			dX = 0;
-		if (dY > 0 && m_imageYOffset + OrigH >= m_height / m_imageYScale)
-			dY = 0;
+		dX = qMax(dX, -m_imageXOffset);
+		dY = qMax(dY, -m_imageYOffset);
+		dX = qMin(dX, m_width / m_imageXScale - OrigW - m_imageXOffset);
+		dY = qMin(dY, m_height / m_imageYScale - OrigH - m_imageYOffset);
 	}
 
 	moveImageXYOffsetBy(dX, dY);

@@ -484,8 +484,12 @@ bool PdfPlug::convert(const QString& fn)
 					cropped = optImp->croppingEnabled();
 					if (!cropped)
 						crop = cropped;
+					// When displaying  pages slices, we should always set useMediaBox to true
+					// in order to use MediaBox (x, y) as coordinate system
 					if (contentRect != Media_Box)
 						useMediaBox = gFalse;
+					if (cropped)
+						useMediaBox = gTrue;
 				/*	if (cb > Media_Box)
 					{
 						cropped = true;
@@ -979,7 +983,7 @@ QImage PdfPlug::readPreview(int pgNum, int width, int height, int box)
 		QPainter pp;
 		pp.begin(&image);
 		pp.setBrush(Qt::NoBrush);
-		pp.setPen(QPen(Qt::red, 1.0));
+		pp.setPen(QPen(Qt::red, 3.0));
 		pp.translate(0, bh);
 		pp.scale(scale, -scale);
 		pp.drawRect(cRect);

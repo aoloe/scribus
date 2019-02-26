@@ -465,21 +465,21 @@ void Scribus12Format::PasteItem(struct CopyPasteBuffer *Buffer, bool drag, bool 
 	currItem->isBookmark = Buffer->isBookmark;
 	currItem->setIsAnnotation(Buffer->m_isAnnotation);
 	currItem->setAnnotation(Buffer->m_annotation);
-	if (!Buffer->AnName.isEmpty())
+	if (!Buffer->itemName.isEmpty())
 	{
 		if (!drag)
 		{
-			if (currItem->itemName() == Buffer->AnName)
+			if (currItem->itemName() == Buffer->itemName)
 				currItem->AutoName = true;
 			else
 			{
-				currItem->setItemName(Buffer->AnName);
+				currItem->setItemName(Buffer->itemName);
 				currItem->AutoName = false;
 			}
 		}
 		else
 		{
-			currItem->setItemName(Buffer->AnName);
+			currItem->setItemName(Buffer->itemName);
 			currItem->AutoName = false;
 		}
 	}
@@ -517,8 +517,8 @@ void Scribus12Format::PasteItem(struct CopyPasteBuffer *Buffer, bool drag, bool 
 	currItem->setStartArrowScale(Buffer->startArrowScale);
 	currItem->setEndArrowScale(Buffer->endArrowScale);
 	currItem->NamedLStyle = Buffer->NamedLStyle;
-	currItem->Cols = Buffer->Cols;
-	currItem->ColGap = Buffer->ColGap;
+	currItem->m_columns = Buffer->Cols;
+	currItem->m_columnGap = Buffer->ColGap;
 	currItem->setFirstLineOffset(Buffer->firstLineOffsetP);
 	if (Buffer->LayerID != -1)
 		currItem->setLayer(Buffer->LayerID);
@@ -1550,7 +1550,7 @@ void Scribus12Format::GetItemProps(QDomElement *obj, struct CopyPasteBuffer *OB,
 		OB->m_annotation.setExtern(efp.absoluteFilePath());
 	}
 	OB->m_annotation.setZiel(obj->attribute("ANZIEL", "0").toInt());
-	OB->AnName=obj->attribute("ANNAME","");
+	OB->itemName=obj->attribute("ANNAME","");
 	OB->m_annotation.setToolTip(obj->attribute("ANTOOLTIP",""));
 	OB->m_annotation.setRollOver(obj->attribute("ANROLL",""));
 	OB->m_annotation.setDown(obj->attribute("ANDOWN",""));

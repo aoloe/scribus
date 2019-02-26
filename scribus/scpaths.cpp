@@ -223,22 +223,22 @@ const QString&  ScPaths::sampleScriptDir() const
 	return m_sampleScriptDir;
 }
 
-const QString&  ScPaths::scriptDir() const
+const QString& ScPaths::scriptDir() const
 {
 	return m_scriptDir;
 }
 
-const QString&  ScPaths::templateDir() const
+const QString& ScPaths::templateDir() const
 {
 	return m_templateDir;
 }
 
-const QString&  ScPaths::shareDir() const
+const QString& ScPaths::shareDir() const
 {
 	return m_shareDir;
 }
 
-const QString&  ScPaths::qmlDir() const
+const QString& ScPaths::qmlDir() const
 {
 	return m_qmlDir;
 }
@@ -390,6 +390,15 @@ QStringList ScPaths::systemFontDirs()
 	fontDirs.append("/Network/Library/Fonts/");
 	fontDirs.append("/System/Library/Fonts/");
 #elif defined(_WIN32)
+	QDir d;
+	QString localFontDir = windowsSpecialDir(CSIDL_LOCAL_APPDATA)+"Microsoft/Windows/Fonts"; // Added by Windows 10 1809
+	QString roamingFontDir = windowsSpecialDir(CSIDL_APPDATA)+"Microsoft/Windows/Fonts"; // Added by Windows 10 1809
+	d.setPath(localFontDir);
+	if (d.exists())
+		fontDirs.append(localFontDir);
+	d.setPath(roamingFontDir);
+	if (d.exists())
+		fontDirs.append(roamingFontDir);
 	fontDirs.append(windowsSpecialDir(CSIDL_FONTS));
 #endif
 	return fontDirs;

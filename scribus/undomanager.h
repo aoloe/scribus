@@ -480,6 +480,7 @@ public:
 	static QString ImageScaling;
 	static QString FrameSize;
 	static QString FreeScaling;
+	static QString FrameFill;
 	static QString KeepRatio;
 	static QString BreakRatio;
 	static QString EditContourLine;

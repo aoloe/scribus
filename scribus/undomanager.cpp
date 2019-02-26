@@ -704,6 +704,7 @@ void UndoManager::languageChange()
 	UndoManager::ChangeMeshGradient = tr("Change mesh gradient");
 	UndoManager::Mode               = tr("Change Mode");
 	UndoManager::FreeScaling        = tr("Free scaling");
+	UndoManager::FrameFill          = tr("Fill frame");
 	UndoManager::KeepRatio          = tr("Keep aspect ratio");
 	UndoManager::BreakRatio         = tr("Break aspect ratio");
 	UndoManager::EditContourLine    = tr("Edit contour line");
@@ -989,6 +990,7 @@ QString UndoManager::PageNmbr           = "";
 QString UndoManager::ImageScaling       = "";
 QString UndoManager::FrameSize          = "";
 QString UndoManager::FreeScaling        = "";
+QString UndoManager::FrameFill          = "";
 QString UndoManager::KeepRatio          = "";
 QString UndoManager::BreakRatio         = "";
 QString UndoManager::EditContourLine    = "";

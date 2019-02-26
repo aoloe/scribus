@@ -186,6 +186,16 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="rejectedFontsTab">
+      <attribute name="title">
+       <string>Rejected Fonts</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="QListWidget" name="fontsRejectedLstWidget"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>

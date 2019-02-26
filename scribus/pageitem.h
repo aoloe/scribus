@@ -216,6 +216,12 @@ public:	// Start enumerator definitions
 		Round		= 2,
 		Other		= 3
 	};
+
+	enum class ImageScaleMode {
+		free,
+		fit,
+		fill
+	};
 		//End enumerator definitions
 
 	// This property may not hang around for too long, but should be useful
@@ -724,8 +730,8 @@ public: // Start public functions
 	bool keepAspectRatio() const { return AspectRatio; }
 	void setKeepAspectRatio(bool val) { AspectRatio = val; }
 	//
-	bool fitImageToFrame() const { return !ScaleType; }
-	void setFitImageToFrame(bool val) { ScaleType = !val; }
+	bool fitImageToFrame() const { return m_scaleMode == ImageScaleMode::fit; }
+	void setFitImageToFrame(bool val) { m_scaleMode = ImageScaleMode::fit; } // TODO: make sure that this function is never called with val false
 	bool isImageInline() const { return isInlineImage; }
 	void setImageInline(bool val) { isInlineImage = val; }
 	void setInlineExt(const QString& val) { inlineExt = val; }
@@ -1031,7 +1037,8 @@ public: // Start public functions
 	 * @param freeScale is the scaling free (not forced to frame size)
 	 * @param keepRatio should the image's aspect ratio be respected
 	 */
-	void setImageScalingMode(bool freeScale, bool keepRatio);
+	void setImageScalingMode(bool freeScale, bool keepRatio); // TODO: replace with the one with ImageScaleMode as argument type
+	void setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio);
 
 	/** @brief Lock or unlock this pageitem. */
 	void toggleLock();
@@ -1346,7 +1353,8 @@ public:	// Start public variables
 	double OldH2;
 	bool Sizing;
 	int  m_layerID;
-	bool ScaleType;
+	bool ScaleType; // TODO: remove and use scaleMode instead
+	ImageScaleMode m_scaleMode{ImageScaleMode::free};
 	bool AspectRatio;
 	QVector<double> DashValues;
 	double DashOffset;

@@ -255,6 +255,16 @@
         </property>
        </widget>
       </item>
+      <item row="8" column="0">
+       <widget class="QRadioButton" name="fillScale">
+        <property name="toolTip">
+         <string>Make the image fill the frame</string>
+        </property>
+        <property name="text">
+         <string>F&amp;ill Frame</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -420,6 +430,7 @@
   <tabstop>keepImageWHRatioButton</tabstop>
   <tabstop>keepImageDPIRatioButton</tabstop>
   <tabstop>frameScale</tabstop>
+  <tabstop>fillScale</tabstop>
   <tabstop>cbProportional</tabstop>
   <tabstop>inputProfiles</tabstop>
   <tabstop>renderIntent</tabstop>

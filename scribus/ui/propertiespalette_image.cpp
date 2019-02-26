@@ -87,6 +87,7 @@ PropertiesPalette_Image::PropertiesPalette_Image( QWidget* parent) : QWidget(par
 	keepImageDPIRatioButton->setAutoRaise( true );
 
 	frameScale->setText( tr("&To Frame Size"));
+	fillScale->setText( tr("F&ill Frame"));
 
 	cbProportional->setEnabled( false );
 	cbProportional->setText( "P&roportional" );
@@ -106,6 +107,7 @@ PropertiesPalette_Image::PropertiesPalette_Image( QWidget* parent) : QWidget(par
 	connect(keepImageDPIRatioButton, SIGNAL(clicked())       , this, SLOT(handleImageDPIRatio()));
 	connect(freeScale          , SIGNAL(clicked())           , this, SLOT(handleScaling()));
 	connect(frameScale         , SIGNAL(clicked())           , this, SLOT(handleScaling()));
+	connect(fillScale, &QRadioButton::clicked, this, &PropertiesPalette_Image::handleScaling);
 	connect(cbProportional     , SIGNAL(stateChanged(int))   , this, SLOT(handleScaling()));
 	connect(imgEffectsButton   , SIGNAL(clicked())           , this, SLOT(handleImageEffects()));
 	connect(imgExtProperties   , SIGNAL(clicked())           , this, SLOT(handleExtImgProperties()));

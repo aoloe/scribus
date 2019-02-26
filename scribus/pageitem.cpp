@@ -193,6 +193,7 @@ PageItem::PageItem(const PageItem & other)
 	Sizing(other.Sizing),
 	m_layerID(other.m_layerID),
 	ScaleType(other.ScaleType),
+	// m_scaleMode{other.scaleMode}; // TODO: activate this as soon in prefs
 	AspectRatio(other.AspectRatio),
 	DashValues(other.DashValues),
 	DashOffset(other.DashOffset),
@@ -651,6 +652,7 @@ PageItem::PageItem(ScribusDoc *pa, ItemType newType, double x, double y, double 
 	groupHeight = 1.0;
 	m_layerID = m_Doc->activeLayer();
 	ScaleType = true;
+	m_scaleMode = ImageScaleMode::free;
 	AspectRatio = true;
 	NamedLStyle = "";
 	DashValues.clear();
@@ -4221,22 +4223,47 @@ void PageItem::flipImageV()
 
 void PageItem::setImageScalingMode(bool freeScale, bool keepRatio)
 {
-	if (ScaleType == freeScale && AspectRatio == keepRatio)
+	qDebug() << "Deprecated: use setImageScalingMode() with ImageScaleMode instead";
+	setImageScalingMode(freeScale ? ImageScaleMode::free : ImageScaleMode::fit, keepRatio);
+}
+
+void PageItem::setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio)
+{
+	if (scaleMode == ImageScaleMode::free && AspectRatio == keepRatio)
+	{
+		m_scaleMode = scaleMode;
+		update();
 		return;
+	}
+
 	if (UndoManager::undoEnabled())
 	{
-		QString from = ScaleType ? Um::FreeScaling : Um::FrameSize;
+		QString from = "";
+		if (m_scaleMode == ImageScaleMode::free)
+			from += Um::FreeScaling;
+		else if (m_scaleMode == ImageScaleMode::fit)
+			from += Um::FrameSize;
+		else if (m_scaleMode == ImageScaleMode::fill)
+			from += Um::FrameFill; // TODO: create Um::FrameFill
 		from += ", ";
 		from += AspectRatio ? Um::KeepRatio : Um::BreakRatio;
-		QString to = freeScale ? Um::FreeScaling : Um::FrameSize;
+
+		QString to = "";
+		if (m_scaleMode == ImageScaleMode::free)
+			to += Um::FreeScaling;
+		else if (m_scaleMode == ImageScaleMode::fit)
+			to += Um::FrameSize;
+		else if (m_scaleMode == ImageScaleMode::fill)
+			to += Um::FrameFill; // TODO: create Um::FrameFill
 		to += ", ";
 		to += keepRatio ? Um::KeepRatio : Um::BreakRatio;
+
 		SimpleState *ss = new SimpleState(Um::ImageScaling, QString(Um::FromTo).arg(from, to), Um::IImageScaling);
 		ss->set("SCALE_MODE");
-		if (freeScale != ScaleType)
+		if (scaleMode != m_scaleMode)
 		{
-			ss->set("SCALE_TYPE", freeScale);
-			if (!freeScale)
+			ss->set("SCALE_TYPE", static_cast<int>(m_scaleMode));
+			if (scaleMode == ImageScaleMode::fill)
 			{
 				//if switching from free scaling to frame size
 				//in undo must be offset and scale saved
@@ -4251,13 +4278,13 @@ void PageItem::setImageScalingMode(bool freeScale, bool keepRatio)
 			ss->set("ASPECT_RATIO", keepRatio);
 		undoManager->action(this, ss);
 	}
-	if (!freeScale)
+	if (scaleMode != ImageScaleMode::free)
 	{
 		m_imageXOffset = 0.0;
 		m_imageYOffset = 0.0;
 		m_imageRotation = 0;
 	}
-	ScaleType = freeScale;
+	m_scaleMode = scaleMode;
 	AspectRatio = keepRatio;
 	adjustPictScale();
 	update();
@@ -7099,7 +7126,7 @@ void PageItem::restoreTextFlowing(SimpleState *state, bool isUndo)
 
 void PageItem::restoreImageScaleMode(SimpleState *state, bool isUndo)
 {
-	bool type=ScaleType;
+	bool type=ScaleType; // TODO: move to m_scaleMode
 	if (state->contains("SCALE_TYPE"))
 	{
 		if (isUndo)
@@ -9733,7 +9760,7 @@ void PageItem::adjustPictScale()
 {
 	if (itemType() != PageItem::ImageFrame)
 		return;
-	if (ScaleType)
+	if (m_scaleMode == ImageScaleMode::free)
 		return;
 	if (OrigW == 0 || OrigH == 0)
 		return;
@@ -10150,7 +10177,7 @@ void PageItem::moveImageInFrame(double dX, double dY)
 	if (imageFlippedV())
 		dY = -dY;
 
-	if (!ScaleType)
+	if (m_scaleMode != PageItem::ImageScaleMode::free)
 	{
 		if (!AspectRatio)
 			return;

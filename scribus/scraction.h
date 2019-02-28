@@ -35,7 +35,7 @@ class SCRIBUS_API ScrAction : public QAction
 	Q_OBJECT
 
 public:
-	typedef enum {Normal, DataInt, DataDouble, DataQString, RecentFile, DLL, Window, RecentScript, UnicodeChar, Layer, ActionDLL, RecentPaste, ActionDLLSE } ActionType;
+	typedef enum {Normal, DataInt, DataDouble, DataQString, RecentFile, DLL, Window, RecentScript, UserScript, UnicodeChar, Layer, ActionDLL, RecentPaste, ActionDLLSE } ActionType;
 	
 	/*!
 		\author Craig Bradney

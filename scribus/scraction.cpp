@@ -114,6 +114,8 @@ void ScrAction::triggeredToTriggeredData()
 		emit triggeredData(data().toString());
 	if (m_actionType==ScrAction::RecentScript)
 		emit triggeredData(data().toString());
+	if (m_actionType==ScrAction::UserScript)
+		emit triggeredData(data().toString());
 	if (m_actionType==ScrAction::UnicodeChar)
 		emit triggeredUnicodeShortcut(data().toInt());
 	if (m_actionType==ScrAction::Layer)
@@ -142,6 +144,8 @@ void ScrAction::toggledToToggledData(bool ison)
 		if (m_actionType==ScrAction::RecentPaste)
 			emit toggledData(ison, data().toString());
 		if (m_actionType==ScrAction::RecentScript)
+			emit toggledData(ison, text());
+		if (m_actionType==ScrAction::UserScript)
 			emit toggledData(ison, text());
 		if (m_actionType==ScrAction::Layer)
 			emit toggledData(ison, data().toInt());

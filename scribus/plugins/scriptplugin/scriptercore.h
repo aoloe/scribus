@@ -33,11 +33,13 @@ public:
 	QString returnString;
 	/** @brief String representation of line of code to be passed to the Python interactive interpreter */
 	QString inValue;
+	QStringList getUserScriptsPaths() { return m_userScriptsPaths; }
 
 public slots:
 	void runScriptDialog();
 	void StdScript(const QString& filebasename);
 	void RecentScript(const QString& fn);
+	void runUserScript(const QString& script);
 	void slotRunScriptFile(const QString& fileName, bool inMainInterpreter = false);
 	void slotRunScriptFile(const QString& fileName, QStringList arguments, bool inMainInterpreter = false);
 	void slotRunPythonScript(); // needed for running python script from CLI
@@ -78,9 +80,13 @@ protected:
 	PythonConsole *pcon;
 	QStringList SavedRecentScripts;
 	QStringList RecentScripts;
+	QStringList m_userScriptsPaths;
+	bool m_userScriptsEnabled{false};
+	QStringList m_userScripts;
 	MenuManager *menuMgr;
 	QMap<QString, QPointer<ScrAction> > scrScripterActions;
 	QMap<QString, QPointer<ScrAction> > scrRecentScriptActions;
+	QMap<QString, QPointer<ScrAction> > scrUserScriptActions;
 
 	// Preferences
 	/** \brief pref: Enable access to main interpreter and 'extension scripts' */
@@ -89,6 +95,9 @@ protected:
 	bool m_importAllNames;
 	/** \brief pref: Load this script on startup */
 	QString m_startupScript;
+private:
+	QStringList getUserScripts(QStringList paths);
+	void rebuildUserScriptsMenu();
 };
 
 #endif

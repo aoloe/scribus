@@ -47,7 +47,7 @@ Prefs_Fonts::Prefs_Fonts(QWidget* parent, ScribusDoc* doc)
 	CurrentPath = "";
 	m_askBeforeSubstitute = true;
 
-	setMinimumSize(fontMetrics().width( tr( "Available Fonts" )+ tr( "Font Substitutions" )+ tr( "Additional Paths" ))+180, 200);
+	setMinimumSize(fontMetrics().width( tr( "Available Fonts" )+ tr( "Font Substitutions" )+ tr( "Additional Paths" )+ tr( "Rejected Fonts" ))+180, 200);
 
 	fontListTableView->setModel(new FontListModel(fontListTableView, m_doc, true));
 
@@ -206,6 +206,23 @@ void Prefs_Fonts::restoreDefaults(struct ApplicationPrefs *prefsData)
 		a++;
 	}
 	deleteSubstitutionButton->setEnabled(false);
+	// fontsRejectedTableWidget->headerView()->resizeSection(0, 500);
+	auto headerView = fontsRejectedTableWidget->horizontalHeader();
+	headerView->resizeSection(0, 150);
+	headerView->resizeSection(1, 250);
+	headerView->setStretchLastSection(true);
+	int i{0};
+	for (const auto& font: prefsData->fontPrefs.AvailFonts.m_rejectedFonts)
+	{
+		fontsRejectedTableWidget->insertRow (i);
+		fontsRejectedTableWidget->setItem(i, 0,
+			new QTableWidgetItem(QFileInfo(font.second).baseName()));
+		fontsRejectedTableWidget->setItem(i, 1,
+			new QTableWidgetItem(font.second));
+		fontsRejectedTableWidget->setItem(i, 2,
+			new QTableWidgetItem(font.first));
+		i++;
+	}
 	updateFontList();
 }
 

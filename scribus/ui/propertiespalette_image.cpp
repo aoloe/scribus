@@ -479,13 +479,25 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 
 		imgEffectsButton->setVisible(m_item->imageIsAvailable && m_item->isRaster);
 		imgExtProperties->setVisible(m_item->imageIsAvailable && m_item->pixm.imgInfo.valid);
-		bool setter = m_item->ScaleType;
-		freeScale->setChecked(setter);
-		frameScale->setChecked(!setter);
+
+		auto scaleMode = m_item->m_scaleMode;
+		switch (scaleMode) {
+			case PageItem::ImageScaleMode::free:
+				freeScale->setChecked(true);
+			break;
+			case PageItem::ImageScaleMode::fit:
+				frameScale->setChecked(true);
+			break;
+			case PageItem::ImageScaleMode::fill:
+				fillScale->setChecked(true);
+			break;
+		}
+
 		if ((m_item->asLatexFrame()) || (m_item->asOSGFrame()))
 		{
 			freeScale->setEnabled(false);
 			frameScale->setEnabled(false);
+			fillScale->setEnabled(false);
 			cbProportional->setEnabled(false);
 			imageXScaleSpinBox->setEnabled(false);
 			imageYScaleSpinBox->setEnabled(false);
@@ -494,17 +506,20 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 		}
 		else
 		{
-			imageXScaleSpinBox->setEnabled(setter);
-			imageYScaleSpinBox->setEnabled(setter);
-			imgDpiX->setEnabled(setter);
-			imgDpiY->setEnabled(setter);
-			cbProportional->setEnabled(!setter);
+
+			bool isFree = (scaleMode == PageItem::ImageScaleMode::free);
+			imageXScaleSpinBox->setEnabled(isFree);
+			imageYScaleSpinBox->setEnabled(isFree);
+			imgDpiX->setEnabled(isFree);
+			imgDpiY->setEnabled(isFree);
+			cbProportional->setEnabled(scaleMode == PageItem::ImageScaleMode::fit);
 			cbProportional->setChecked(m_item->AspectRatio);
 			freeScale->setEnabled(true);
 			frameScale->setEnabled(true);
+			fillScale->setEnabled(true);
 			//Necessary for undo action
-			keepImageWHRatioButton->setEnabled(setter);
-			keepImageDPIRatioButton->setEnabled(setter);
+			keepImageWHRatioButton->setEnabled(isFree);
+			keepImageDPIRatioButton->setEnabled(isFree);
 			keepImageWHRatioButton->setChecked(m_item->AspectRatio);
 			keepImageDPIRatioButton->setChecked(m_item->AspectRatio);
 		}
@@ -515,7 +530,7 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 		double rangeMin{-16777215};
 		double rangeMaxX{16777215 * m_unitRatio};
 		double rangeMaxY{16777215 * m_unitRatio};
-		if (!setter)
+		if (scaleMode == PageItem::ImageScaleMode::fit)
 		{
 			if (m_item->AspectRatio)
 			{
@@ -622,12 +637,20 @@ void PropertiesPalette_Image::handleScaling()
 
 	// here there was code setting which widgets are enabled
 	// when the scaling type changes. but, finally,
-	// handleSelectionChanged() and setCurItem() get called
+	// handleSelectionChanged() and setCurrentItem() get called
 	// and overwrite what has been done here.
 
 	if ((m_haveDoc) && (m_haveItem))
 	{
-		m_item->setImageScalingMode(freeScale->isChecked(), cbProportional->isChecked());
+		// m_item->setImageScalingMode(freeScale->isChecked(), cbProportional->isChecked());
+		PageItem::ImageScaleMode scaleMode;
+		if (freeScale->isChecked())
+			scaleMode = PageItem::ImageScaleMode::free;
+		else if (frameScale->isChecked())
+			scaleMode = PageItem::ImageScaleMode::fit;
+		else if (fillScale->isChecked())
+			scaleMode = PageItem::ImageScaleMode::fill;
+		m_item->setImageScalingMode(scaleMode, cbProportional->isChecked());
 		m_doc->changed();
 		emit UpdtGui(PageItem::ImageFrame);
 	}

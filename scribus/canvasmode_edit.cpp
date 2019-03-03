@@ -417,8 +417,7 @@ void CanvasMode_Edit::mouseMoveEvent(QMouseEvent *m)
 			{
 				if (m->modifiers() & Qt::ShiftModifier)
 				{
-					// only rotate if free scale
-					if (currItem->ScaleType)
+					if (currItem->m_scaleMode == PageItem::ImageScaleMode::free)
 					{
 						m_view->setCursor(IconManager::instance()->loadCursor("Rotieren2.png"));
 						QTransform p = currItem->getTransform();

@@ -651,7 +651,6 @@ PageItem::PageItem(ScribusDoc *pa, ItemType newType, double x, double y, double 
 	groupWidth = 1.0;
 	groupHeight = 1.0;
 	m_layerID = m_Doc->activeLayer();
-	ScaleType = true;
 	m_scaleMode = ImageScaleMode::free;
 	AspectRatio = true;
 	NamedLStyle = "";
@@ -4244,7 +4243,7 @@ void PageItem::setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio)
 		else if (m_scaleMode == ImageScaleMode::fit)
 			from += Um::FrameSize;
 		else if (m_scaleMode == ImageScaleMode::fill)
-			from += Um::FrameFill; // TODO: create Um::FrameFill
+			from += Um::FrameFill;
 		from += ", ";
 		from += AspectRatio ? Um::KeepRatio : Um::BreakRatio;
 
@@ -4254,7 +4253,7 @@ void PageItem::setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio)
 		else if (m_scaleMode == ImageScaleMode::fit)
 			to += Um::FrameSize;
 		else if (m_scaleMode == ImageScaleMode::fill)
-			to += Um::FrameFill; // TODO: create Um::FrameFill
+			to += Um::FrameFill;
 		to += ", ";
 		to += keepRatio ? Um::KeepRatio : Um::BreakRatio;
 
@@ -4262,7 +4261,8 @@ void PageItem::setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio)
 		ss->set("SCALE_MODE");
 		if (scaleMode != m_scaleMode)
 		{
-			ss->set("SCALE_TYPE", static_cast<int>(m_scaleMode));
+			ss->set("OLD_SCALE_TYPE", static_cast<int>(m_scaleMode));
+			ss->set("NEW_SCALE_TYPE", static_cast<int>(scaleMode));
 			if (scaleMode != ImageScaleMode::free)
 			{
 				//if switching from free scaling to frame size
@@ -7126,16 +7126,16 @@ void PageItem::restoreTextFlowing(SimpleState *state, bool isUndo)
 
 void PageItem::restoreImageScaleMode(SimpleState *state, bool isUndo)
 {
-	bool type=ScaleType; // TODO: move to m_scaleMode
-	if (state->contains("SCALE_TYPE"))
+	auto scaleMode = m_scaleMode;
+	if (state->contains("SCALE_MODE"))
 	{
 		if (isUndo)
-			type = !state->getBool("SCALE_TYPE");
+			scaleMode = static_cast<ImageScaleMode>(state->getInt("OLD_SCALE_TYPE"));
 		else
-			type = state->getBool("SCALE_TYPE");
+			scaleMode = static_cast<ImageScaleMode>(state->getInt("NEW_SCALE_TYPE"));
 		//if restoring free scaling
 		//old offset and scale ratio must be restored
-		if (type)
+		if (scaleMode == ImageScaleMode::free)
 		{
 			double oscx = state->getDouble("OLD_IMAGEXSCALE");
 			double oscy = state->getDouble("OLD_IMAGEYSCALE");
@@ -7167,7 +7167,7 @@ void PageItem::restoreImageScaleMode(SimpleState *state, bool isUndo)
 			ratio = state->getBool("ASPECT_RATIO");
 	}
 
-	setImageScalingMode(type, ratio);
+	setImageScalingMode(scaleMode, ratio);
 }
 
 void PageItem::restoreImageScaleChange(SimpleState *state, bool isUndo)

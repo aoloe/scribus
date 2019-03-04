@@ -526,8 +526,8 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 
 		bool xEnabled{true};
 		bool yEnabled{true};
-		bool rotationEnabled{true};
-		double rangeMin{-16777215};
+		double rangeMinX{-16777215};
+		double rangeMinY{-16777215};
 		double rangeMaxX{16777215 * m_unitRatio};
 		double rangeMaxY{16777215 * m_unitRatio};
 		if (scaleMode == PageItem::ImageScaleMode::fit)
@@ -542,18 +542,26 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 				xEnabled = false;
 				yEnabled = false;
 			}
-			rotationEnabled = false;
-			rangeMin = 0.0;
+			rangeMinX = rangeMinY = 0.0;
 			rangeMaxX = (m_item->width() - m_item->OrigW * m_item->imageXScale()) * m_unitRatio;
 			rangeMaxY = (m_item->height() - m_item->OrigH * m_item->imageYScale()) * m_unitRatio;
 		}
+		else if (scaleMode == PageItem::ImageScaleMode::fill)
+		{
+			xEnabled = m_item->isImageFittingHorizontal();
+			yEnabled = m_item->isImageFittingVertical();
+			rangeMinX = (m_item->width() - m_item->OrigW * m_item->imageXScale()) * m_unitRatio;
+			rangeMinY = (m_item->height() - m_item->OrigH * m_item->imageYScale()) * m_unitRatio;
+			rangeMaxX = rangeMaxY = 0.0;
+		}
 		imageXOffsetSpinBox->setEnabled(xEnabled);
 		if (xEnabled)
-			imageXOffsetSpinBox->setValues(rangeMin, rangeMaxX, unitGetPrecisionFromIndex(m_unitIndex), 0);
+			imageXOffsetSpinBox->setValues(rangeMinX, rangeMaxX, unitGetPrecisionFromIndex(m_unitIndex), 0);
 		imageYOffsetSpinBox->setEnabled(yEnabled);
 		if (yEnabled)
-			imageYOffsetSpinBox->setValues(rangeMin, rangeMaxY, unitGetPrecisionFromIndex(m_unitIndex), 0);
-		imageRotation->setEnabled(rotationEnabled);
+			imageYOffsetSpinBox->setValues(rangeMinY, rangeMaxY, unitGetPrecisionFromIndex(m_unitIndex), 0);
+
+		imageRotation->setEnabled(scaleMode == PageItem::ImageScaleMode::free);
 
 		imageXScaleSpinBox->blockSignals(false);
 		imageYScaleSpinBox->blockSignals(false);
@@ -642,7 +650,6 @@ void PropertiesPalette_Image::handleScaling()
 
 	if ((m_haveDoc) && (m_haveItem))
 	{
-		// m_item->setImageScalingMode(freeScale->isChecked(), cbProportional->isChecked());
 		PageItem::ImageScaleMode scaleMode;
 		if (freeScale->isChecked())
 			scaleMode = PageItem::ImageScaleMode::free;

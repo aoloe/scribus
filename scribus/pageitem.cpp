@@ -10158,30 +10158,44 @@ void PageItem::moveImageInFrame(double dX, double dY)
 	if (imageFlippedV())
 		dY = -dY;
 
+	auto overflowX = OrigW - m_width / m_imageXScale;
+	auto overflowY = OrigH - m_height / m_imageYScale;
+
 	if (m_scaleMode == PageItem::ImageScaleMode::fit)
 	{
 		if (!AspectRatio)
 			return;
 		if (isImageFittingHorizontal())
 			dX = 0;
+		else
+		{
+			dX = qMax(dX, -m_imageXOffset);
+			dX = qMin(dX, - (overflowX + m_imageXOffset));
+		}
 		if (isImageFittingVertical())
 			dY = 0;
-		dX = qMax(dX, -m_imageXOffset);
-		dY = qMax(dY, -m_imageYOffset);
-		dX = qMin(dX, m_width / m_imageXScale - OrigW - m_imageXOffset);
-		dY = qMin(dY, m_height / m_imageYScale - OrigH - m_imageYOffset);
+		else
+		{
+			dY = qMax(dY, -m_imageYOffset);
+			dY = qMin(dY, - (overflowY + m_imageYOffset));
+		}
 	}
 	else if (m_scaleMode == PageItem::ImageScaleMode::fill)
 	{
-		// TODO: currently just inverted fit... and it does not work
 		if (isImageFittingHorizontal())
 			dY = 0;
+		else
+		{
+			dY = qMax(dY, -m_imageYOffset);
+			dY = qMin(dY, -(overflowY + m_imageYOffset));
+		}
 		if (isImageFittingVertical())
 			dX = 0;
-		dX = qMax(dX, -m_imageXOffset);
-		dY = qMax(dY, -m_imageYOffset);
-		dX = qMin(dX, m_width / m_imageXScale - OrigW - m_imageXOffset);
-		dY = qMin(dY, m_height / m_imageYScale - OrigH - m_imageYOffset);
+		else
+		{
+			dX = qMin(dX, -m_imageXOffset); // right boundary
+			dX = qMax(dX, - (overflowX + m_imageXOffset)); // left boundary
+		}
 	}
 
 	moveImageXYOffsetBy(dX, dY);

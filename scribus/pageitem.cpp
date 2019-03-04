@@ -4263,7 +4263,7 @@ void PageItem::setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio)
 		if (scaleMode != m_scaleMode)
 		{
 			ss->set("SCALE_TYPE", static_cast<int>(m_scaleMode));
-			if (scaleMode == ImageScaleMode::fill)
+			if (scaleMode != ImageScaleMode::free)
 			{
 				//if switching from free scaling to frame size
 				//in undo must be offset and scale saved
@@ -9766,44 +9766,23 @@ void PageItem::adjustPictScale()
 		return;
 	double xs = m_width / static_cast<double>(OrigW);
 	double ys = m_height / static_cast<double>(OrigH);
-	double imgXOffs = m_imageXOffset;
-	double imgYOffs = m_imageYOffset; 
-	double imageRot = fmod(m_imageRotation, 360);
-	if (imageRot != 0.0)
+	if (m_scaleMode == ImageScaleMode::fit)
 	{
-		QRectF br = QRectF(0, 0, OrigW, OrigH);
-		QTransform m;
-		m.rotate(m_imageRotation);
-		br = m.mapRect(br);
-		xs = m_width / br.width();
-		ys = m_height / br.height();
-		QLineF wL = QLineF(0, 0, OrigW, 0);
-		wL.setAngle(-m_imageRotation);
-		QLineF hL = QLineF(0, 0, 0, OrigH);
-		hL.setAngle(-m_imageRotation-90);
-		QTransform mm;
-		mm.scale(xs, ys);
-		hL = mm.map(hL);
-		wL = mm.map(wL);
-		xs = wL.length() / static_cast<double>(OrigW);
-		ys = hL.length() / static_cast<double>(OrigH);
-		m_imageXOffset = -br.x();
-		m_imageYOffset = -br.y();
+		if (AspectRatio)
+		{
+			m_imageXScale = qMin(xs, ys);
+			m_imageYScale = qMin(xs, ys);
+		}
+		else
+		{
+			m_imageXScale = xs;
+			m_imageYScale = ys;
+		}
 	}
-	if (AspectRatio)
+	else if (m_scaleMode == ImageScaleMode::fill)
 	{
-		m_imageXScale = qMin(xs, ys);
-		m_imageYScale = qMin(xs, ys);
-	}
-	else
-	{
-		m_imageXScale = xs;
-		m_imageYScale = ys;
-	}
-	if (m_Doc && m_Doc->isLoading())
-	{
-		m_imageXOffset = imgXOffs;
-		m_imageYOffset = imgYOffs;
+		m_imageXScale = qMax(xs, ys);
+		m_imageYScale = qMax(xs, ys);
 	}
 	if (!imageClip.empty())
 	{
@@ -10164,6 +10143,8 @@ void PageItem::updateConstants()
  * Apply the mouse movements for moving an image in the frame.
  * If the image fits the frame, constraint the movements
  * and make sure that the image does not overflow the frame.
+ * If the image fills the frame, constraint the movements
+ * and make sure that the image fills the frame.
  */
 void PageItem::moveImageInFrame(double dX, double dY)
 {
@@ -10177,7 +10158,7 @@ void PageItem::moveImageInFrame(double dX, double dY)
 	if (imageFlippedV())
 		dY = -dY;
 
-	if (m_scaleMode != PageItem::ImageScaleMode::free)
+	if (m_scaleMode == PageItem::ImageScaleMode::fit)
 	{
 		if (!AspectRatio)
 			return;
@@ -10185,6 +10166,18 @@ void PageItem::moveImageInFrame(double dX, double dY)
 			dX = 0;
 		if (isImageFittingVertical())
 			dY = 0;
+		dX = qMax(dX, -m_imageXOffset);
+		dY = qMax(dY, -m_imageYOffset);
+		dX = qMin(dX, m_width / m_imageXScale - OrigW - m_imageXOffset);
+		dY = qMin(dY, m_height / m_imageYScale - OrigH - m_imageYOffset);
+	}
+	else if (m_scaleMode == PageItem::ImageScaleMode::fill)
+	{
+		// TODO: currently just inverted fit... and it does not work
+		if (isImageFittingHorizontal())
+			dY = 0;
+		if (isImageFittingVertical())
+			dX = 0;
 		dX = qMax(dX, -m_imageXOffset);
 		dY = qMax(dY, -m_imageYOffset);
 		dX = qMin(dX, m_width / m_imageXScale - OrigW - m_imageXOffset);

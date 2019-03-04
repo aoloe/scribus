@@ -7148,7 +7148,7 @@ void PageItem::restoreImageScaleMode(SimpleState *state, bool isUndo)
 			m_Doc->itemSelection_SetImageOffset(ox, oy, &tempSelection);
 			m_Doc->itemSelection_SetImageRotation(orot, &tempSelection);
 		}
-		else
+		else if (m_scaleMode == ImageScaleMode::free)
 		{
 			state->set("OLD_IMAGEXOFFSET", m_imageXOffset);
 			state->set("OLD_IMAGEYOFFSET", m_imageYOffset);

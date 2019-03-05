@@ -2608,7 +2608,7 @@ void Scribus150Format::SetItemProps(ScXmlStreamWriter& docu, PageItem* item, con
 		docu.writeAttribute("LOCALY",item->imageYOffset());
 		docu.writeAttribute("LOCALROT" ,item->imageRotation());
 		docu.writeAttribute("PICART", item->imageVisible() ? 1 : 0);
-		docu.writeAttribute("SCALETYPE", item->ScaleType ? 1 : 0);
+		docu.writeAttribute("SCALETYPE", static_cast<int>(item->m_scaleMode));
 		docu.writeAttribute("RATIO", item->AspectRatio ? 1 : 0);
 	}
 	if (item->asTextFrame() || item->asPathText())

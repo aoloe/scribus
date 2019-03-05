@@ -625,7 +625,7 @@ PageItem *SVGPlug::finishNode(const QDomNode &e, PageItem* item)
 				item->setImageXYOffset(0.0, 0.0);
 				item->setImageXYScale(item->width() / (item->pixm.width() * (item->pixm.imgInfo.xres / 72.0)),
 									  item->height() / (item->pixm.height() * (item->pixm.imgInfo.yres / 72.0)));
-				item->setImageScalingMode(false, false); // fit to frame
+				item->setImageScalingMode(PageItem::ImageScaleMode::fit, false); // fit to frame
 			}
 			break;
 		}

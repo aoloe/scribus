@@ -220,7 +220,7 @@ void PageItem_ImageFrame::clearContents()
 		is->set("CI_PFILE", Pfile);
 		is->set("CI_FLIPPH",imageFlippedH());
 		is->set("CI_FLIPPV",imageFlippedV());
-		is->set("CI_SCALING",ScaleType);
+		is->set("CI_SCALING",static_cast<int>(m_scaleMode));
 		is->set("CI_ASPECT",AspectRatio);
 		is->set("CI_XOFF",imageXOffset());
 		is->set("CI_XSCALE",imageXScale());
@@ -245,7 +245,7 @@ void PageItem_ImageFrame::clearContents()
 	setImageFlippedH(false);
 	setImageFlippedV(false);
 	EmProfile = "";
-	ScaleType = m_Doc->prefsData().itemToolPrefs.imageScaleType;;
+	m_scaleMode = m_Doc->prefsData().itemToolPrefs.imageScaleType;
 	AspectRatio = m_Doc->prefsData().itemToolPrefs.imageAspectRatio;
 	setFillTransparency(0.0);
 	setLineTransparency(0.0);
@@ -330,13 +330,13 @@ void PageItem_ImageFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		UndoTransaction transaction;
 		if (UndoManager::undoEnabled())
 		{
-			if ((fitImageToFrame() || !controlDown) && (dX != 0.0 || dY != 0.0))
+			if ((isImageScaleFit() || !controlDown) && (dX != 0.0 || dY != 0.0))
 				transaction = undoManager->beginTransaction(getUName(), getUPixmap(), Um::ImageScale, "", Um::IMove);
 		}
 		if (dX != 0.0)
 		{
 			double newXScale = dX / 100.0 * m_imageXScale;
-			setImageScalingMode(true, AspectRatio);
+			setImageScalingMode(ImageScaleMode::free, AspectRatio);
 			setImageXScale(newXScale);
 			if (!controlDown)
 			{
@@ -347,7 +347,7 @@ void PageItem_ImageFrame::handleModeEditKey(QKeyEvent *k, bool& keyRepeat)
 		else if (dY != 0.0)
 		{
 			double newYScale = dY / 100.0 * m_imageYScale;
-			setImageScalingMode(true, AspectRatio);
+			setImageScalingMode(ImageScaleMode::free, AspectRatio);
 			setImageYScale(newYScale);
 			if (!controlDown)
 			{

@@ -25,6 +25,7 @@ for which a new license (GPL+exception) is in place.
 #include "scfonts.h"
 #include "scpattern.h"
 #include "vgradient.h"
+#include "pageitem.h"
 
 struct CheckerPrefs
 {
@@ -277,7 +278,7 @@ struct ItemToolPrefs
 	int imageStrokeColorShade; //! Default shade of stroke color of an image grame
 	double imageScaleX; //! X scale of an image within an image frame
 	double imageScaleY; //! Y scale of an image within an image frame
-	bool imageScaleType; //! Scale type of image
+	PageItem::ImageScaleMode imageScaleType; //! Scale type of image
 	bool imageAspectRatio; //! Use stored aspect ratio for the image
 	int imageLowResType; //! Preview type for an image frame
 	bool imageUseEmbeddedPath; //! Use embedded path, eg from an EPS etc.

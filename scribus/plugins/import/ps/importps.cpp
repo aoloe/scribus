@@ -866,7 +866,7 @@ bool EPSPlug::Image(QString vals)
 */
 	m_Doc->loadPict(filename, ite, -1);
 	ite->setRotation(angle);
-	ite->setImageScalingMode(false, true); // fit to frame, keep ratio
+	ite->setImageScalingMode(PageItem::ImageScaleMode::fit, true); // fit to frame, keep ratio
 //	m_Doc->view()->adjustItemSize(ite);
 	Elements.append(ite);
 	return ret == 0;

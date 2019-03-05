@@ -730,8 +730,12 @@ public: // Start public functions
 	bool keepAspectRatio() const { return AspectRatio; }
 	void setKeepAspectRatio(bool val) { AspectRatio = val; }
 	//
-	bool fitImageToFrame() const { return m_scaleMode == ImageScaleMode::fit; }
-	void setFitImageToFrame(bool val) { m_scaleMode = ImageScaleMode::fit; } // TODO: make sure that this function is never called with val false
+	void setImageScaleFree() { m_scaleMode = ImageScaleMode::free; }
+	void setImageScaleFit() { m_scaleMode = ImageScaleMode::fit; }
+	void setImageScaleFill() { m_scaleMode = ImageScaleMode::fill; }
+	bool isImageScaleFree() { return m_scaleMode == ImageScaleMode::free; }
+	bool isImageScaleFit() { return m_scaleMode == ImageScaleMode::fit; }
+	bool isImageScaleFill() { return m_scaleMode == ImageScaleMode::fill; }
 	bool isImageInline() const { return isInlineImage; }
 	void setImageInline(bool val) { isInlineImage = val; }
 	void setInlineExt(const QString& val) { inlineExt = val; }
@@ -1034,10 +1038,9 @@ public: // Start public functions
 
 	/**
 	 * @brief Set the image scaling mode.
-	 * @param freeScale is the scaling free (not forced to frame size)
+	 * @param scaleMode free, fit, or fill
 	 * @param keepRatio should the image's aspect ratio be respected
 	 */
-	void setImageScalingMode(bool freeScale, bool keepRatio); // TODO: replace with the one with ImageScaleMode as argument type
 	void setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio);
 
 	/** @brief Lock or unlock this pageitem. */

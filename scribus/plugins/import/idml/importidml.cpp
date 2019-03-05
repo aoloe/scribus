@@ -2602,12 +2602,12 @@ QList<PageItem*> IdmlPlug::parseItemXML(const QDomElement& itElem, const QTransf
 							item->isTempFile = true;
 							item->AspectRatio = true;
 							if (imageFit == "None")
-								item->ScaleType   = true;
+								item->setImageScaleFree();
 							else if (imageFit == "ContentToFrame")
-								item->ScaleType   = false;
+								item->setImageScaleFit();
 							else if (imageFit == "Proportionally")
 							{
-								item->ScaleType   = false;
+								item->setImageScaleFit();
 								item->AspectRatio = false;
 							}
 							m_Doc->loadPict(fileName, item);
@@ -2637,12 +2637,12 @@ QList<PageItem*> IdmlPlug::parseItemXML(const QDomElement& itElem, const QTransf
 					}
 					item->AspectRatio = true;
 					if (imageFit == "None")
-						item->ScaleType   = true;
+						item->setImageScaleFree();
 					else if (imageFit == "ContentToFrame")
-						item->ScaleType   = false;
+						item->setImageScaleFit();
 					else if (imageFit == "Proportionally")
 					{
-						item->ScaleType   = false;
+						item->setImageScaleFit();
 						item->AspectRatio = false;
 					}
 					m_Doc->loadPict(QUrl::fromPercentEncoding(fileName), item);

@@ -5602,7 +5602,7 @@ void ScribusDoc::itemAddDetails(const PageItem::ItemType itemType, const PageIte
 	{
 		case PageItem::ImageFrame:
 			newItem->setImageXYScale(m_docPrefsData.itemToolPrefs.imageScaleX, m_docPrefsData.itemToolPrefs.imageScaleY);
-			newItem->ScaleType = m_docPrefsData.itemToolPrefs.imageScaleType;
+			newItem->m_scaleMode = m_docPrefsData.itemToolPrefs.imageScaleType;
 			newItem->AspectRatio = m_docPrefsData.itemToolPrefs.imageAspectRatio;
 			newItem->IProfile = m_docPrefsData.colorPrefs.DCMSset.DefaultImageRGBProfile;
 			newItem->IRender = m_docPrefsData.colorPrefs.DCMSset.DefaultIntentImages;
@@ -15236,7 +15236,7 @@ void ScribusDoc::removeFromGroup(PageItem* item)
 	item->setXYPos(nX, nY, true);
 	item->rotateBy(-gRot);
 	item->setLineWidth(item->lineWidth() * qMax(grScXi, grScYi));
-	if (!item->ScaleType)
+	if (!item->isImageScaleFree())
 		item->adjustPictScale();
 	else
 	{
@@ -15742,7 +15742,7 @@ void ScribusDoc::itemSelection_AdjustImagetoFrameSize( Selection *customSelectio
 		if (currItem!=nullptr)
 		{
 			if (currItem->asImageFrame() && currItem->imageIsAvailable)
-				currItem->setImageScalingMode(false, true);
+				currItem->setImageScalingMode(PageItem::ImageScaleMode::fit, true);
 		}
 	}
 	regionsChanged()->update(QRectF());

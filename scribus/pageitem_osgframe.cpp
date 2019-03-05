@@ -118,7 +118,7 @@ void PageItem_OSGFrame::setImage(QImage &image)
 		delete tempFile;
 		isTempFile = true;
 	}
-	setImageScalingMode(false, true);
+	setImageScalingMode(ImageScaleMode::fit, true);
 }
 
 void PageItem_OSGFrame::clearContents()

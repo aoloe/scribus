@@ -1644,7 +1644,7 @@ PageItem* VivaPlug::parseObjectDetailsXML(const QDomElement& obNode, int baseTyp
 		if (baseType == 1)
 		{
 			item->AspectRatio = true;
-			item->ScaleType   = false;
+			item->setImageScaleFit();
 			bool erf = m_Doc->loadPict(imageFile, item);
 			if (!erf)
 			{
@@ -1662,7 +1662,7 @@ PageItem* VivaPlug::parseObjectDetailsXML(const QDomElement& obNode, int baseTyp
 							item->isInlineImage = true;
 							item->isTempFile = true;
 							item->AspectRatio = true;
-							item->ScaleType   = false;
+							item->setImageScaleFit();
 							m_Doc->loadPict(fileName, item);
 						}
 					}

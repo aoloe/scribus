@@ -1716,7 +1716,7 @@ PageItem* XpsPlug::createItem(QDomElement &dpg, ObjState &obState)
 						retObj->isInlineImage = true;
 						retObj->isTempFile = true;
 						retObj->AspectRatio = false;
-						retObj->ScaleType   = false;
+						retObj->setImageScaleFit();
 						m_Doc->loadPict(fileName, retObj);
 						retObj->adjustPictScale();
 					}

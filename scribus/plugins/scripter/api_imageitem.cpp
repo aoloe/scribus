@@ -196,9 +196,12 @@ void ImageAPI::scaleToFrame(bool scaleToFrame, bool proportional)
 		RAISE("Specified item not an image frame.");
 		return;
 	}
-	// Set the item to scale if appropriate. ScaleType 1 is free
-	// scale, 0 is scale to frame.
-	item->ScaleType = !scaleToFrame;
+	// TODO: modify the API to give access to ImageScaleMode::fill
+	// (probably by creating scaleFree, scaleToFrame, scaleToFill
+	if (scaleToFrame)
+		item->setImageScaleFit()
+	else
+		item->setImageScaleFree()
 	// Now, if the user has chosen to set the proportional mode,
 	// set it. 1 is proportional, 0 is free aspect.
 	item->AspectRatio = proportional;

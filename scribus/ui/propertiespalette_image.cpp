@@ -480,18 +480,12 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 		imgEffectsButton->setVisible(m_item->imageIsAvailable && m_item->isRaster);
 		imgExtProperties->setVisible(m_item->imageIsAvailable && m_item->pixm.imgInfo.valid);
 
-		auto scaleMode = m_item->m_scaleMode;
-		switch (scaleMode) {
-			case PageItem::ImageScaleMode::free:
-				freeScale->setChecked(true);
-			break;
-			case PageItem::ImageScaleMode::fit:
-				frameScale->setChecked(true);
-			break;
-			case PageItem::ImageScaleMode::fill:
-				fillScale->setChecked(true);
-			break;
-		}
+		if (m_item->isImageScaleFree())
+			freeScale->setChecked(true);
+		else if (m_item->isImageScaleFit())
+			frameScale->setChecked(true);
+		else if (m_item->isImageScaleFill())
+			fillScale->setChecked(true);
 
 		if ((m_item->asLatexFrame()) || (m_item->asOSGFrame()))
 		{
@@ -507,12 +501,12 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 		else
 		{
 
-			bool isFree = (scaleMode == PageItem::ImageScaleMode::free);
+			bool isFree = m_item->isImageScaleFree();
 			imageXScaleSpinBox->setEnabled(isFree);
 			imageYScaleSpinBox->setEnabled(isFree);
 			imgDpiX->setEnabled(isFree);
 			imgDpiY->setEnabled(isFree);
-			cbProportional->setEnabled(scaleMode == PageItem::ImageScaleMode::fit);
+			cbProportional->setEnabled(m_item->isImageScaleFit());
 			cbProportional->setChecked(m_item->AspectRatio);
 			freeScale->setEnabled(true);
 			frameScale->setEnabled(true);
@@ -530,7 +524,8 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 		double rangeMinY{-16777215};
 		double rangeMaxX{16777215 * m_unitRatio};
 		double rangeMaxY{16777215 * m_unitRatio};
-		if (scaleMode == PageItem::ImageScaleMode::fit)
+
+		if (m_item->isImageScaleFit())
 		{
 			if (m_item->AspectRatio)
 			{
@@ -546,7 +541,7 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 			rangeMaxX = (m_item->width() - m_item->OrigW * m_item->imageXScale()) * m_unitRatio;
 			rangeMaxY = (m_item->height() - m_item->OrigH * m_item->imageYScale()) * m_unitRatio;
 		}
-		else if (scaleMode == PageItem::ImageScaleMode::fill)
+		else if (m_item->isImageScaleFill())
 		{
 			xEnabled = m_item->isImageFittingHorizontal();
 			yEnabled = m_item->isImageFittingVertical();
@@ -561,7 +556,7 @@ void PropertiesPalette_Image::setCurrentItem(PageItem *item)
 		if (yEnabled)
 			imageYOffsetSpinBox->setValues(rangeMinY, rangeMaxY, unitGetPrecisionFromIndex(m_unitIndex), 0);
 
-		imageRotation->setEnabled(scaleMode == PageItem::ImageScaleMode::free);
+		imageRotation->setEnabled(m_item->isImageScaleFree());
 
 		imageXScaleSpinBox->blockSignals(false);
 		imageYScaleSpinBox->blockSignals(false);

@@ -2055,7 +2055,7 @@ void SvmPlug::handleImage(QDataStream &ds, qint64 posi, quint32 totalSize)
 			ite->isInlineImage = true;
 			ite->isTempFile = true;
 			ite->AspectRatio = false;
-			ite->ScaleType   = false;
+			ite->setImageScaleFit();
 			m_Doc->loadPict(fileName, ite);
 			ite->adjustPictScale();
 		}
@@ -2111,7 +2111,7 @@ void SvmPlug::handleImageEX(QDataStream &ds, qint64 posi, quint32 totalSize)
 			ite->isInlineImage = true;
 			ite->isTempFile = true;
 			ite->AspectRatio = false;
-			ite->ScaleType   = false;
+			ite->setImageScaleFit();
 			m_Doc->loadPict(fileName, ite);
 			ite->adjustPictScale();
 		}
@@ -4591,7 +4591,7 @@ void SvmPlug::handleEMFPDrawImageData(QPointF p1, QPointF p2, QPointF p3, quint8
 						m_Effects.clear();
 					}
 					m_Doc->loadPict(fileName, ite);
-					ite->setImageScalingMode(false, false);
+					ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 					ite->updateClip();
 					if (currentDC.clipPath.count() != 0)
 					{

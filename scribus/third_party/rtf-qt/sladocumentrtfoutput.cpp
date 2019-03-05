@@ -652,7 +652,7 @@ namespace RtfReader
 				item->isInlineImage = true;
 				item->isTempFile = true;
 				item->AspectRatio = true;
-				item->ScaleType   = false;
+				item->setImageScaleFit();
 				m_Doc->loadPict(fileName, item);
 				m_Doc->Items->takeAt(z);
 				item->isEmbedded = true;

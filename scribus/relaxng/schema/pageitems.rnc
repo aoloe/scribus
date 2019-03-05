@@ -109,7 +109,7 @@ grammar {
                         [impl:name="PicArt" impl:getter="imageShown" impl:setter="setImageShown"]
                         attribute PICART { xsd:boolean },
                         [impl:name="ScaleType"]
-                        attribute SCALETYPE { xsd:boolean },
+                        attribute SCALETYPE { xsd:int },
                         [impl:name="AspectRatio"]
                         attribute RATIO { xsd:boolean },
                         #[ impl:name="LocalRot" ]

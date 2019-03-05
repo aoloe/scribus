@@ -31,6 +31,7 @@ for which a new license (GPL+exception) is in place.
 #include "fileloader.h"
 #include "ui/missing.h"
 #include "ui/multiprogressdialog.h"
+#include "pageitem.h"
 #include "pageitem_imageframe.h"
 #include "pagesize.h"
 #include "prefscontext.h"
@@ -2959,7 +2960,7 @@ void EmfPlug::handleImage(qint32 dstX, qint32 dstY, qint32 dstW, qint32 dstH, co
 			ite->isInlineImage = true;
 			ite->isTempFile = true;
 			ite->AspectRatio = false;
-			ite->ScaleType   = false;
+			ite->setImageScaleFit();
 			if (currentDC.clipValid)
 			{
 				FPointArray cp = currentDC.clipPath.copy();
@@ -5720,7 +5721,7 @@ void EmfPlug::handleEMFPDrawImageData(QPointF p1, QPointF p2, QPointF p3, quint8
 						m_Effects.clear();
 					}
 					m_Doc->loadPict(fileName, ite);
-					ite->setImageScalingMode(false, false);
+					ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 					ite->updateClip();
 					if (currentDC.clipValid)
 					{

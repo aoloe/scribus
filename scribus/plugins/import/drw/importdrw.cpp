@@ -28,6 +28,7 @@ for which a new license (GPL+exception) is in place.
 
 #include "commonstrings.h"
 #include "loadsaveplugin.h"
+#include "pageitem.h"
 #include "pageitem_imageframe.h"
 #include "pagesize.h"
 #include "prefscontext.h"
@@ -907,7 +908,7 @@ void DrwPlug::decodeCmd(quint8 cmd, int pos)
 						tmpImage.save(fileName, "PNG");
 						m_Doc->loadPict(fileName, currentItem);
 						delete tempFile;
-						currentItem->setImageScalingMode(false, false);
+						currentItem->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 					}
 					imageValid = false;
 					tmpImage = QImage();

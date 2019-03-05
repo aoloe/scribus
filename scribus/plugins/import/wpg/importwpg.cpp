@@ -406,7 +406,7 @@ void ScrPainter::drawBitmap(const libwpg::WPGBitmap& bitmap, double hres, double
 	image.setDotsPerMeterY ((int) (vres / 0.0254));
 	image.save(fileName, "PNG");
 	m_Doc->loadPict(fileName, ite);
-	ite->setImageScalingMode(false, false);
+	ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 	ite->moveBy(m_Doc->currentPage()->xOffset(), m_Doc->currentPage()->yOffset());
 	finishItem(ite);
 //	qDebug() << "drawBitmap";

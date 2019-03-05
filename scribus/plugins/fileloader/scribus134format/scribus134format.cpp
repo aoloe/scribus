@@ -14,6 +14,7 @@ for which a new license (GPL+exception) is in place.
 #include "langmgr.h"
 #include "ui/missing.h"
 #include "hyphenator.h"
+#include "pageitem.h"
 #include "pageitem_latexframe.h"
 #include "pageitem_table.h"
 #include "prefsmanager.h"
@@ -1026,7 +1027,7 @@ void Scribus134Format::readToolSettings(ScribusDoc* doc, ScXmlStreamAttributes& 
 	doc->itemToolPrefs().lineEndArrow   = attrs.valueAsInt("EndArrow", 0);
 	doc->itemToolPrefs().imageScaleX      = attrs.valueAsDouble("PICTSCX", 1.0);
 	doc->itemToolPrefs().imageScaleY      = attrs.valueAsDouble("PICTSCY", 1.0);
-	doc->itemToolPrefs().imageScaleType   = attrs.valueAsBool("PSCALE", true);
+	doc->itemToolPrefs().imageScaleType   = static_cast<PageItem::ImageScaleMode>(attrs.valueAsInt("PSCALE", 0));
 	doc->itemToolPrefs().imageAspectRatio = attrs.valueAsBool("PASPECT", false);
 	doc->itemToolPrefs().imageLowResType  = attrs.valueAsInt("HalfRes", 1);
 	doc->itemToolPrefs().imageUseEmbeddedPath = attrs.valueAsBool("EmbeddedPath", false);
@@ -2555,7 +2556,7 @@ PageItem* Scribus134Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		if (pagenr > -2) 
 			currItem->OwnPage = pagenr;
 		UndoManager::instance()->setUndoEnabled(false);
-		currItem->ScaleType   = attrs.valueAsInt("SCALETYPE", 1);
+		currItem->m_scaleMode = static_cast<PageItem::ImageScaleMode>(attrs.valueAsInt("SCALETYPE", 1));
 		currItem->AspectRatio = attrs.valueAsInt("RATIO", 0);
 		currItem->setImageXYScale(scx, scy);
 		currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX"), attrs.valueAsDouble("LOCALY"));
@@ -2851,7 +2852,7 @@ PageItem* Scribus134Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		UndoManager::instance()->setUndoEnabled(false);
 		if (currItem->isAnnotation() && currItem->annotation().UseIcons())
 		{
-			currItem->ScaleType   = attrs.valueAsInt("SCALETYPE", 1);
+			currItem->m_scaleMode = static_cast<PageItem::ImageScaleMode>(attrs.valueAsInt("SCALETYPE", 1));
 			currItem->AspectRatio = attrs.valueAsInt("RATIO", 0);
 			currItem->setImageXYScale(scx, scy);
 			currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX"), attrs.valueAsDouble("LOCALY"));

@@ -2429,7 +2429,7 @@ void SlaOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str, int 
 			ite->isTempFile = true;
 			res.save(fileName, "PNG");
 			m_doc->loadPict(fileName, ite);
-			ite->setImageScalingMode(false, false);
+			ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 			m_Elements->append(ite);
 			if (m_groupStack.count() != 0)
 			{
@@ -2445,7 +2445,7 @@ void SlaOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str, int 
 				FPoint wh = getMaxClipF(&ite->PoLine);
 				ite->setWidthHeight(wh.x(),wh.y());
 				ite->setTextFlowMode(PageItem::TextFlowDisabled);
-				ite->ScaleType   = true;
+				ite->setImageScaleFree();
 				m_doc->adjustItemSize(ite);
 				ite->OldB2 = ite->width();
 				ite->OldH2 = ite->height();
@@ -2568,10 +2568,9 @@ void SlaOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref, Stream *str
 			ite->isInlineImage = true;
 			ite->isTempFile = true;
 			ite->AspectRatio = false;
-			ite->ScaleType   = false;
+			ite->setImageScaleFit();
 			res.save(fileName, "PNG");
 			m_doc->loadPict(fileName, ite);
-		//	ite->setImageScalingMode(false, false);
 			m_Elements->append(ite);
 			if (m_groupStack.count() != 0)
 			{
@@ -2587,7 +2586,7 @@ void SlaOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref, Stream *str
 				FPoint wh = getMaxClipF(&ite->PoLine);
 				ite->setWidthHeight(wh.x(),wh.y());
 				ite->setTextFlowMode(PageItem::TextFlowDisabled);
-				ite->ScaleType   = true;
+				ite->setImageScaleFree();
 				m_doc->adjustItemSize(ite);
 				ite->OldB2 = ite->width();
 				ite->OldH2 = ite->height();
@@ -2717,10 +2716,9 @@ void SlaOutputDev::drawMaskedImage(GfxState *state, Object *ref, Stream *str,  i
 			ite->isInlineImage = true;
 			ite->isTempFile = true;
 			ite->AspectRatio = false;
-			ite->ScaleType   = false;
+			ite->setImageScaleFit();
 			res.save(fileName, "PNG");
 			m_doc->loadPict(fileName, ite);
-		//	ite->setImageScalingMode(false, false);
 			m_Elements->append(ite);
 			if (m_groupStack.count() != 0)
 			{
@@ -2736,7 +2734,7 @@ void SlaOutputDev::drawMaskedImage(GfxState *state, Object *ref, Stream *str,  i
 				FPoint wh = getMaxClipF(&ite->PoLine);
 				ite->setWidthHeight(wh.x(),wh.y());
 				ite->setTextFlowMode(PageItem::TextFlowDisabled);
-				ite->ScaleType   = true;
+				ite->setImageScaleFree();
 				m_doc->adjustItemSize(ite);
 				ite->OldB2 = ite->width();
 				ite->OldH2 = ite->height();
@@ -2889,7 +2887,7 @@ void SlaOutputDev::drawImage(GfxState *state, Object *ref, Stream *str, int widt
 				ite->isInlineImage = true;
 				ite->isTempFile = true;
 				ite->AspectRatio = false;
-				ite->ScaleType   = false;
+				ite->setImageScaleFit();
 				TIFF* tif = TIFFOpen(fileName.toLocal8Bit().data(), "w");
 				if (tif)
 				{
@@ -2932,7 +2930,7 @@ void SlaOutputDev::drawImage(GfxState *state, Object *ref, Stream *str, int widt
 				ite->isInlineImage = true;
 				ite->isTempFile = true;
 				ite->AspectRatio = false;
-				ite->ScaleType   = false;
+				ite->setImageScaleFit();
 				img.save(fileName, "PNG");
 				m_doc->loadPict(fileName, ite);
 				m_Elements->append(ite);
@@ -2956,7 +2954,7 @@ void SlaOutputDev::drawImage(GfxState *state, Object *ref, Stream *str, int widt
 		FPoint wh = getMaxClipF(&ite->PoLine);
 		ite->setWidthHeight(wh.x(),wh.y());
 		ite->setTextFlowMode(PageItem::TextFlowDisabled);
-		ite->ScaleType   = true;
+		ite->setImageScaleFree();
 		m_doc->adjustItemSize(ite);
 		ite->OldB2 = ite->width();
 		ite->OldH2 = ite->height();

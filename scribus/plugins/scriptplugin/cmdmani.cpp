@@ -570,9 +570,10 @@ PyObject *scribus_setscaleimagetoframe(PyObject* /* self */, PyObject* args, PyO
 		PyErr_SetString(ScribusException, QObject::tr("Specified item not an image frame.","python error").toLocal8Bit().constData());
 		return nullptr;
 	}
-	// Set the item to scale if appropriate. ScaleType 1 is free
-	// scale, 0 is scale to frame.
-	item->ScaleType = scaleToFrame == 0;
+	// Set the item to scale if appropriate. ScaleType 0 is free
+	// scale, 1 is scale to frame, 2 is fill frame.
+	scaleToFrame == 0;
+	item->setImageScaleFree();
 	// Now, if the user has chosen to set the proportional mode,
 	// set it. 1 is proportional, 0 is free aspect.
 	if (proportional != -1)

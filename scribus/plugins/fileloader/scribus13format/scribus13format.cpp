@@ -11,6 +11,7 @@ for which a new license (GPL+exception) is in place.
 #include "commonstrings.h"
 #include "langmgr.h"
 #include "ui/missing.h"
+#include "pageitem.h"
 #include "pageitem_group.h"
 #include "prefsmanager.h"
 #include "qtiocompressor.h"
@@ -391,7 +392,7 @@ bool Scribus13Format::loadFile(const QString & fileName, const FileFormat & /* f
 		m_Doc->itemToolPrefs().lineEndArrow = dc.attribute("EndArrow", "0").toInt();
 		m_Doc->itemToolPrefs().imageScaleX = ScCLocale::toDoubleC(dc.attribute("PICTSCX"), 1.0);
 		m_Doc->itemToolPrefs().imageScaleY = ScCLocale::toDoubleC(dc.attribute("PICTSCY"), 1.0);
-		m_Doc->itemToolPrefs().imageScaleType = static_cast<bool>(dc.attribute("PSCALE", "1").toInt());
+		m_Doc->itemToolPrefs().imageScaleType = static_cast<PageItem::ImageScaleMode>(dc.attribute("PSCALE", "1").toInt());
 		m_Doc->itemToolPrefs().imageAspectRatio = static_cast<bool>(dc.attribute("PASPECT", "0").toInt());
 		m_Doc->itemToolPrefs().imageLowResType = dc.attribute("HalfRes", "1").toInt();
 		m_Doc->itemToolPrefs().imageUseEmbeddedPath = static_cast<bool>(dc.attribute("EmbeddedPath", "0").toInt());
@@ -1521,7 +1522,7 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 		if (pagenr > -2) 
 			currItem->setOwnerPage(pagenr);
 		UndoManager::instance()->setUndoEnabled(false);
-		currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
+		currItem->m_scaleMode = static_cast<PageItem::ImageScaleMode>(obj->attribute("SCALETYPE", "1").toInt());
 		currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 		currItem->setImageXYScale(scx, scy);
 		currItem->setImageXYOffset(offsX, offsY);
@@ -1814,7 +1815,7 @@ PageItem* Scribus13Format::PasteItem(QDomElement *obj, ScribusDoc *doc, const QS
 		UndoManager::instance()->setUndoEnabled(false);
 		if (currItem->isAnnotation() && currItem->annotation().UseIcons())
 		{
-			currItem->ScaleType = obj->attribute("SCALETYPE", "1").toInt();
+			currItem->m_scaleMode = static_cast<PageItem::ImageScaleMode>(obj->attribute("SCALETYPE", "1").toInt());
 			currItem->AspectRatio = obj->attribute("RATIO", "0").toInt();
 			currItem->setImageXYScale(scx, scy);
 			currItem->setImageXYOffset(offsX, offsY);

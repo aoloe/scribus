@@ -15,6 +15,7 @@ for which a new license (GPL+exception) is in place.
 #include "commonstrings.h"
 #include "prefsmanager.h"
 #include "sampleitem.h"
+#include "pageitem.h"
 
 
 Prefs_ItemTools::Prefs_ItemTools(QWidget* parent, ScribusDoc* doc)
@@ -135,8 +136,9 @@ void Prefs_ItemTools::restoreDefaults(struct ApplicationPrefs *prefsData)
 	rightTextDistanceSpinBox->setValue(prefsData->itemToolPrefs.textDistances.right() * unitRatio);
 
 	//Image Tool
-	imageFreeScalingRadioButton->setChecked( prefsData->itemToolPrefs.imageScaleType );
-	imageFrameScalingRadioButton->setChecked( !prefsData->itemToolPrefs.imageScaleType );
+	imageFreeScalingRadioButton->setChecked(prefsData->itemToolPrefs.imageScaleType == PageItem::ImageScaleMode::free);
+	imageFrameScalingRadioButton->setChecked(prefsData->itemToolPrefs.imageScaleType == PageItem::ImageScaleMode::fit);
+	imageFillScalingRadioButton->setChecked(prefsData->itemToolPrefs.imageScaleType == PageItem::ImageScaleMode::fill);
 	imageHorizontalScalingSpinBox->setValue(qRound(prefsData->itemToolPrefs.imageScaleX * 100));
 	imageVerticalScalingSpinBox->setValue(qRound(prefsData->itemToolPrefs.imageScaleY * 100));
 	imageKeepAspectRatioCheckBox->setChecked(prefsData->itemToolPrefs.imageAspectRatio);
@@ -267,7 +269,12 @@ void Prefs_ItemTools::saveGuiToPrefs(struct ApplicationPrefs *prefsData) const
 	prefsData->itemToolPrefs.imageStrokeColorShade = imageFrameFillShadingSpinBox->value();
 	prefsData->itemToolPrefs.imageScaleX = static_cast<double>(imageHorizontalScalingSpinBox->value()) / 100.0;
 	prefsData->itemToolPrefs.imageScaleY = static_cast<double>(imageVerticalScalingSpinBox->value()) / 100.0;
-	prefsData->itemToolPrefs.imageScaleType = imageFreeScalingRadioButton->isChecked();
+	if (imageFreeScalingRadioButton->isChecked())
+		prefsData->itemToolPrefs.imageScaleType = PageItem::ImageScaleMode::free;
+	else if (imageFrameScalingRadioButton->isChecked())
+		prefsData->itemToolPrefs.imageScaleType = PageItem::ImageScaleMode::fit;
+	else if (imageFillScalingRadioButton->isChecked())
+		prefsData->itemToolPrefs.imageScaleType = PageItem::ImageScaleMode::fill;
 	prefsData->itemToolPrefs.imageAspectRatio = imageKeepAspectRatioCheckBox->isChecked();
 	prefsData->itemToolPrefs.imageUseEmbeddedPath = imageUseEmbeddedClippingPathCheckBox->isChecked();
 	int haRes = 0;
@@ -342,6 +349,7 @@ void Prefs_ItemTools::enableSignals(bool on)
 		connect(imageVerticalScalingSpinBox, SIGNAL(valueChanged(int)), this, SLOT(imageVerticalScalingChange()));
 		connect(imageFreeScalingRadioButton, SIGNAL(clicked(bool)), this, SLOT(imageScalingTypeChange()));
 		connect(imageFrameScalingRadioButton, SIGNAL(clicked(bool)), this, SLOT(imageScalingTypeChange()));
+		connect(imageFillScalingRadioButton, SIGNAL(clicked(bool)), this, SLOT(imageScalingTypeChange()));
 	}
 	else
 	{

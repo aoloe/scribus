@@ -222,7 +222,10 @@ void Scribus12Format::PasteItem(struct CopyPasteBuffer *Buffer, bool drag, bool 
 			m_Doc->loadPict(currItem->Pfile, currItem);
 		currItem->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
 		currItem->setImageVisible(Buffer->PicArt);
-		currItem->ScaleType = Buffer->ScaleType;
+		if (Buffer->ScaleType)
+			currItem->setImageScaleFree();
+		else
+			currItem->setImageScaleFit();
 		currItem->AspectRatio = Buffer->AspectRatio;
 		currItem->setLineWidth(Buffer->Pwidth);
 //		undoManager->setUndoEnabled(true);
@@ -405,7 +408,10 @@ void Scribus12Format::PasteItem(struct CopyPasteBuffer *Buffer, bool drag, bool 
 			m_Doc->loadPict(currItem->Pfile, currItem);
 		currItem->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
 		currItem->setImageVisible(Buffer->PicArt);
-		currItem->ScaleType = Buffer->ScaleType;
+		if (Buffer->ScaleType)
+			currItem->setImageScaleFree();
+		else
+			currItem->setImageScaleFit();
 		currItem->AspectRatio = Buffer->AspectRatio;
 		currItem->setLineWidth(Buffer->Pwidth);
 		PageItem_LatexFrame *latexframe = currItem->asLatexFrame();
@@ -430,7 +436,10 @@ void Scribus12Format::PasteItem(struct CopyPasteBuffer *Buffer, bool drag, bool 
 			m_Doc->loadPict(currItem->Pfile, currItem);
 		currItem->setImageXYScale(Buffer->LocalScX, Buffer->LocalScY);
 		currItem->setImageVisible(Buffer->PicArt);
-		currItem->ScaleType = Buffer->ScaleType;
+		if (Buffer->ScaleType)
+			currItem->setImageScaleFree();
+		else
+			currItem->setImageScaleFit();
 		currItem->AspectRatio = Buffer->AspectRatio;
 		currItem->setLineWidth(Buffer->Pwidth);
 //		undoManager->setUndoEnabled(true);

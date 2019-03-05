@@ -1016,7 +1016,7 @@ void PctPlug::parsePict(QDataStream &ts)
 						ite->moveBy(offsetX, offsetY);
 						finishItem(ite);
 						m_Doc->loadPict(fileName, ite);
-						ite->setImageScalingMode(false, false);
+						ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 						delete tempFile;
 					}
 //					qDebug() << "End of Pict";
@@ -1852,7 +1852,7 @@ void PctPlug::handlePixmap(QDataStream &ts, quint16 opCode)
 		ite->moveBy(offsetX, offsetY);
 		finishItem(ite);
 		m_Doc->loadPict(fileName, ite);
-		ite->setImageScalingMode(false, false);
+		ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 		skipOpcode = false;
 	}
 	alignStreamToWord(ts, 0);

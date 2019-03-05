@@ -417,7 +417,7 @@ void CanvasMode_Edit::mouseMoveEvent(QMouseEvent *m)
 			{
 				if (m->modifiers() & Qt::ShiftModifier)
 				{
-					if (currItem->m_scaleMode == PageItem::ImageScaleMode::free)
+					if (currItem->isImageScaleFree())
 					{
 						m_view->setCursor(IconManager::instance()->loadCursor("Rotieren2.png"));
 						QTransform p = currItem->getTransform();

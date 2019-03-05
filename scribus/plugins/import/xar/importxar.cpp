@@ -681,7 +681,7 @@ void XarPlug::handleTags(quint32 tag, quint32 dataLen, QDataStream &ts)
 		image.save(fileName, "PNG");
 		ite->moveBy(m_Doc->currentPage()->xOffset(), m_Doc->currentPage()->yOffset());
 		m_Doc->LoadPict(fileName, z);
-		ite->setImageScalingMode(false, false);
+		ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 		ite->ClipEdited = true;
 		ite->FrameType = 3;
 		ite->setFillShade(CurrFillShade);
@@ -2816,7 +2816,7 @@ void XarPlug::handleBitmap(QDataStream &ts)
 		ite->isInlineImage = true;
 		image.save(fileName, "PNG");
 		m_Doc->loadPict(fileName, ite);
-		ite->setImageScalingMode(false, false);
+		ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 	}
 }
 

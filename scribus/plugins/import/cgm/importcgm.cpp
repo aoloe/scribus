@@ -1578,7 +1578,7 @@ void CgmPlug::decodeClass4(QDataStream &ts, quint16 elemID, quint16 paramLen)
 		delete tempFile;
 		ite->setImageFlippedH(flipX);
 		ite->setImageFlippedV(flipY);
-		ite->setImageScalingMode(false, false);
+		ite->setImageScalingMode(PageItem::ImageScaleMode::fit, false);
 		ite->adjustPictScale();
 		colorPrecision = t_colorPrecision;
 		colorIndexPrecision = t_colorIndexPrecision;
@@ -2409,7 +2409,7 @@ void CgmPlug::decodeClass5(QDataStream &ts, quint16 elemID, quint16 paramLen)
 				ite->isTempFile = true;
 				tmpImg.save(fileName, "PNG");
 				m_Doc->loadPict(fileName, ite);
-				ite->setImageScalingMode(false, true);
+				ite->setImageScalingMode(PageItem::ImageScaleMode::fit, true);
 				ScPattern pat = ScPattern();
 				pat.setDoc(m_Doc);
 				pat.pattern = tmpImg;

@@ -313,7 +313,7 @@ void ResizeGesture::doResize(bool scaleContent)
 			double imgScX = (newBounds.width() - m_extraWidth) / divX * currItem->imageXScale();
 			double imgScY = (newBounds.height() - m_extraHeight) / divY * currItem->imageYScale();
 			// The aspect ratio has been fixed, so make the modification in the direction of the larger movement.
-			if (currItem->keepAspectRatio() && currItem->fitImageToFrame()) 
+			if (currItem->keepAspectRatio() && currItem->isImageScaleFit()) 
 			{
 				if (qAbs((newBounds.width() - m_extraWidth) - currItem->width()) > qAbs((newBounds.height() - m_extraHeight) - currItem->height()))
 					imgScY = imgScX;
@@ -322,7 +322,7 @@ void ResizeGesture::doResize(bool scaleContent)
 			}
 			currItem->setImageXYScale(imgScX, imgScY);
 		}
-		else if (currItem->itemType() == PageItem::ImageFrame && currItem->imageIsAvailable && !currItem->fitImageToFrame())
+		else if (currItem->itemType() == PageItem::ImageFrame && currItem->imageIsAvailable && !currItem->isImageScaleFit())
 		{
 			QTransform mm = currItem->getTransform();
 			QPointF itPos = mm.map(QPointF(-m_extraX, -m_extraY));

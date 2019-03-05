@@ -1313,7 +1313,7 @@ void CanvasMode::commonkeyPressEvent_NormalNodeEdit(QKeyEvent *e)
 			double radRotation = rotationFC * M_PI / 180.0;
 
 			bool moveImage = false;
-			if ((currItem->asImageFrame() || currItem->asLatexFrame() || currItem->asOSGFrame()) && currItem->imageIsAvailable && !currItem->fitImageToFrame())
+			if ((currItem->asImageFrame() || currItem->asLatexFrame() || currItem->asOSGFrame()) && currItem->imageIsAvailable && !currItem->isImageScaleFit())
 				moveImage = true;
 
 			switch (kk)

@@ -192,8 +192,7 @@ PageItem::PageItem(const PageItem & other)
 	OldH2(other.OldH2),
 	Sizing(other.Sizing),
 	m_layerID(other.m_layerID),
-	ScaleType(other.ScaleType),
-	// m_scaleMode{other.scaleMode}; // TODO: activate this as soon in prefs
+	m_scaleMode{other.m_scaleMode},
 	AspectRatio(other.AspectRatio),
 	DashValues(other.DashValues),
 	DashOffset(other.DashOffset),
@@ -4220,12 +4219,6 @@ void PageItem::flipImageV()
 	m_ImageIsFlippedV = !m_ImageIsFlippedV;
 }
 
-void PageItem::setImageScalingMode(bool freeScale, bool keepRatio)
-{
-	qDebug() << "Deprecated: use setImageScalingMode() with ImageScaleMode instead";
-	setImageScalingMode(freeScale ? ImageScaleMode::free : ImageScaleMode::fit, keepRatio);
-}
-
 void PageItem::setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio)
 {
 	if (scaleMode == ImageScaleMode::free && AspectRatio == keepRatio)
@@ -4248,11 +4241,11 @@ void PageItem::setImageScalingMode(ImageScaleMode scaleMode, bool keepRatio)
 		from += AspectRatio ? Um::KeepRatio : Um::BreakRatio;
 
 		QString to = "";
-		if (m_scaleMode == ImageScaleMode::free)
+		if (scaleMode == ImageScaleMode::free)
 			to += Um::FreeScaling;
-		else if (m_scaleMode == ImageScaleMode::fit)
+		else if (scaleMode == ImageScaleMode::fit)
 			to += Um::FrameSize;
-		else if (m_scaleMode == ImageScaleMode::fill)
+		else if (scaleMode == ImageScaleMode::fill)
 			to += Um::FrameFill;
 		to += ", ";
 		to += keepRatio ? Um::KeepRatio : Um::BreakRatio;
@@ -7212,7 +7205,7 @@ void PageItem::restoreClearImage(UndoState *state, bool isUndo)
 		effectsInUse = is->getItem();
 		setImageFlippedH(is->getBool("CI_FLIPPH"));
 		setImageFlippedV(is->getBool("CI_FLIPPV"));
-		setImageScalingMode(is->getBool("CI_SCALING"),is->getBool("CI_ASPECT"));
+		setImageScalingMode(static_cast<ImageScaleMode>(is->getInt("CI_SCALING")),is->getBool("CI_ASPECT"));
 		setImageXOffset(is->getDouble("CI_XOFF"));
 		setImageXScale(is->getDouble("CI_XSCALE"));
 		setImageYOffset(is->getDouble("CI_YOFF"));
@@ -7548,7 +7541,7 @@ void PageItem::restoreGetImage(UndoState *state, bool isUndo)
 		{
 			setImageFlippedH(is->getBool("FLIPPH"));
 			setImageFlippedV(is->getBool("FLIPPV"));
-			setImageScalingMode(is->getBool("SCALING"), is->getBool("ASPECT"));
+			setImageScalingMode(static_cast<ImageScaleMode>(is->getInt("SCALING")), is->getBool("ASPECT"));
 		}
 	}
 	else
@@ -7560,7 +7553,7 @@ void PageItem::restoreGetImage(UndoState *state, bool isUndo)
 			effectsInUse = is->getItem();
 			setImageFlippedH(is->getBool("FLIPPH"));
 			setImageFlippedV(is->getBool("FLIPPV"));
-			setImageScalingMode(is->getBool("SCALING"), is->getBool("ASPECT"));
+			setImageScalingMode(static_cast<ImageScaleMode>(is->getInt("SCALING")), is->getBool("ASPECT"));
 			setImageXOffset(is->getDouble("XOFF"));
 			setImageXScale(is->getDouble("XSCALE"));
 			setImageYOffset(is->getDouble("YOFF"));
@@ -9376,7 +9369,7 @@ bool PageItem::loadImage(const QString& filename, const bool reload, const int g
 		is->set("NEW_IMAGE_PATH", filename);
 		is->set("FLIPPH",imageFlippedH());
 		is->set("FLIPPV",imageFlippedV());
-		is->set("SCALING",ScaleType);
+		is->set("SCALING",static_cast<int>(m_scaleMode));
 		is->set("ASPECT",AspectRatio);
 		is->set("XOFF",imageXOffset());
 		is->set("XSCALE",imageXScale());
@@ -10186,15 +10179,15 @@ void PageItem::moveImageInFrame(double dX, double dY)
 			dY = 0;
 		else
 		{
-			dY = qMax(dY, -m_imageYOffset);
-			dY = qMin(dY, -(overflowY + m_imageYOffset));
+			dY = qMin(dY, -m_imageYOffset);
+			dY = qMax(dY, -(overflowY + m_imageYOffset));
 		}
 		if (isImageFittingVertical())
 			dX = 0;
 		else
 		{
-			dX = qMin(dX, -m_imageXOffset); // right boundary
-			dX = qMax(dX, - (overflowX + m_imageXOffset)); // left boundary
+			dX = qMin(dX, -m_imageXOffset);
+			dX = qMax(dX, - (overflowX + m_imageXOffset));
 		}
 	}
 

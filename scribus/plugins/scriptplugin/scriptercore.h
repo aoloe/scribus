@@ -34,6 +34,7 @@ public:
 	/** @brief String representation of line of code to be passed to the Python interactive interpreter */
 	QString inValue;
 	QStringList getUserScriptsPaths() { return m_userScriptsPaths; }
+	QStringList getUserScriptsPaths(PrefsContext* prefs);
 
 public slots:
 	void runScriptDialog();
@@ -64,6 +65,7 @@ public slots:
 	void setStartupScript(const QString& newScript);
 	void setExtensionsEnabled(bool enable);
 	void updateSyntaxHighlighter();
+	void updateUserScriptsPaths();
 
 protected:
 	// Private helper functions
@@ -95,7 +97,15 @@ protected:
 	bool m_importAllNames;
 	/** \brief pref: Load this script on startup */
 	QString m_startupScript;
+private slots:
+	void updateUserScriptsMenu();
 private:
+	/** \brief Add the user menu script if it does not exist yet */
+	void addUserScriptsMenu();
+	/**
+	 * \brief List all the scripts in the paths' main directory and all
+	 * the main.py and subdirectory.py in the sub directories.
+	 */
 	QStringList getUserScripts(QStringList paths);
 	void rebuildUserScriptsMenu();
 };

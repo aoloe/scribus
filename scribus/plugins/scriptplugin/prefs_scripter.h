@@ -37,6 +37,8 @@ class Prefs_Scripter : public Prefs_Pane, Ui::Prefs_Scripter
 		QColor signColor;
 		QColor stringColor;
 		QColor numberColor;
+	private:
+		QString userScriptsPaths{};
 
 	protected slots:
 		/*! \brief All requests for color change are handled here.
@@ -47,6 +49,7 @@ class Prefs_Scripter : public Prefs_Pane, Ui::Prefs_Scripter
 
 	signals:
 		void prefsChanged();
+		void prefsUserScriptsPathsChanged();
 };
 
 #endif // PREFS_SCRIPTER_H

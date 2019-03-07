@@ -41,6 +41,8 @@ class PLUGIN_API ScriptPlugin : public ScPersistentPlugin
 
 		// Special features (none)
 		QByteArray pythonHome;
+		private slots:
+			void updateUserScriptsPaths();
 };
 
 extern "C" PLUGIN_API int scriptplugin_getPluginAPIVersion();

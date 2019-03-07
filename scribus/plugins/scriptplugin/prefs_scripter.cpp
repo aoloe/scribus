@@ -34,12 +34,13 @@ Prefs_Scripter::Prefs_Scripter(QWidget* parent)
 
 	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
 	PrefsTable* prefUserScriptsPath = prefs->getTable("userscriptspaths");
-	QStringList paths{};
+	QStringList userPaths{};
 	for (int i = 0; i < prefUserScriptsPath->getRowCount(); i++)
 	{
-		paths.append(prefUserScriptsPath->get(i, 0));
+		userPaths.append(prefUserScriptsPath->get(i, 0));
 	}
-	userScriptPathEdit->setText(paths.join(";"));
+	userScriptsPaths = userPaths.join(";");
+	userScriptPathEdit->setText(userScriptsPaths);
 	userScriptPathEdit->setToolTip( "<qt>" + tr("Multiple paths are separated by semicolons. You need to restart Scribus to see new scripts.") + "</qt>");
 
 	// signals and slots connections
@@ -89,17 +90,20 @@ void Prefs_Scripter::apply()
 		prefs->set("syntaxstring", stringColor.name());
 		prefs->set("syntaxtext", textColor.name());
 
-		// qDebug() << userScriptPathEdit->text();
-		PrefsTable* prefUserScriptsPath = prefs->getTable("userscriptspaths");
-		prefUserScriptsPath->clear();
-		int i = 0;
-		for (auto path: userScriptPathEdit->text().split(";"))
-		{
-			prefUserScriptsPath->set(i, 0, path);
-			i++;
-		}
-
 		emit prefsChanged();
+
+		if (userScriptPathEdit->text() != userScriptsPaths)
+		{
+			PrefsTable* prefUserScriptsPath = prefs->getTable("userscriptspaths");
+			prefUserScriptsPath->clear();
+			int i = 0;
+			for (auto path: userScriptPathEdit->text().split(";"))
+			{
+				prefUserScriptsPath->set(i, 0, path);
+				i++;
+			}
+			emit prefsUserScriptsPathsChanged();
+		}
 	}
 }
 

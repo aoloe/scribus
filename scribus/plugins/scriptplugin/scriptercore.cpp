@@ -93,11 +93,7 @@ void ScripterCore::addToMainWindowMenu(ScribusMainWindow *mw)
 	menuMgr->addMenuItemString("scripterExecuteScript", "Scripter");
 	menuMgr->createMenu("RecentScripts", QObject::tr("&Recent Scripts"), "Scripter", false, true);
 	menuMgr->addMenuItemString("RecentScripts", "Scripter");
-	if (m_userScriptsEnabled)
-	{
-		menuMgr->createMenu("UserScripts", QObject::tr("S&cripts"), "Scripter", false, true);
-		menuMgr->addMenuItemString("UserScripts", "Scripter");
-	}
+	addUserScriptsMenu();
 	menuMgr->addMenuItemString("scripterExecuteScript", "Scripter");
 	menuMgr->addMenuItemString("SEPARATOR", "Scripter");
 	menuMgr->addMenuItemString("scripterShowConsole", "Scripter");
@@ -109,9 +105,19 @@ void ScripterCore::addToMainWindowMenu(ScribusMainWindow *mw)
 	menuMgr->addMenuItemStringstoMenuBar("Scripter", scrScripterActions);
 	RecentScripts = SavedRecentScripts;
 	rebuildRecentScriptsMenu();
+	rebuildUserScriptsMenu();
+}
+
+void ScripterCore::addUserScriptsMenu()
+{
 	if (m_userScriptsEnabled)
 	{
-		rebuildUserScriptsMenu();
+		if (!menuMgr->menuExists("UserScripts"))
+		{
+			menuMgr->createMenu("UserScripts", QObject::tr("S&cripts"), "Scripter", false, true);
+			menuMgr->addMenuItemString("UserScripts", "Scripter");
+		}
+
 	}
 }
 
@@ -176,6 +182,12 @@ void ScripterCore::rebuildRecentScriptsMenu()
 	menuMgr->addMenuItemStringstoRememberedMenu("RecentScripts", scrRecentScriptActions);
 }
 
+void ScripterCore::updateUserScriptsMenu()
+{
+	m_userScripts = getUserScripts(m_userScriptsPaths);
+	rebuildUserScriptsMenu();
+}
+
 void ScripterCore::rebuildUserScriptsMenu()
 {
 	menuMgr->clearMenuStrings("UserScripts");
@@ -187,6 +199,13 @@ void ScripterCore::rebuildUserScriptsMenu()
 		connect( scrUserScriptActions[menuEntry], SIGNAL(triggeredData(QString)), this, SLOT(runUserScript(QString)) );
 		menuMgr->addMenuItemString(menuEntry, "UserScripts");
 	}
+
+	menuMgr->addMenuItemString("SEPARATOR", "UserScripts");
+
+	scrUserScriptActions.insert("userScriptsUpdate", new ScrAction(QObject::tr("List &Update"), QKeySequence(), this));
+	QObject::connect( scrUserScriptActions["userScriptsUpdate"], SIGNAL(triggered()) , this, SLOT(updateUserScriptsMenu()) );
+	menuMgr->addMenuItemString("userScriptsUpdate", "UserScripts");
+
 	menuMgr->addMenuItemStringstoRememberedMenu("UserScripts", scrUserScriptActions);
 }
 
@@ -547,25 +566,28 @@ void ScripterCore::ReadPlugPrefs()
 	m_startupScript = prefs->get("startupscript", QString::null);
 	// and have the console window set up its position
 
-	auto prefUserScriptsPath = prefs->getTable("userscriptspaths");
-	m_userScriptsPaths.clear();
-	for (int i = 0; i < prefUserScriptsPath->getRowCount(); i++)
-	{
-		m_userScriptsPaths.append(prefUserScriptsPath->get(i, 0));
-	}
-
+	m_userScriptsPaths = getUserScriptsPaths(prefs);
 	m_userScriptsEnabled = !m_userScriptsPaths.empty();
-
 	if (m_userScriptsEnabled)
 	{
 		m_userScripts = getUserScripts(m_userScriptsPaths);
 	}
 }
 
-/**
- * list all the scripts in the paths' main directory and all
- * the main.py and subdirectory.py in the sub directories.
- */
+QStringList ScripterCore::getUserScriptsPaths(PrefsContext* prefs)
+{
+	QStringList result{};
+
+	auto prefUserScriptsPath = prefs->getTable("userscriptspaths");
+	result.clear();
+	for (int i = 0; i < prefUserScriptsPath->getRowCount(); i++)
+	{
+		result.append(prefUserScriptsPath->get(i, 0));
+	}
+
+	return result;
+}
+
 QStringList ScripterCore::getUserScripts(QStringList paths)
 {
 	QStringList result{};
@@ -732,6 +754,18 @@ void ScripterCore::setExtensionsEnabled(bool enable)
 void ScripterCore::updateSyntaxHighlighter()
 {
 	pcon->updateSyntaxHighlighter();
+}
+
+void ScripterCore::updateUserScriptsPaths()
+{
+	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
+	m_userScriptsPaths = getUserScriptsPaths(prefs);
+	m_userScripts = getUserScripts(m_userScriptsPaths);
+	m_userScriptsEnabled = !m_userScriptsPaths.empty();
+
+	addUserScriptsMenu();
+
+	rebuildUserScriptsMenu();
 }
 
 const QString & ScripterCore::startupScript() const

@@ -205,6 +205,7 @@ bool ScriptPlugin::newPrefsPanelWidget(QWidget* parent, PrefsPanel*& panel, QStr
 	panel = new ScripterPrefsGui(parent);
 	Q_CHECK_PTR(panel);
 	connect(panel, SIGNAL(prefsChanged()), scripterCore, SLOT(updateSyntaxHighlighter()));
+	connect(panel, SIGNAL(prefsUserScriptsPathsChanged()), scripterCore, SLOT(updateUserScriptsPaths()));
 	caption = tr("Scripter");
 	icon = IconManager::instance()->loadPixmap("python.png");
 	return true;
@@ -216,6 +217,7 @@ bool ScriptPlugin::newPrefsPanelWidget(QWidget* parent, Prefs_Pane*& panel, QStr
 	panel = new Prefs_Scripter(parent);
 	Q_CHECK_PTR(panel);
 	connect(panel, SIGNAL(prefsChanged()), scripterCore, SLOT(updateSyntaxHighlighter()));
+	connect(panel, SIGNAL(prefsUserScriptsPathsChanged()), scripterCore, SLOT(updateUserScriptsPaths()));
 	caption = tr("Scripter");
 	icon = IconManager::instance()->loadPixmap("python_16.png");
 	return true;

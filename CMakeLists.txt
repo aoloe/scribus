@@ -770,12 +770,12 @@ endif()
 
 #<< PYTHON
 #set(PythonLibs_FIND_VERSION 2)
-find_package(PythonLibs 2 REQUIRED)
-if (PYTHON_LIBRARY)
-	message("Python Library Found OK")
-	set(HAVE_PYTHON 1)
-	set(COMPILE_PYTHON 1)
-endif()
+# find_package(PythonLibs 2 REQUIRED)
+# if (PYTHON_LIBRARY)
+# 	message("Python Library Found OK")
+# 	set(HAVE_PYTHON 1)
+# 	set(COMPILE_PYTHON 1)
+# endif()
 #>> PYTHON
 
 #<< FreeType2

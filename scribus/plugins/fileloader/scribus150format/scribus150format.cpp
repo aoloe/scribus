@@ -598,6 +598,7 @@ bool Scribus150Format::loadElements(const QString& data, const QString& fileDir,
 				cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 				cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 				cItem->setRotation(cItem->rotation() - gItem->rotation());
+				cItem->oldRot = cItem->rotation();
 			}
 			m_Doc->DocItems.removeOne(cItem);
 		}
@@ -628,6 +629,7 @@ bool Scribus150Format::loadElements(const QString& data, const QString& fileDir,
 				cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 				cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 				cItem->setRotation(cItem->rotation() - gItem->rotation());
+				cItem->oldRot = cItem->rotation();
 			}
 			m_Doc->FrameItems.remove(m_Doc->FrameItems.key(cItem));
 		}
@@ -658,6 +660,7 @@ bool Scribus150Format::loadElements(const QString& data, const QString& fileDir,
 				cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 				cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 				cItem->setRotation(cItem->rotation() - gItem->rotation());
+				cItem->oldRot = cItem->rotation();
 			}
 			m_Doc->MasterItems.removeOne(cItem);
 		}
@@ -1119,6 +1122,7 @@ bool Scribus150Format::loadPalette(const QString & fileName)
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->DocItems.removeOne(cItem);
 			}
@@ -1151,6 +1155,7 @@ bool Scribus150Format::loadPalette(const QString & fileName)
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->FrameItems.remove(m_Doc->FrameItems.key(cItem));
 			}
@@ -1183,6 +1188,7 @@ bool Scribus150Format::loadPalette(const QString & fileName)
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->MasterItems.removeOne(cItem);
 			}
@@ -1836,6 +1842,7 @@ bool Scribus150Format::loadFile(const QString & fileName, const FileFormat & /* 
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->DocItems.removeOne(cItem);
 			}
@@ -1868,6 +1875,7 @@ bool Scribus150Format::loadFile(const QString & fileName, const FileFormat & /* 
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->FrameItems.remove(m_Doc->FrameItems.key(cItem));
 			}
@@ -1900,6 +1908,7 @@ bool Scribus150Format::loadFile(const QString & fileName, const FileFormat & /* 
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->MasterItems.removeOne(cItem);
 			}
@@ -4197,7 +4206,10 @@ bool Scribus150Format::readObject(ScribusDoc* doc, ScXmlStreamReader& reader, It
 	{
 		if (!newItem->Pfile.isEmpty())
 		{
+			double imageXOffset = newItem->imageXOffset();
+			double imageYOffset = newItem->imageYOffset();
 			doc->loadPict(newItem->Pfile, newItem, false);
+			newItem->setImageXYOffset(imageXOffset, imageYOffset);
 			if (newItem->pixm.imgInfo.PDSpathData.contains(clipPath))
 			{
 				newItem->imageClip = newItem->pixm.imgInfo.PDSpathData[clipPath].copy();
@@ -4211,6 +4223,7 @@ bool Scribus150Format::readObject(ScribusDoc* doc, ScXmlStreamReader& reader, It
 			{
 				newItem->pixm.imgInfo.isRequest = true;
 				doc->loadPict(newItem->Pfile, newItem, true);
+				newItem->setImageXYOffset(imageXOffset, imageYOffset);
 			}
 		}
 	}
@@ -4428,6 +4441,7 @@ bool Scribus150Format::readPattern(ScribusDoc* doc, ScXmlStreamReader& reader, c
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->DocItems.removeOne(cItem);
 			}
@@ -4806,8 +4820,10 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 	double w   = attrs.valueAsDouble("WIDTH");
 	double h   = attrs.valueAsDouble("HEIGHT");
 	double pw  = attrs.valueAsDouble("PWIDTH");
-	double scx = attrs.valueAsDouble("LOCALSCX");
-	double scy = attrs.valueAsDouble("LOCALSCY");
+	double imageXOffset = attrs.valueAsDouble("LOCALX");
+	double imageYOffset = attrs.valueAsDouble("LOCALY");
+	double imageXScale  = attrs.valueAsDouble("LOCALSCX");
+	double imageYScale  = attrs.valueAsDouble("LOCALSCY");
 	QString Pcolor = attrs.valueAsString("PCOLOR");
 	if (Pcolor.isEmpty())
 		Pcolor = CommonStrings::None;
@@ -4837,8 +4853,8 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		UndoManager::instance()->setUndoEnabled(false);
 		currItem->ScaleType   = attrs.valueAsInt("SCALETYPE", 1);
 		currItem->AspectRatio = attrs.valueAsInt("RATIO", 0);
-		currItem->setImageXYScale(scx, scy);
-		currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX"), attrs.valueAsDouble("LOCALY"));
+		currItem->setImageXYScale(imageXScale, imageYScale);
+		currItem->setImageXYOffset(imageXOffset, imageYOffset);
 		currItem->setImageRotation(attrs.valueAsDouble("LOCALROT"));
 //		if (!currItem->asLatexFrame())
 #ifdef HAVE_OSG
@@ -4896,7 +4912,7 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 			currItem->CompressionMethodIndex = attrs.valueAsInt("COMPRESSIONMETHOD", 0);
 		if ((currItem->OverrideCompressionQuality = attrs.hasAttribute("COMPRESSIONQUALITY")))
 			currItem->CompressionQualityIndex = attrs.valueAsInt("COMPRESSIONQUALITY");
-		currItem->setImageXYScale(scx, scy);
+		currItem->setImageXYScale(imageXScale, imageYScale);
 		currItem->setImageRotation(attrs.valueAsDouble("LOCALROT"));
 		clPath = attrs.valueAsString("ImageClip", "");
 		if (!clPath.isEmpty())
@@ -5145,6 +5161,7 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		}
 	}
 	currItem->setRotation( attrs.valueAsDouble("ROT", 0.0) );
+	currItem->oldRot = currItem->rotation();
 	currItem->setTextToFrameDist(attrs.valueAsDouble("EXTRA", 0.0),
 								attrs.valueAsDouble("REXTRA", 0.0),
 								attrs.valueAsDouble("TEXTRA", 0.0),
@@ -5213,8 +5230,8 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		UndoManager::instance()->setUndoEnabled(false);
 		if (currItem->isAnnotation() && currItem->annotation().UseIcons())
 		{
-			currItem->setImageXYScale(scx, scy);
-			currItem->setImageXYOffset(attrs.valueAsDouble("LOCALX"), attrs.valueAsDouble("LOCALY"));
+			currItem->setImageXYScale(imageXScale, imageYScale);
+			currItem->setImageXYOffset(imageXOffset, imageYOffset);
 			currItem->setImageRotation(attrs.valueAsDouble("LOCALROT"));
 			currItem->Pfile  = Relative2Path(attrs.valueAsString("PFILE" , ""), baseDir);
 			currItem->Pfile2 = Relative2Path(attrs.valueAsString("PFILE2", ""), baseDir);
@@ -5224,7 +5241,7 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 			currItem->IRender     = (eRenderIntent) attrs.valueAsInt("IRENDER" , 1);
 			currItem->UseEmbedded = attrs.valueAsInt("EMBEDDED", 1);
 			doc->loadPict(currItem->Pfile, currItem);
-			currItem->setImageXYScale(scx, scy);
+			currItem->setImageXYScale(imageXScale, imageYScale);
 			currItem->setImageVisible( attrs.valueAsInt("PICART"));
 /*			currItem->BBoxX = ScCLocale::toDoubleC( obj->attribute("BBOXX"));
 			currItem->BBoxH = ScCLocale::toDoubleC( obj->attribute("BBOXH")); */
@@ -6519,6 +6536,7 @@ bool Scribus150Format::loadPage(const QString & fileName, int pageNumber, bool M
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->DocItems.removeOne(cItem);
 			}
@@ -6551,6 +6569,7 @@ bool Scribus150Format::loadPage(const QString & fileName, int pageNumber, bool M
 					cItem->gXpos = ma.m11() * n.x() + ma.m21() * n.y() + ma.dx();
 					cItem->gYpos = ma.m22() * n.y() + ma.m12() * n.x() + ma.dy();
 					cItem->setRotation(cItem->rotation() - gItem->rotation());
+					cItem->oldRot = cItem->rotation();
 				}
 				m_Doc->FrameItems.remove(m_Doc->FrameItems.key(cItem));
 			}

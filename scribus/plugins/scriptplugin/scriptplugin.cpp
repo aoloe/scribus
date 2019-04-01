@@ -50,7 +50,6 @@ for which a new license (GPL+exception) is in place.
 #include "scribuscore.h"
 #include "scribusstructs.h"
 #include "scriptercore.h"
-#include "scripterprefsgui.h"
 #include "scriptplugin.h"
 #include "svgimport.h"
 #include "ui/customfdialog.h"
@@ -199,17 +198,6 @@ bool ScriptPlugin::cleanupPlugin()
 	Py_Finalize();
 	return true;
 }
-
-bool ScriptPlugin::newPrefsPanelWidget(QWidget* parent, PrefsPanel*& panel, QString& caption, QPixmap& icon)
-{
-	panel = new ScripterPrefsGui(parent);
-	Q_CHECK_PTR(panel);
-	connect(panel, SIGNAL(prefsChanged()), scripterCore, SLOT(updateSyntaxHighlighter()));
-	caption = tr("Scripter");
-	icon = IconManager::instance()->loadPixmap("python.png");
-	return true;
-}
-
 
 bool ScriptPlugin::newPrefsPanelWidget(QWidget* parent, Prefs_Pane*& panel, QString& caption, QPixmap& icon)
 {
@@ -611,7 +599,7 @@ void initscribus_failed(const char* fileName, int lineNo)
 		PyErr_Print();
 }
 
-void initscribus(ScribusMainWindow *pl)
+void initscribus(ScribusMainWindow *mainWin)
 {
 	if (!scripterCore)
 	{
@@ -850,7 +838,6 @@ void initscribus(ScribusMainWindow *pl)
 	else
 		qDebug("Couldn't parse version string '%s' in scripter", VERSION);
 
-// 	ScMW = pl;
 	// Function aliases for compatibility
 	// We need to import the __builtins__, warnings and exceptions modules to be able to run
 	// the generated Python functions from inside the `scribus' module's context.
@@ -944,10 +931,10 @@ is not exhaustive due to exceptions from called functions.\n\
 	Py_DECREF(wrappedQApp);
 	wrappedQApp = nullptr;
 
-	wrappedMainWindow = wrapQObject(pl);
+	wrappedMainWindow = wrapQObject(mainWin);
 	if (!wrappedMainWindow)
 	{
-		qDebug("Failed to wrap up ScMW");
+		qDebug("Failed to wrap up ScribusMainWindow");
 		PyErr_Print();
 	}
 	// Push it into the module dict, stealing a ref in the process

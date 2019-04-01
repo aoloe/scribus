@@ -1170,26 +1170,26 @@ void ScribusMainWindow::initMenuBar()
 void ScribusMainWindow::createMenuBar()
 {
 	scrMenuMgr->addMenuStringToMenuBar("File");
-	scrMenuMgr->addMenuItemStringstoMenuBar("File", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("File", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("Edit");
-	scrMenuMgr->addMenuItemStringstoMenuBar("Edit", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("Edit", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("Item");
-	scrMenuMgr->addMenuItemStringstoMenuBar("Item", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("Item", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("Insert");
-	scrMenuMgr->addMenuItemStringstoMenuBar("Insert", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("Insert", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("Page");
-	scrMenuMgr->addMenuItemStringstoMenuBar("Page", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("Page", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("ItemTable");
-	scrMenuMgr->addMenuItemStringstoMenuBar("ItemTable", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("ItemTable", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("Extras");
-	scrMenuMgr->addMenuItemStringstoMenuBar("Extras", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("Extras", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("View");
-	scrMenuMgr->addMenuItemStringstoMenuBar("View", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("View", scrActions);
 	scrMenuMgr->addMenuStringToMenuBar("Windows", true);
 	addDefaultWindowMenuItems();
 	menuBar()->addSeparator();
 	scrMenuMgr->addMenuStringToMenuBar("Help");
-	scrMenuMgr->addMenuItemStringstoMenuBar("Help", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("Help", scrActions);
 	connect(scrMenuMgr->getLocalPopupMenu("Extras"), SIGNAL(aboutToShow()), this, SLOT(extrasMenuAboutToShow()));
 	connect(scrMenuMgr->getLocalPopupMenu("Windows"), SIGNAL(aboutToShow()), this, SLOT(windowsMenuAboutToShow()));
 
@@ -1225,7 +1225,7 @@ void ScribusMainWindow::addDefaultWindowMenuItems()
 	scrMenuMgr->addMenuItemString("toolsToolbarPDF", "Windows");
 	scrMenuMgr->addMenuItemString("toolsToolbarView", "Windows");
 	scrMenuMgr->addMenuItemString("SEPARATOR", "Windows");
-	scrMenuMgr->addMenuItemStringstoMenuBar("Windows", scrActions);
+	scrMenuMgr->addMenuItemStringsToMenuBar("Windows", scrActions);
 }
 
 
@@ -1249,7 +1249,6 @@ void ScribusMainWindow::initStatusBar()
 	zoomLayout->setSpacing(1);
 
 	zoomSpinBox = new ScrSpinBox( 1, 32000, zoomWidget, 6 );
-	zoomSpinBox->setTabAdvance(false);
 	zoomSpinBox->setFont(fo);
 	zoomSpinBox->setValue( 100 );
 	zoomSpinBox->setSingleStep(10);
@@ -1510,89 +1509,94 @@ void ScribusMainWindow::specialActionKeyEvent(int unicodevalue)
 		return;
 	if (doc->m_Selection->count() != 1)
 		return;
+	if ((doc->appMode != modeEdit) && (doc->appMode != modeEditTable))
+		return;
+
 	PageItem* selItem = doc->m_Selection->itemAt(0);
-	if (((doc->appMode == modeEdit) || (doc->appMode == modeEditTable)) && (selItem->isTextFrame() || selItem->isTable()))
+	if (!selItem->isTextFrame() && !selItem->isTable())
+		return;
+
+	PageItem_TextFrame *currItem;
+	if (doc->appMode == modeEditTable)
+		currItem = selItem->asTable()->activeCell().textFrame();
+	else
+		currItem = selItem->asTextFrame();
+	if (currItem == nullptr)
+		return;
+
+	if (unicodevalue!=-1)
 	{
-		PageItem_TextFrame *currItem;
-		if (doc->appMode == modeEditTable)
-			currItem = selItem->asTable()->activeCell().textFrame();
-		else
-			currItem = selItem->asTextFrame();
-		if (currItem!=nullptr)
+		UndoTransaction activeTransaction;
+		if (currItem->HasSel)
 		{
-			if (unicodevalue!=-1)
-			{
-				UndoTransaction activeTransaction;
-				if (currItem->HasSel){
-					if (UndoManager::undoEnabled())
-						activeTransaction = m_undoManager->beginTransaction(Um::Selection, Um::IGroup, Um::ReplaceText, "", Um::IDelete);
-					currItem->deleteSelectedTextFromFrame();
-				}
-				if (UndoManager::undoEnabled())
-				{
-					SimpleState *ss = dynamic_cast<SimpleState*>(m_undoManager->getLastUndo());
-					if (ss && ss->get("ETEA") == "insert_frametext")
-						ss->set("TEXT_STR",ss->get("TEXT_STR") + QString(QChar(unicodevalue)));
-					else {
-						ss = new SimpleState(Um::InsertText,"",Um::ICreate);
-						ss->set("INSERT_FRAMETEXT");
-						ss->set("ETEA", QString("insert_frametext"));
-						ss->set("TEXT_STR", QString(QChar(unicodevalue)));
-						ss->set("START", currItem->itemText.cursorPosition());
-						UndoObject * undoTarget = currItem;
-						if (currItem->isNoteFrame())
-						{
-							undoTarget = doc;
-							ss->set("noteframeName", currItem->getUName());
-						}
-						m_undoManager->action(undoTarget, ss);
-					}
-				}
-				currItem->itemText.insertChars(QString(QChar(unicodevalue)), true);
-				if (activeTransaction)
-					activeTransaction.commit();
-			}
-			else if (unicodevalue==SpecialChars::SHYPHEN.unicode()) //ignore the char as we use an attribute if the text item, for now.
-			{
-				// this code is currently dead since unicodeSoftHyphen
-				// doesn't have unicodevalue == -1 any more
-				if (currItem->itemText.cursorPosition() > 1)
-				{
-#if 0
-					StyleFlag fl = currItem->itemText.item(qMax(currItem->CPos-1,0))->effects();
-					fl |= ScStyle_HyphenationPossible;
-					currItem->itemText.item(qMax(currItem->CPos-1,0))->setEffects(fl);
-#else
-					if (UndoManager::undoEnabled())
-					{
-						SimpleState *ss = dynamic_cast<SimpleState*>(m_undoManager->getLastUndo());
-						if (ss && ss->get("ETEA") == "insert_frametext")
-							ss->set("TEXT_STR",ss->get("TEXT_STR") + QString(SpecialChars::SHYPHEN));
-						else {
-							ss = new SimpleState(Um::InsertText,"",Um::ICreate);
-							ss->set("INSERT_FRAMETEXT");
-							ss->set("ETEA", QString("insert_frametext"));
-							ss->set("TEXT_STR", QString(SpecialChars::SHYPHEN));
-							ss->set("START", currItem->itemText.cursorPosition());
-							UndoObject * undoTarget = currItem;
-							if (currItem->isNoteFrame())
-							{
-								undoTarget = doc;
-								ss->set("noteframeName", currItem->getUName());
-							}
-							m_undoManager->action(undoTarget, ss);
-						}
-					}
-					currItem->itemText.insertChars(QString(SpecialChars::SHYPHEN), true);
-#endif
-				}
-			}
-			if (doc->appMode == modeEditTable)
-				selItem->asTable()->update();
-			else
-				currItem->update();
+			if (UndoManager::undoEnabled())
+				activeTransaction = m_undoManager->beginTransaction(Um::Selection, Um::IGroup, Um::ReplaceText, "", Um::IDelete);
+			currItem->deleteSelectedTextFromFrame();
 		}
+		if (UndoManager::undoEnabled())
+		{
+			SimpleState *ss = dynamic_cast<SimpleState*>(m_undoManager->getLastUndo());
+			if (ss && ss->get("ETEA") == "insert_frametext")
+				ss->set("TEXT_STR",ss->get("TEXT_STR") + QString(QChar(unicodevalue)));
+			else
+			{
+				ss = new SimpleState(Um::InsertText,"",Um::ICreate);
+				ss->set("INSERT_FRAMETEXT");
+				ss->set("ETEA", QString("insert_frametext"));
+				ss->set("TEXT_STR", QString(QChar(unicodevalue)));
+				ss->set("START", currItem->itemText.cursorPosition());
+				UndoObject * undoTarget = currItem;
+				if (currItem->isNoteFrame())
+				{
+					undoTarget = doc;
+					ss->set("noteframeName", currItem->getUName());
+				}
+				m_undoManager->action(undoTarget, ss);
+			}
+		}
+		currItem->itemText.insertChars(QString(QChar(unicodevalue)), true);
+		if (activeTransaction)
+			activeTransaction.commit();
 	}
+	else if (unicodevalue == SpecialChars::SHYPHEN.unicode()) //ignore the char as we use an attribute if the text item, for now.
+	{
+		// this code is currently dead since unicodeSoftHyphen
+		// doesn't have unicodevalue == -1 any more
+		if (currItem->itemText.cursorPosition() <= 1)
+			return;
+#if 0
+		StyleFlag fl = currItem->itemText.item(qMax(currItem->CPos-1,0))->effects();
+		fl |= ScStyle_HyphenationPossible;
+		currItem->itemText.item(qMax(currItem->CPos-1,0))->setEffects(fl);
+#else
+		if (UndoManager::undoEnabled())
+		{
+			SimpleState *ss = dynamic_cast<SimpleState*>(m_undoManager->getLastUndo());
+			if (ss && ss->get("ETEA") == "insert_frametext")
+				ss->set("TEXT_STR",ss->get("TEXT_STR") + QString(SpecialChars::SHYPHEN));
+			else
+			{
+				ss = new SimpleState(Um::InsertText,"", Um::ICreate);
+				ss->set("INSERT_FRAMETEXT");
+				ss->set("ETEA", QString("insert_frametext"));
+				ss->set("TEXT_STR", QString(SpecialChars::SHYPHEN));
+				ss->set("START", currItem->itemText.cursorPosition());
+				UndoObject * undoTarget = currItem;
+				if (currItem->isNoteFrame())
+				{
+					undoTarget = doc;
+					ss->set("noteframeName", currItem->getUName());
+				}
+				m_undoManager->action(undoTarget, ss);
+			}
+		}
+		currItem->itemText.insertChars(QString(SpecialChars::SHYPHEN), true);
+#endif
+	}
+	if (doc->appMode == modeEditTable)
+		selItem->asTable()->update();
+	else
+		currItem->update();
 }
 
 bool ScribusMainWindow::eventFilter( QObject* /*o*/, QEvent *e )
@@ -2450,7 +2454,7 @@ void ScribusMainWindow::windowsMenuAboutToShow()
 			scrMenuMgr->addMenuItemString(docInWindow, "Windows");
 		}
 		if (windowCount>1)
-			scrMenuMgr->addMenuItemStringstoRememberedMenu("Windows", scrWindowsActions);
+			scrMenuMgr->addMenuItemStringsToRememberedMenu("Windows", scrWindowsActions);
 	}
 }
 
@@ -2986,7 +2990,7 @@ void ScribusMainWindow::rebuildRecentFileMenu()
 		connect( scrRecentFileActions[strippedName], SIGNAL(triggeredData(QString)), this, SLOT(loadRecent(QString)) );
 		scrMenuMgr->addMenuItemString(strippedName, "FileOpenRecent");
 	}
-	scrMenuMgr->addMenuItemStringstoRememberedMenu("FileOpenRecent", scrRecentFileActions);
+	scrMenuMgr->addMenuItemStringsToRememberedMenu("FileOpenRecent", scrRecentFileActions);
 	fileToolBar->rebuildRecentFileMenu();
 }
 
@@ -3011,7 +3015,7 @@ void ScribusMainWindow::rebuildRecentPasteMenu()
 			scrMenuMgr->addMenuItemString(strippedName, "EditPasteRecent");
 			it--;
 		}
-		scrMenuMgr->addMenuItemStringstoRememberedMenu("EditPasteRecent", scrRecentPasteActions);
+		scrMenuMgr->addMenuItemStringsToRememberedMenu("EditPasteRecent", scrRecentPasteActions);
 	}
 }
 
@@ -3030,7 +3034,7 @@ void ScribusMainWindow::rebuildScrapbookMenu()
 		connect(act, SIGNAL(triggeredData(int)), this, SLOT(PutScrap(int)));
 		scrMenuMgr->addMenuItemString(scrapNames[i], "ItemSendToScrapbook");
 	}
-	scrMenuMgr->addMenuItemStringstoRememberedMenu("ItemSendToScrapbook", scrScrapActions);
+	scrMenuMgr->addMenuItemStringsToRememberedMenu("ItemSendToScrapbook", scrScrapActions);
 }
 
 void ScribusMainWindow::pasteFromScrapbook(const QString& fn)
@@ -3239,7 +3243,7 @@ void ScribusMainWindow::rebuildLayersList()
 		scrMenuMgr->addMenuItemString(it.key(), "ItemLayer");
 		connect( (*it), SIGNAL(triggeredData(int)), doc, SLOT(itemSelection_SendToLayer(int)) );
 	}
-	scrMenuMgr->addMenuItemStringstoRememberedMenu("ItemLayer", scrLayersActions);
+	scrMenuMgr->addMenuItemStringsToRememberedMenu("ItemLayer", scrLayersActions);
 }
 
 void ScribusMainWindow::updateItemLayerList()
@@ -4684,21 +4688,28 @@ void ScribusMainWindow::slotEditCopy()
 	{
 		if ((currItem->isSingleSel) && (currItem->isGroup()))
 			return;
-		//do not copy notes frames
-		if (doc->m_Selection->count() ==1 && currItem->isNoteFrame())
+
+		// Do not copy notes frames
+		if ((doc->m_Selection->count() == 1) && currItem->isNoteFrame())
 			return;
-		//deselect notesframes
-		Selection tempSelection(*(doc->m_Selection));
+		
+		// Sort items in Z-order
+		QList<PageItem*> selectedItems = doc->m_Selection->items();
+		qStableSort(selectedItems.begin(), selectedItems.end(), compareItemLevel);
+
+		Selection tempSelection(this, false);
+		for (int i = 0; i < selectedItems.count(); ++i)
+			tempSelection.addItem(selectedItems.at(i));
+
+		// Deselect notesframes
 		for (int i = 0; i < doc->m_Selection->count(); ++i)
 		{
 			if (doc->m_Selection->itemAt(i)->isNoteFrame())
 				tempSelection.removeItem(doc->m_Selection->itemAt(i));
 		}
-		if (tempSelection.count() < doc->m_Selection->count())
-			*(doc->m_Selection) = tempSelection;
 
 		ScriXmlDoc ss;
-		QString BufferS = ss.writeElem(doc, doc->m_Selection);
+		QString BufferS = ss.writeElem(doc, &tempSelection);
 		if (!internalCopy)
 		{
 			if ((m_prefsManager->appPrefs.scrapbookPrefs.doCopyToScrapbook) && (!internalCopy))

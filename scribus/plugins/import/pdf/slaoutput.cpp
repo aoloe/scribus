@@ -277,12 +277,12 @@ LinkAction* SlaOutputDev::SC_getAction(AnnotWidget *ano)
 	LinkAction *linkAction = nullptr;
 	Object obj;
 	Ref refa = ano->getRef();
-	Object additionalActions;
+
 	obj = xref->fetch(refa.num, refa.gen);
 	if (obj.isDict())
 	{
 		Dict* adic = obj.getDict();
-		additionalActions = adic->lookupNF("A");
+		POPPLER_CONST_075 Object POPPLER_REF additionalActions = adic->lookupNF("A");
 		Object additionalActionsObject = additionalActions.fetch(pdfDoc->getXRef());
 		if (additionalActionsObject.isDict())
 		{
@@ -306,13 +306,12 @@ LinkAction* SlaOutputDev::SC_getAdditionalAction(const char *key, AnnotWidget *a
 	LinkAction *linkAction = nullptr;
 	Object obj;
 	Ref refa = ano->getRef();
-	Object additionalActions;
 
 	obj = xref->fetch(refa.num, refa.gen);
 	if (obj.isDict())
 	{
 		Dict* adic = obj.getDict();
-		additionalActions = adic->lookupNF("AA");
+		POPPLER_CONST_075 Object POPPLER_REF additionalActions = adic->lookupNF("AA");
 		Object additionalActionsObject = additionalActions.fetch(pdfDoc->getXRef());
 		if (additionalActionsObject.isDict())
 		{
@@ -853,7 +852,7 @@ bool SlaOutputDev::handleWidgetAnnot(Annot* annota, double xCoor, double yCoor, 
 				QList<int> radList;
 				for (int i = 0; i < obj2.arrayGetLength(); i++)
 				{
-					Object childRef = obj2.arrayGetNF(i);
+					POPPLER_CONST_075 Object POPPLER_REF childRef = obj2.arrayGetNF(i);
 					if (!childRef.isRef())
 						continue;
 					Object childObj = obj2.arrayGet(i);
@@ -1332,13 +1331,13 @@ void SlaOutputDev::restoreState(GfxState *state)
 		m_currentClipPath = m_clipPaths.pop();
 }
 
-void SlaOutputDev::beginTransparencyGroup(GfxState *state, double *bbox, GfxColorSpace * /*blendingColorSpace*/, GBool isolated, GBool knockout, GBool forSoftMask)
+void SlaOutputDev::beginTransparencyGroup(GfxState *state, POPPLER_CONST_070 double *bbox, GfxColorSpace * /*blendingColorSpace*/, GBool isolated, GBool knockout, GBool forSoftMask)
 {
 	pushGroup("", forSoftMask);
 	m_groupStack.top().isolated = isolated;
 }
 
-void SlaOutputDev::paintTransparencyGroup(GfxState *state, double *bbox)
+void SlaOutputDev::paintTransparencyGroup(GfxState *state, POPPLER_CONST_070 double *bbox)
 {
 	if (m_groupStack.count() != 0)
 	{
@@ -1429,7 +1428,7 @@ void SlaOutputDev::endTransparencyGroup(GfxState *state)
 	}
 }
 
-void SlaOutputDev::setSoftMask(GfxState * /*state*/, double * /*bbox*/, GBool alpha, Function *transferFunc, GfxColor * /*backdropColor*/)
+void SlaOutputDev::setSoftMask(GfxState * /*state*/, POPPLER_CONST_070 double * /*bbox*/, GBool alpha, Function *transferFunc, GfxColor * /*backdropColor*/)
 {
 	if (m_groupStack.count() != 0)
 	{
@@ -2180,7 +2179,7 @@ GBool SlaOutputDev::patchMeshShadedFill(GfxState *state, GfxPatchMeshShading *sh
 	return gTrue;
 }
 
-GBool SlaOutputDev::tilingPatternFill(GfxState *state, Gfx * /*gfx*/, Catalog *cat, Object *str, double *pmat, int paintType, int tilingType, Dict *resDict, double *mat, double *bbox, int x0, int y0, int x1, int y1, double xStep, double yStep)
+GBool SlaOutputDev::tilingPatternFill(GfxState *state, Gfx * /*gfx*/, Catalog *cat, Object *str, POPPLER_CONST_070 double *pmat, int paintType, int tilingType, Dict *resDict, POPPLER_CONST_070 double *mat, POPPLER_CONST_070 double *bbox, int x0, int y0, int x1, int y1, double xStep, double yStep)
 {
 	PDFRectangle box;
 	Gfx *gfx;

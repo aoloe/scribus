@@ -14285,7 +14285,14 @@ bool ScribusDoc::sizeItem(double newX, double newY, PageItem *pi, bool fromMP, b
 	if ((redraw) && (!m_loading))
 	{
 		QRectF newR(currItem->getBoundingRect());
-		regionsChanged()->update(newR.united(oldR));
+		QRectF updateRect = newR.united(oldR);
+		if (currItem->isTextFrame() && currItem->nextInChain())
+		{
+			// If current frame is a text frame, force update of linked frames currently displayed on screen
+			if (currItem->itemText.length() > 0)
+				updateRect = QRectF();
+		}	
+		regionsChanged()->update(updateRect);
 	}
 	if (!fromMP)
 	{
@@ -14359,7 +14366,8 @@ void ScribusDoc::adjustItemSize(PageItem *currItem, bool includeGroup, bool move
 {
 	if (currItem->isArc())
 		return;
-	m_undoManager->setUndoEnabled(false);
+	// Added by r17735: why? this break resizing of multiple item selections
+	//m_undoManager->setUndoEnabled(false);
 	bool siz = currItem->Sizing;
 	currItem->Sizing = false;
 	if ((!(currItem->isGroup() || currItem->isSymbol())) || includeGroup)
@@ -14432,7 +14440,8 @@ void ScribusDoc::adjustItemSize(PageItem *currItem, bool includeGroup, bool move
 		currItem->Clip = FlattenPath(currItem->PoLine, currItem->Segments);
 	currItem->updateGradientVectors();
 	currItem->Sizing = siz;
-	m_undoManager->setUndoEnabled(true);
+	// Added by r17735: why? this break resizing of multiple item selections
+	//m_undoManager->setUndoEnabled(true);
 }
 
 void ScribusDoc::moveGroup(double x, double y, Selection* customSelection)
@@ -14548,6 +14557,10 @@ void ScribusDoc::scaleGroup(double scx, double scy, bool scaleText, Selection* c
 	double origGW = gw;
 	double origGH = gh;
 	updateManager()->setUpdatesDisabled();
+
+	UndoTransaction activeTransaction;
+	if (UndoManager::undoEnabled())
+		activeTransaction = m_undoManager->beginTransaction(Um::Selection, Um::IResize, Um::Resize, "", Um::IResize);
 
 	for (int i = 0; i < selectedItemCount; ++i)
 	{
@@ -14693,6 +14706,9 @@ void ScribusDoc::scaleGroup(double scx, double scy, bool scaleText, Selection* c
 					bb->updatePolyClip();
 			}
 		}
+
+		bb->checkChanges();
+
 		bb->setImageXYOffset(oldLocalX, oldLocalY);
 		bb->OldB2 = bb->width();
 		bb->OldH2 = bb->height();
@@ -14756,6 +14772,9 @@ void ScribusDoc::scaleGroup(double scx, double scy, bool scaleText, Selection* c
 		currItem->gWidth = gw;
 		currItem->gHeight = gh;
 	}
+
+	if (activeTransaction)
+		activeTransaction.commit();
 	// FIXME:av emit DocChanged();
 }
 

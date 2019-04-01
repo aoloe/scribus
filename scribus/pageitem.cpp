@@ -4638,7 +4638,7 @@ void PageItem::convertTo(ItemType newType)
 		SimpleState *ss = new SimpleState(Um::ConvertTo + " " + toType,
 										  QString(Um::FromTo).arg(fromType).arg(toType));
 		ss->set("CONVERT", "convert");
-		ss->set("PAGEITEM", reinterpret_cast<int>(this));
+		ss->set("PAGEITEM", reinterpret_cast<void*>(this));
 		ss->set("OLD_TYPE", m_ItemType);
 		ss->set("NEW_TYPE", newType);
 		undoManager->action(this, ss);
@@ -7049,8 +7049,7 @@ void PageItem::restorePStyle(SimpleState *state, bool isUndo)
 // For now we'll just make it independent of 'this' -- AV
 void PageItem::restoreType(SimpleState *state, bool isUndo)
 {
-	// well, probably not the best way to handle pointers...
-	PageItem * item = reinterpret_cast<PageItem *>(state->getInt("PAGEITEM"));
+	PageItem * item = reinterpret_cast<PageItem *>(state->getVoidPtr("PAGEITEM"));
 	int type = state->getInt("OLD_TYPE");
 	if (!isUndo)
 		type = state->getInt("NEW_TYPE");
@@ -7349,21 +7348,21 @@ void PageItem::restorePathOperation(UndoState *state, bool isUndo)
 
 	if (isUndo)
 	{
-		this->ClipEdited=is->getBool("PATH_OP_OLD_CLIPEDITED");
-		this->FrameType=is->getInt("PATH_OP_OLD_FRAMETYPE");
-		this->OldB2=is->getDouble("PATH_OP_OLD_OLDB2");
-		this->OldH2=is->getDouble("PATH_OP_OLD_OLDH2");
-		QPair<FPointArray, FPointArray> oldLines=is->getItem().first;
+		this->ClipEdited = is->getBool("PATH_OP_OLD_CLIPEDITED");
+		this->FrameType = is->getInt("PATH_OP_OLD_FRAMETYPE");
+		this->OldB2 = is->getDouble("PATH_OP_OLD_OLDB2");
+		this->OldH2 = is->getDouble("PATH_OP_OLD_OLDH2");
+		QPair<FPointArray, FPointArray> oldLines = is->getItem().first;
 		this->PoLine = oldLines.first;
 		this->ContourLine = oldLines.second;
 	}
 	else
 	{
-		this->ClipEdited=is->getBool("PATH_OP_NEW_CLIPEDITED");
-		this->FrameType=is->getInt("PATH_OP_NEW_FRAMETYPE");
-		this->OldB2=is->getDouble("PATH_OP_NEW_OLDB2");
-		this->OldH2=is->getDouble("PATH_OP_NEW_OLDH2");
-		QPair<FPointArray, FPointArray> newLines=is->getItem().second;
+		this->ClipEdited = is->getBool("PATH_OP_NEW_CLIPEDITED");
+		this->FrameType = is->getInt("PATH_OP_NEW_FRAMETYPE");
+		this->OldB2 = is->getDouble("PATH_OP_NEW_OLDB2");
+		this->OldH2 = is->getDouble("PATH_OP_NEW_OLDH2");
+		QPair<FPointArray, FPointArray> newLines = is->getItem().second;
 		this->PoLine = newLines.first;
 		this->ContourLine = newLines.second;
 	}
@@ -7417,7 +7416,7 @@ void PageItem::restoreUniteItem(SimpleState *state, bool isUndo)
 		Segments.clear();
 		FrameType = is->getInt("FRAMETYPE");
 		ClipEdited = is->getBool("CLIPEDITED");
-		bool oldRotMode = doc()->rotationMode();
+		int oldRotMode = doc()->rotationMode();
 		doc()->setRotationMode(0);
 		doc()->adjustItemSize(this);
 		doc()->setRotationMode(oldRotMode);
@@ -9604,7 +9603,7 @@ bool PageItem::loadImage(const QString& filename, const bool reload, const int g
 void PageItem::drawLockedMarker(ScPainter *p)
 {
 	//TODO: CB clean
-	double scp1 = p->zoomFactor() ;// / ScMW->view->scale();
+	double scp1 = p->zoomFactor() ;
 	double ofwh = 6 * scp1;
 	double ofx = m_width - ofwh/2;
 	double ofy = m_height - ofwh*1.5;
@@ -9740,18 +9739,17 @@ void PageItem::adjustPictScale()
 		br = m.mapRect(br);
 		xs = m_width / br.width();
 		ys = m_height / br.height();
+		double xs2 = AspectRatio ? qMin(xs, ys) : xs;
+		double ys2 = AspectRatio ? qMin(xs, ys) : ys;
 		QLineF wL = QLineF(0, 0, OrigW, 0);
-		wL.setAngle(-m_imageRotation);
 		QLineF hL = QLineF(0, 0, 0, OrigH);
-		hL.setAngle(-m_imageRotation-90);
 		QTransform mm;
-		mm.scale(xs, ys);
+		mm.scale(xs2, ys2);
+		mm.rotate(-m_imageRotation);
 		hL = mm.map(hL);
 		wL = mm.map(wL);
 		xs = wL.length() / static_cast<double>(OrigW);
 		ys = hL.length() / static_cast<double>(OrigH);
-		m_imageXOffset = -br.x();
-		m_imageYOffset = -br.y();
 	}
 	if (AspectRatio)
 	{
@@ -9762,6 +9760,21 @@ void PageItem::adjustPictScale()
 	{
 		m_imageXScale = xs;
 		m_imageYScale = ys;
+	}
+	if (imageRot != 0.0)
+	{
+		QRectF br = QRectF(0, 0, OrigW * xs, OrigH * ys);
+		QTransform m;
+		m.scale(1.0 / xs, 1.0 / ys);
+		m.rotate(m_imageRotation);
+		br = m.mapRect(br);
+		m_imageXOffset = -br.x();
+		m_imageYOffset = -br.y();
+	}
+	else
+	{
+		m_imageXOffset = 0.0;
+		m_imageYOffset = 0.0;
 	}
 	// Disable broken code. Code must be independent from doc in that function
 	/*switch (m_Doc->RotMode)
@@ -10449,9 +10462,9 @@ void PageItem::updateClip(bool updateWelded)
 			OldH2 = height();
 			if (updateWelded)
 			{
-			for (int i = 0 ; i < weldList.count(); i++)
-			{
-				WeldingInfo wInf = weldList.at(i);
+				for (int i = 0 ; i < weldList.count(); i++)
+				{
+					WeldingInfo wInf = weldList.at(i);
 					if (wInf.weldItem->isNoteFrame())
 					{
 						PageItem_NoteFrame* noteFrame = wInf.weldItem->asNoteFrame();
@@ -10470,17 +10483,17 @@ void PageItem::updateClip(bool updateWelded)
 							continue;
 						}
 					}
-				FPointArray gr4;
-				FPoint wp = wInf.weldPoint;
-				gr4.addPoint(wp);
-				gr4.map(ma);
-				double dx = gr4.point(0).x() - wp.x();
-				double dy = gr4.point(0).y() - wp.y();
-				moveWelded(dx, dy, i);
-				wInf.weldPoint = gr4.point(0);
-				weldList[i] = wInf;
+					FPointArray gr4;
+					FPoint wp = wInf.weldPoint;
+					gr4.addPoint(wp);
+					gr4.map(ma);
+					double dx = gr4.point(0).x() - wp.x();
+					double dy = gr4.point(0).y() - wp.y();
+					moveWelded(dx, dy, i);
+					wInf.weldPoint = gr4.point(0);
+					weldList[i] = wInf;
+				}
 			}
-		}
 		}
 		break;
 	}

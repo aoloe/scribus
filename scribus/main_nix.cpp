@@ -46,7 +46,6 @@ void initCrashHandler();
 static void defaultCrashHandler(int sig);
 
 ScribusCore SCRIBUS_API *ScCore;
-ScribusMainWindow SCRIBUS_API *ScMW;
 ScribusQApp SCRIBUS_API *ScQApp;
 bool emergencyActivated;
 
@@ -130,9 +129,13 @@ void defaultCrashHandler(int sig)
 		if (ScribusQApp::useGUI)
 		{
 			ScCore->closeSplash();
-			ScMessageBox::critical(ScMW, sigHdr, sigMsg);
-			ScMW->emergencySave();
-			ScMW->close();
+			ScribusMainWindow* mainWin = ScCore->primaryMainWindow();
+			if (mainWin)
+			{
+				ScMessageBox::critical(mainWin, sigHdr, sigMsg);
+				mainWin->emergencySave();
+				mainWin->close();
+			}
 		}
 		alarm(300);
 	}

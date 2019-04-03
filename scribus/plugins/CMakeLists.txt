@@ -11,7 +11,7 @@ if(WANT_SCRIPTER2)
   #scripter2
   message(STATUS "Building with Scripter 2")
   add_subdirectory(scripter)
-else if(WANT_SCRIPTER_PYBIND11)
+elseif(WANT_SCRIPTER_PYBIND11)
   message(STATUS "Building with Scripter Pybind11")
   add_subdirectory(scripter-pybind11)
 else()

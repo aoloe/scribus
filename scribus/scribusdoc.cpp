@@ -242,7 +242,6 @@ ScribusDoc::ScribusDoc() : UndoObject( tr("Document")), Observable<ScribusDoc>(n
 	ValCount(0),
 	m_documentFileName( tr("Document")+"-"),
 	AllFonts(&m_appPrefsData.fontPrefs.AvailFonts),
-	CurrentSel(-1),
 	LastAuto(nullptr), FirstAuto(nullptr),
 	DraggedElem(nullptr),
 	ElemToLink(nullptr),
@@ -337,7 +336,6 @@ ScribusDoc::ScribusDoc(const QString& docName, int unitindex, const PageSize& pa
 	ValCount(0),
 	m_documentFileName(docName),
 	AllFonts(&m_appPrefsData.fontPrefs.AvailFonts),
-	CurrentSel(-1),
 	LastAuto(nullptr), FirstAuto(nullptr),
 	DraggedElem(nullptr),
 	ElemToLink(nullptr),
@@ -5422,6 +5420,7 @@ int ScribusDoc::itemAdd(const PageItem::ItemType itemType, const PageItem::ItemF
 	}
 	
 	Items->append(newItem);
+
 	if (UndoManager::undoEnabled())
 	{
 		ScItemState<PageItem*> *is = new ScItemState<PageItem*>("Create PageItem");
@@ -6568,7 +6567,13 @@ void ScribusDoc::setMasterPageMode(bool changeToMasterPageMode)
 {
 	if (changeToMasterPageMode == m_masterPageMode)
 		return;
-	if (changeToMasterPageMode)
+	m_masterPageMode = changeToMasterPageMode;
+	assignPageModeLists();
+}
+
+void ScribusDoc::assignPageModeLists()
+{
+	if (m_masterPageMode)
 	{
 		Pages = &MasterPages;
 		Items = &MasterItems;
@@ -6578,7 +6583,6 @@ void ScribusDoc::setMasterPageMode(bool changeToMasterPageMode)
 		Pages = &DocPages;
 		Items = &DocItems;
 	}
-	m_masterPageMode = changeToMasterPageMode;
 }
 
 void ScribusDoc::setSymbolEditMode(bool mode, const QString& symbolName)
@@ -6713,16 +6717,7 @@ void ScribusDoc::setSymbolEditMode(bool mode, const QString& symbolName)
 				docPatterns[m_ScMW->patternsDependingOnThis[a]].pattern = currItem->DrawObj_toImage(qMin(qMax(x2 - x1, y2 - y1), 500.0));
 			}
 		}
-		if (masterPageMode())
-		{
-			Pages = &MasterPages;
-			Items = &MasterItems;
-		}
-		else
-		{
-			Pages = &DocPages;
-			Items = &DocItems;
-		}
+		assignPageModeLists();
 		delete addedPage;
 		setActiveLayer(m_storedLayerID);
 		setLayerVisible(m_storedLayerID, m_storedLayerVis);
@@ -6856,16 +6851,7 @@ void ScribusDoc::setInlineEditMode(bool mode, int id)
 			currItem->inlineCharID = m_currentEditedIFrame;
 			FrameItems[m_currentEditedIFrame] = currItem;
 		}
-		if (masterPageMode())
-		{
-			Pages = &MasterPages;
-			Items = &MasterItems;
-		}
-		else
-		{
-			Pages = &DocPages;
-			Items = &DocItems;
-		}
+		assignPageModeLists();
 		delete addedPage;
 		EditFrameItems.clear();
 		setActiveLayer(m_storedLayerID);

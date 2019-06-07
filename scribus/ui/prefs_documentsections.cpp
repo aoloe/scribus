@@ -202,6 +202,7 @@ void Prefs_DocumentSections::addEntry()
 		blank.sectionstartindex = 1;
 		blank.reversed = false;
 		blank.active = true;
+		blank.pageNumberWidth = 0;
 		m_localSections.insert(count, blank);
 	}
 	else
@@ -221,12 +222,13 @@ void Prefs_DocumentSections::addEntry()
 				struct DocumentSection blank;
 				blank.number = ++i;
 				blank.name = QString::number(i);
-				blank.fromindex = it->toindex+1+1;
-				blank.toindex = it->toindex+2+1;
+				blank.fromindex = it->toindex+1;
+				blank.toindex = it->toindex+2;
 				blank.type = Type_1_2_3;
 				blank.sectionstartindex = 1;
 				blank.reversed = false;
 				blank.active = true;
+				blank.pageNumberWidth = 0;
 				m_localSections.insert(i, blank);
 			}
 			++i;

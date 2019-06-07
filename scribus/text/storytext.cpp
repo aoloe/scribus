@@ -555,6 +555,13 @@ void StoryText::removeChars(int pos, uint len)
 	if (pos + static_cast<int>(len) > length())
 		len = length() - pos;
 
+	if (pos == 0 && len > 0 && len == length())
+	{
+		int lastChar = length() - 1;
+		while (lastChar > 0 && text(lastChar) == SpecialChars::PARSEP)
+			--lastChar;
+		d->orphanedCharStyle = charStyle(lastChar);
+	}
 	for (int i = pos + static_cast<int>(len) - 1; i >= pos; --i)
 	{
 		ScText *it = d->at(i);
@@ -1011,7 +1018,7 @@ bool StoryText::hasMark(int pos, Mark* mrk) const
 
 	StoryText* that = const_cast<StoryText *>(this);
 	if (that->d->at(pos)->ch == SpecialChars::OBJECT)
-        return that->d->at(pos)->hasMark(mrk);
+		return that->d->at(pos)->hasMark(mrk);
 	return false;
 }
 
@@ -1152,7 +1159,7 @@ const CharStyle & StoryText::charStyle(int pos) const
 	if (length() == 0)
 	{
 //		qDebug() << "storytext::charstyle: default";
-		return defaultStyle().charStyle();
+		return d->orphanedCharStyle;
 	}
 	if (pos == length())
 	{
@@ -1984,7 +1991,7 @@ void StoryText::invalidateLayout()
 void StoryText::invalidateAll()
 {
 	d->pstyleContext.invalidate();
-    invalidate(0, length());
+	invalidate(0, length());
 }
 
 void StoryText::invalidate(int firstItem, int endItem)

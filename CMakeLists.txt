@@ -769,13 +769,15 @@ endif()
 #<< JPEG, TIFF
 
 #<< PYTHON
-#set(PythonLibs_FIND_VERSION 2)
-# find_package(PythonLibs 2 REQUIRED)
-# if (PYTHON_LIBRARY)
-# 	message("Python Library Found OK")
-# 	set(HAVE_PYTHON 1)
-# 	set(COMPILE_PYTHON 1)
-# endif()
+if(NOT WANT_SCRIPTER_PYBIND11)
+	set(PythonLibs_FIND_VERSION 2)
+	find_package(PythonLibs 2 REQUIRED)
+	if (PYTHON_LIBRARY)
+		message("Python Library Found OK")
+		set(HAVE_PYTHON 1)
+		set(COMPILE_PYTHON 1)
+	endif()
+endif()
 #>> PYTHON
 
 #<< FreeType2

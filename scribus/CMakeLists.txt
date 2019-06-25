@@ -38,6 +38,7 @@ if (WANT_DESIGNER)
 	add_subdirectory(designer)
 endif ()
 add_subdirectory(third_party)
+add_subdirectory(api)
 
 if(HAVE_OSG)
 	set(SCRIBUS_OSG_UI_SRC

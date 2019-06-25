@@ -1109,6 +1109,7 @@ link_directories(
 	${CMAKE_CURRENT_BINARY_DIR}/third_party/pgf
 	${CMAKE_CURRENT_BINARY_DIR}/third_party/rtf-qt
 	${CMAKE_CURRENT_BINARY_DIR}/third_party/zip
+	${CMAKE_CURRENT_BINARY_DIR}/api
 	${HARFBUZZ_LIBRARY_DIRS}
 	${ICU_LIBRARY_DIRS}
 )
@@ -1144,6 +1145,7 @@ endif ()
 set(SCRIBUS_WPG_LIB "scribus_wpg_lib")
 set(SCRIBUS_PGF_LIB "scribus_pgf_lib")
 set(SCRIBUS_ZIP_LIB "scribus_zip_lib")
+set(SCRIBUS_API_LIB "scribus_api_lib")
 set(SCRIBUS_RTF_LIB "scribus_rtf_lib")
 
 include_directories(
@@ -1337,6 +1339,7 @@ target_link_libraries(${EXE_NAME}
 	${SCRIBUS_WPG_LIB}
 	${SCRIBUS_PGF_LIB}
 	${SCRIBUS_ZIP_LIB}
+	${SCRIBUS_API_LIB}
 	${SCRIBUS_RTF_LIB}
 	${LCMS2_LIBRARIES}
 )

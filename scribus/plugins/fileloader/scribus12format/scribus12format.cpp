@@ -162,7 +162,7 @@ QString Scribus12Format::readSLA(const QString & fileName)
 		docBytes = compressor.readAll();
 		compressor.close();
 		if (docBytes.isEmpty())
-			return QString::null;
+			return QString();
 	}
 	else
 	{
@@ -176,13 +176,13 @@ QString Scribus12Format::readSLA(const QString & fileName)
 			docText = QString::fromUtf8(docBytes);
 		else if (docBytes.left(9) == "<SCRIBUS>") // Older non utf8 doc
 			docText = QString::fromLocal8Bit(docBytes);
-		else 
-			return QString::null;
+		else
+			return QString();
 	}
 	else
 	{
 		qDebug("scribus12format: SCRIBUSUTF8NEW");
-		return QString::null;
+		return QString();
 	}
 	if (docText.endsWith(QChar(10)) || docText.endsWith(QChar(13)))
 		docText.truncate(docText.length()-1);
@@ -536,7 +536,7 @@ void Scribus12Format::PasteItem(struct CopyPasteBuffer *Buffer, bool drag, bool 
 			currItem->convertClip();
 		else
 			//
-			currItem->Clip = FlattenPath(currItem->PoLine, currItem->Segments);
+			currItem->Clip = flattenPath(currItem->PoLine, currItem->Segments);
 	}
 	else
 	{
@@ -766,7 +766,7 @@ bool Scribus12Format::loadFile(const QString& fileName, const FileFormat & /* fm
 	}
 	int ObCount = 0;
 	int activeLayer = 0;
-	PrefsManager* prefsManager=PrefsManager::instance();
+	PrefsManager& prefsManager=PrefsManager::instance();
 	while (!DOC.isNull())
 	{
 		QDomElement dc=DOC.toElement();
@@ -799,14 +799,14 @@ bool Scribus12Format::loadFile(const QString& fileName, const FileFormat & /* fm
 		m_Doc->PageSp=dc.attribute("AUTOSPALTEN").toInt();
 		m_Doc->PageSpa=ScCLocale::toDoubleC(dc.attribute("ABSTSPALTEN"));
 		m_Doc->setUnitIndex(dc.attribute("UNITS", "0").toInt());
-		m_Doc->guidesPrefs().gridShown = prefsManager->appPrefs.guidesPrefs.gridShown;
-		m_Doc->guidesPrefs().guidesShown = prefsManager->appPrefs.guidesPrefs.guidesShown;
-		m_Doc->guidesPrefs().colBordersShown = prefsManager->appPrefs.guidesPrefs.colBordersShown;
-		m_Doc->guidesPrefs().framesShown = prefsManager->appPrefs.guidesPrefs.framesShown;
-		m_Doc->guidesPrefs().layerMarkersShown = prefsManager->appPrefs.guidesPrefs.layerMarkersShown;
-		m_Doc->guidesPrefs().marginsShown = prefsManager->appPrefs.guidesPrefs.marginsShown;
-		m_Doc->guidesPrefs().baselineGridShown = prefsManager->appPrefs.guidesPrefs.baselineGridShown;
-		m_Doc->guidesPrefs().linkShown = prefsManager->appPrefs.guidesPrefs.linkShown;
+		m_Doc->guidesPrefs().gridShown = prefsManager.appPrefs.guidesPrefs.gridShown;
+		m_Doc->guidesPrefs().guidesShown = prefsManager.appPrefs.guidesPrefs.guidesShown;
+		m_Doc->guidesPrefs().colBordersShown = prefsManager.appPrefs.guidesPrefs.colBordersShown;
+		m_Doc->guidesPrefs().framesShown = prefsManager.appPrefs.guidesPrefs.framesShown;
+		m_Doc->guidesPrefs().layerMarkersShown = prefsManager.appPrefs.guidesPrefs.layerMarkersShown;
+		m_Doc->guidesPrefs().marginsShown = prefsManager.appPrefs.guidesPrefs.marginsShown;
+		m_Doc->guidesPrefs().baselineGridShown = prefsManager.appPrefs.guidesPrefs.baselineGridShown;
+		m_Doc->guidesPrefs().linkShown = prefsManager.appPrefs.guidesPrefs.linkShown;
 		m_Doc->guidesPrefs().showPic = true;
 		m_Doc->guidesPrefs().showControls = false;
 		m_Doc->guidesPrefs().renderStackOrder.clear();
@@ -815,7 +815,7 @@ bool Scribus12Format::loadFile(const QString& fileName, const FileFormat & /* fm
 // 		DoFonts.clear();
 		m_Doc->itemToolPrefs().textSize=qRound(ScCLocale::toDoubleC(dc.attribute("DSIZE")) * 10);
 		Defont=dc.attribute("DFONT");
-		m_Doc->itemToolPrefs().textFont = prefsManager->appPrefs.itemToolPrefs.textFont;
+		m_Doc->itemToolPrefs().textFont = prefsManager.appPrefs.itemToolPrefs.textFont;
 		m_AvailableFonts->findFont(Defont, m_Doc);
 		m_Doc->itemToolPrefs().textFont = Defont;
 		m_Doc->itemToolPrefs().textColumns=dc.attribute("DCOL", "1").toInt();
@@ -853,7 +853,7 @@ bool Scribus12Format::loadFile(const QString& fileName, const FileFormat & /* fm
 		m_Doc->cmsSettings().CMSinUse = static_cast<bool>(dc.attribute("DPuse", "0").toInt());
 		m_Doc->cmsSettings().GamutCheck = static_cast<bool>(dc.attribute("DPgam", "0").toInt());
 		m_Doc->cmsSettings().BlackPoint = static_cast<bool>(dc.attribute("DPbla", "1").toInt());
-		m_Doc->cmsSettings().DefaultMonitorProfile = prefsManager->appPrefs.colorPrefs.DCMSset.DefaultMonitorProfile;
+		m_Doc->cmsSettings().DefaultMonitorProfile = prefsManager.appPrefs.colorPrefs.DCMSset.DefaultMonitorProfile;
 		m_Doc->cmsSettings().DefaultPrinterProfile = dc.attribute("DPPr","");
 		m_Doc->cmsSettings().DefaultImageRGBProfile = dc.attribute("DPIn","");
 		m_Doc->cmsSettings().DefaultImageCMYKProfile = dc.attribute("DPPr",""); // Use DPPr to match 1.2.x behavior
@@ -883,8 +883,8 @@ bool Scribus12Format::loadFile(const QString& fileName, const FileFormat & /* fm
 		m_Doc->GuideLock = static_cast<bool>(dc.attribute("GUIDELOCK", "0").toInt());
 		m_Doc->SnapGuides = static_cast<bool>(dc.attribute("SnapToGuides", "0").toInt());
 		m_Doc->SnapGrid  = static_cast<bool>(dc.attribute("SnapToGrid", "0").toInt());
-		m_Doc->guidesPrefs().minorGridSpacing = ScCLocale::toDoubleC(dc.attribute("MINGRID"), prefsManager->appPrefs.guidesPrefs.minorGridSpacing);
-		m_Doc->guidesPrefs().majorGridSpacing = ScCLocale::toDoubleC(dc.attribute("MAJGRID"), prefsManager->appPrefs.guidesPrefs.majorGridSpacing);
+		m_Doc->guidesPrefs().minorGridSpacing = ScCLocale::toDoubleC(dc.attribute("MINGRID"), prefsManager.appPrefs.guidesPrefs.minorGridSpacing);
+		m_Doc->guidesPrefs().majorGridSpacing = ScCLocale::toDoubleC(dc.attribute("MAJGRID"), prefsManager.appPrefs.guidesPrefs.majorGridSpacing);
 		m_Doc->itemToolPrefs().lineStartArrow = 0;
 		m_Doc->itemToolPrefs().lineEndArrow = 0;
 		m_Doc->LastAuto = nullptr;
@@ -1114,21 +1114,21 @@ bool Scribus12Format::loadFile(const QString& fileName, const FileFormat & /* fm
 					{
 						PageItem* ta = TableItems.at(ttc);
 						if (ta->TopLinkID != -1)
-							ta->TopLink = m_Doc->Items->at(TableID[ta->TopLinkID]);
+							ta->m_topLink = m_Doc->Items->at(TableID[ta->TopLinkID]);
 						else
-							ta->TopLink = nullptr;
+							ta->m_topLink = nullptr;
 						if (ta->LeftLinkID != -1)
-							ta->LeftLink = m_Doc->Items->at(TableID[ta->LeftLinkID]);
+							ta->m_leftLink = m_Doc->Items->at(TableID[ta->LeftLinkID]);
 						else
-							ta->LeftLink = nullptr;
+							ta->m_leftLink = nullptr;
 						if (ta->RightLinkID != -1)
-							ta->RightLink = m_Doc->Items->at(TableID[ta->RightLinkID]);
+							ta->m_rightLink = m_Doc->Items->at(TableID[ta->RightLinkID]);
 						else
-							ta->RightLink = nullptr;
+							ta->m_rightLink = nullptr;
 						if (ta->BottomLinkID != -1)
-							ta->BottomLink = m_Doc->Items->at(TableID[ta->BottomLinkID]);
+							ta->m_bottomLink = m_Doc->Items->at(TableID[ta->BottomLinkID]);
 						else
-							ta->BottomLink = nullptr;
+							ta->m_bottomLink = nullptr;
 					}
 				}
 			}
@@ -2113,21 +2113,21 @@ bool Scribus12Format::loadPage(const QString & fileName, int pageNumber, bool Mp
 					{
 						PageItem* ta = TableItems.at(ttc);
 						if (ta->TopLinkID != -1)
-							ta->TopLink = m_Doc->Items->at(TableID[ta->TopLinkID]);
+							ta->m_topLink = m_Doc->Items->at(TableID[ta->TopLinkID]);
 						else
-							ta->TopLink = nullptr;
+							ta->m_topLink = nullptr;
 						if (ta->LeftLinkID != -1)
-							ta->LeftLink = m_Doc->Items->at(TableID[ta->LeftLinkID]);
+							ta->m_leftLink = m_Doc->Items->at(TableID[ta->LeftLinkID]);
 						else
-							ta->LeftLink = nullptr;
+							ta->m_leftLink = nullptr;
 						if (ta->RightLinkID != -1)
-							ta->RightLink = m_Doc->Items->at(TableID[ta->RightLinkID]);
+							ta->m_rightLink = m_Doc->Items->at(TableID[ta->RightLinkID]);
 						else
-							ta->RightLink = nullptr;
+							ta->m_rightLink = nullptr;
 						if (ta->BottomLinkID != -1)
-							ta->BottomLink = m_Doc->Items->at(TableID[ta->BottomLinkID]);
+							ta->m_bottomLink = m_Doc->Items->at(TableID[ta->BottomLinkID]);
 						else
-							ta->BottomLink = nullptr;
+							ta->m_bottomLink = nullptr;
 					}
 				}
 				// reestablish textframe links
@@ -2265,9 +2265,9 @@ void Scribus12Format::GetStyle(QDomElement *pg, ParagraphStyle *vg, StyleSet<Par
 	tmpf = pg->attribute("FONT", doc->itemToolPrefs().textFont);
 	if (tmpf.isEmpty())
 		tmpf = doc->itemToolPrefs().textFont;
-	PrefsManager *prefsManager=PrefsManager::instance();
-	prefsManager->appPrefs.fontPrefs.AvailFonts.findFont(tmpf, doc);
-	vg->charStyle().setFont(prefsManager->appPrefs.fontPrefs.AvailFonts[tmpf]);
+	PrefsManager& prefsManager=PrefsManager::instance();
+	prefsManager.appPrefs.fontPrefs.AvailFonts.findFont(tmpf, doc);
+	vg->charStyle().setFont(prefsManager.appPrefs.fontPrefs.AvailFonts[tmpf]);
 	vg->charStyle().setFontSize(qRound(ScCLocale::toDoubleC(pg->attribute("FONTSIZE"), 12.0) * 10.0));
 	vg->setHasDropCap(static_cast<bool>(pg->attribute("DROP", "0").toInt()));
 	vg->setDropCapLines(pg->attribute("DROPLIN", "2").toInt());

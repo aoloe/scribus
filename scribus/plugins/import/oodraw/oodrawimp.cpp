@@ -168,7 +168,7 @@ bool OODrawImportPlugin::import(QString fileName, int flags)
 	if (fileName.isEmpty())
 	{
 		flags |= lfInteractive;
-		PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("OODrawImport");
+		PrefsContext* prefs = PrefsManager::instance().prefsFile->getPluginContext("OODrawImport");
 		QString wdir = prefs->get("wdir", ".");
 		CustomFDialog diaf(ScCore->primaryMainWindow(), wdir, QObject::tr("Open"), QObject::tr("OpenOffice.org Draw (*.sxd *.SXD);;All Files (*)"));
 		if (diaf.exec())
@@ -743,7 +743,7 @@ QList<PageItem*> OODPlug::parseLine(const QDomElement &e)
 	ite->FrameType = 3;
 	if (!e.hasAttribute("draw:transform"))
 	{
-		ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+		ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 		m_Doc->adjustItemSize(ite);
 	}
 	ite = finishNodeParsing(e, ite, style);
@@ -769,7 +769,7 @@ QList<PageItem*> OODPlug::parsePolygon(const QDomElement &e)
 	ite->FrameType = 3;
 	if (!e.hasAttribute("draw:transform"))
 	{
-		ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+		ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 		m_Doc->adjustItemSize(ite);
 	}
 	ite = finishNodeParsing(e, ite, style);
@@ -795,7 +795,7 @@ QList<PageItem*> OODPlug::parsePolyline(const QDomElement &e)
 	ite->FrameType = 3;
 	if (!e.hasAttribute("draw:transform"))
 	{
-		ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+		ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 		m_Doc->adjustItemSize(ite);
 	}
 	ite = finishNodeParsing(e, ite, style);
@@ -847,7 +847,7 @@ QList<PageItem*> OODPlug::parsePath(const QDomElement &e)
 		ite->FrameType = 3;
 		if (!e.hasAttribute("draw:transform"))
 		{
-			ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+			ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 			m_Doc->adjustItemSize(ite);
 		}
 		ite = finishNodeParsing(e, ite, style);
@@ -1144,7 +1144,7 @@ PageItem* OODPlug::finishNodeParsing(const QDomElement &elm, PageItem* item, OOD
 		item->FrameType = 3;
 		FPoint wh = getMaxClipF(&item->PoLine);
 		item->setWidthHeight(wh.x(), wh.y());
-		item->Clip = FlattenPath(item->PoLine, item->Segments);
+		item->Clip = flattenPath(item->PoLine, item->Segments);
 		m_Doc->adjustItemSize(item);
 	}
 	item->OwnPage = m_Doc->OnPage(item);

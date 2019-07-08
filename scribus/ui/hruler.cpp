@@ -35,7 +35,6 @@ for which a new license (GPL+exception) is in place.
 
 #include "canvasgesture_rulermove.h"
 #include "hruler.h"
-#include "prefsmanager.h"
 #include "scpage.h"
 
 #include "scribusdoc.h"
@@ -96,7 +95,6 @@ Hruler::Hruler(ScribusView *pa, ScribusDoc *doc) : QWidget(pa),
 	m_whereToDraw(0),
 	m_drawMark(false)
 {
-	prefsManager=PrefsManager::instance();
 	setBackgroundRole(QPalette::Window);
 	setAutoFillBackground(true);
 	QPalette palette;
@@ -348,7 +346,7 @@ void Hruler::mouseReleaseEvent(QMouseEvent *m)
 void Hruler::enterEvent(QEvent *e)
 {
 	if (m_textEditMode)
-		qApp->changeOverrideCursor(IconManager::instance()->loadCursor("tab.png", 3));
+		qApp->changeOverrideCursor(IconManager::instance().loadCursor("tab.png", 3));
 }
 
 void Hruler::leaveEvent(QEvent *m)
@@ -449,7 +447,7 @@ void Hruler::mouseMoveEvent(QMouseEvent *m)
 		}
 		if ((!m_mousePressed) && (m->y() < height()) && (m->y() > 0) && (m->x() > ColStart - 2*m_doc->guidesPrefs().grabRadius) && (m->x() < ColEnd + 2*m_doc->guidesPrefs().grabRadius))
 		{
-			setCursor(IconManager::instance()->loadCursor("tab.png", 3));
+			setCursor(IconManager::instance().loadCursor("tab.png", 3));
 			switch (findRulerHandle(m->pos(), m_doc->guidesPrefs().grabRadius))
 			{
 				case rc_leftFrameDist:
@@ -478,7 +476,7 @@ void Hruler::mouseMoveEvent(QMouseEvent *m)
 		}
 		if ((m_mousePressed) && (m_rulerCode == rc_tab) && ((m->y() > height()) || (m->y() < 0)))
 		{
-			setCursor(IconManager::instance()->loadCursor("DelPoint.png", 1, 1));
+			setCursor(IconManager::instance().loadCursor("DelPoint.png", 1, 1));
 			return;
 		}
 		setCursor(QCursor(Qt::ArrowCursor));

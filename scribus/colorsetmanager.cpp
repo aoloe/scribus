@@ -27,13 +27,9 @@ for which a new license (GPL+exception) is in place.
 #include <QByteArray>
 #include <QDebug>
 
-ColorSetManager::ColorSetManager()
-{
-}
+ColorSetManager::ColorSetManager() = default;
 
-ColorSetManager::~ColorSetManager()
-{
-}
+ColorSetManager::~ColorSetManager() = default;
 
 void ColorSetManager::initialiseDefaultPrefs(struct ApplicationPrefs& appPrefs)
 {
@@ -203,7 +199,7 @@ void ColorSetManager::searchDir(const QString& path, QMap<QString, QString> &pLi
 					{
 						item = new QTreeWidgetItem(parent);
 						item->setFlags(Qt::ItemIsEditable | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled);
-						item->setIcon(0, QIcon(IconManager::instance()->loadIcon("16/folder.png")));
+						item->setIcon(0, QIcon(IconManager::instance().loadIcon("16/folder.png")));
 						item->setText(0, setName);
 					}
 					searchDir(path + dirs[dc] + "/", pList, item);
@@ -226,7 +222,7 @@ void ColorSetManager::searchDir(const QString& path, QMap<QString, QString> &pLi
 					item->setText(0, setName);
 					item->setData(0, Qt::UserRole, fi.absolutePath());
 					if ((!fi.isWritable()) || (fi.absolutePath().contains(ScPaths::applicationDataDir()+"swatches/locked")))
-						item->setIcon(0, QIcon(IconManager::instance()->loadIcon("16/lock.png")));
+						item->setIcon(0, QIcon(IconManager::instance().loadIcon("16/lock.png")));
 				}
 			}
 		}
@@ -327,7 +323,7 @@ bool ColorSetManager::loadPalette(const QString& paletteFileName, ScribusDoc *do
 		const FileFormat *fmt = LoadSavePlugin::getFormatById(FORMATID_SLA150IMPORT);
 		if (fmt)
 		{
-			fmt->setupTargets(doc, nullptr, doc->scMW(), nullptr, &(PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts));
+			fmt->setupTargets(doc, nullptr, doc->scMW(), nullptr, &(PrefsManager::instance().appPrefs.fontPrefs.AvailFonts));
 			fmt->loadPalette(paletteFileName);
 		}
 		else

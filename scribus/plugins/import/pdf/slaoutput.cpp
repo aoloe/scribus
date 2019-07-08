@@ -374,7 +374,7 @@ bool SlaOutputDev::handleTextAnnot(Annot* annota, double xCoor, double yCoor, do
 	ite->ClipEdited = true;
 	ite->FrameType = 3;
 	ite->setFillEvenOdd(false);
-	ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+	ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 	ite->ContourLine = ite->PoLine.copy();
 	ite->setTextFlowMode(PageItem::TextFlowDisabled);
 	m_Elements->append(ite);
@@ -529,7 +529,7 @@ bool SlaOutputDev::handleLinkAnnot(Annot* annota, double xCoor, double yCoor, do
 		ite->ClipEdited = true;
 		ite->FrameType = 3;
 		ite->setFillEvenOdd(false);
-		ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+		ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 		ite->ContourLine = ite->PoLine.copy();
 		ite->setTextFlowMode(PageItem::TextFlowDisabled);
 		m_Elements->append(ite);
@@ -689,7 +689,7 @@ bool SlaOutputDev::handleWidgetAnnot(Annot* annota, double xCoor, double yCoor, 
 			ite->ClipEdited = true;
 			ite->FrameType = 3;
 			ite->setFillEvenOdd(false);
-			ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+			ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 			ite->ContourLine = ite->PoLine.copy();
 			ite->setTextFlowMode(PageItem::TextFlowDisabled);
 			m_Elements->append(ite);
@@ -1593,7 +1593,7 @@ void SlaOutputDev::stroke(GfxState *state)
 		out.parseSVG(output);
 		m_ctm = QTransform(ctm[0], ctm[1], ctm[2], ctm[3], ctm[4], ctm[5]);
 		out.map(m_ctm);
-		FPoint wh = out.WidthHeight();
+		FPoint wh = out.widthHeight();
 		if ((out.size() > 3) && ((wh.x() != 0.0) || (wh.y() != 0.0)))
 		{
 			CurrColorStroke = getColor(state->getStrokeColorSpace(), state->getStrokeColor(), &CurrStrokeShade);
@@ -1671,7 +1671,7 @@ void SlaOutputDev::fill(GfxState *state)
 	m_ctm = QTransform(ctm[0], ctm[1], ctm[2], ctm[3], ctm[4], ctm[5]);
 	out.map(m_ctm);
 	Coords = output;
-	FPoint wh = out.WidthHeight();
+	FPoint wh = out.widthHeight();
 	if ((out.size() > 3) && ((wh.x() != 0.0) || (wh.y() != 0.0)))
 	{
 		CurrColorFill = getColor(state->getFillColorSpace(), state->getFillColor(), &CurrFillShade);
@@ -1716,7 +1716,7 @@ void SlaOutputDev::eoFill(GfxState *state)
 	m_ctm = QTransform(ctm[0], ctm[1], ctm[2], ctm[3], ctm[4], ctm[5]);
 	out.map(m_ctm);
 	Coords = output;
-	FPoint wh = out.WidthHeight();
+	FPoint wh = out.widthHeight();
 	if ((out.size() > 3) && ((wh.x() != 0.0) || (wh.y() != 0.0)))
 	{
 		CurrColorFill = getColor(state->getFillColorSpace(), state->getFillColor(), &CurrFillShade);
@@ -2439,7 +2439,7 @@ void SlaOutputDev::drawImageMask(GfxState *state, Object *ref, Stream *str, int 
 	ite->ClipEdited = true;
 	ite->FrameType = 3;
 	m_doc->setRedrawBounding(ite);
-	ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+	ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 	ite->setTextFlowMode(PageItem::TextFlowDisabled);
 	ite->setFillShade(100);
 	ite->setLineShade(100);
@@ -2577,7 +2577,7 @@ void SlaOutputDev::drawSoftMaskedImage(GfxState *state, Object *ref, Stream *str
 	ite->ClipEdited = true;
 	ite->FrameType = 3;
 	m_doc->setRedrawBounding(ite);
-	ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+	ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 	ite->setTextFlowMode(PageItem::TextFlowDisabled);
 	ite->setFillShade(100);
 	ite->setLineShade(100);
@@ -2726,7 +2726,7 @@ void SlaOutputDev::drawMaskedImage(GfxState *state, Object *ref, Stream *str,  i
 	ite->ClipEdited = true;
 	ite->FrameType = 3;
 	m_doc->setRedrawBounding(ite);
-	ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+	ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 	ite->setTextFlowMode(PageItem::TextFlowDisabled);
 	ite->setFillShade(100);
 	ite->setLineShade(100);
@@ -2874,7 +2874,7 @@ void SlaOutputDev::drawImage(GfxState *state, Object *ref, Stream *str, int widt
 	ite->ClipEdited = true;
 	ite->FrameType = 3;
 	m_doc->setRedrawBounding(ite);
-	ite->Clip = FlattenPath(ite->PoLine, ite->Segments);
+	ite->Clip = flattenPath(ite->PoLine, ite->Segments);
 	ite->setTextFlowMode(PageItem::TextFlowDisabled);
 	ite->setFillShade(100);
 	ite->setLineShade(100);
@@ -3410,7 +3410,7 @@ void SlaOutputDev::drawChar(GfxState *state, double x, double y, double dx, doub
 			double yCoor = m_doc->currentPage()->yOffset();
 			FPointArray textPath;
 			textPath.fromQPainterPath(qPath);
-			FPoint wh = textPath.WidthHeight();
+			FPoint wh = textPath.widthHeight();
 			if ((textPath.size() > 3) && ((wh.x() != 0.0) || (wh.y() != 0.0)))
 			{
 				CurrColorFill = getColor(state->getFillColorSpace(), state->getFillColor(), &CurrFillShade);
@@ -3927,7 +3927,7 @@ bool SlaOutputDev::checkClip()
 	bool ret = false;
 	if (m_currentClipPath.count() != 0)
 	{
-		FPoint wh = m_currentClipPath.WidthHeight();
+		FPoint wh = m_currentClipPath.widthHeight();
 		if ((wh.x() > 0) && (wh.y() > 0))
 			ret = true;
 	}

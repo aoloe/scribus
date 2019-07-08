@@ -53,8 +53,8 @@ CupsOptions::CupsOptions(QWidget* parent, const QString& device) : QDialog( pare
 	FlagsOpt.clear();
 	setModal(true);
 	setWindowTitle( tr( "Printer Options" ) );
-	setWindowIcon(IconManager::instance()->loadIcon("AppIcon.png"));
-	prefs = PrefsManager::instance()->prefsFile->getContext("cups_options");
+	setWindowIcon(IconManager::instance().loadIcon("AppIcon.png"));
+	prefs = PrefsManager::instance().prefsFile->getContext("cups_options");
 	setSizeGripEnabled(true);
 	CupsOptionsLayout = new QVBoxLayout( this );
 	CupsOptionsLayout->setSpacing( 5 );

@@ -126,7 +126,7 @@ void SCFonts::AddPath(QString p)
 void SCFonts::AddScalableFonts(const QString &path, const QString& DocName)
 {
 	//Make sure this is not empty or we will scan the whole drive on *nix
-	//QString::null+/ is / of course.
+	//QString()+/ is / of course.
 	if (path.isEmpty())
 		return;
 	FT_Library library = nullptr;
@@ -624,7 +624,7 @@ static QString getFtError(int code)
 
 	if (ftErrors.contains(code))
 		return ftErrors.value(code);
-	return QString::null;
+	return QString();
 }
 
 // Load a single font into the library from the passed filename. Returns true on error.
@@ -922,18 +922,18 @@ const ScFace& SCFonts::findFont(const QString& fontname, ScribusDoc *doc)
 	if (fontname.isEmpty())
 		return ScFace::none();
 	
-	PrefsManager* prefsManager = PrefsManager::instance();
+	PrefsManager& prefsManager = PrefsManager::instance();
 	
 	if (!contains(fontname) || !(*this)[fontname].usable())
 	{
 		QString replFont;
-		if ((!prefsManager->appPrefs.fontPrefs.GFontSub.contains(fontname)) || (!(*this)[prefsManager->appPrefs.fontPrefs.GFontSub[fontname]].usable()))
+		if ((!prefsManager.appPrefs.fontPrefs.GFontSub.contains(fontname)) || (!(*this)[prefsManager.appPrefs.fontPrefs.GFontSub[fontname]].usable()))
 		{
-			replFont = doc ? doc->itemToolPrefs().textFont : prefsManager->appPrefs.itemToolPrefs.textFont;
+			replFont = doc ? doc->itemToolPrefs().textFont : prefsManager.appPrefs.itemToolPrefs.textFont;
 		}
 		else
-			replFont = prefsManager->appPrefs.fontPrefs.GFontSub[fontname];
-		ScFace repl = (*this)[replFont].mkReplacementFor(fontname, doc ? doc->documentFileName() : QString(""));
+			replFont = prefsManager.appPrefs.fontPrefs.GFontSub[fontname];
+		ScFace repl = (*this)[replFont].mkReplacementFor(fontname, doc ? doc->documentFileName() : QString());
 		insert(fontname, repl);
 	}
 	else if ( doc && !doc->UsedFonts.contains(fontname) )
@@ -1111,7 +1111,7 @@ void SCFonts::AddXFontServerPath()
  * fallback if no suitable fonts are found elsewere */
 void SCFonts::AddUserPath(const QString& pf)
 {
-	PrefsContext *pc = PrefsManager::instance()->prefsFile->getContext("Fonts");
+	PrefsContext *pc = PrefsManager::instance().prefsFile->getContext("Fonts");
 	PrefsTable *extraDirs = pc->getTable("ExtraFontDirs");
 	for (int i = 0; i < extraDirs->getRowCount(); ++i)
 		AddPath(extraDirs->get(i, 0));
@@ -1160,7 +1160,7 @@ void SCFonts::ReadCacheList(const QString& pf)
 
 void SCFonts::WriteCacheList()
 {
-	QString prefsLocation = PrefsManager::instance()->preferencesLocation();
+	QString prefsLocation = PrefsManager::instance().preferencesLocation();
 	WriteCacheList(prefsLocation);
 }
 

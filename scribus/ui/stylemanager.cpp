@@ -37,7 +37,7 @@ const QString StyleManager::SEPARATOR = "$$$$"; // dumb but it works
 
 StyleManager::StyleManager(QWidget *parent, const char *name)
 	: ScrPaletteBase(parent, name), m_item(nullptr), m_widget(nullptr),
-	m_shortcutWidget(nullptr), m_currentType(QString::null), m_isEditMode(true), m_doc(nullptr)
+	m_shortcutWidget(nullptr), m_isEditMode(true), m_doc(nullptr)
 {
 	setupUi(this);
 	styleView->hideColumn(SHORTCUT_COL);
@@ -54,7 +54,7 @@ StyleManager::StyleManager(QWidget *parent, const char *name)
 	QString pname(name);
 	if (pname.isEmpty())
 		pname = "styleManager";
-	m_prefs = PrefsManager::instance()->prefsFile->getContext(pname);
+	m_prefs = PrefsManager::instance().prefsFile->getContext(pname);
 	m_isEditMode = true;
 	m_isStoryEditMode = false;
 	m_editPosition.setX(m_prefs->getInt("eX", x()));
@@ -335,7 +335,7 @@ void StyleManager::slotImport()
 	if (!m_doc)
 		return;
 
-	PrefsContext* dirs = PrefsManager::instance()->prefsFile->getContext("dirs");
+	PrefsContext* dirs = PrefsManager::instance().prefsFile->getContext("dirs");
 	QString wdir = dirs->get("editformats", ".");
 	CustomFDialog dia(this, wdir, tr("Open"), tr("documents (*.sla *.sla.gz *.scd *.scd.gz);;All Files (*)"));
 	if (dia.exec() == QDialog::Accepted)
@@ -533,8 +533,8 @@ void StyleManager::slotEdit()
 			}
 			++it;
 		}
-		m_rcStyle = QString::null;
-		m_rcType = QString::null;
+		m_rcStyle.clear();
+		m_rcType.clear();
 	}
 }
 
@@ -562,8 +562,8 @@ void StyleManager::slotClone()
 			}
 			++it;
 		}
-		m_rcStyle = QString::null;
-		m_rcType = QString::null;
+		m_rcStyle.clear();
+		m_rcType.clear();
 	}
 
 	QTreeWidgetItemIterator it(styleView, QTreeWidgetItemIterator::Selected);
@@ -611,8 +611,8 @@ void StyleManager::slotNewPopup(QAction *action)
 	else if (actionType.isEmpty())
 		return;
 
-	m_rcType = QString::null;
-	m_rcStyle = QString::null;
+	m_rcStyle.clear();
+	m_rcType.clear();
 
 	createNewStyle(typeName);
 }
@@ -625,8 +625,8 @@ void StyleManager::slotNewPopup()
 void StyleManager::slotRightClick(/*StyleViewItem *item, */const QPoint &point/*, int col*/)
 {
 	StyleViewItem *item = static_cast<StyleViewItem*>(styleView->currentItem());
-	m_rcStyle = QString::null;
-	m_rcType = QString::null;
+	m_rcStyle.clear();
+	m_rcType.clear();
 
 	if (m_isEditMode && item) // make item the only selection if in edit mode
 	{                        // default behaviour for right clicking is not to select the item
@@ -709,8 +709,8 @@ void StyleManager::slotRightClick(/*StyleViewItem *item, */const QPoint &point/*
 
 void StyleManager::slotDoubleClick(QTreeWidgetItem *item, /*const QPoint &point, */int col)
 {
-	m_rcStyle = QString::null;
-	m_rcType = QString::null;
+	m_rcStyle.clear();
+	m_rcType.clear();
 
 	if (m_isEditMode && item) // make item the only selection if in edit mode
 	{
@@ -735,8 +735,8 @@ void StyleManager::slotDoubleClick(QTreeWidgetItem *item, /*const QPoint &point,
 			slotOk(); 
 		createNewStyle(itext);
 	}
-	m_rcStyle = QString::null;
-	m_rcType = QString::null;
+	m_rcStyle.clear();
+	m_rcType.clear();
 }
 
 void StyleManager::createNewStyle(const QString &typeName, const QString &fromParent)
@@ -1136,7 +1136,7 @@ bool StyleManager::shortcutExists(const QString &keys)
 			return true;
 	}
 
-	ApplicationPrefs *prefsData=&(PrefsManager::instance()->appPrefs);
+	ApplicationPrefs *prefsData=&(PrefsManager::instance().appPrefs);
 	for (QMap<QString,Keys>::Iterator it=prefsData->keyShortcutPrefs.KeyActions.begin();
 		 it!=prefsData->keyShortcutPrefs.KeyActions.end(); ++it)
 	{
@@ -1159,8 +1159,8 @@ void StyleManager::slotApplyStyle(const QString& keyString)
 	m_item->toSelection(slist[1]);
 	slotDocSelectionChanged();
 
-	m_rcStyle = QString::null;
-	m_rcType  = QString::null;
+	m_rcStyle.clear();
+	m_rcType.clear();
 }
 
 bool StyleManager::nameIsUnique(const QString &name)
@@ -1199,7 +1199,7 @@ void StyleManager::slotSetupWidget()
 			if (m_shortcutWidget)
 			{
 				m_shortcutWidget->setEnabled(false);
-				m_shortcutWidget->setShortcut(QString::null);
+				m_shortcutWidget->setShortcut(QString());
 			}
 		}
 		else
@@ -1243,8 +1243,8 @@ void StyleManager::slotApplyStyle(QTreeWidgetItem *item)
 
 	slotDocSelectionChanged();
 
-	m_rcStyle = QString::null;
-	m_rcType  = QString::null;
+	m_rcStyle.clear();
+	m_rcType.clear();
 }
 
 void StyleManager::slotApplyStyle(QTreeWidgetItem *newitem, QTreeWidgetItem *)
@@ -1304,14 +1304,14 @@ void StyleManager::slotDocStylesChanged()
 	qDebug() << "slotDocStylesChanged()";
 }
 
-// QPair.first == QString::null if nothing is selected or if
+// QPair.first == QString() if nothing is selected or if
 // there are items from more than one type in the selection
 // if selection is valid (only from single type) QPair.first will
 // include the type name and QPair.second will have all the selected
 // stylenames in it
 QPair<QString, QStringList> StyleManager::namesFromSelection()
 {
-	QString typeName(QString::null);
+	QString typeName;
 	QStringList styleNames;
 	if (m_rcStyle.isNull())
 	{
@@ -1324,7 +1324,7 @@ QPair<QString, QStringList> StyleManager::namesFromSelection()
 				typeName = item->rootName();
 			else if (!typeName.isNull() && typeName != item->rootName())
 			{
-				typeName = QString::null;
+				typeName.clear();
 				break; // two different types selected returning null
 			}
 	

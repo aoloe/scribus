@@ -300,9 +300,9 @@ QImage SvmPlug::readThumbnail(const QString& fName)
 	double y = 0;
 	parseHeader(fName, x, y, b, h);
 	if (b == 0.0)
-		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
+		b = PrefsManager::instance().appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
-		h = PrefsManager::instance()->appPrefs.docSetupPrefs.pageHeight;
+		h = PrefsManager::instance().appPrefs.docSetupPrefs.pageHeight;
 	docWidth = b;
 	docHeight = h;
 	docX = x;
@@ -433,9 +433,9 @@ bool SvmPlug::import(const QString& fNameIn, const TransactionSettings& trSettin
 	}
 	parseHeader(fNameIn, x, y, b, h);
 	if (b == 0.0)
-		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
+		b = PrefsManager::instance().appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
-		h = PrefsManager::instance()->appPrefs.docSetupPrefs.pageHeight;
+		h = PrefsManager::instance().appPrefs.docSetupPrefs.pageHeight;
 	docWidth = b;
 	docHeight = h;
 	docX = x;
@@ -1528,7 +1528,7 @@ void SvmPlug::finishItem(PageItem* ite, bool fill)
 				iteG->ClipEdited = true;
 				iteG->OldB2 = ite->width();
 				iteG->OldH2 = ite->height();
-				iteG->Clip = FlattenPath(iteG->PoLine, iteG->Segments);
+				iteG->Clip = flattenPath(iteG->PoLine, iteG->Segments);
 				iteG->updateGradientVectors();
 				ite = iteG;
 				tmpSel->clear();

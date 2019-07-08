@@ -66,7 +66,7 @@ Prefs_KeyboardShortcuts::Prefs_KeyboardShortcuts(QWidget* parent, ScribusDoc* do
 	keyDisplay->setText("");
 	selectedLVI = nullptr;
 
-	clearSearchButton->setIcon(IconManager::instance()->loadIcon("clear_right.png"));
+	clearSearchButton->setIcon(IconManager::instance().loadIcon("clear_right.png"));
 	// signals and slots connections
 	connect( keyTable, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), this, SLOT(dispKey(QTreeWidgetItem*, QTreeWidgetItem*)));
 	connect( noKey, SIGNAL(clicked()), this, SLOT(setNoKey()));
@@ -124,7 +124,7 @@ void Prefs_KeyboardShortcuts::loadKeySetFile()
 
 void Prefs_KeyboardShortcuts::importKeySetFile()
 {
-	PrefsContext* dirs = PrefsManager::instance()->prefsFile->getContext("dirs");
+	PrefsContext* dirs = PrefsManager::instance().prefsFile->getContext("dirs");
 	QString currentPath = dirs->get("keymapprefs_import", ScPaths::instance().shareDir() + "keysets/");
 	QString s = QFileDialog::getOpenFileName(this, tr("Select a Key set file to read"), currentPath, tr("Key Set XML Files (*.xml)"));
 	if (!s.isEmpty())
@@ -132,7 +132,7 @@ void Prefs_KeyboardShortcuts::importKeySetFile()
 }
 void Prefs_KeyboardShortcuts::exportKeySetFile()
 {
-	PrefsContext* dirs = PrefsManager::instance()->prefsFile->getContext("dirs");
+	PrefsContext* dirs = PrefsManager::instance().prefsFile->getContext("dirs");
 	QString currentPath= dirs->get("keymapprefs_export", ".");
 	QString s = QFileDialog::getSaveFileName(this, tr("Select a Key set file to save to"), currentPath, tr("Key Set XML Files (*.xml)") );
 	if (!s.isEmpty())
@@ -204,7 +204,7 @@ bool Prefs_KeyboardShortcuts::exportKeySet(const QString& filename)
 	if (overwrite(this, exportFileName))
 	{
 		bool ok;
-		QString setName = QInputDialog::getText(this, tr("Export Keyboard Shortcuts to File"), tr("Enter the name of the shortcut set:"), QLineEdit::Normal, QString::null, &ok);
+		QString setName = QInputDialog::getText(this, tr("Export Keyboard Shortcuts to File"), tr("Enter the name of the shortcut set:"), QLineEdit::Normal, QString(), &ok);
 		if (!( ok && !setName.isEmpty()) )
 			return false;
 

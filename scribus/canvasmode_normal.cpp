@@ -483,7 +483,7 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 				ScElemMimeData* md = ScriXmlDoc::writeToMimeData(m_doc, m_doc->m_Selection);
 				QDrag* dr = new QDrag(m_view);
 				dr->setMimeData(md);
-				const QPixmap& pm = IconManager::instance()->loadPixmap("dragpix.png");
+				const QPixmap& pm = IconManager::instance().loadPixmap("dragpix.png");
 				dr->setPixmap(pm);
 			//	dr->setDragCursor(pm, Qt::CopyAction);
 			//	dr->setDragCursor(pm, Qt::MoveAction);
@@ -1205,7 +1205,7 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 	}
 	if (m_doc->appMode != modeEdit)
 	{
-		if (!PrefsManager::instance()->appPrefs.uiPrefs.stickyTools)
+		if (!PrefsManager::instance().appPrefs.uiPrefs.stickyTools)
 			m_view->requestMode(modeNormal);
 		else
 		{
@@ -1810,7 +1810,7 @@ void CanvasMode_Normal::importToPage()
 	formats.append("Scribus Objects (*.sce *.SCE)");
 	qSort(formats);
 	allFormats += formats.join(";;");
-	PrefsContext* dirs = PrefsManager::instance()->prefsFile->getContext("dirs");
+	PrefsContext* dirs = PrefsManager::instance().prefsFile->getContext("dirs");
 	QString wdir = dirs->get("pastefile", ".");
 	FPoint pastePoint = m_mouseCurrentPoint;
 	CustomFDialog dia(m_view, wdir, tr("Open"), allFormats, fdExistingFiles | fdShowImportOptions | fdDisableOk);
@@ -1820,7 +1820,7 @@ void CanvasMode_Normal::importToPage()
 		return;
 	if (!fileName.isEmpty())
 	{
-		PrefsManager::instance()->prefsFile->getContext("dirs")->set("pastefile", fileName.left(fileName.lastIndexOf("/")));
+		PrefsManager::instance().prefsFile->getContext("dirs")->set("pastefile", fileName.left(fileName.lastIndexOf("/")));
 		m_doc->setLoading(true);
 		QFileInfo fi(fileName);
 		bool savedAlignGrid = m_doc->SnapGrid;

@@ -21,19 +21,19 @@ SMCStyleWidget::SMCStyleWidget(QWidget *parent) :
 {
 	setupUi(this);
 
-	IconManager* im = IconManager::instance();
-	fontSizeLabel_->setPixmap(im->loadPixmap("zeichen.png"));
-	trackingLabel_->setPixmap(im->loadPixmap("textkern.png"));
-	widthSpaceLabel->setPixmap(im->loadPixmap("spacewidth.png"));
-	baselineOffsetLabel_->setPixmap(im->loadPixmap("textbase.png"));
-	hscaleLabel_->setPixmap(im->loadPixmap("textscaleh.png"));
-	vscaleLabel_->setPixmap(im->loadPixmap("textscalev.png"));
-	FillIcon->setPixmap(im->loadPixmap("16/color-fill.png"));
-	fillShadeLabel->setPixmap(im->loadPixmap("shade.png"));
-	StrokeIcon->setPixmap(im->loadPixmap("16/color-stroke.png"));
-	strokeShadeLabel->setPixmap(im->loadPixmap("shade.png"));
-	backIcon->setPixmap(im->loadPixmap("16/color-fill.png"));
-	backShadeLabel->setPixmap(im->loadPixmap("shade.png"));
+	IconManager& im = IconManager::instance();
+	fontSizeLabel_->setPixmap(im.loadPixmap("zeichen.png"));
+	trackingLabel_->setPixmap(im.loadPixmap("textkern.png"));
+	widthSpaceLabel->setPixmap(im.loadPixmap("spacewidth.png"));
+	baselineOffsetLabel_->setPixmap(im.loadPixmap("textbase.png"));
+	hscaleLabel_->setPixmap(im.loadPixmap("textscaleh.png"));
+	vscaleLabel_->setPixmap(im.loadPixmap("textscalev.png"));
+	FillIcon->setPixmap(im.loadPixmap("16/color-fill.png"));
+	fillShadeLabel->setPixmap(im.loadPixmap("shade.png"));
+	StrokeIcon->setPixmap(im.loadPixmap("16/color-stroke.png"));
+	strokeShadeLabel->setPixmap(im.loadPixmap("shade.png"));
+	backIcon->setPixmap(im.loadPixmap("16/color-fill.png"));
+	backShadeLabel->setPixmap(im.loadPixmap("shade.png"));
 
 	fillColor_->setPixmapType(ColorCombo::fancyPixmaps);
 	fillColor_->clear();
@@ -171,7 +171,7 @@ void SMCStyleWidget::handleUpdateRequest(int updateFlags)
 
 void SMCStyleWidget::slotEnableFontFeatures(const QString& s)
 {
-	const ScFace& font = PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts[s];
+	const ScFace& font = PrefsManager::instance().appPrefs.fontPrefs.AvailFonts[s];
 	fontfeaturesSetting->enableFontFeatures(font.fontFeatures());
 }
 
@@ -311,7 +311,7 @@ void SMCStyleWidget::show(CharStyle *cstyle, QList<CharStyle> &cstyles, const QS
 
 	QString defaultLang(defLang.isEmpty() ? "en_GB" : defLang);
 	QString clang(cstyle->language().isEmpty() ? defaultLang : cstyle->language());
-	QString plang(QString::null);
+	QString plang;
 	if (hasParent)
 		plang = parent->language().isEmpty() ? defaultLang : parent->language();
 

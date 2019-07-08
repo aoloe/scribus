@@ -144,7 +144,7 @@ void ScripterCore::rebuildRecentScriptsMenu()
 {
 	m_menuMgr->clearMenuStrings("RecentScripts");
 	m_recentScriptActions.clear();
-	uint max = qMin(PrefsManager::instance()->appPrefs.uiPrefs.recentDocCount, m_recentScripts.count());
+	uint max = qMin(PrefsManager::instance().appPrefs.uiPrefs.recentDocCount, m_recentScripts.count());
 	for (uint m = 0; m < max; ++m)
 	{
 		QString strippedName=m_recentScripts[m];
@@ -483,7 +483,7 @@ void ScripterCore::slotExecute()
 
 void ScripterCore::readPlugPrefs()
 {
-	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
+	PrefsContext* prefs = PrefsManager::instance().prefsFile->getPluginContext("scriptplugin");
 	if (!prefs)
 	{
 		qDebug("scriptplugin: Unable to load prefs");
@@ -504,13 +504,13 @@ void ScripterCore::readPlugPrefs()
 	// then get more general preferences
 	m_enableExtPython = prefs->getBool("extensionscripts",false);
 	m_importAllNames = prefs->getBool("importall",true);
-	m_startupScript = prefs->get("startupscript", QString::null);
+	m_startupScript = prefs->get("startupscript", QString());
 	// and have the console window set up its position
 }
 
 void ScripterCore::savePlugPrefs()
 {
-	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
+	PrefsContext* prefs = PrefsManager::instance().prefsFile->getPluginContext("scriptplugin");
 	if (!prefs)
 	{
 		qDebug("scriptplugin: Unable to load prefs");
@@ -535,7 +535,7 @@ void ScripterCore::savePlugPrefs()
 void ScripterCore::aboutScript()
 {
 	QString fname = ScCore->primaryMainWindow()->CFileDialog(".", tr("Examine Script"), tr("Python Scripts (*.py *.PY);;All Files (*)"), "", fdNone);
-	if (fname == QString::null)
+	if (fname.isNull())
 		return;
 	QString html("<html><body>");
 	QFileInfo fi = QFileInfo(fname);

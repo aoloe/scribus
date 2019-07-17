@@ -950,31 +950,31 @@ public:
 		, m_scpage(scpage)
 	{}
 
-	void translate(double xp, double yp)
+	void translate(double xp, double yp) override
 	{
 		TextLayoutPainter::translate(xp, yp);
 		m_painter->translate(xp, yp);
 	}
 
-	void save()
+	void save() override
 	{
 		TextLayoutPainter::save();
 		m_painter->save();
 	}
 
-	void restore()
+	void restore() override
 	{
 		TextLayoutPainter::restore();
 		m_painter->restore();
 	}
 
-	void setScale(double h, double v)
+	void setScale(double h, double v) override
 	{
 		TextLayoutPainter::setScale(h, v);
 		m_painter->scale(h, v);
 	}
 
-	void drawGlyph(const GlyphCluster& gc)
+	void drawGlyph(const GlyphCluster& gc) override
 	{
 		if (gc.isControlGlyphs())
 			return;
@@ -1002,7 +1002,7 @@ public:
 			if (outline.size() > 3)
 				m_painter->fillPath();
 			m_painter->restore();
-			m_painter->translate(gl.xadvance, 0.0);
+			m_painter->translate(gl.xadvance * gl.scaleH, 0.0);
 		}
 
 		m_painter->setFillMode(fm);
@@ -1010,7 +1010,7 @@ public:
 		m_painter->restore();
 	}
 
-	void drawGlyphOutline(const GlyphCluster& gc, bool fill)
+	void drawGlyphOutline(const GlyphCluster& gc, bool fill) override
 	{
 		if (gc.isControlGlyphs())
 			return;
@@ -1030,9 +1030,11 @@ public:
 			m_painter->translate(gl.xoffset + current_x, -(fontSize() * gc.scaleV()) + gl.yoffset);
 
 			FPointArray outline = font().glyphOutline(gl.glyph);
-			double scaleH = gc.scaleH() * fontSize() / 10.0;
-			double scaleV = gc.scaleV() * fontSize() / 10.0;
-			m_painter->scale(scaleH, scaleV);
+			double scaleH = gl.scaleH * fontSize() / 10.0;
+			double scaleV = gl.scaleV * fontSize() / 10.0;
+			QTransform trans;
+			trans.scale(scaleH, scaleV);
+			outline.map(trans);
 			m_painter->setupPolygon(&outline, true);
 			if (outline.size() > 3)
 			{
@@ -1040,14 +1042,14 @@ public:
 				m_painter->strokePath();
 			}
 			m_painter->restore();
-			current_x += gl.xadvance;
+			current_x += gl.xadvance * gl.scaleH;
 		}
 
 		m_painter->setFillRule(fr);
 		m_painter->restore();
 	}
 
-	void drawLine(QPointF start, QPointF end)
+	void drawLine(QPointF start, QPointF end) override
 	{
 		m_painter->save();
 		setupState();
@@ -1055,7 +1057,7 @@ public:
 		m_painter->restore();
 	}
 
-	void drawRect(QRectF rect)
+	void drawRect(QRectF rect) override
 	{
 		m_painter->save();
 		setupState();
@@ -1065,7 +1067,7 @@ public:
 		m_painter->restore();
 	}
 
-	void drawObject(PageItem* embedded)
+	void drawObject(PageItem* embedded) override
 	{
 		QRect cullingArea;
 		if (!embedded)

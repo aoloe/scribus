@@ -144,7 +144,7 @@ public:
 
 	~PdfPainter() {}
 
-	void drawGlyph(const GlyphCluster& gc)
+	void drawGlyph(const GlyphCluster& gc) override
 	{
 		if (gc.isControlGlyphs() || gc.isEmpty())
 			return;
@@ -154,7 +154,7 @@ public:
 		{
 			if (gl.glyph >= ScFace::CONTROL_GLYPHS)
 			{
-				current_x += gl.xadvance;
+				current_x += gl.xadvance * gl.scaleH;
 				continue;
 			}
 
@@ -175,10 +175,10 @@ public:
 
 				m_pathBuffer += "q\n";
 				m_pathBuffer += transformToStr(transform) + " cm\n";
-				m_pathBuffer += FToStr(fontSize()) + " 0 0 " + FToStr(fontSize()) + " " + FToStr(x() + gl.xoffset + current_x) + " " + FToStr((y() - fontSize() + gl.yoffset) * -1) + " cm\n";
+				m_pathBuffer += FToStr(fontSize()) + " 0 0 " + FToStr(fontSize()) + " " + FToStr(x() + gl.xoffset + current_x) + " " + FToStr(-y() + fontSize() - gl.yoffset) + " cm\n";
 
 				if (gl.scaleV != 1.0)
-					m_pathBuffer += "1 0 0 1 0 " + FToStr(((fontSize() - fontSize() * gl.scaleV) / fontSize()) * -1) + " cm\n";
+					m_pathBuffer += "1 0 0 1 0 " + FToStr(gl.scaleV - 1.0) + " cm\n";
 				m_pathBuffer += FToStr(qMax(gl.scaleH, 0.1)) + " 0 0 " + FToStr(qMax(gl.scaleV, 0.1)) + " 0 0 cm\n";
 
 				if (!FillColor.isEmpty())
@@ -249,11 +249,11 @@ public:
 					}
 				}
 			}
-			current_x += gl.xadvance;
+			current_x += gl.xadvance * gl.scaleH;
 		}
 	}
 
-	void drawGlyphOutline(const GlyphCluster& gc, bool fill)
+	void drawGlyphOutline(const GlyphCluster& gc, bool fill) override
 	{
 		if (gc.isControlGlyphs() || gc.isEmpty())
 			return;
@@ -263,7 +263,7 @@ public:
 		{
 			if (gl.glyph >= ScFace::CONTROL_GLYPHS)
 			{
-				current_x += gl.xadvance;
+				current_x += gl.xadvance * gl.scaleH;
 				continue;
 			}
 
@@ -279,30 +279,32 @@ public:
 
 			if (pdfFont.method == Use_XForm)
 			{
+				m_pathBuffer += "q\n";
 				if (!StrokeColor.isEmpty())
 				{
-					m_pathBuffer += FToStr(strokeWidth() / fontSize()) + " w\n[] 0 d\n0 J\n0 j\n";
+					m_pathBuffer += FToStr(strokeWidth()) + " w\n[] 0 d\n0 J\n0 j\n";
 					m_pathBuffer += StrokeColor;
 				}
-
-				if (!FillColor.isEmpty())
-					m_pathBuffer += FillColor;
-
-				m_pathBuffer += "q\n";
 				m_pathBuffer += transformToStr(transform) + " cm\n";
-				m_pathBuffer += FToStr(fontSize()) + " 0 0 " + FToStr(fontSize()) + " " + FToStr(x() + gl.xoffset) + " " + FToStr((y() - fontSize() + gl.yoffset) * -1) + " cm\n";
-
-				if (gc.scaleV() != 1.0)
-					m_pathBuffer += "1 0 0 1 0 " + FToStr(((fontSize() - fontSize() * (gc.scaleV())) / fontSize()) * -1) + " cm\n";
-
-				m_pathBuffer += FToStr(qMax(gc.scaleH(), 0.1)) + " 0 0 " + FToStr(qMax(gc.scaleV(), 0.1)) + " 0 0 cm\n";
 
 				if (!FillColor.isEmpty())
+				{
+					m_pathBuffer += "q\n";
+					m_pathBuffer += FillColor;
+					m_pathBuffer += FToStr(fontSize()) + " 0 0 " + FToStr(fontSize()) + " " + FToStr(x() + gl.xoffset + current_x) + " " + FToStr(-y() + fontSize() - gl.yoffset) + " cm\n";
+					if (gc.scaleV() != 1.0)
+						m_pathBuffer += "1 0 0 1 0 " + FToStr(gl.scaleV - 1.0) + " cm\n";
+					m_pathBuffer += FToStr(qMax(gc.scaleH(), 0.1)) + " 0 0 " + FToStr(qMax(gc.scaleV(), 0.1)) + " 0 0 cm\n";
 					m_pathBuffer += pdfFont.name + "_gl" + Pdf::toPdf(gl.glyph) + " Do\n";
+					m_pathBuffer += "Q\n";
+				}
+
+				m_pathBuffer += "1.0 0 0 1.0 " + FToStr(x()) + " " + FToStr(fontSize() - y()) + " cm\n";
+				m_pathBuffer += "1.0 0 0 1.0 " + FToStr(gl.xoffset + current_x) + " " + FToStr(gc.scaleV() * fontSize() - fontSize() - gl.yoffset) + " cm\n";
 
 				FPointArray outline = font().glyphOutline(gl.glyph);
 				QTransform mat;
-				mat.scale(0.1, 0.1);
+				mat.scale((fontSize() * gc.scaleH()) / 10.0, (fontSize() * gc.scaleV()) / 10.0);
 				outline.map(mat);
 				bool nPath = true;
 				FPoint np;
@@ -385,17 +387,14 @@ public:
 					m_pathBuffer += "q\n";
 					m_pathBuffer += FToStr(strokeWidth()) + " w\n[] 0 d\n0 J\n0 j\n";
 
-					transform.scale(fontSize(), fontSize());
-					transform.translate(x() + gl.xoffset + current_x, y() + gl.yoffset);
-					if (gc.scaleV() != 1.0)
-						transform.translate(0, ((fontSize() - fontSize() * gc.scaleV()) / fontSize()) * -1);
-					transform.scale(qMax(gc.scaleH(), 0.1), qMax(gc.scaleV(), 0.1));
 					m_pathBuffer += transformToStr(transform) + " cm\n";
+					m_pathBuffer += "1.0 0 0 1.0 " + FToStr(x()) + " " + FToStr(fontSize() - y()) + " cm\n";
+					m_pathBuffer += "1.0 0 0 1.0 " + FToStr(gl.xoffset + current_x) + " " + FToStr(gc.scaleV() * fontSize() - fontSize() - gl.yoffset) + " cm\n";
 
 					/* paint outline */
 					FPointArray outline = font().glyphOutline(gl.glyph);
 					QTransform mat;
-					mat.scale(0.1, 0.1);
+					mat.scale((fontSize() * gc.scaleH()) / 10.0, (fontSize() * gc.scaleV()) / 10.0);
 					outline.map(mat);
 					bool nPath = true;
 					FPoint np;
@@ -456,11 +455,11 @@ public:
 					}
 				}
 			}
-			current_x += gl.xadvance;
+			current_x += gl.xadvance * gl.scaleH;
 		}
 	}
 
-	void drawLine(QPointF start, QPointF end)
+	void drawLine(QPointF start, QPointF end) override
 	{
 		QTransform transform = matrix();
 		transform.translate(x(), y());
@@ -479,7 +478,7 @@ public:
 		return m_backBuffer + "BT\n" + m_glyphBuffer + "ET\n" + m_pathBuffer;
 	}
 
-	void drawRect(QRectF rect)
+	void drawRect(QRectF rect) override
 	{
 		QTransform transform = matrix();
 //		transform.translate(x(), y());
@@ -498,7 +497,7 @@ public:
 		m_backBuffer += "Q\n";
 	}
 
-	void drawObject(PageItem* embedded)
+	void drawObject(PageItem* embedded) override
 	{
 		m_glyphBuffer += "ET\n"+m_pathBuffer;
 		m_pathBuffer.clear();

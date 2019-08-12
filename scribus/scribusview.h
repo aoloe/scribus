@@ -162,9 +162,10 @@ public:
 	void hideSymbolPage();
 	void showInlinePage(int id);
 	void hideInlinePage();
+
 	QImage PageToPixmap(int Nr, int maxGr, PageToPixmapFlags flags = Pixmap_DrawFrame | Pixmap_DrawBackground);
 	QImage MPageToPixmap(const QString& name, int maxGr, bool drawFrame = true);
-	void RecalcPicturesRes();
+
 	/**
 	 * Called when the ruler origin is dragged
 	 * @param m mouse event
@@ -342,44 +343,19 @@ signals:
 	void DocChanged();
 	void ItemGeom();
 	void PolyOpen();
-	void PStatus(int, uint);
-	void SetAngle(double);
-	void SetSizeValue(double);
-	void SetLineArt(Qt::PenStyle, Qt::PenCapStyle, Qt::PenJoinStyle);
-	void SetLocalValues(double, double, double, double);
-	void ItemTextAttr(double);
-	void ItemTextCols(int, double);
-	void SetDistValues(double, double, double, double);
 	void ItemCharStyle(const CharStyle&);
 	void ItemTextAlign(int);
 	void ItemTextEffects(int);
-	void HasTextSel();
-	void HasNoTextSel();
-	void MVals(double, double, double, double, double, double, int);
-	void PaintingDone();
 	void LoadPic();
 	void StatusPic();
-	void AppendText();
-	void DoGroup();
-	void CutItem();
-	void CopyItem();
-	void Amode(int);
 	void AddBM(PageItem *);
 	void DelBM(PageItem *);
 	void ChBMText(PageItem *);
-	void ToScrap(QString);
 	void LoadElem(QString, double, double, bool, bool, ScribusDoc *, ScribusView *);
-	void LevelChanged(uint);
 	void HavePoint(bool, bool);
 	void ClipPo(double, double);
 	void PolyStatus(int, uint);
-	void AnnotProps();
-	void EndNodeEdit();
-	void Hrule(int);
-	void Vrule(int);
 	void MousePos(double, double);
-	void callGimp();
-	void signalGuideInformation(int, qreal);
 };
 
 

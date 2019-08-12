@@ -240,9 +240,6 @@ void CanvasMode_Normal::mouseDoubleClickEvent(QMouseEvent *m)
 			// See if double click was on a frame handle
 			FPoint p = m_canvas->globalToCanvas(m->globalPos());
 			Canvas::FrameHandle fh = m_canvas->frameHitTest(QPointF(p.x(),p.y()), currItem);
-			//CB old code
-			//emit currItem->isAnnotation() ? AnnotProps() : Amode(modeEdit);
-			//mousePressEvent(m);
 			//CB if annotation, open the annotation dialog
 			if (currItem->isAnnotation())
 			{
@@ -1169,14 +1166,12 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 				PageItem* docItem = m_doc->Items->at(a);
 				if ((m_doc->masterPageMode()) && (docItem->OnMasterPage != m_doc->currentPage()->pageName()))
 					continue;
-				QRect  apr2 = m_canvas->canvasToLocal( docItem->getCurrentBoundingRect(docItem->lineWidth()) );
 				if (((docItem->m_layerID == m_doc->activeLayer()) || (m_doc->layerSelectable(docItem->m_layerID))) && (!m_doc->layerLocked(docItem->m_layerID)))
 				{
 					// get current item rect/bounding box
 					QRect apr2 = m_canvas->canvasToLocal( docItem->getCurrentBoundingRect(docItem->lineWidth()) );
 
 					bool is_selected = docItem->isSelected();
-					bool redrawSelection = false;
 
 					// alt selection
 					bool select = altPressed ? localSele.intersects(apr2) :

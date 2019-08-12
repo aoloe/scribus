@@ -5,8 +5,10 @@
 #Require 2.8.9 for Qt5 and CMAKE_POSITION_INDEPENDENT_CODE property
 #Require 3.1.0 for Qt 5.7 C++ 11 easy support
 #Require 3.2.0 for add_custom_target with byproducts
-cmake_minimum_required(VERSION 3.2.0 FATAL_ERROR)
+#Require 3.12 for new Find Python modules
+cmake_minimum_required(VERSION 3.12.0 FATAL_ERROR)
 
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
 
 # Configure CCache if available and wanted
 if (WANT_CCACHE)
@@ -63,7 +65,7 @@ project(scribus)
 #where VERSION_SUFFIX is of the form "", "svn" or "Nsvn" (N being the minor patch level)
 set (VERSION_MAJOR "1")
 set (VERSION_MINOR "5")
-set (VERSION_PATCH "5")
+set (VERSION_PATCH "6")
 set (VERSION_SUFFIX "svn")
 set (VERSION ${VERSION_MAJOR})
 if (VERSION_MINOR GREATER -1)
@@ -510,13 +512,13 @@ set(MIMEDIR "${CMAKE_INSTALL_DATAROOTDIR}/mime/packages/")
 #None, Debug, Release, .. or custom ones
 # set(WANT_DEBUG ON)
 if(WANT_DEBUG)
-	set(CMAKE_BUILD_TYPE Debug)
+	set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Set Debug Build Type" FORCE)
 endif()
 if (WANT_RELEASEWITHDEBUG)
-	set(CMAKE_BUILD_TYPE RelWithDebInfo)
+	set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Set Release with Debug Info Build Type" FORCE)
 endif()
 if(NOT WANT_DEBUG AND NOT WANT_RELEASEWITHDEBUG)
-	set(CMAKE_BUILD_TYPE RELEASE)
+	set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Set Release Build Type" FORCE)
 endif()
 
 
@@ -649,16 +651,16 @@ if(APPLE)
 	set(ENV{LD_PREBIND} 1 )
 	set(ENV{LD_PREBIND_ALLOW_OVERLAP} 1 )
 	if (WANT_DEBUG)
-	    set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
-		set(CMAKE_C_FLAGS_DEBUG "-O0 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
+		set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
 	endif()
 	if (WANT_RELEASEWITHDEBUG)
-	    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
-		set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
+		set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O2 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
+		set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -O2 -g -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
 	endif()
 	if (NOT WANT_DEBUG AND NOT WANT_RELEASEWITHDEBUG)
-	    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
-		set(CMAKE_C_FLAGS_RELEASE "-O2 -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
+		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
+		set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -fno-inline-functions -Wall -mmacosx-version-min=${OSXMINVER}")
 	endif()
 else()
 	if(${CMAKE_GENERATOR} MATCHES "^(Visual Studio|NMake).*")
@@ -668,24 +670,22 @@ else()
 		set(CMAKE_C_FLAGS_DEBUG)
 	else()
 		# vanilla gcc
-		set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -Wall -fstrict-aliasing")
-		set(CMAKE_C_FLAGS_DEBUG "-O0 -g -Wall -fstrict-aliasing")
+		set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -Wall -fstrict-aliasing -Wl,-E")
+		set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -g -Wall -fstrict-aliasing -Wl,-E")
 		if (_machine_x86 OR _machine_x86_64)
 			set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fPIC")
 			set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fPIC")
 		endif()
 	endif()
+	if(${CMAKE_GENERATOR} MATCHES "^(Visual Studio|NMake).*")
+		set(CMAKE_CXX_FLAGS_RELEASE)
+		set(CMAKE_C_FLAGS_RELEASE)
+	else()
+		set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -Wall -fPIC -Wl,-E")
+		set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -Wall -fPIC -Wl,-E")
+	#	add_definitions(-DNDEBUG)
+	endif()
 endif()
-
-if(${CMAKE_GENERATOR} MATCHES "^(Visual Studio|NMake).*")
-	set(CMAKE_CXX_FLAGS_RELEASE)
-	set(CMAKE_C_FLAGS_RELEASE)
-else()
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -Wall -fPIC")
-	set(CMAKE_C_FLAGS_RELEASE "-O2 -Wall -fPIC")
-#	add_definitions(-DNDEBUG)
-endif()
-
 if(WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN
 					-DAVOID_WIN32_FILEIO
@@ -701,7 +701,7 @@ endif()
 ########## Find Dependencies                                                                        ##########
 
 #<< Qt
-set (QT_MIN_VERSION "5.7.0")
+set(QT_MIN_VERSION "5.7.0")
 set(CMAKE_PREFIX_PATH "${QT_PREFIX}/lib/cmake")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 find_package(Qt5Core ${QT_MIN_VERSION} REQUIRED)
@@ -846,9 +846,17 @@ endif()
 #<< JPEG, TIFF
 
 #<< PYTHON
-#set(PythonLibs_FIND_VERSION 2)
-find_package(PythonLibs 2 REQUIRED)
-if (PYTHON_LIBRARY)
+#
+#find_package(PythonInterp 2)
+#find_package(PythonLibs 2 REQUIRED)
+#if (PYTHON_LIBRARY)
+#	message("Python Library Found OK")
+#	set(HAVE_PYTHON ON)
+#	set(COMPILE_PYTHON ON)
+#endif()
+#
+find_package (Python2 REQUIRED COMPONENTS Interpreter Development)
+if (Python2_Development_FOUND)
 	message("Python Library Found OK")
 	set(HAVE_PYTHON ON)
 	set(COMPILE_PYTHON ON)
@@ -1209,12 +1217,12 @@ if(EXISTS "${CMAKE_ROOT}/Modules/CPack.cmake")
 	set(CPACK_TOPLEVEL_TAG "")
 	set(CPACK_SOURCE_IGNORE_FILES
 		CMakeCache.txt
-		scribus-1.5.5.tar.bz2
-		scribus-1.5.5.tar.Z
-		scribus-1.5.5.tar.gz
-		scribus-1.5.5.svn.tar.bz2
-		scribus-1.5.5.svn.tar.Z
-		scribus-1.5.5.svn.tar.gz
+		scribus-1.5.6.tar.bz2
+		scribus-1.5.6.tar.7z
+		scribus-1.5.6.tar.gz
+		scribus-1.5.6.svn.tar.bz2
+		scribus-1.5.6.svn.tar.7z
+		scribus-1.5.6.svn.tar.gz
 		"~$"
 		"\\\\.cvsignore$"
 		"\\\\.o$"

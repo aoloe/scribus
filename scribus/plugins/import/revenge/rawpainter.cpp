@@ -18,7 +18,6 @@ for which a new license (GPL+exception) is in place.
 
 #include <cstdlib>
 
-#include "color.h"
 #include "commonstrings.h"
 #include "fileloader.h"
 #include "loadsaveplugin.h"
@@ -70,24 +69,23 @@ void RawPainterPres::startDocument(const librevenge::RVNGPropertyList &propList)
 void RawPainterPres::endDocument()
 {
 	painter->endDocument();
-	if (pageElements.count() > 1)
+	if (pageElements.isEmpty())
+		return;
+	for (int i = 1; i < pageElements.count(); ++i)
 	{
-		for (int a = 1; a < pageElements.count(); ++a)
+		if (i < mDoc->Pages->count())
 		{
-			if (a < mDoc->Pages->count())
+			double bX = mDoc->Pages->at(i)->xOffset();
+			double bY = mDoc->Pages->at(i)->yOffset();
+			for (int j = 0; j < pageElements[i].count(); ++j)
 			{
-				double bX = mDoc->Pages->at(a)->xOffset();
-				double bY = mDoc->Pages->at(a)->yOffset();
-				for (int b = 0; b < pageElements[a].count(); ++b)
-				{
-					PageItem *item = pageElements[a][b];
-					item->setXYPos(item->xPos() + bX, item->yPos() + bY, true);
-					if (item->isGroup())
-						mDoc->GroupOnPage(item);
-					else
-						item->OwnPage = mDoc->OnPage(item);
-					item->setRedrawBounding();
-				}
+				PageItem *item = pageElements[i][j];
+				item->setXYPos(item->xPos() + bX, item->yPos() + bY, true);
+				if (item->isGroup())
+					mDoc->GroupOnPage(item);
+				else
+					item->OwnPage = mDoc->OnPage(item);
+				item->setRedrawBounding();
 			}
 		}
 	}
@@ -513,8 +511,8 @@ void RawPainter::startPage(const librevenge::RVNGPropertyList &propList)
 		m_Doc->currentPage()->setInitialHeight(docHeight);
 		m_Doc->currentPage()->setWidth(docWidth);
 		m_Doc->currentPage()->setHeight(docHeight);
-		m_Doc->currentPage()->MPageNam = CommonStrings::trMasterPageNormal;
-		m_Doc->currentPage()->m_pageSize = "Custom";
+		m_Doc->currentPage()->setMasterPageNameNormal();
+		m_Doc->currentPage()->setSize("Custom");
 		m_Doc->reformPages(true);
 		baseX = m_Doc->currentPage()->xOffset();
 		baseY = m_Doc->currentPage()->yOffset();
@@ -3508,13 +3506,6 @@ double RawPainter::fromPercentage( const QString &s )
 	return ScCLocale::toDoubleC(s1) / 100.0;
 }
 
-QColor RawPainter::parseColorN( const QString &rgbColor )
-{
-	int r, g, b;
-	keywordToRGB( rgbColor.toLower(), r, g, b );
-	return QColor( r, g, b );
-}
-
 QString RawPainter::parseColor( const QString &s )
 {
 	QColor c;
@@ -3544,16 +3535,8 @@ QString RawPainter::parseColor( const QString &s )
 		c = QColor(r.toInt(), g.toInt(), b.toInt());
 	}
 	else
-	{
-		QString rgbColor = s.trimmed();
-		if (rgbColor.startsWith( "#" ))
-		{
-			rgbColor = rgbColor.left(7);
-			c.setNamedColor( rgbColor );
-		}
-		else
-			c = parseColorN( rgbColor );
-	}
+		c.setNamedColor( s.trimmed() );
+
 	ScColor tmp;
 	tmp.fromQColor(c);
 	tmp.setSpotColor(false);

@@ -114,6 +114,8 @@ private slots:
 	void doClearCStyle();
 	void doClearPStyle();
 
+	void doPStyleFromSelection();
+
 protected:
 	PropertyWidget_Advanced* advancedWidgets;
 	PropertyWidget_Distance* distanceWidgets;

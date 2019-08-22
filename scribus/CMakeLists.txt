@@ -176,6 +176,7 @@ set(SCRIBUS_UI_SRC
 	ui/propertywidget_orphansbase.ui
 	ui/propertywidget_pathtextbase.ui
 	ui/propertywidget_textcolorbase.ui
+	ui/propertywidget_stylefromselection.ui
 	ui/recoverdialog.ui
 	ui/replacecolors.ui
 	ui/replaceonecolor.ui
@@ -474,6 +475,7 @@ set(SCRIBUS_MOC_CLASSES
 	ui/propertywidget_pathtext.h
 	ui/propertywidget_textcolor.h
 	ui/propertywidget_fontfeatures.h
+	ui/propertywidget_stylefromselection.h
 	ui/proptree.h
 	ui/query.h
 	ui/recoverdialog.h
@@ -974,6 +976,7 @@ set(SCRIBUS_SOURCES
 	ui/propertywidget_pathtext.cpp
 	ui/propertywidget_textcolor.cpp
 	ui/propertywidget_fontfeatures.cpp
+	ui/propertywidget_stylefromselection.cpp
 	ui/propertywidgetbase.cpp
 	ui/proptree.cpp
 	ui/query.cpp

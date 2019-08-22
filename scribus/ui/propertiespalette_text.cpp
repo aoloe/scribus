@@ -13,6 +13,7 @@ for which a new license (GPL+exception) is in place.
 #endif
 #include <cmath>
 #include <QSignalBlocker>
+#include <QInputDialog>
 
 #include "appmodes.h"
 #include "colorcombo.h"
@@ -34,6 +35,7 @@ for which a new license (GPL+exception) is in place.
 #include "propertywidget_pareffect.h"
 #include "propertywidget_pathtext.h"
 #include "propertywidget_textcolor.h"
+#include "propertywidget_stylefromselection.h"
 #include "sccombobox.h"
 #include "scfonts.h"
 #include "scraction.h"
@@ -41,6 +43,7 @@ for which a new license (GPL+exception) is in place.
 #include "selection.h"
 #include "spalette.h"
 #include "styleselect.h"
+#include "stylemanager.h"
 #include "tabmanager.h"
 #include "undomanager.h"
 #include "units.h"
@@ -70,6 +73,13 @@ PropertiesPalette_Text::PropertiesPalette_Text( QWidget* parent) : QWidget(paren
 	paraStyleClear->setIcon(IconManager::instance().loadPixmap("16/edit-clear.png"));
 	charStyleLabel->setBuddy(charStyleCombo);
 	charStyleClear->setIcon(IconManager::instance().loadPixmap("16/edit-clear.png"));
+
+	paraStyleCreate->setIcon(IconManager::instance().loadPixmap("16/create-style.png"));
+	auto paraStyleCreateWidget = new PropertyWidget_StyleFromSelection(paraStyleCreate, this);
+	auto paraStyleCreateAction = new QWidgetAction(this);
+	paraStyleCreateAction->setDefaultWidget(paraStyleCreateWidget);
+	paraStyleCreate->setPopupMode(QToolButton::InstantPopup);
+	paraStyleCreate->addAction(paraStyleCreateAction);
 
 	colorWidgets = new PropertyWidget_TextColor(textTree);
 	colorWidgetsItem = textTree->addItem( colorWidgets, tr("Color && Effects") );
@@ -114,6 +124,7 @@ PropertiesPalette_Text::PropertiesPalette_Text( QWidget* parent) : QWidget(paren
 	connect(textDirection , SIGNAL(State(int))   , this, SLOT(handleDirection(int)));
 	connect(charStyleClear, SIGNAL(clicked()), this, SLOT(doClearCStyle()));
 	connect(paraStyleClear, SIGNAL(clicked()), this, SLOT(doClearPStyle()));
+	// connect(paraStyleCreate, SIGNAL(clicked()), this, SLOT(doPStyleFromSelection()));
 
 	connect(flopBox->flopGroup, SIGNAL(buttonClicked( int )), this, SLOT(handleFirstLinePolicy(int)));
 
@@ -678,6 +689,74 @@ void PropertiesPalette_Text::doClearPStyle()
 	m_doc->itemSelection_EraseParagraphStyle(&tempSelection);
 	CharStyle emptyCStyle;
 	m_doc->itemSelection_SetCharStyle(emptyCStyle, &tempSelection);
+}
+
+void PropertiesPalette_Text::doPStyleFromSelection()
+{
+	if (!m_ScMW || m_ScMW->scriptIsRunning() || !m_haveDoc || !m_haveItem)
+		return;
+
+	auto currItem = currentItemFromSelection();
+	if (!currItem)
+		return;
+
+	/**
+	 * Show an ad hoc dialog
+	 *
+	 *                               +---+
+	 *                               |Add|
+	 *                               +---+
+	 * +---------------------------------+
+	 * |                                 |
+	 * | Default Paragraph ...    Update |
+	 * |-------------------+             |
+	 * ||                  |      Create |
+	 * +-------------------+             |
+	 * |                                 |
+	 * |Feedback area            Cancel |
+	 * +---------------------------------+
+	 */
+	bool ok = false;
+	auto styleName = QInputDialog::getText(m_ScMW, tr("Create a new Paragraph Style"), tr("Name:"), QLineEdit::Normal, "" , &ok);
+	// TODO: also implement the update
+	// TODO: make sure that the style is unique
+	// TODO: call scribusdoc::createParagraphStyleFromSelection(name)
+	qDebug() << styleName;
+
+	if (ok) // TODO: we need a branching here: update or create?
+	{
+		auto referenceStyle = currItem->currentStyle();
+		referenceStyle.charStyle().applyCharStyle(currItem->currentCharStyle());
+
+		// TODO: the real code should go to ScribusDoc, so that it
+		// can also be used by the scripter
+		// PStyleFromStyle(QString newName, ParagraphStyle currStyle, bool update, bool defStyle)
+
+		ParagraphStyle newStyle;
+		newStyle.setStyle(referenceStyle);
+		newStyle.setName(styleName);
+		StyleSet<ParagraphStyle> styleSet;
+		styleSet.create(newStyle);
+		m_doc->redefineStyles(styleSet, false);
+		// changed();
+
+		qDebug() << "hey";
+
+		if (ScCore->usingGUI())
+		{
+			m_ScMW->styleMgr()->setDoc(m_doc);
+			paraStyleCombo->updateFormatList();
+		}
+
+		// PStyleFromStyle(styleName, curStyle, false);
+		// changed();
+		// TODO: apply the new style to the current selection
+		// if (ScCore->usingGUI())
+		// {
+		// 	scMW()->styleMgr()->setDoc(this);
+		// 	scMW()->propertiesPalette->paraStyleCombo->updateFormatList();
+		// }
+	}
 }
 
 void PropertiesPalette_Text::updateColorList()

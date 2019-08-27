@@ -42,12 +42,12 @@ struct SVGState;
 class SCRIBUS_API FPointArray : public QVector<FPoint>
 {
 public:
-	FPointArray() : m_svgState(nullptr) {};
-	FPointArray(int size) : QVector<FPoint>(size), m_svgState(nullptr) {};
-	FPointArray(const FPointArray &a) : QVector<FPoint>(a), m_svgState(nullptr) {};
+	FPointArray() {};
+	FPointArray(int size) : QVector<FPoint>(size) {};
+	FPointArray(const FPointArray &a) : QVector<FPoint>(a) {};
 	~FPointArray();
 
-	int  size() const { return QVector<FPoint>::count(); }
+	int size() const { return QVector<FPoint>::count(); }
 	bool resize(int newCount);
 	void reverse();
 	void setPoint(int i, double x, double y) { FPoint& p = QVector<FPoint>::operator[](i); p.xp = x; p.yp = y; };
@@ -79,6 +79,7 @@ public:
 	double lenPathDist(int seg, double t1, double t2) const;
 	void pointTangentNormalAt( int seg, double t, FPoint* p, FPoint* tn, FPoint* n ) const;
 	void pointDerivativesAt( int seg, double t, FPoint* p, FPoint* d1, FPoint* d2 ) const;
+	bool isBezierClosed() const;
 	void svgInit();
 	void svgMoveTo(double x, double y);
 	void svgLineTo(double x, double y);
@@ -92,7 +93,7 @@ public:
 	void fromQPainterPath(QPainterPath &path, bool close = false);
 
 private:
-	SVGState * m_svgState;
+	SVGState *m_svgState {nullptr};
 };
 
 #endif

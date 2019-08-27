@@ -164,7 +164,6 @@ public:
 		StrokeOpacity(1.0),
 		textAnchor("start"),
 		clipPath(),
-		forGroup(false),
 		endMarker(""),
 		startMarker("")
 		{
@@ -215,7 +214,6 @@ public:
 	QString textAnchor;
 	QString textDecoration;
 	FPointArray clipPath;
-	bool forGroup;
 	QString filter;
 	QString endMarker;
 	QString startMarker;
@@ -276,7 +274,6 @@ public:
 	double  parseFontSize(const QString& fsize);
 	double  parseUnit(const QString &unit);
 	QTransform parseTransform(const QString &transform);
-	bool    parseSVG( const QString &s, FPointArray *ite );
 	QString parseColor( const QString &s );
 	QString parseIccColor( const QString &s );
 	QString parseTagName( const QDomElement &e );

@@ -566,13 +566,7 @@ void SVGPlug::addGraphicContext()
 	if (m_gc.top())
 	{
 		*gc = *(m_gc.top());
-		if (m_gc.top()->forGroup)
-		{
-			gc->forGroup = false;
-			gc->Opacity = 1.0;
-			gc->FillOpacity = 1.0;
-			gc->StrokeOpacity = 1.0;
-		}
+		gc->Opacity = 1.0; // opacity is not inheritable contrary to fill-opacity or stroke-opacity
 		gc->filter.clear(); // filter is not inheritable
 	}
 	m_gc.push(gc);
@@ -1100,7 +1094,7 @@ void SVGPlug::parseClipPath(const QDomElement &e)
 		while (b2.nodeName() == "use")
 			b2 = getReferencedNode(b2);
 		if (b2.nodeName() == "path")
-			parseSVG(b2.attribute("d"), &clip);
+			clip.parseSVG(b2.attribute("d"));
 		else if (b2.nodeName() == "rect")
 		{
 			double x = parseUnit(b2.attribute("x", "0.0"));
@@ -1248,7 +1242,6 @@ QList<PageItem*> SVGPlug::parseGroup(const QDomElement &e)
 	groupLevel++;
 	setupNode(e);
 	parseClipPathAttr(e, clipPath);
-	m_gc.top()->forGroup = true;
 	int z = m_Doc->itemAdd(PageItem::Group, PageItem::Rectangle, baseX, baseY, 1, 1, 0, CommonStrings::None, CommonStrings::None);
 	PageItem *neu = m_Doc->Items->at(z);
 	for (QDomNode n = e.firstChild(); !n.isNull(); n = n.nextSibling())
@@ -1688,18 +1681,15 @@ QList<PageItem*> SVGPlug::parsePath(const QDomElement &e)
 	double baseY = m_Doc->currentPage()->yOffset();
 	setupNode(e);
 	SvgStyle *gc = m_gc.top();
-	PageItem::ItemType itype = parseSVG(e.attribute("d"), &pArray) ? PageItem::PolyLine : PageItem::Polygon; 
+	PageItem::ItemType itype = pArray.parseSVG(e.attribute("d")) ? PageItem::PolyLine : PageItem::Polygon; 
 	int z = m_Doc->itemAdd(itype, PageItem::Unspecified, baseX, baseY, 10, 10, gc->LWidth, gc->FillCol, gc->StrokeCol);
 	PageItem* ite = m_Doc->Items->at(z);
 	ite->fillRule = (gc->fillRule != "nonzero");
 	ite->PoLine = pArray;
 	if (ite->PoLine.size() < 4)
 	{
-// 			m_Doc->m_Selection->addItem(ite);
 		tmpSel->addItem(ite);
-// 			m_Doc->itemSelection_DeleteItem();
 		m_Doc->itemSelection_DeleteItem(tmpSel);
-// 			m_Doc->m_Selection->clear();
 	}
 	else
 	{
@@ -2328,11 +2318,6 @@ const char * SVGPlug::getCoord(const char *ptr, double &number)
 		ptr++;
 
 	return ptr;
-}
-
-bool SVGPlug::parseSVG(const QString &s, FPointArray *ite)
-{
-	return ite->parseSVG(s);
 }
 
 QString SVGPlug::parseColor(const QString &s)

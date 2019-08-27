@@ -25,6 +25,13 @@ make install
 cd -
 
 ########################################################################
+# Get the applystyle plugin
+########################################################################
+
+git clone https://github.com/aoloe/scribus-plugin-applyStyle.git plugin-applystyle
+ln -s plugin-applystyle scribus/plugins/applystyle
+
+########################################################################
 # Build Scribus and install to appdir/
 ########################################################################
 

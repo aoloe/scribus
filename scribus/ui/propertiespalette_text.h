@@ -32,6 +32,10 @@ class ScribusDoc;
 class ScribusMainWindow;
 class Selection;
 
+namespace PropertyWidget {
+	class StyleFromSelection;
+}
+
 class SCRIBUS_API PropertiesPalette_Text : public QWidget, public Ui::PropertiesPalette_TextBase
 {
 	Q_OBJECT
@@ -114,7 +118,14 @@ private slots:
 	void doClearCStyle();
 	void doClearPStyle();
 
-	void doPStyleFromSelection();
+	void doUpdatePStyleFromSelection();
+	void doCreatePStyleFromSelection(QString);
+	void doUpdateCStyleFromSelection();
+	void doCreateCStyleFromSelection(QString);
+	QString getCurrentParagraphStyleName();
+	QStringList getParagraphStyleNames();
+	QString getCurrentCharacterStyleName();
+	QStringList getCharacterStyleNames();
 
 protected:
 	PropertyWidget_Advanced* advancedWidgets;
@@ -127,6 +138,8 @@ protected:
 	PropertyWidget_ParEffect* parEffectWidgets;
 	PropertyWidget_PathText* pathTextWidgets;
 	PropertyWidget_TextColor* colorWidgets;
+	PropertyWidget::StyleFromSelection* paraStyleCreateWidget;
+	PropertyWidget::StyleFromSelection* charStyleCreateWidget;
 
 	int advancedWidgetsItem;
 	int colorWidgetsItem;

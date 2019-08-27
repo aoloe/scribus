@@ -74,12 +74,37 @@ PropertiesPalette_Text::PropertiesPalette_Text( QWidget* parent) : QWidget(paren
 	charStyleLabel->setBuddy(charStyleCombo);
 	charStyleClear->setIcon(IconManager::instance().loadPixmap("16/edit-clear.png"));
 
+	// https://www.walletfox.com/course/customqtoolbutton.php
+	// https://stackoverflow.com/questions/31668623/set-position-to-right-of-qt-qpushbutton-popup-menu
 	paraStyleCreate->setIcon(IconManager::instance().loadPixmap("16/create-style.png"));
-	auto paraStyleCreateWidget = new PropertyWidget_StyleFromSelection(paraStyleCreate, this);
+
+	paraStyleCreateWidget = new PropertyWidget::StyleFromSelection(paraStyleCreate, m_doc, this);
+
+	// TODO: as soon as the *Names() function are in scribusdoc capture m_doc instead of this
+	paraStyleCreateWidget->setCurrentStyle(
+		[this]() {return this->getCurrentParagraphStyleName();});
+	paraStyleCreateWidget->setStylesList(
+		[this]() {return this->getParagraphStyleNames();});
+
 	auto paraStyleCreateAction = new QWidgetAction(this);
 	paraStyleCreateAction->setDefaultWidget(paraStyleCreateWidget);
 	paraStyleCreate->setPopupMode(QToolButton::InstantPopup);
 	paraStyleCreate->addAction(paraStyleCreateAction);
+
+	charStyleCreate->setIcon(IconManager::instance().loadPixmap("16/create-style.png"));
+
+	charStyleCreateWidget = new PropertyWidget::StyleFromSelection(charStyleCreate, m_doc, this);
+
+	// TODO: as soon as the *Names() function are in scribusdoc capture m_doc instead of this
+	charStyleCreateWidget->setCurrentStyle(
+		[this]() {return this->getCurrentCharacterStyleName();});
+	charStyleCreateWidget->setStylesList(
+		[this]() {return this->getCharacterStyleNames();});
+
+	auto charStyleCreateAction = new QWidgetAction(this);
+	charStyleCreateAction->setDefaultWidget(charStyleCreateWidget);
+	charStyleCreate->setPopupMode(QToolButton::InstantPopup);
+	charStyleCreate->addAction(charStyleCreateAction);
 
 	colorWidgets = new PropertyWidget_TextColor(textTree);
 	colorWidgetsItem = textTree->addItem( colorWidgets, tr("Color && Effects") );
@@ -124,7 +149,10 @@ PropertiesPalette_Text::PropertiesPalette_Text( QWidget* parent) : QWidget(paren
 	connect(textDirection , SIGNAL(State(int))   , this, SLOT(handleDirection(int)));
 	connect(charStyleClear, SIGNAL(clicked()), this, SLOT(doClearCStyle()));
 	connect(paraStyleClear, SIGNAL(clicked()), this, SLOT(doClearPStyle()));
-	// connect(paraStyleCreate, SIGNAL(clicked()), this, SLOT(doPStyleFromSelection()));
+	connect(paraStyleCreateWidget, &PropertyWidget::StyleFromSelection::updateStyle, this, &PropertiesPalette_Text::doUpdatePStyleFromSelection);
+	connect(paraStyleCreateWidget, &PropertyWidget::StyleFromSelection::createStyle, this, &PropertiesPalette_Text::doCreatePStyleFromSelection);
+	connect(charStyleCreateWidget, &PropertyWidget::StyleFromSelection::updateStyle, this, &PropertiesPalette_Text::doUpdateCStyleFromSelection);
+	connect(charStyleCreateWidget, &PropertyWidget::StyleFromSelection::createStyle, this, &PropertiesPalette_Text::doCreateCStyleFromSelection);
 
 	connect(flopBox->flopGroup, SIGNAL(buttonClicked( int )), this, SLOT(handleFirstLinePolicy(int)));
 
@@ -691,7 +719,7 @@ void PropertiesPalette_Text::doClearPStyle()
 	m_doc->itemSelection_SetCharStyle(emptyCStyle, &tempSelection);
 }
 
-void PropertiesPalette_Text::doPStyleFromSelection()
+void PropertiesPalette_Text::doUpdatePStyleFromSelection()
 {
 	if (!m_ScMW || m_ScMW->scriptIsRunning() || !m_haveDoc || !m_haveItem)
 		return;
@@ -700,63 +728,182 @@ void PropertiesPalette_Text::doPStyleFromSelection()
 	if (!currItem)
 		return;
 
-	/**
-	 * Show an ad hoc dialog
-	 *
-	 *                               +---+
-	 *                               |Add|
-	 *                               +---+
-	 * +---------------------------------+
-	 * |                                 |
-	 * | Default Paragraph ...    Update |
-	 * |-------------------+             |
-	 * ||                  |      Create |
-	 * +-------------------+             |
-	 * |                                 |
-	 * |Feedback area            Cancel |
-	 * +---------------------------------+
-	 */
-	bool ok = false;
-	auto styleName = QInputDialog::getText(m_ScMW, tr("Create a new Paragraph Style"), tr("Name:"), QLineEdit::Normal, "" , &ok);
-	// TODO: also implement the update
-	// TODO: make sure that the style is unique
-	// TODO: call scribusdoc::createParagraphStyleFromSelection(name)
-	qDebug() << styleName;
+	auto currentStyle = currItem->currentStyle();
+	currentStyle.charStyle().applyCharStyle(currItem->currentCharStyle());
 
-	if (ok) // TODO: we need a branching here: update or create?
+	ParagraphStyle referenceStyle;
+	if (currentStyle.name().isEmpty() && currentStyle.hasParent())
+		referenceStyle = *((ParagraphStyle*) currentStyle.parentStyle());
+	else if (!currentStyle.name().isEmpty())
 	{
-		auto referenceStyle = currItem->currentStyle();
-		referenceStyle.charStyle().applyCharStyle(currItem->currentCharStyle());
-
-		// TODO: the real code should go to ScribusDoc, so that it
-		// can also be used by the scripter
-		// PStyleFromStyle(QString newName, ParagraphStyle currStyle, bool update, bool defStyle)
-
-		ParagraphStyle newStyle;
-		newStyle.setStyle(referenceStyle);
-		newStyle.setName(styleName);
-		StyleSet<ParagraphStyle> styleSet;
-		styleSet.create(newStyle);
-		m_doc->redefineStyles(styleSet, false);
-		// changed();
-
-		qDebug() << "hey";
-
-		if (ScCore->usingGUI())
-		{
-			m_ScMW->styleMgr()->setDoc(m_doc);
-			paraStyleCombo->updateFormatList();
-		}
-
-		// PStyleFromStyle(styleName, curStyle, false);
-		// changed();
-		// TODO: apply the new style to the current selection
-		// if (ScCore->usingGUI())
-		// {
-		// 	scMW()->styleMgr()->setDoc(this);
-		// 	scMW()->propertiesPalette->paraStyleCombo->updateFormatList();
-		// }
+		qDebug() << "can this happen?";
+		referenceStyle = currentStyle;
 	}
+	else
+	{
+		//FIX ME: (cezary) name is empty and has not any parent = default style?
+		qDebug() << "can this happen?";
+		// PStyleFromStyle(newName, currStyle, false, true);
+		return;
+	}
+
+	// referenceStyle.updateAttr(currentStyle);
+	StyleSet<ParagraphStyle> styleSet;
+	styleSet.create(referenceStyle);
+	m_doc->redefineStyles(styleSet);
+
+	if (ScCore->usingGUI())
+	{
+		m_ScMW->styleMgr()->setDoc(m_doc);
+		paraStyleCombo->updateFormatList();
+	}
+}
+
+void PropertiesPalette_Text::doCreatePStyleFromSelection(QString styleName)
+{
+	if (!m_ScMW || m_ScMW->scriptIsRunning() || !m_haveDoc || !m_haveItem)
+		return;
+
+	auto currItem = currentItemFromSelection();
+	if (!currItem)
+		return;
+
+	auto referenceStyle = currItem->currentStyle();
+	referenceStyle.charStyle().applyCharStyle(currItem->currentCharStyle());
+
+	// TODO: the real code should go to ScribusDoc, so that it
+	// can also be used by the scripter
+	// PStyleFromStyle(QString newName, ParagraphStyle currStyle, bool update, bool defStyle)
+
+	ParagraphStyle newStyle;
+	newStyle.setStyle(referenceStyle);
+	newStyle.setName(styleName);
+	StyleSet<ParagraphStyle> styleSet;
+	styleSet.create(newStyle);
+	m_doc->redefineStyles(styleSet);
+
+	if (ScCore->usingGUI())
+	{
+		m_ScMW->styleMgr()->setDoc(m_doc);
+		paraStyleCombo->updateFormatList();
+	}
+}
+
+void PropertiesPalette_Text::doUpdateCStyleFromSelection()
+{
+	if (!m_ScMW || m_ScMW->scriptIsRunning() || !m_haveDoc || !m_haveItem)
+		return;
+
+	auto currItem = currentItemFromSelection();
+	if (!currItem)
+		return;
+
+	auto currentStyle = currItem->currentCharStyle();
+
+	CharStyle referenceStyle;
+	if (currentStyle.name().isEmpty() && currentStyle.hasParent())
+		referenceStyle = *((CharStyle*) currentStyle.parentStyle());
+	else if (!currentStyle.name().isEmpty())
+	{
+		qDebug() << "can this happen?";
+		referenceStyle = currentStyle;
+	}
+	else
+	{
+		//FIX ME: (cezary) name is empty and has not any parent = default style?
+		qDebug() << "can this happen?";
+		// CStyleFromStyle(newName, currStyle, false, true);
+		return;
+	}
+
+	// referenceStyle.updateAttr(currentStyle);
+	StyleSet<CharStyle> styleSet;
+	styleSet.create(referenceStyle);
+	m_doc->redefineCharStyles(styleSet);
+
+	if (ScCore->usingGUI())
+		// TODO: is it needed?
+		m_ScMW->styleMgr()->setDoc(m_doc);
+}
+
+void PropertiesPalette_Text::doCreateCStyleFromSelection(QString styleName)
+{
+	if (!m_ScMW || m_ScMW->scriptIsRunning() || !m_haveDoc || !m_haveItem)
+		return;
+
+	auto currItem = currentItemFromSelection();
+	if (!currItem)
+		return;
+
+	auto referenceStyle = currItem->currentCharStyle();
+
+	CharStyle newStyle;
+	newStyle.setStyle(referenceStyle);
+	newStyle.setName(styleName);
+	StyleSet<CharStyle> styleSet;
+	styleSet.create(newStyle);
+	m_doc->redefineCharStyles(styleSet);
+
+	if (ScCore->usingGUI())
+	{
+		m_ScMW->styleMgr()->setDoc(m_doc);
+		charStyleCombo->updateFormatList();
+	}
+}
+
+// TODO: this should go to ScribusDoc
+QString PropertiesPalette_Text::getCurrentParagraphStyleName()
+{
+	// TODO: currentItemFromSelection should go to ScribusDoc as getCurrentTextFrameFromSelection()
+	auto currItem = currentItemFromSelection();
+	if (!currItem)
+		return {};
+
+	auto styleName = currItem->currentStyle().parent();
+	return styleName.isEmpty() ? CommonStrings::trDefaultParagraphStyle : styleName;
+}
+
+// TODO: this should go to ScribusDoc
+QStringList PropertiesPalette_Text::getParagraphStyleNames()
+{
+	QStringList list;
+	for (int i = 0; i < m_doc->paragraphStyles().count(); ++i)
+	{
+		if (!m_doc->paragraphStyles()[i].isDefaultStyle())
+		{
+			list.append(m_doc->paragraphStyles()[i].name());
+		}
+		list.sort();
+		list.prepend(CommonStrings::trDefaultParagraphStyle);
+	}
+	return list;
+}
+
+// TODO: this should go to ScribusDoc
+QString PropertiesPalette_Text::getCurrentCharacterStyleName()
+{
+	// TODO: currentItemFromSelection should go to ScribusDoc as getCurrentTextFrameFromSelection()
+	auto currItem = currentItemFromSelection();
+	if (!currItem)
+		return {};
+
+	auto styleName = currItem->currentCharStyle().parent();
+	return styleName.isEmpty() ? CommonStrings::trDefaultParagraphStyle : styleName;
+}
+
+QStringList PropertiesPalette_Text::getCharacterStyleNames()
+{
+	QStringList list;
+	for (int i = 0; i < m_doc->charStyles().count(); ++i)
+	{
+		if (!m_doc->charStyles()[i].isDefaultStyle())
+		{
+			list.append(m_doc->charStyles()[i].name());
+		}
+		list.sort();
+		list.prepend(CommonStrings::trDefaultCharacterStyle);
+	}
+	return list;
 }
 
 void PropertiesPalette_Text::updateColorList()

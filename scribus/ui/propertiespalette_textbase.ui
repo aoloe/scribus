@@ -294,6 +294,26 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QToolButton" name="charStyleCreate">
+       <property name="maximumSize">
+        <size>
+         <width>22</width>
+         <height>22</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Create a character style based on the selection</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>../../resources/icons/16/create-style.png</normaloff>../../resources/icons/16/create-style.png</iconset>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>

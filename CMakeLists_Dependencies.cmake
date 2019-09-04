@@ -144,11 +144,13 @@ endif()
 #	set(COMPILE_PYTHON ON)
 #endif()
 #
-find_package (Python2 REQUIRED COMPONENTS Interpreter Development)
-if (Python2_Development_FOUND)
-	message("Python Library Found OK")
-	set(HAVE_PYTHON ON)
-	set(COMPILE_PYTHON ON)
+if(NOT WANT_SCRIPTER_PYBIND11)
+    find_package (Python2 REQUIRED COMPONENTS Interpreter Development)
+    if (Python2_Development_FOUND)
+        message("Python Library Found OK")
+        set(HAVE_PYTHON ON)
+        set(COMPILE_PYTHON ON)
+    endif()
 endif()
 #>> PYTHON
 

@@ -98,201 +98,110 @@ void PageItem_TextFrame::init()
 	connect(&itemText,SIGNAL(changed(int,int)), this, SLOT(slotInvalidateLayout(int,int)));
 }
 
-static QRegion itemShape(PageItem* docItem, double xOffset, double yOffset)
-{
-	QRegion res;
-	QTransform pp;
-	if (docItem->isGroupChild())
-		pp.translate(docItem->gXpos, docItem->gYpos);
-	else
-		pp.translate(docItem->xPos() - xOffset, docItem->yPos() - yOffset);
-	pp.rotate(docItem->rotation());
-	if (docItem->textFlowUsesBoundingBox())
-	{
-		QRectF bb = docItem->getVisualBoundingRect();
-		if (docItem->isGroupChild())
-		{
-			bb.translate(-docItem->xPos(), -docItem->yPos());
-			bb.translate(docItem->gXpos, docItem->gYpos);
-		}
-		res = QRegion(bb.toRect());
-	}
-	else if ((docItem->textFlowUsesImageClipping()) && (!docItem->imageClip.empty()))
-	{
-		QList<uint> Segs;
-		QPolygon Clip2 = FlattenPath(docItem->imageClip, Segs);
-		res = QRegion(pp.map(Clip2)).intersected(QRegion(pp.map(docItem->Clip)));
-	}
-	else if ((docItem->textFlowUsesContourLine()) && (!docItem->ContourLine.empty()))
-	{
-		QList<uint> Segs;
-		QPolygon Clip2 = FlattenPath(docItem->ContourLine, Segs);
-		res = QRegion(pp.map(Clip2));
-	}
-	else
-	{
-		if (docItem->isSymbol() || docItem->isGroup())
-		{
-			if (docItem->imageFlippedH())
-			{
-				pp.translate(docItem->width(), 0);
-				pp.scale(-1, 1);
-			}
-			if (docItem->imageFlippedV())
-			{
-				pp.translate(0, docItem->height());
-				pp.scale(1, -1);
-			}
-		}
-		if ((((docItem->lineColor() != CommonStrings::None) || (!docItem->patternStrokeVal.isEmpty()) || (docItem->GrTypeStroke > 0)) && (docItem->lineWidth() > 1)) || (!docItem->NamedLStyle.isEmpty()))
-		{
-//			QVector<double> m_array;
-			QPainterPath ppa;
-			QPainterPath result;
-			if (docItem->itemType() == PageItem::PolyLine)
-				ppa = docItem->PoLine.toQPainterPath(false);
-			else
-				ppa = docItem->PoLine.toQPainterPath(true);
-			if (docItem->NamedLStyle.isEmpty())
-			{
-				QPainterPathStroker stroke;
-				stroke.setCapStyle(docItem->lineEnd());
-				stroke.setJoinStyle(docItem->lineJoin());
-				stroke.setDashPattern(Qt::SolidLine);
-				stroke.setWidth(docItem->lineWidth());
-				result = stroke.createStroke(ppa);
-			}
-			else
-			{
-				multiLine ml = docItem->doc()->MLineStyles[docItem->NamedLStyle];
-				int ind = ml.size()-1;
-				if ((ml[ind].Color != CommonStrings::None) && (ml[ind].Width != 0))
-				{
-					QPainterPathStroker stroke;
-					stroke.setCapStyle(static_cast<Qt::PenCapStyle>(ml[ind].LineEnd));
-					stroke.setJoinStyle(static_cast<Qt::PenJoinStyle>(ml[ind].LineJoin));
-					stroke.setDashPattern(Qt::SolidLine);
-					stroke.setWidth(ml[ind].Width);
-					result = stroke.createStroke(ppa);
-				}
-			}
-			res = QRegion(pp.map(docItem->Clip));
-			QList<QPolygonF> pl = result.toSubpathPolygons();
-			for (int b = 0; b < pl.count(); b++)
-			{
-				res = res.united(QRegion(pp.map(pl[b].toPolygon())));
-			}
-		}
-		else
-			res = QRegion(pp.map(docItem->Clip));
-	}
-	return  res;
-}
-
 QRegion PageItem_TextFrame::calcAvailableRegion()
 {
 	QRegion result(this->Clip);
-	if ((!isEmbedded) || (isGroupChild()))
+	if (isEmbedded && !isGroupChild())
+		return result;
+
+	bool invertible(false);
+	QTransform canvasToLocalMat;
+	if (isGroupChild())
+		canvasToLocalMat.translate(gXpos, gYpos);
+	else
+		canvasToLocalMat.translate(m_xPos, m_yPos);
+	canvasToLocalMat.rotate(m_rotation);
+	canvasToLocalMat = canvasToLocalMat.inverted(&invertible);
+
+	if (!invertible)
+		return QRegion();
+
+	int LayerLev = m_Doc->layerLevelFromID(m_layerID);
+	int docItemsCount = m_Doc->Items->count();
+	ScPage* Mp = nullptr;
+	ScPage* Dp = nullptr;
+	PageItem* docItem = nullptr;
+	int LayerLevItem;
+	QList<PageItem*> thisList;
+	if (!OnMasterPage.isEmpty())
 	{
-		bool invertible(false);
-		QTransform canvasToLocalMat;
+		if ((savedOwnPage == -1) || (savedOwnPage >= signed(m_Doc->Pages->count())))
+			return result;
+		Mp = m_Doc->MasterPages.at(m_Doc->MasterNames[OnMasterPage]);
+		Dp = m_Doc->Pages->at(savedOwnPage);
 		if (isGroupChild())
-			canvasToLocalMat.translate(gXpos, gYpos);
+			thisList = Parent->asGroupFrame()->groupItemList;
 		else
-			canvasToLocalMat.translate(m_xPos, m_yPos);
-		canvasToLocalMat.rotate(m_rotation);
-		canvasToLocalMat = canvasToLocalMat.inverted(&invertible);
-
-		if (!invertible) return QRegion();
-
-		int LayerLev = m_Doc->layerLevelFromID(m_layerID);
-		int docItemsCount = m_Doc->Items->count();
-		ScPage* Mp=nullptr;
-		ScPage* Dp=nullptr;
-		PageItem* docItem=nullptr;
-		int LayerLevItem;
-		QList<PageItem*> thisList;
-		if (!OnMasterPage.isEmpty())
+			thisList = m_Doc->MasterItems;
+		int thisid = thisList.indexOf(this);
+		for (int a = 0; a < m_Doc->MasterItems.count(); ++a)
 		{
-			if ((savedOwnPage == -1) || (savedOwnPage >= signed(m_Doc->Pages->count())))
-				return result;
-			Mp = m_Doc->MasterPages.at(m_Doc->MasterNames[OnMasterPage]);
-			Dp = m_Doc->Pages->at(savedOwnPage);
-			if (isGroupChild())
-				thisList = Parent->asGroupFrame()->groupItemList;
-			else
-				thisList = m_Doc->MasterItems;
-			int thisid = thisList.indexOf(this);
-			for (int a = 0; a < m_Doc->MasterItems.count(); ++a)
+			docItem = m_Doc->MasterItems.at(a);
+			// #10642 : masterpage items interact only with items placed on same masterpage
+			if (docItem->OnMasterPage != OnMasterPage)
+				continue;
+			LayerLevItem = m_Doc->layerLevelFromID(docItem->m_layerID);
+			if (((a > thisid) && (docItem->m_layerID == m_layerID)) || (LayerLevItem > LayerLev && m_Doc->layerFlow(docItem->m_layerID)))
 			{
-				docItem = m_Doc->MasterItems.at(a);
-				// #10642 : masterpage items interact only with items placed on same masterpage
-				if (docItem->OnMasterPage != OnMasterPage)
-					continue;
+				if (docItem->textFlowAroundObject())
+				{
+					QRegion itemRgn = docItem->textInteractionRegion(Mp->xOffset() - Dp->xOffset(), Mp->yOffset() - Dp->yOffset());
+					result = result.subtracted( canvasToLocalMat.map(itemRgn) );
+				}
+			}
+		} // for all masterItems
+		// (JG) #6009 : disable possible interaction between master text frames and normal frames
+		// which have the text flow option set
+		/*if (!m_Doc->masterPageMode())
+		{
+			for (uint a = 0; a < docItemsCount; ++a)
+			{
+				docItem = m_Doc->Items->at(a);
+				Mp = m_Doc->MasterPages.at(m_Doc->MasterNames[OnMasterPage]);
+				Dp = m_Doc->Pages->at(OwnPage);
+				if ((docItem->textFlowAroundObject()) && (docItem->OwnPage == OwnPage))
+				{
+					result = result.subtract(itemShape(docItem, m_Doc->view(), Mp->xOffset() - Dp->xOffset(), Mp->yOffset() - Dp->yOffset()));
+				}
+			} // for all docItems
+		} // if (! masterPageMode) */
+	} // if (!OnMasterPage.isEmpty())
+	else
+	{
+		int thisid = 0;
+		if (isGroupChild())
+		{
+			thisid = Parent->asGroupFrame()->groupItemList.indexOf(this);
+			docItemsCount = Parent->asGroupFrame()->groupItemList.count();
+			for (int a = thisid + 1; a < docItemsCount; ++a)
+			{
+				docItem = Parent->asGroupFrame()->groupItemList.at(a);
+				if (docItem->textFlowAroundObject())
+				{
+					QRegion itemRgn = docItem->textInteractionRegion(0, 0);
+					result = result.subtracted( canvasToLocalMat.map(itemRgn) );
+				}
+			}
+		}
+		else
+		{
+			thisid = m_Doc->Items->indexOf(this);
+			for (int a = 0; a < docItemsCount; ++a)
+			{
+				docItem = m_Doc->Items->at(a);
 				LayerLevItem = m_Doc->layerLevelFromID(docItem->m_layerID);
 				if (((a > thisid) && (docItem->m_layerID == m_layerID)) || (LayerLevItem > LayerLev && m_Doc->layerFlow(docItem->m_layerID)))
 				{
 					if (docItem->textFlowAroundObject())
 					{
-						QRegion itemRgn = itemShape(docItem, Mp->xOffset() - Dp->xOffset(), Mp->yOffset() - Dp->yOffset());
-						result = result.subtracted( canvasToLocalMat.map(itemRgn) );
-					}
-				}
-			} // for all masterItems
-			// (JG) #6009 : disable possible interaction between master text frames and normal frames
-			// which have the text flow option set
-			/*if (!m_Doc->masterPageMode())
-			{
-				for (uint a = 0; a < docItemsCount; ++a)
-				{
-					docItem = m_Doc->Items->at(a);
-					Mp = m_Doc->MasterPages.at(m_Doc->MasterNames[OnMasterPage]);
-					Dp = m_Doc->Pages->at(OwnPage);
-					if ((docItem->textFlowAroundObject()) && (docItem->OwnPage == OwnPage))
-					{
-						result = result.subtract(itemShape(docItem, m_Doc->view(), Mp->xOffset() - Dp->xOffset(), Mp->yOffset() - Dp->yOffset()));
-					}
-				} // for all docItems
-			} // if (! masterPageMode) */
-		} // if (!OnMasterPage.isEmpty())
-		else
-		{
-			int thisid = 0;
-			if (isGroupChild())
-			{
-				thisid = Parent->asGroupFrame()->groupItemList.indexOf(this);
-				docItemsCount = Parent->asGroupFrame()->groupItemList.count();
-				for (int a = thisid + 1; a < docItemsCount; ++a)
-				{
-					docItem = Parent->asGroupFrame()->groupItemList.at(a);
-					if (docItem->textFlowAroundObject())
-					{
-						QRegion itemRgn = itemShape(docItem, 0, 0);
+						QRegion itemRgn = docItem->textInteractionRegion(0, 0);
 						result = result.subtracted( canvasToLocalMat.map(itemRgn) );
 					}
 				}
 			}
-			else
-			{
-				thisid = m_Doc->Items->indexOf(this);
-				for (int a = 0; a < docItemsCount; ++a)
-				{
-					docItem = m_Doc->Items->at(a);
-					LayerLevItem = m_Doc->layerLevelFromID(docItem->m_layerID);
-					if (((a > thisid) && (docItem->m_layerID == m_layerID)) || (LayerLevItem > LayerLev && m_Doc->layerFlow(docItem->m_layerID)))
-					{
-						if (docItem->textFlowAroundObject())
-						{
-							QRegion itemRgn = itemShape(docItem, 0, 0);
-							result = result.subtracted( canvasToLocalMat.map(itemRgn) );
-						}
-					}
-				}
-			} // for all docItems
-		} // if(OnMasterPage.isEmpty()
-	} // if(!Embedded)
-	//else
-	//	qDebug() << "QRegion empty";
+		} // for all docItems
+	} // if(OnMasterPage.isEmpty()
+
 	return result;
 }
 
@@ -302,31 +211,36 @@ void PageItem_TextFrame::setShadow()
 		return;
 
 	QString newShadow = m_Doc->masterPageMode() ? OnMasterPage : QString::number(OwnPage);
-	if (newShadow != m_currentShadow) {
-		if (m_currentShadow == OnMasterPage) {
-			// masterpage was edited, clear all shadows
-			m_shadows.clear();
-		}
-		if (!m_shadows.contains(newShadow)) {
-			if (!m_shadows.contains(OnMasterPage)) {
-				m_shadows[OnMasterPage] = itemText;
-//				const ParagraphStyle& pstyle(shadows[OnMasterPage].paragraphStyle(0));
-//				qDebug() << QString("Pageitem_Textframe: style of master: %1 align=%2").arg(pstyle.parent()).arg(pstyle.alignment());
-//				qDebug() << QString("Pageitem_Textframe: shadow itemText->%1").arg(OnMasterPage);
-			}
-			if (newShadow != OnMasterPage) {
-				m_shadows[newShadow] = m_shadows[OnMasterPage].copy();
-//				const ParagraphStyle& pstyle(shadows[newShadow].paragraphStyle(0));
-//				qDebug() << QString("Pageitem_Textframe: style of shadow copy: %1 align=%2").arg(pstyle.parent()).arg(pstyle.alignment());
-			}
-//			qDebug() << QString("Pageitem_Textframe: shadow %1<-%2").arg(newShadow).arg(OnMasterPage);
-		}
-		itemText = m_shadows[newShadow];
-//		const ParagraphStyle& pstyle(itemText.paragraphStyle(0));
-//		qDebug() << QString("Pageitem_Textframe: style of shadow: %1 align=%2").arg(pstyle.parent()).arg(pstyle.alignment());
-		invalid = true;
-		m_currentShadow = newShadow;
+	if (newShadow == m_currentShadow)
+		return;
+
+	if (m_currentShadow == OnMasterPage)
+	{
+		// masterpage was edited, clear all shadows
+		m_shadows.clear();
 	}
+	if (!m_shadows.contains(newShadow))
+	{
+		if (!m_shadows.contains(OnMasterPage))
+		{
+			m_shadows[OnMasterPage] = itemText;
+//			const ParagraphStyle& pstyle(shadows[OnMasterPage].paragraphStyle(0));
+//			qDebug() << QString("Pageitem_Textframe: style of master: %1 align=%2").arg(pstyle.parent()).arg(pstyle.alignment());
+//			qDebug() << QString("Pageitem_Textframe: shadow itemText->%1").arg(OnMasterPage);
+		}
+		if (newShadow != OnMasterPage)
+		{
+			m_shadows[newShadow] = m_shadows[OnMasterPage].copy();
+//			const ParagraphStyle& pstyle(shadows[newShadow].paragraphStyle(0));
+//			qDebug() << QString("Pageitem_Textframe: style of shadow copy: %1 align=%2").arg(pstyle.parent()).arg(pstyle.alignment());
+		}
+//		qDebug() << QString("Pageitem_Textframe: shadow %1<-%2").arg(newShadow).arg(OnMasterPage);
+	}
+	itemText = m_shadows[newShadow];
+//	const ParagraphStyle& pstyle(itemText.paragraphStyle(0));
+//	qDebug() << QString("Pageitem_Textframe: style of shadow: %1 align=%2").arg(pstyle.parent()).arg(pstyle.alignment());
+	invalid = true;
+	m_currentShadow = newShadow;
 }
 /*
 static void debugLineLayout(const StoryText& itemText, const LineSpec& line)
@@ -2572,7 +2486,7 @@ void PageItem_TextFrame::layout()
 							current.lineData.width += current.opticalRightMargin(itemText);
 
 						OFs = 0;
-						if (style.alignment() == ParagraphStyle::Rightaligned)
+						if (style.alignment() == ParagraphStyle::RightAligned)
 							OFs = current.lineData.width - current.lineData.naturalWidth;
 						if (style.alignment() == ParagraphStyle::Centered)
 							OFs = (current.lineData.width - current.lineData.naturalWidth) / 2;
@@ -2681,7 +2595,7 @@ void PageItem_TextFrame::layout()
 							current.line.naturalWidth += hyphWidth;*/
 
 						OFs = 0;
-						if (style.alignment() == ParagraphStyle::Rightaligned)
+						if (style.alignment() == ParagraphStyle::RightAligned)
 							OFs = current.lineData.width - current.lineData.naturalWidth;
 						if (style.alignment() == ParagraphStyle::Centered)
 							OFs = (current.lineData.width - current.lineData.naturalWidth) / 2;
@@ -2927,7 +2841,7 @@ void PageItem_TextFrame::layout()
 				current.lineData.width += current.opticalRightMargin(itemText);
 
 			OFs = 0;
-			if (style.alignment() == ParagraphStyle::Rightaligned)
+			if (style.alignment() == ParagraphStyle::RightAligned)
 				OFs = current.lineData.width - current.lineData.naturalWidth;
 			if (style.alignment() == ParagraphStyle::Centered)
 				OFs = (current.lineData.width - current.lineData.naturalWidth) / 2;
@@ -3172,7 +3086,7 @@ void PageItem_TextFrame::DrawObj_Item(ScPainter *p, QRectF cullingArea)
 			if (isAnnotation() && !((m_Doc->appMode == modeEdit) && (m_Doc->m_Selection->findItem(this) != -1)) && ((annotation().Type() == 2) || (annotation().Type() == 5) || (annotation().Type() == 6)))
 			{
 				if ((annotation().Feed() == 1) && annotation().IsOn())
-					p->setBrush(QColor(255 - fillQColor.red(), 255 - fillQColor.green(), 255 - fillQColor.blue(), fillQColor.alpha()));
+					p->setBrush(QColor(255 - m_fillQColor.red(), 255 - m_fillQColor.green(), 255 - m_fillQColor.blue(), m_fillQColor.alpha()));
 			}
 			p->setupPolygon(&PoLine);
 			p->fillPath();
@@ -3663,7 +3577,7 @@ void PageItem_TextFrame::DrawObj_Post(ScPainter *p)
 			{
 				if ((lineColor() != CommonStrings::None) || (!patternStrokeVal.isEmpty()) || (GrTypeStroke > 0))
 				{
-					p->setPen(strokeQColor, m_lineWidth, PLineArt, PLineEnd, PLineJoin);
+					p->setPen(m_strokeQColor, m_lineWidth, PLineArt, PLineEnd, PLineJoin);
 					if (DashValues.count() != 0)
 						p->setDash(DashValues, DashOffset);
 				}
@@ -3692,7 +3606,7 @@ void PageItem_TextFrame::DrawObj_Post(ScPainter *p)
 					{
 						if (lineColor() != CommonStrings::None)
 						{
-							p->setBrush(strokeQColor);
+							p->setBrush(m_strokeQColor);
 							p->setStrokeMode(ScPainter::Solid);
 						}
 						else
@@ -3715,7 +3629,7 @@ void PageItem_TextFrame::DrawObj_Post(ScPainter *p)
 				else if (lineColor() != CommonStrings::None)
 				{
 					p->setStrokeMode(ScPainter::Solid);
-					p->setPen(strokeQColor, m_lineWidth, PLineArt, PLineEnd, PLineJoin);
+					p->setPen(m_strokeQColor, m_lineWidth, PLineArt, PLineEnd, PLineJoin);
 					if (DashValues.count() != 0)
 						p->setDash(DashValues, DashOffset);
 					p->strokePath();
@@ -3766,13 +3680,13 @@ void PageItem_TextFrame::DrawObj_Decoration(ScPainter *p)
 		double scpInv = 0.0;
 		if ((drawFrame()) && (m_Doc->guidesPrefs().framesShown) && (no_stroke))
 		{
-			p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameNormColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
+			p->setPen(PrefsManager::instance().appPrefs.displayPrefs.frameNormColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if ((isBookmark) || (m_isAnnotation))
-				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameAnnotationColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
+				p->setPen(PrefsManager::instance().appPrefs.displayPrefs.frameAnnotationColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if ((BackBox != nullptr) || (NextBox != nullptr))
-				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameLinkColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
+				p->setPen(PrefsManager::instance().appPrefs.displayPrefs.frameLinkColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if (m_Locked)
-				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameLockColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
+				p->setPen(PrefsManager::instance().appPrefs.displayPrefs.frameLockColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 
 			p->setFillMode(0);
 			p->setupSharpPolygon(&PoLine);
@@ -3810,9 +3724,9 @@ void PageItem_TextFrame::DrawObj_Decoration(ScPainter *p)
 		}
 		if (no_fill && no_stroke && m_Doc->guidesPrefs().framesShown)
 		{
-			p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameNormColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
+			p->setPen(PrefsManager::instance().appPrefs.displayPrefs.frameNormColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			if (m_Locked)
-				p->setPen(PrefsManager::instance()->appPrefs.displayPrefs.frameLockColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
+				p->setPen(PrefsManager::instance().appPrefs.displayPrefs.frameLockColor, scpInv, Qt::SolidLine, Qt::FlatCap, Qt::MiterJoin);
 			p->setFillMode(ScPainter::None);
 			p->drawSharpRect(0, 0, m_width, m_height);
 			no_fill = false;
@@ -4782,7 +4696,7 @@ void PageItem_TextFrame::deleteSelectedTextFromFrame(/*bool findNotes*/)
 
 bool PageItem_TextFrame::checkKeyIsShortcut(QKeyEvent *k)
 {
-	QMap<QString, Keys> keyMap=PrefsManager::instance()->appPrefs.keyShortcutPrefs.KeyActions;
+	QMap<QString, Keys> keyMap=PrefsManager::instance().appPrefs.keyShortcutPrefs.KeyActions;
 
 	bool ret = false;
 	int keyCode =0;
@@ -4944,7 +4858,6 @@ void PageItem_TextFrame::ExpandSel(int oldPos)
 	{
 		//CB Replace with direct call for now //emit HasTextSel();
 		m_Doc->scMW()->EnableTxEdit();
-
 	}
 	else
 	{
@@ -4999,13 +4912,13 @@ void PageItem_TextFrame::drawOverflowMarker(ScPainter *p)
 	qreal top   = Height - sideLength;// * 1.5;
 	qreal bottom = top   + sideLength;
 
-	QColor color(PrefsManager::instance()->appPrefs.displayPrefs.frameNormColor);
+	QColor color(PrefsManager::instance().appPrefs.displayPrefs.frameNormColor);
 	if ((isBookmark) || (m_isAnnotation))
-		color = PrefsManager::instance()->appPrefs.displayPrefs.frameAnnotationColor;
+		color = PrefsManager::instance().appPrefs.displayPrefs.frameAnnotationColor;
 	if ((BackBox != nullptr) || (NextBox != nullptr))
-		color = PrefsManager::instance()->appPrefs.displayPrefs.frameLinkColor;
+		color = PrefsManager::instance().appPrefs.displayPrefs.frameLinkColor;
 	if (m_Locked)
-		color = PrefsManager::instance()->appPrefs.displayPrefs.frameLockColor;
+		color = PrefsManager::instance().appPrefs.displayPrefs.frameLockColor;
 	if (m_Doc->m_Selection->containsItem(this))
 		color = Qt::red;
 
@@ -5146,7 +5059,7 @@ void PageItem_TextFrame::applicableActions(QStringList & actionList)
 	actionList << "toolsEditWithStoryEditor";
 	actionList << "insertSampleText";
 	actionList << "itemPDFIsAnnotation";
-	if (doc()->currentPage()->pageName().isEmpty())
+	if (doc()->currentPage()->pageNameEmpty())
 		actionList << "itemPDFIsBookmark";
 	if (isAnnotation())
 	{

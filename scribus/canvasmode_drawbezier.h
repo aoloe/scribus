@@ -33,7 +33,7 @@ class BezierMode : public CanvasMode
 {
 public:
 	explicit BezierMode(ScribusView* view);
-	~BezierMode() override {}
+	~BezierMode() override = default;
 
 	void enterEvent(QEvent *) override;
 	void leaveEvent(QEvent *) override;
@@ -52,12 +52,10 @@ private:
 	void finalizeItem(PageItem* item);
 	void selectPage(QMouseEvent *m);
 
-	bool inItemCreation, shiftSelItems, FirstPoly;
-	bool m_MouseButtonPressed;
-	double Mxp, Myp;
-	double SeRx, SeRy;
-	bool MoveGX, MoveGY;
-	FPointArray RecordP;
+	bool m_inItemCreation;
+	bool m_firstPoly;
+	bool m_mouseButtonPressed;
+	double m_xp, m_yp;
 };
 
 

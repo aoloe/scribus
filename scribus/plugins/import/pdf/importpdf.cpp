@@ -171,9 +171,7 @@ QImage PdfPlug::readThumbnail(const QString& fName)
 bool PdfPlug::import(const QString& fNameIn, const TransactionSettings& trSettings, int flags, bool showProgress)
 {
 #ifdef Q_OS_OSX
-	#if QT_VERSION >= 0x050300
-		showProgress = false;
-	#endif
+	showProgress = false;
 #endif
 	bool success = false;
 	interactive = (flags & LoadSavePlugin::lfInteractive);
@@ -216,9 +214,9 @@ bool PdfPlug::import(const QString& fNameIn, const TransactionSettings& trSettin
 		qApp->processEvents();
 	}
 	if (b == 0.0)
-		b = PrefsManager::instance()->appPrefs.docSetupPrefs.pageWidth;
+		b = PrefsManager::instance().appPrefs.docSetupPrefs.pageWidth;
 	if (h == 0.0)
-		h = PrefsManager::instance()->appPrefs.docSetupPrefs.pageHeight;
+		h = PrefsManager::instance().appPrefs.docSetupPrefs.pageHeight;
 	docWidth = b;
 	docHeight = h;
 	baseX = 0;
@@ -732,8 +730,8 @@ bool PdfPlug::convert(const QString& fn)
 									m_Doc->currentPage()->setWidth(pdfDoc->getPageMediaWidth(pp));
 								}
 							}
-							m_Doc->currentPage()->MPageNam = CommonStrings::trMasterPageNormal;
-							m_Doc->currentPage()->m_pageSize = "Custom";
+							m_Doc->currentPage()->setMasterPageNameNormal();
+							m_Doc->currentPage()->setSize("Custom");
 							m_Doc->reformPages(true);
 							if (hasOcg)
 							{

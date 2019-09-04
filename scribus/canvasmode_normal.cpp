@@ -240,9 +240,6 @@ void CanvasMode_Normal::mouseDoubleClickEvent(QMouseEvent *m)
 			// See if double click was on a frame handle
 			FPoint p = m_canvas->globalToCanvas(m->globalPos());
 			Canvas::FrameHandle fh = m_canvas->frameHitTest(QPointF(p.x(),p.y()), currItem);
-			//CB old code
-			//emit currItem->isAnnotation() ? AnnotProps() : Amode(modeEdit);
-			//mousePressEvent(m);
 			//CB if annotation, open the annotation dialog
 			if (currItem->isAnnotation())
 			{
@@ -483,7 +480,7 @@ void CanvasMode_Normal::mouseMoveEvent(QMouseEvent *m)
 				ScElemMimeData* md = ScriXmlDoc::writeToMimeData(m_doc, m_doc->m_Selection);
 				QDrag* dr = new QDrag(m_view);
 				dr->setMimeData(md);
-				const QPixmap& pm = IconManager::instance()->loadPixmap("dragpix.png");
+				const QPixmap& pm = IconManager::instance().loadPixmap("dragpix.png");
 				dr->setPixmap(pm);
 			//	dr->setDragCursor(pm, Qt::CopyAction);
 			//	dr->setDragCursor(pm, Qt::MoveAction);
@@ -903,7 +900,7 @@ void CanvasMode_Normal::mousePressEvent(QMouseEvent *m)
 			m_view->updatesOn(true);
 			m_doc->m_Selection->delaySignalsOff();
 		}
-		if (((m_doc->m_Selection->count() == 0) || (!shiftSel)) && (m->modifiers() == Qt::ShiftModifier))
+		if (((m_doc->m_Selection->isEmpty()) || (!shiftSel)) && (m->modifiers() == Qt::ShiftModifier))
 		{
 			m_shiftSelItems = true;
 			m_mouseCurrentPoint = m_mousePressPoint = m_mouseSavedPoint = mousePointDoc;
@@ -916,7 +913,7 @@ void CanvasMode_Normal::mousePressEvent(QMouseEvent *m)
 	else // !GetItem()
 	{
 		SeleItem(m);
-		if (m_doc->m_Selection->count() == 0)
+		if (m_doc->m_Selection->isEmpty())
 		{
 			m_mouseCurrentPoint = m_mousePressPoint = m_mouseSavedPoint = mousePointDoc;
 			m_view->redrawMarker->setGeometry(m->globalPos().x(), m->globalPos().y(), 1, 1);
@@ -1128,7 +1125,7 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 
 
 	//CB Drag selection performed here
-	if (((m_doc->m_Selection->count() == 0) && (m_view->HaveSelRect) && (!m_view->MidButt)) || ((m_shiftSelItems) && (m_view->HaveSelRect) && (!m_view->MidButt)))
+	if (((m_doc->m_Selection->isEmpty()) && (m_view->HaveSelRect) && (!m_view->MidButt)) || ((m_shiftSelItems) && (m_view->HaveSelRect) && (!m_view->MidButt)))
 	{
 		// get newly selection rectangle
 		double dx = m_mouseSavedPoint.x() - m_mousePressPoint.x();
@@ -1169,14 +1166,12 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 				PageItem* docItem = m_doc->Items->at(a);
 				if ((m_doc->masterPageMode()) && (docItem->OnMasterPage != m_doc->currentPage()->pageName()))
 					continue;
-				QRect  apr2 = m_canvas->canvasToLocal( docItem->getCurrentBoundingRect(docItem->lineWidth()) );
 				if (((docItem->m_layerID == m_doc->activeLayer()) || (m_doc->layerSelectable(docItem->m_layerID))) && (!m_doc->layerLocked(docItem->m_layerID)))
 				{
 					// get current item rect/bounding box
 					QRect apr2 = m_canvas->canvasToLocal( docItem->getCurrentBoundingRect(docItem->lineWidth()) );
 
 					bool is_selected = docItem->isSelected();
-					bool redrawSelection = false;
 
 					// alt selection
 					bool select = altPressed ? localSele.intersects(apr2) :
@@ -1205,7 +1200,7 @@ void CanvasMode_Normal::mouseReleaseEvent(QMouseEvent *m)
 	}
 	if (m_doc->appMode != modeEdit)
 	{
-		if (!PrefsManager::instance()->appPrefs.uiPrefs.stickyTools)
+		if (!PrefsManager::instance().appPrefs.uiPrefs.stickyTools)
 			m_view->requestMode(modeNormal);
 		else
 		{
@@ -1810,7 +1805,7 @@ void CanvasMode_Normal::importToPage()
 	formats.append("Scribus Objects (*.sce *.SCE)");
 	qSort(formats);
 	allFormats += formats.join(";;");
-	PrefsContext* dirs = PrefsManager::instance()->prefsFile->getContext("dirs");
+	PrefsContext* dirs = PrefsManager::instance().prefsFile->getContext("dirs");
 	QString wdir = dirs->get("pastefile", ".");
 	FPoint pastePoint = m_mouseCurrentPoint;
 	CustomFDialog dia(m_view, wdir, tr("Open"), allFormats, fdExistingFiles | fdShowImportOptions | fdDisableOk);
@@ -1820,7 +1815,7 @@ void CanvasMode_Normal::importToPage()
 		return;
 	if (!fileName.isEmpty())
 	{
-		PrefsManager::instance()->prefsFile->getContext("dirs")->set("pastefile", fileName.left(fileName.lastIndexOf("/")));
+		PrefsManager::instance().prefsFile->getContext("dirs")->set("pastefile", fileName.left(fileName.lastIndexOf("/")));
 		m_doc->setLoading(true);
 		QFileInfo fi(fileName);
 		bool savedAlignGrid = m_doc->SnapGrid;

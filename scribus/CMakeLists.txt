@@ -5,18 +5,15 @@ if (WANT_SVNVERSION)
 	# a custom target that is always built
 
 	if (NOT CMAKE_VERSION VERSION_LESS "3.2.0")
-	add_custom_target(svnheader ALL COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P ${CMAKE_MODULE_PATH}/getsvn.cmake BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/svnversion.h)
-
+		add_custom_target(svnheader ALL COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P ${CMAKE_MODULE_PATH}/getsvn.cmake BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/svnversion.h)
 	else ()
-	add_custom_target(svnheader ALL DEPENDS svn_header ) # svn_header is nothing more than a unique string
-
-	# creates svnheader.h using cmake script
-	add_custom_command(OUTPUT svn_header ${CMAKE_CURRENT_BINARY_DIR}/svnversion.h
+		add_custom_target(svnheader ALL DEPENDS svn_header ) # svn_header is nothing more than a unique string
+		# creates svnheader.h using cmake script
+		add_custom_command(OUTPUT svn_header ${CMAKE_CURRENT_BINARY_DIR}/svnversion.h
 		COMMAND ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} -P ${CMAKE_MODULE_PATH}/getsvn.cmake)
-
-	set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/svnversion.h
-		PROPERTIES GENERATED TRUE
-		HEADER_FILE_ONLY TRUE)
+		set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/svnversion.h
+			PROPERTIES GENERATED TRUE
+			HEADER_FILE_ONLY TRUE)
 	endif ()
 endif ()
 
@@ -91,6 +88,7 @@ set(SCRIBUS_ITEMSETTERS_SRC
 
 set(SCRIBUS_UI_SRC
 	ui/aboutplugins.ui
+	ui/actionsearchdialog.ui
 	ui/aligndistribute.ui
 	ui/annot.ui
 	ui/arcvectorbase.ui
@@ -310,6 +308,7 @@ set(SCRIBUS_MOC_CLASSES
 	urllauncher.h
 	ui/about.h
 	ui/aboutplugins.h
+	ui/actionsearchdialog.h
 	ui/adjustcmsdialog.h
 	ui/aligndistribute.h
 	ui/alignselect.h
@@ -567,6 +566,7 @@ set(SCRIBUS_MOC_CLASSES
 
 set(SCRIBUS_SOURCES
 	actionmanager.cpp
+	actionsearch.cpp
 	appmodehelper.cpp
 	canvas.cpp
 	canvasgesture_cellselect.cpp
@@ -811,6 +811,7 @@ set(SCRIBUS_SOURCES
 	third_party/fparser/fparser.cc
 	ui/about.cpp
 	ui/aboutplugins.cpp
+	ui/actionsearchdialog.cpp
 	ui/adjustcmsdialog.cpp
 	ui/aligndistribute.cpp
 	ui/alignselect.cpp
@@ -1193,9 +1194,9 @@ if(GESTURE_FRAME_PREVIEW)
 endif()
 
 if(APPLEBUNDLE)
-	set(EXE_NAME "Scribus${TAG_VERSION}" CACHE TYPE STRING)
+	set(EXE_NAME "Scribus${TAG_VERSION}" CACHE STRING "Scribus version")
 else()
-	set(EXE_NAME "scribus${TAG_VERSION}" CACHE TYPE STRING)
+	set(EXE_NAME "scribus${TAG_VERSION}" CACHE STRING "Scribus version")
 endif()
 
 if(COMMAND cmake_policy)

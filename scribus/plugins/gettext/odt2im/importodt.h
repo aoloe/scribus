@@ -41,7 +41,7 @@ public:
 	  fontWeight(""),
 	  fontSize(10.0),
 	  textIndent(0.0),
-	  textAlign(ParagraphStyle::Leftaligned),
+	  textAlign(ParagraphStyle::LeftAligned),
 	  textPos(""),
 	  textOutline(""),
 	  textUnderline(false),
@@ -149,7 +149,6 @@ class ODTIm
 		void applyParagraphStyle(ParagraphStyle &tmpStyle, ObjStyleODT &oStyle);
 		void resolveStyle(ObjStyleODT &tmpOStyle, const QString& pAttrs);
 		double parseUnit(const QString &unit);
-		QColor parseColorN( const QString &rgbColor );
 		QString parseColor( const QString &s );
 		QString constructFontName(const QString& fontBaseName, const QString& fontStyle);
 		void setFontstyle(CharStyle &tmpCStyle, int kind);

@@ -419,21 +419,21 @@ bool Scribus150Format::loadElements(const QString& data, const QString& fileDir,
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = LinkID[ta->TopLinkID];
+					ta->m_topLink = LinkID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = LinkID[ta->LeftLinkID];
+					ta->m_leftLink = LinkID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = LinkID[ta->RightLinkID];
+					ta->m_rightLink = LinkID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = LinkID[ta->BottomLinkID];
+					ta->m_bottomLink = LinkID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -477,21 +477,21 @@ bool Scribus150Format::loadElements(const QString& data, const QString& fileDir,
 			{
 				PageItem* ta = TableItemsF.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableIDF[ta->TopLinkID];
+					ta->m_topLink = TableIDF[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableIDF[ta->LeftLinkID];
+					ta->m_leftLink = TableIDF[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableIDF[ta->RightLinkID];
+					ta->m_rightLink = TableIDF[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableIDF[ta->BottomLinkID];
+					ta->m_bottomLink = TableIDF[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (TableItemsM.count() != 0)
@@ -500,21 +500,21 @@ bool Scribus150Format::loadElements(const QString& data, const QString& fileDir,
 			{
 				PageItem* ta = TableItemsM.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableIDM[ta->TopLinkID];
+					ta->m_topLink = TableIDM[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableIDM[ta->LeftLinkID];
+					ta->m_leftLink = TableIDM[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableIDM[ta->RightLinkID];
+					ta->m_rightLink = TableIDM[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableIDM[ta->BottomLinkID];
+					ta->m_bottomLink = TableIDM[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (TableItems.count() != 0)
@@ -523,21 +523,21 @@ bool Scribus150Format::loadElements(const QString& data, const QString& fileDir,
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableID[ta->TopLinkID];
+					ta->m_topLink = TableID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableID[ta->LeftLinkID];
+					ta->m_leftLink = TableID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableID[ta->RightLinkID];
+					ta->m_rightLink = TableID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableID[ta->BottomLinkID];
+					ta->m_bottomLink = TableID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -921,21 +921,21 @@ bool Scribus150Format::loadPalette(const QString & fileName)
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = LinkID[ta->TopLinkID];
+					ta->m_topLink = LinkID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = LinkID[ta->LeftLinkID];
+					ta->m_leftLink = LinkID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = LinkID[ta->RightLinkID];
+					ta->m_rightLink = LinkID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = LinkID[ta->BottomLinkID];
+					ta->m_bottomLink = LinkID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -979,21 +979,21 @@ bool Scribus150Format::loadPalette(const QString & fileName)
 			{
 				PageItem* ta = TableItemsF.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableIDF[ta->TopLinkID];
+					ta->m_topLink = TableIDF[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableIDF[ta->LeftLinkID];
+					ta->m_leftLink = TableIDF[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableIDF[ta->RightLinkID];
+					ta->m_rightLink = TableIDF[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableIDF[ta->BottomLinkID];
+					ta->m_bottomLink = TableIDF[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (TableItemsM.count() != 0)
@@ -1002,21 +1002,21 @@ bool Scribus150Format::loadPalette(const QString & fileName)
 			{
 				PageItem* ta = TableItemsM.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableIDM[ta->TopLinkID];
+					ta->m_topLink = TableIDM[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableIDM[ta->LeftLinkID];
+					ta->m_leftLink = TableIDM[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableIDM[ta->RightLinkID];
+					ta->m_rightLink = TableIDM[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableIDM[ta->BottomLinkID];
+					ta->m_bottomLink = TableIDM[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (TableItems.count() != 0)
@@ -1025,21 +1025,21 @@ bool Scribus150Format::loadPalette(const QString & fileName)
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableID[ta->TopLinkID];
+					ta->m_topLink = TableID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableID[ta->LeftLinkID];
+					ta->m_leftLink = TableID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableID[ta->RightLinkID];
+					ta->m_rightLink = TableID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableID[ta->BottomLinkID];
+					ta->m_bottomLink = TableID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -1607,21 +1607,21 @@ bool Scribus150Format::loadFile(const QString & fileName, const FileFormat & /* 
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = LinkID[ta->TopLinkID];
+					ta->m_topLink = LinkID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = LinkID[ta->LeftLinkID];
+					ta->m_leftLink = LinkID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = LinkID[ta->RightLinkID];
+					ta->m_rightLink = LinkID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = LinkID[ta->BottomLinkID];
+					ta->m_bottomLink = LinkID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -1665,21 +1665,21 @@ bool Scribus150Format::loadFile(const QString & fileName, const FileFormat & /* 
 			{
 				PageItem* ta = TableItemsF.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableIDF[ta->TopLinkID];
+					ta->m_topLink = TableIDF[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableIDF[ta->LeftLinkID];
+					ta->m_leftLink = TableIDF[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableIDF[ta->RightLinkID];
+					ta->m_rightLink = TableIDF[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableIDF[ta->BottomLinkID];
+					ta->m_bottomLink = TableIDF[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (TableItemsM.count() != 0)
@@ -1688,21 +1688,21 @@ bool Scribus150Format::loadFile(const QString & fileName, const FileFormat & /* 
 			{
 				PageItem* ta = TableItemsM.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableIDM[ta->TopLinkID];
+					ta->m_topLink = TableIDM[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableIDM[ta->LeftLinkID];
+					ta->m_leftLink = TableIDM[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableIDM[ta->RightLinkID];
+					ta->m_rightLink = TableIDM[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableIDM[ta->BottomLinkID];
+					ta->m_bottomLink = TableIDM[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (TableItems.count() != 0)
@@ -1711,21 +1711,21 @@ bool Scribus150Format::loadFile(const QString & fileName, const FileFormat & /* 
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableID[ta->TopLinkID];
+					ta->m_topLink = TableID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableID[ta->LeftLinkID];
+					ta->m_leftLink = TableID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableID[ta->RightLinkID];
+					ta->m_rightLink = TableID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableID[ta->BottomLinkID];
+					ta->m_bottomLink = TableID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -2115,13 +2115,12 @@ void Scribus150Format::readDocAttributes(ScribusDoc* doc, ScXmlStreamAttributes&
 
 void Scribus150Format::readCMSSettings(ScribusDoc* doc, ScXmlStreamAttributes& attrs)
 {
-	PrefsManager* prefsManager = PrefsManager::instance();
 	doc->cmsSettings().SoftProofOn     = attrs.valueAsBool("DPSo", false);
 	doc->cmsSettings().SoftProofFullOn = attrs.valueAsBool("DPSFo", false);
 	doc->cmsSettings().CMSinUse   = attrs.valueAsBool("DPuse", false);
 	doc->cmsSettings().GamutCheck = attrs.valueAsBool("DPgam", false);
 	doc->cmsSettings().BlackPoint = attrs.valueAsBool("DPbla", true);
-	doc->cmsSettings().DefaultMonitorProfile   = prefsManager->appPrefs.colorPrefs.DCMSset.DefaultMonitorProfile;
+	doc->cmsSettings().DefaultMonitorProfile   = PrefsManager::instance().appPrefs.colorPrefs.DCMSset.DefaultMonitorProfile;
 	doc->cmsSettings().DefaultPrinterProfile   = attrs.valueAsString("DPPr","");
 	doc->cmsSettings().DefaultImageRGBProfile  = attrs.valueAsString("DPIn","");
 	doc->cmsSettings().DefaultImageCMYKProfile = attrs.valueAsString("DPInCMYK","");
@@ -2158,9 +2157,9 @@ void Scribus150Format::readDocumentInfo(ScribusDoc* doc, ScXmlStreamAttributes& 
 
 void Scribus150Format::readGuideSettings(ScribusDoc* doc, ScXmlStreamAttributes& attrs)
 {
-	PrefsManager* prefsManager = PrefsManager::instance();
-	doc->guidesPrefs().minorGridSpacing = attrs.valueAsDouble("MINGRID", prefsManager->appPrefs.guidesPrefs.minorGridSpacing);
-	doc->guidesPrefs().majorGridSpacing = attrs.valueAsDouble("MAJGRID", prefsManager->appPrefs.guidesPrefs.majorGridSpacing);
+	PrefsManager& prefsManager = PrefsManager::instance();
+	doc->guidesPrefs().minorGridSpacing = attrs.valueAsDouble("MINGRID", prefsManager.appPrefs.guidesPrefs.minorGridSpacing);
+	doc->guidesPrefs().majorGridSpacing = attrs.valueAsDouble("MAJGRID", prefsManager.appPrefs.guidesPrefs.majorGridSpacing);
 	doc->guidesPrefs().gridShown    = attrs.valueAsBool("SHOWGRID", false);
 	doc->guidesPrefs().guidesShown  =attrs.valueAsBool("SHOWGUIDES", true);
 	doc->guidesPrefs().colBordersShown  = attrs.valueAsBool("showcolborders", false);
@@ -2212,8 +2211,7 @@ void Scribus150Format::readGuideSettings(ScribusDoc* doc, ScXmlStreamAttributes&
 
 void Scribus150Format::readToolSettings(ScribusDoc* doc, ScXmlStreamAttributes& attrs)
 {
-	PrefsManager* prefsManager = PrefsManager::instance();
-	const ItemToolPrefs& defToolPrefs = prefsManager->appPrefs.itemToolPrefs;
+	const ItemToolPrefs& defToolPrefs = PrefsManager::instance().appPrefs.itemToolPrefs;
 
 	QString textFont = attrs.valueAsString("DFONT");
 	m_AvailableFonts->findFont(textFont, doc);
@@ -3646,9 +3644,9 @@ bool Scribus150Format::readPage(ScribusDoc* doc, ScXmlStreamReader& reader)
 
 	newPage->LeftPg   = attrs.valueAsInt("LEFT", 0);
 	QString mpName    = attrs.valueAsString("MNAM", "Normal");
-	newPage->MPageNam = m_Doc->masterPageMode() ? QString("") : mpName;
+	newPage->setMasterPageName(m_Doc->masterPageMode() ? QString() : mpName);
 	if (attrs.hasAttribute("Size"))
-		newPage->m_pageSize = attrs.valueAsString("Size");
+		newPage->setSize(attrs.valueAsString("Size"));
 	if (attrs.hasAttribute("Orientation"))
 		newPage->setOrientation(attrs.valueAsInt("Orientation"));
 	newPage->setXOffset(attrs.valueAsDouble("PAGEXPOS"));
@@ -3665,9 +3663,9 @@ bool Scribus150Format::readPage(ScribusDoc* doc, ScXmlStreamReader& reader)
 		QString pageSize(attrs.valueAsString("Size"));
 		PageSize ps(pageSize);
 		if (!compareDouble(ps.width(), newPage->width()) || !compareDouble(ps.height(), newPage->height()))
-			newPage->m_pageSize = CommonStrings::customPageSize;
+			newPage->setSize(CommonStrings::customPageSize);
 		else
-			newPage->m_pageSize = pageSize;
+			newPage->setSize(pageSize);
 	}
 
 
@@ -4351,21 +4349,21 @@ bool Scribus150Format::readPattern(ScribusDoc* doc, ScXmlStreamReader& reader, c
 			{
 				PageItem* ta = TableItems2.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = LinkID[ta->TopLinkID];
+					ta->m_topLink = LinkID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = LinkID[ta->LeftLinkID];
+					ta->m_leftLink = LinkID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = LinkID[ta->RightLinkID];
+					ta->m_rightLink = LinkID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = LinkID[ta->BottomLinkID];
+					ta->m_bottomLink = LinkID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -4391,21 +4389,21 @@ bool Scribus150Format::readPattern(ScribusDoc* doc, ScXmlStreamReader& reader, c
 			{
 				PageItem* ta = TableItems2.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableID2[ta->TopLinkID];
+					ta->m_topLink = TableID2[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableID2[ta->LeftLinkID];
+					ta->m_leftLink = TableID2[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableID2[ta->RightLinkID];
+					ta->m_rightLink = TableID2[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableID2[ta->BottomLinkID];
+					ta->m_bottomLink = TableID2[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -5461,7 +5459,7 @@ PageItem* Scribus150Format::pasteItem(ScribusDoc *doc, ScXmlStreamAttributes& at
 		currItem->ContourLine = currItem->PoLine.copy();
 
 	if (!currItem->asLine())
-		currItem->Clip = FlattenPath(currItem->PoLine, currItem->Segments);
+		currItem->Clip = flattenPath(currItem->PoLine, currItem->Segments);
 	else
 	{
 		int ph = static_cast<int>(qMax(1.0, currItem->lineWidth() / 2.0));
@@ -6171,7 +6169,7 @@ bool Scribus150Format::loadPage(const QString & fileName, int pageNumber, bool M
 				ss->set("LEFT_OLD", newPage->LeftPg);
 				ss->set("NAME_OLD", newPage->pageName());
 				ss->set("ORIENTATION_OLD", newPage->orientation());
-				ss->set("SIZE_OLD", newPage->m_pageSize);
+				ss->set("SIZE_OLD", newPage->size());
 				ss->set("WIDTH_OLD", newPage->width());
 				ss->set("HEIGHT_OLD", newPage->height());
 				ss->set("INIT_HEIGHT_OLD", newPage->initialHeight());
@@ -6200,7 +6198,7 @@ bool Scribus150Format::loadPage(const QString & fileName, int pageNumber, bool M
 					newPage->setPageName(attrs.valueAsString("NAM",""));
 			}
 			if (attrs.hasAttribute("Size"))
-				newPage->m_pageSize = attrs.valueAsString("Size");
+				newPage->setSize(attrs.valueAsString("Size"));
 			if (attrs.hasAttribute("Orientation"))
 				newPage->setOrientation(attrs.valueAsInt("Orientation"));
 			if (attrs.hasAttribute("PAGEWIDTH"))
@@ -6244,7 +6242,7 @@ bool Scribus150Format::loadPage(const QString & fileName, int pageNumber, bool M
 				ss->set("LEFT", newPage->LeftPg);
 				ss->set("NAME", newPage->pageName());
 				ss->set("ORIENTATION", newPage->orientation());
-				ss->set("SIZE", newPage->m_pageSize);
+				ss->set("SIZE", newPage->size());
 				ss->set("WIDTH", newPage->width());
 				ss->set("HEIGHT", newPage->height());
 				ss->set("INIT_HEIGHT", newPage->initialHeight());
@@ -6385,21 +6383,21 @@ bool Scribus150Format::loadPage(const QString & fileName, int pageNumber, bool M
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = LinkID[ta->TopLinkID];
+					ta->m_topLink = LinkID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = LinkID[ta->LeftLinkID];
+					ta->m_leftLink = LinkID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = LinkID[ta->RightLinkID];
+					ta->m_rightLink = LinkID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = LinkID[ta->BottomLinkID];
+					ta->m_bottomLink = LinkID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -6443,21 +6441,21 @@ bool Scribus150Format::loadPage(const QString & fileName, int pageNumber, bool M
 			{
 				PageItem* ta = TableItems.at(ttc);
 				if (ta->TopLinkID != -1)
-					ta->TopLink = TableID[ta->TopLinkID];
+					ta->m_topLink = TableID[ta->TopLinkID];
 				else
-					ta->TopLink = nullptr;
+					ta->m_topLink = nullptr;
 				if (ta->LeftLinkID != -1)
-					ta->LeftLink = TableID[ta->LeftLinkID];
+					ta->m_leftLink = TableID[ta->LeftLinkID];
 				else
-					ta->LeftLink = nullptr;
+					ta->m_leftLink = nullptr;
 				if (ta->RightLinkID != -1)
-					ta->RightLink = TableID[ta->RightLinkID];
+					ta->m_rightLink = TableID[ta->RightLinkID];
 				else
-					ta->RightLink = nullptr;
+					ta->m_rightLink = nullptr;
 				if (ta->BottomLinkID != -1)
-					ta->BottomLink = TableID[ta->BottomLinkID];
+					ta->m_bottomLink = TableID[ta->BottomLinkID];
 				else
-					ta->BottomLink = nullptr;
+					ta->m_bottomLink = nullptr;
 			}
 		}
 		if (WeldItems.count() != 0)
@@ -6602,7 +6600,7 @@ void Scribus150Format::getStyle(ParagraphStyle& style, ScXmlStreamReader& reader
 {
 	bool  found(false);
 	const StyleSet<ParagraphStyle> * docParagraphStyles = tempStyles? tempStyles : & doc->paragraphStyles();
-	//UNUSED: PrefsManager* prefsManager = PrefsManager::instance();
+	//UNUSED: PrefsManager& prefsManager = PrefsManager::instance();
 	readParagraphStyle(doc, reader, style);
 	for (int xx=0; xx<docParagraphStyles->count(); ++xx)
 	{

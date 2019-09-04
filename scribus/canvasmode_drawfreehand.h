@@ -33,7 +33,7 @@ class FreehandMode : public CanvasMode
 {
 public:
 	explicit FreehandMode(ScribusView* view);
-	~FreehandMode() {}
+	~FreehandMode() override = default;
 
 	void enterEvent(QEvent *) override;
 	void leaveEvent(QEvent *) override;
@@ -50,11 +50,9 @@ private:
 	inline bool GetItem(PageItem** pi); 
 	void selectPage(QMouseEvent *m);
 
-	bool   m_MouseButtonPressed;
-	double Mxp, Myp, Dxp, Dyp;
-	double SeRx, SeRy;
-	bool MoveGX, MoveGY;
-	FPointArray RecordP;
+	bool   m_mouseButtonPressed;
+	double m_xp, m_yp;
+	FPointArray m_poly;
 };
 
 

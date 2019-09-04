@@ -139,7 +139,7 @@ ScribusView::ScribusView(QWidget* win, ScribusMainWindow* mw, ScribusDoc *doc) :
 	QScrollArea(win),
 	Doc(doc),
 	m_canvas(new Canvas(doc, this)),
-	Prefs(&(PrefsManager::instance()->appPrefs)),
+	Prefs(&(PrefsManager::instance().appPrefs)),
 	undoManager(UndoManager::instance()),
 	m_ScMW(mw),
 	OldScale(0),
@@ -162,7 +162,7 @@ ScribusView::ScribusView(QWidget* win, ScribusMainWindow* mw, ScribusDoc *doc) :
 {
 	setObjectName("s");
 	QPalette p=palette();
-	p.setBrush(QPalette::Window, PrefsManager::instance()->appPrefs.displayPrefs.scratchColor);
+	p.setBrush(QPalette::Window, PrefsManager::instance().appPrefs.displayPrefs.scratchColor);
 	setPalette(p);
 	setAttribute(Qt::WA_StaticContents);
 	setAttribute(Qt::WA_InputMethodEnabled, true);
@@ -223,7 +223,7 @@ ScribusView::ScribusView(QWidget* win, ScribusMainWindow* mw, ScribusDoc *doc) :
 	clockLabel = new ClockWidget(this, Doc);
 	clockLabel->setGeometry(m_vhRulerHW + 1, height() - m_vhRulerHW - 61, 60, 60);
 	clockLabel->setVisible(false);
-	endEditButton = new QPushButton(IconManager::instance()->loadIcon("22/exit.png"), tr("End Edit"), this);
+	endEditButton = new QPushButton(IconManager::instance().loadIcon("22/exit.png"), tr("End Edit"), this);
 	endEditButton->setGeometry(m_vhRulerHW + 1, height() - m_vhRulerHW - endEditButton->minimumSizeHint().height() - 1, endEditButton->minimumSizeHint().width(), endEditButton->minimumSizeHint().height());
 	endEditButton->setVisible(false);
 	connect(endEditButton, SIGNAL(clicked()), m_ScMW, SLOT(slotEndSpecialEdit()));
@@ -407,7 +407,7 @@ void ScribusView::stopGesture()
 		m_canvasMode->deactivate(false);
 		m_canvasMode = m_canvasMode->delegate();
 		m_canvasMode->activate(true);
-		if (PrefsManager::instance()->appPrefs.uiPrefs.stickyTools)
+		if (PrefsManager::instance().appPrefs.uiPrefs.stickyTools)
 		{
 			m_canvas->setForcedRedraw(true);
 			//			Doc->m_Selection->clear();
@@ -1463,7 +1463,7 @@ void ScribusView::TransformPoly(int mode, int rot, double scaling)
 	{
 		FPoint tp2(getMinClipF(&currItem->ContourLine));
 		FPoint tp(getMaxClipF(&currItem->ContourLine));
-		FPoint tpS = currItem->ContourLine.WidthHeight();
+		FPoint tpS = currItem->ContourLine.widthHeight();
 		currItem->ContourLine.translate(-qRound((tp.x() + tp2.x()) / 2.0), -qRound((tp.y() + tp2.y()) / 2.0));
 		switch (mode)
 		{
@@ -2846,7 +2846,7 @@ void ScribusView::setNewRulerOrigin(QMouseEvent *m)
 
 void ScribusView::editExtendedImageProperties()
 {
-	if (Doc->m_Selection->count() == 0)
+	if (Doc->m_Selection->isEmpty())
 		return;
 	PageItem *currItem = Doc->m_Selection->itemAt(0);
 	if (!currItem->pixm.imgInfo.valid)
@@ -2979,7 +2979,7 @@ class TextToPathPainter: public TextLayoutPainter
 			, m_counter(0)
 		{}
 
-		void drawGlyph(const GlyphCluster& gc)
+		void drawGlyph(const GlyphCluster& gc) override
 		{
 			for (const GlyphLayout& gl : gc.glyphs())
 			{
@@ -3027,7 +3027,8 @@ class TextToPathPainter: public TextLayoutPainter
 				m_group.append(m_view->Doc->Items->takeAt(z));
 			}
 		}
-		void drawGlyphOutline(const GlyphCluster& gc, bool fill)
+
+		void drawGlyphOutline(const GlyphCluster& gc, bool fill) override
 		{
 			for (const GlyphLayout& gl : gc.glyphs())
 			{
@@ -3078,7 +3079,8 @@ class TextToPathPainter: public TextLayoutPainter
 				m_group.append(m_view->Doc->Items->takeAt(z));
 			}
 		}
-		void drawLine(QPointF start, QPointF end)
+
+		void drawLine(QPointF start, QPointF end) override
 		{
 			QTransform transform = matrix();
 			transform.translate(x(), y());
@@ -3106,8 +3108,9 @@ class TextToPathPainter: public TextLayoutPainter
 			m_view->undoManager->setUndoEnabled(true);
 			m_group.append(m_view->Doc->Items->takeAt(z));
 		}
-		void drawRect(QRectF rect) {}
-		void drawObject(PageItem* item) {}
+
+		void drawRect(QRectF rect) override {}
+		void drawObject(PageItem* item) override {}
 };
 
 void ScribusView::TextToPath()
@@ -3189,7 +3192,7 @@ void ScribusView::TextToPath()
 				newItem->FrameType = 3;
 				newItem->OldB2 = newItem->width();
 				newItem->OldH2 = newItem->height();
-				newItem->Clip = FlattenPath(newItem->PoLine, newItem->Segments);
+				newItem->Clip = flattenPath(newItem->PoLine, newItem->Segments);
 				newItem->ContourLine = newItem->PoLine.copy();
 				newGroupedItems.prepend(newItem);
 			}

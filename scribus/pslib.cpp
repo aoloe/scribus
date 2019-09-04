@@ -94,11 +94,11 @@ public:
 		m_ps(ps)
 	{}
 
-	void drawGlyph(const GlyphCluster& gc);
-	void drawGlyphOutline(const GlyphCluster& gc, bool fill);
-	void drawLine(QPointF start, QPointF end);
-	void drawRect(QRectF rect);
-	void drawObject(PageItem* item);
+	void drawGlyph(const GlyphCluster& gc) override;
+	void drawGlyphOutline(const GlyphCluster& gc, bool fill) override;
+	void drawLine(QPointF start, QPointF end) override;
+	void drawRect(QRectF rect) override;
+	void drawObject(PageItem* item) override;
 };
 
 void PSPainter::drawGlyph(const GlyphCluster& gc)
@@ -115,7 +115,7 @@ void PSPainter::drawGlyph(const GlyphCluster& gc)
 	{
 		if (gl.glyph >= ScFace::CONTROL_GLYPHS)
 		{
-			current_x += gl.xadvance;
+			current_x += gl.xadvance * gl.scaleH;
 			continue;
 		}
 
@@ -129,7 +129,7 @@ void PSPainter::drawGlyph(const GlyphCluster& gc)
 		m_ps->PS_showSub(gl.glyph, m_ps->FontSubsetMap[font().scName()], fontSize(), false);
 		m_ps->PS_restore();
 
-		current_x += gl.xadvance;
+		current_x += gl.xadvance * gl.scaleH;
 	}
 	m_ps->PS_restore();
 }
@@ -156,7 +156,7 @@ void PSPainter::drawGlyphOutline(const GlyphCluster& gc, bool fill)
 	{
 		if (gl.glyph >= ScFace::CONTROL_GLYPHS)
 		{
-			current_x += gl.xadvance;
+			current_x += gl.xadvance * gl.scaleH;
 			continue;
 		}
 
@@ -166,11 +166,17 @@ void PSPainter::drawGlyphOutline(const GlyphCluster& gc, bool fill)
 		chma.scale((fontSize() * gc.scaleH()) / 10.0, (fontSize() * gc.scaleV()) / 10.0);
 		gly.map(chma);
 		m_ps->PS_translate(gl.xoffset + current_x, -(fontSize() - fontSize() * gc.scaleV()) - gl.yoffset);
-		if (gc.scaleH() != 1.0 || gc.scaleV() != 1.0)
-			m_ps->PS_scale(gc.scaleH(), gc.scaleV());
+
 		if (fill)
+		{
+			m_ps->PS_save();
+			if (gc.scaleH() != 1.0 || gc.scaleV() != 1.0)
+				m_ps->PS_scale(gc.scaleH(), gc.scaleV());
 			m_ps->putColorNoDraw(fillColor().color, fillColor().shade);
-		m_ps->PS_showSub(gl.glyph, m_ps->FontSubsetMap[font().scName()], fontSize(), false);
+			m_ps->PS_showSub(gl.glyph, m_ps->FontSubsetMap[font().scName()], fontSize(), false);
+			m_ps->PS_restore();
+		}
+
 		m_ps->SetColor(strokeColor().color, strokeColor().shade, &h, &s, &v, &k);
 		m_ps->PS_setcmykcolor_stroke(h, s, v, k);
 		m_ps->SetClipPath(gly, true);
@@ -178,7 +184,7 @@ void PSPainter::drawGlyphOutline(const GlyphCluster& gc, bool fill)
 		m_ps->putColor(strokeColor().color, strokeColor().shade, false);
 		m_ps->PS_restore();
 
-		current_x += gl.xadvance;
+		current_x += gl.xadvance * gl.scaleH;
 	}
 
 	m_ps->PS_restore();
@@ -1218,7 +1224,7 @@ bool PSLib::PS_image(PageItem *item, double x, double y, const QString& fn, doub
 		if (loadRawText(fn, tmp))
 		{
 			PutStream("bEPS\n");
-			PutStream(ToStr(PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 72.0 * scalex) + " " + ToStr(PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 72.0 * scaley) + " sc\n");
+			PutStream(ToStr(PrefsManager::instance().appPrefs.extToolPrefs.gs_Resolution / 72.0 * scalex) + " " + ToStr(PrefsManager::instance().appPrefs.extToolPrefs.gs_Resolution / 72.0 * scaley) + " sc\n");
 			PutStream(ToStr(-item->BBoxX+x * scalex) + " " + ToStr(y * scalex) + " tr\n");
 			int h = item->pixm.height();
 			PutStream("0 " + ToStr(h*scaley) + " tr\n");
@@ -1279,8 +1285,8 @@ bool PSLib::PS_image(PageItem *item, double x, double y, const QString& fn, doub
 	PutStream("0 " + ToStr(-h*scaley) + " tr\n");
 	if ((extensionIndicatesPDF(ext)) && (!item->asLatexFrame()))
 	{
-		scalex *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
-		scaley *= PrefsManager::instance()->appPrefs.extToolPrefs.gs_Resolution / 300.0;
+		scalex *= PrefsManager::instance().appPrefs.extToolPrefs.gs_Resolution / 300.0;
+		scaley *= PrefsManager::instance().appPrefs.extToolPrefs.gs_Resolution / 300.0;
 	}
 	//	PutStream(ToStr(x*scalex) + " " + ToStr(y*scaley) + " tr\n");
 	PutStream(ToStr(qRound(scalex*w)) + " " + ToStr(qRound(scaley*h)) + " sc\n");
@@ -1527,7 +1533,6 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 	bool farb = options.useColor;
 	bool Hm = options.mirrorH;
 	bool Vm = options.mirrorV;
-	bool doDev = options.setDevParam;
 	bool doClip = options.doClip;
 	int sepac;
 	int pagemult;
@@ -1745,7 +1750,7 @@ int PSLib::CreatePS(ScribusDoc* Doc, PrintOptions &options)
 			Doc->Layers.levelToLayer(ll, lam);
 			if (!ll.isPrintable)
 				continue;
-			if (!page->MPageNam.isEmpty() && !abortExport && !errorOccured)
+			if (!page->masterPageNameEmpty() && !abortExport && !errorOccured)
 			{
 				errorOccured |= !ProcessMasterPageLayer(Doc, page, ll, a, sep, farb);
 			}
@@ -1854,7 +1859,7 @@ bool PSLib::ProcessItem(ScribusDoc* Doc, ScPage* page, PageItem* item, uint PNr,
 		{
 			bool imageOk = false;
 			PS_translate(0, -item->BBoxH*item->imageYScale());
-			if ((optimization == OptimizeSize) && (((!page->pageName().isEmpty()) && !sep && farb) || useTemplate))
+			if ((optimization == OptimizeSize) && (((!page->pageNameEmpty()) && !sep && farb) || useTemplate))
 				imageOk = PS_image(item, item->imageXOffset(), -item->imageYOffset(), item->Pfile, item->imageXScale(), item->imageYScale(), item->IProfile, item->UseEmbedded, item->itemName());
 			else
 				imageOk = PS_image(item, item->imageXOffset(), -item->imageYOffset(), item->Pfile, item->imageXScale(), item->imageYScale(), item->IProfile, item->UseEmbedded);
@@ -2583,7 +2588,7 @@ void PSLib::ProcessPage(ScribusDoc* Doc, ScPage* page, uint PNr, bool sep, bool 
 	ScLayer ll;
 	ll.isPrintable = false;
 	ll.ID = 0;
-	PItems = (page->pageName().isEmpty()) ? Doc->DocItems : Doc->MasterItems;
+	PItems = (page->pageNameEmpty()) ? Doc->DocItems : Doc->MasterItems;
 	for (int la = 0; la < Doc->Layers.count(); ++la)
 	{
 		Doc->Layers.levelToLayer(ll, Lnr);
@@ -2596,13 +2601,13 @@ void PSLib::ProcessPage(ScribusDoc* Doc, ScPage* page, uint PNr, bool sep, bool 
 					ScQApp->processEvents();
 				if (item->m_layerID != ll.ID)
 					continue;
-				if ((!page->pageName().isEmpty()) && (item->asTextFrame()))
+				if ((!page->pageNameEmpty()) && (item->asTextFrame()))
 					continue;
-				if ((!page->pageName().isEmpty()) && (item->asPathText()))
+				if ((!page->pageNameEmpty()) && (item->asPathText()))
 					continue;
-				if ((!page->pageName().isEmpty()) && (item->asTable()))
+				if ((!page->pageNameEmpty()) && (item->asTable()))
 					continue;
-				if ((!page->pageName().isEmpty()) && (item->asImageFrame()) && ((sep) || (!farb)))
+				if ((!page->pageNameEmpty()) && (item->asImageFrame()) && ((sep) || (!farb)))
 					continue;
 				//if ((!Art) && (view->SelItem.count() != 0) && (!item->Select))
 				if ((!psExport) && (!item->isSelected()) && (Doc->m_Selection->count() != 0))
@@ -2622,7 +2627,7 @@ void PSLib::ProcessPage(ScribusDoc* Doc, ScPage* page, uint PNr, bool sep, bool 
 					continue;
 				if (item->ChangedMasterItem)
 					continue;
-				if ((!page->pageName().isEmpty()) && (item->OwnPage != static_cast<int>(page->pageNr())) && (item->OwnPage != -1))
+				if ((!page->pageNameEmpty()) && (item->OwnPage != static_cast<int>(page->pageNr())) && (item->OwnPage != -1))
 					continue;
 				ProcessItem(Doc, page, item, PNr, sep, farb, false);
 			}
@@ -2636,7 +2641,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 	bool success = true;
 	double h, s, v, k;
 	QVector<double> dum;
-	ScPage* mPage = Doc->MasterPages.at(Doc->MasterNames[page->MPageNam]);
+	ScPage* mPage = Doc->MasterPages.at(Doc->MasterNames[page->masterPageName()]);
 	if (layer.isPrintable)
 	{
 		for (int am = 0; am < page->FromMaster.count() && !abortExport; ++am)
@@ -2648,7 +2653,7 @@ bool PSLib::ProcessMasterPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer
 				continue;
 			if (!(ite->asTextFrame()) && !(ite->asImageFrame()) && !(ite->asPathText()) && !(ite->asTable()))
 			{
-				int mpIndex = Doc->MasterNames[page->MPageNam];
+				int mpIndex = Doc->MasterNames[page->masterPageName()];
 				PS_UseTemplate(QString("mp_obj_%1_%2").arg(mpIndex).arg(qHash(ite)));
 			}
 			else if (ite->asImageFrame())
@@ -3013,7 +3018,7 @@ bool PSLib::ProcessPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer, uint
 		return true;
 
 	QList<PageItem*> items;
-	items = (page->pageName().isEmpty()) ? Doc->DocItems : Doc->MasterItems;
+	items = (page->pageNameEmpty()) ? Doc->DocItems : Doc->MasterItems;
 
 	for (int i = 0; i < items.count() && !abortExport; ++i)
 	{
@@ -3022,13 +3027,13 @@ bool PSLib::ProcessPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer, uint
 			ScQApp->processEvents();
 		if (item->m_layerID != layer.ID)
 			continue;
-		if ((!page->pageName().isEmpty()) && (item->asTextFrame()))
+		if ((!page->pageNameEmpty()) && (item->asTextFrame()))
 			continue;
-		if ((!page->pageName().isEmpty()) && (item->asPathText()))
+		if ((!page->pageNameEmpty()) && (item->asPathText()))
 			continue;
-		if ((!page->pageName().isEmpty()) && (item->asTable()))
+		if ((!page->pageNameEmpty()) && (item->asTable()))
 			continue;
-		if ((!page->pageName().isEmpty()) && (item->asImageFrame()) && ((sep) || (!farb)))
+		if ((!page->pageNameEmpty()) && (item->asImageFrame()) && ((sep) || (!farb)))
 			continue;
 		//if ((!Art) && (view->SelItem.count() != 0) && (!item->Select))
 		if ((!psExport) && (!item->isSelected()) && (Doc->m_Selection->count() != 0))
@@ -3048,7 +3053,7 @@ bool PSLib::ProcessPageLayer(ScribusDoc* Doc, ScPage* page, ScLayer& layer, uint
 			continue;
 		if (item->ChangedMasterItem)
 			continue;
-		if ((!page->pageName().isEmpty()) && (item->OwnPage != static_cast<int>(page->pageNr())) && (item->OwnPage != -1))
+		if ((!page->pageNameEmpty()) && (item->OwnPage != static_cast<int>(page->pageNr())) && (item->OwnPage != -1))
 			continue;
 		success &= ProcessItem(Doc, page, item, PNr, sep, farb, false);
 		if (!success)

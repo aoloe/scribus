@@ -49,7 +49,7 @@ SearchReplace::SearchReplace( QWidget* parent, ScribusDoc *doc, PageItem* ite, b
 
 	setModal(true);
 	setWindowTitle( tr( "Search/Replace" ) );
-	setWindowIcon(IconManager::instance()->loadIcon("AppIcon.png"));
+	setWindowIcon(IconManager::instance().loadIcon("AppIcon.png"));
 
 	SearchReplaceLayout = new QVBoxLayout( this );
 	SearchReplaceLayout->setMargin(10);
@@ -359,7 +359,7 @@ SearchReplace::SearchReplace( QWidget* parent, ScribusDoc *doc, PageItem* ite, b
 	setTabOrder( DoReplace, AllReplace );
 	setTabOrder( AllReplace, Leave );
 
-	m_prefs = PrefsManager::instance()->prefsFile->getContext("SearchReplace");
+	m_prefs = PrefsManager::instance().prefsFile->getContext("SearchReplace");
 	readPrefs();
 }
 

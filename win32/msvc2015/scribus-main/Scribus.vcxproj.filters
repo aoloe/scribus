@@ -797,10 +797,7 @@
     <ClInclude Include="..\..\..\scribus\sccolorstructs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\scribus\ui\numformatcombo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\scribus\ui\smnumformatcombo.h">
+    <ClInclude Include="..\..\..\scribus\actionsearch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -2488,6 +2485,12 @@
     <ClCompile Include="..\..\..\scribus\ui\smnumformatcombo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\scribus\actionsearch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\scribus\ui\actionsearchdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Scribus.rc">
@@ -2864,6 +2867,9 @@
       <Filter>Form Files</Filter>
     </uic>
     <uic Include="..\..\..\scribus\ui\cxfimportdialogbase.ui">
+      <Filter>Form Files</Filter>
+    </uic>
+    <uic Include="..\..\..\scribus\ui\actionsearchdialog.ui">
       <Filter>Form Files</Filter>
     </uic>
   </ItemGroup>
@@ -4103,14 +4109,17 @@
     <moc Include="..\..\..\scribus\ui\cxfimportdialog.h">
       <Filter>Header Files</Filter>
     </moc>
+    <moc Include="..\..\..\scribus\ui\numformatcombo.h">
+      <Filter>Header Files</Filter>
+    </moc>
+    <moc Include="..\..\..\scribus\ui\smnumformatcombo.h">
+      <Filter>Header Files</Filter>
+    </moc>
+    <moc Include="..\..\..\scribus\ui\actionsearchdialog.h">
+      <Filter>Header Files</Filter>
+    </moc>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\..\scribus\color.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="..\..\..\scribus\crypt.h">
-      <Filter>Header Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\..\scribus\documentchecker.h">
       <Filter>Header Files</Filter>
     </CustomBuild>

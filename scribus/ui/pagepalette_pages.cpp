@@ -60,7 +60,7 @@ PagePalette_Pages::PagePalette_Pages(QWidget* parent) : QWidget(parent)
 	trash->setMinimumSize(QSize(32,32));
 	trash->setMaximumSize(QSize(32,32));
 
-	pix = IconManager::instance()->loadPixmap("32/page-simple.png");
+	pix = IconManager::instance().loadPixmap("32/page-simple.png");
 
 	currView = nullptr;
 	Rebuild();
@@ -90,7 +90,7 @@ void PagePalette_Pages::deleteMasterPage(const QString& tmp)
 	QString extraWarn = "";
 	for (int i=0; i < currView->Doc->DocPages.count(); ++i )
 	{
-		if (currView->Doc->DocPages[i]->MPageNam == tmp)
+		if (currView->Doc->DocPages[i]->masterPageName() == tmp)
 			extraWarn = tr("This master page is used at least once in the document.");
 	}
 	int exit = ScMessageBox::warning(this,
@@ -271,7 +271,7 @@ void PagePalette_Pages::rebuildPages()
 	pageList.clear();
 	for (int a = 0; a < currView->Doc->DocPages.count(); ++a)
 	{
-		str = currView->Doc->DocPages.at(a)->MPageNam;
+		str = currView->Doc->DocPages.at(a)->masterPageName();
 		SeItem *it = new SeItem(str, a, createIcon(a, str, pix));
 		pageList.append(it);
 		pageView->setItem(rowcounter*rowmult+rowadd, counter*colmult+coladd, (QTableWidgetItem *)it);

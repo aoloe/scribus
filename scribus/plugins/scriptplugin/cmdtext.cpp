@@ -625,7 +625,7 @@ PyObject *scribus_setfont(PyObject* /* self */, PyObject* args)
 		PyErr_SetString(WrongFrameTypeError, QObject::tr("Cannot set font on a non-text frame.","python error").toLocal8Bit().constData());
 		return nullptr;
 	}
-	if (!PrefsManager::instance()->appPrefs.fontPrefs.AvailFonts.contains(QString::fromUtf8(Font)))
+	if (!PrefsManager::instance().appPrefs.fontPrefs.AvailFonts.contains(QString::fromUtf8(Font)))
 	{
 		PyErr_SetString(PyExc_ValueError, QObject::tr("Font not found.", "python error").toLocal8Bit().constData());
 		return nullptr;
@@ -675,8 +675,7 @@ PyObject *scribus_setlinespace(PyObject* /* self */, PyObject* args)
 		doc->appMode = modeEdit;
 	doc->itemSelection_SetLineSpacing(w, &tmpSelection);
 	doc->appMode = oldAppMode;
-		
-//	item->setLineSpacing(w);
+
 	Py_RETURN_NONE;
 }
 

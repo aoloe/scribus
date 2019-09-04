@@ -27,7 +27,7 @@ PythonConsole::PythonConsole( QWidget* parent)
 	: QMainWindow( parent )
 {
 	setupUi(this);
-	setWindowIcon(IconManager::instance()->loadIcon("AppIcon.png"));
+	setWindowIcon(IconManager::instance().loadIcon("AppIcon.png"));
 
 	changedLabel = new QLabel(this);
 	cursorTemplate = tr("Col: %1 Row: %2/%3");
@@ -35,11 +35,11 @@ PythonConsole::PythonConsole( QWidget* parent)
 	statusBar()->addPermanentWidget(changedLabel);
 	statusBar()->addPermanentWidget(cursorLabel);
 
-	action_Open->setIcon(IconManager::instance()->loadIcon("16/document-open.png"));
-	action_Save->setIcon(IconManager::instance()->loadIcon("16/document-save.png"));
-	actionSave_As->setIcon(IconManager::instance()->loadIcon("16/document-save-as.png"));
-	action_Exit->setIcon(IconManager::instance()->loadIcon("exit.png"));
-	action_Run->setIcon(IconManager::instance()->loadIcon("ok.png"));
+	action_Open->setIcon(IconManager::instance().loadIcon("16/document-open.png"));
+	action_Save->setIcon(IconManager::instance().loadIcon("16/document-save.png"));
+	actionSave_As->setIcon(IconManager::instance().loadIcon("16/document-save-as.png"));
+	action_Exit->setIcon(IconManager::instance().loadIcon("exit.png"));
+	action_Run->setIcon(IconManager::instance().loadIcon("ok.png"));
 
 	action_Open->setShortcut(tr("Ctrl+O"));
 	action_Save->setShortcut(tr("Ctrl+S"));
@@ -91,7 +91,7 @@ void PythonConsole::setFonts()
 {
 	QFont font = QFont("Fixed");
 	font.setStyleHint(QFont::TypeWriter);
-	font.setPointSize(PrefsManager::instance()->appPrefs.uiPrefs.applicationFontSize);
+	font.setPointSize(PrefsManager::instance().appPrefs.uiPrefs.applicationFontSize);
 	commandEdit->setFont(font);	
 	outputEdit->setFont(font);
 }
@@ -165,7 +165,7 @@ void PythonConsole::slot_runScriptAsConsole()
 	parsePythonString();
 	commandEdit->clear();
 	// content is destroyed. This is to prevent overwriting
-	filename = QString::null;
+	filename.clear();
 	outputEdit->append("\n>>> " + m_command);
 	emit runCommand();
 }
@@ -368,7 +368,7 @@ void SyntaxHighlighter::highlightBlock(const QString &text)
 
 SyntaxColors::SyntaxColors()
 {
-	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
+	PrefsContext* prefs = PrefsManager::instance().prefsFile->getPluginContext("scriptplugin");
 	if (prefs)
 	{
 		errorColor.setNamedColor(prefs->get("syntaxerror", "#aa0000"));
@@ -393,7 +393,7 @@ SyntaxColors::SyntaxColors()
 
 void SyntaxColors::saveToPrefs()
 {
-	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
+	PrefsContext* prefs = PrefsManager::instance().prefsFile->getPluginContext("scriptplugin");
 	if (prefs)
 	{
 		prefs->set("syntaxerror", qcolor2named(errorColor));

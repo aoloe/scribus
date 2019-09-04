@@ -41,8 +41,12 @@ Prefs_Fonts::Prefs_Fonts(QWidget* parent, ScribusDoc* doc)
 	m_doc(doc)
 {
 	setupUi(this);
+	languageChange();
 
-	RList = PrefsManager::instance()->appPrefs.fontPrefs.GFontSub;
+	m_caption = tr("Fonts");
+	m_icon = "16/preferences-desktop-font.png";
+
+	RList = PrefsManager::instance().appPrefs.fontPrefs.GFontSub;
 	UsedFonts.clear();
 	CurrentPath = "";
 	m_askBeforeSubstitute = true;
@@ -124,7 +128,7 @@ void Prefs_Fonts::languageChange()
 
 void Prefs_Fonts::restoreDefaults(struct ApplicationPrefs *prefsData)
 {
-	// 	SCFonts* availFonts=&(PrefsManager::instance()->appPrefs.AvailFonts);
+	// 	SCFonts* availFonts=&(PrefsManager::instance().appPrefs.AvailFonts);
 	m_availFonts = prefsData->fontPrefs.AvailFonts;
 	fontListTableView->setFonts(m_availFonts);
 	/*
@@ -132,7 +136,7 @@ void Prefs_Fonts::restoreDefaults(struct ApplicationPrefs *prefsData)
 	It's just a performance vs. functionality test.
 	availFonts->clear();
 	// FIXME: This is main preformance issue. It's about 90% of all preference reads! - PV
-	availFonts->GetFonts(HomeP); */
+	availFonts->getFonts(HomeP); */
 	/* Are you wondering why this condition? See the comment at
 	line #102 (or somewhere near) as reference. Hint: PathList
 	is not initialized for example... - PV */
@@ -141,7 +145,7 @@ void Prefs_Fonts::restoreDefaults(struct ApplicationPrefs *prefsData)
 		for (uint a = 0; a < PathList->count(); ++a)
 		{
 			QString dir = ScPaths::separatorsToSlashes(PathList->text(a));
-			availFonts->AddScalableFonts(dir +"/"); //, docc->DocName);
+			availFonts->addScalableFonts(dir +"/"); //, docc->DocName);
 			availFonts->updateFontMap();
 		}
 	} */
@@ -312,7 +316,7 @@ void Prefs_Fonts::DelEntry()
 void Prefs_Fonts::readPaths()
 {
 	Q_ASSERT(m_doc==nullptr); // should never be called in doc-specific prefs
-	PrefsContext *fontPrefsContext = PrefsManager::instance()->prefsFile->getContext("Fonts");
+	PrefsContext *fontPrefsContext = PrefsManager::instance().prefsFile->getContext("Fonts");
 	PrefsTable *fontPathTable = fontPrefsContext->getTable("ExtraFontDirs");
 	pathListWidget->clear();
 	for (int i = 0; i < fontPathTable->getRowCount(); ++i)
@@ -322,7 +326,7 @@ void Prefs_Fonts::readPaths()
 void Prefs_Fonts::writePaths() const
 {
 	Q_ASSERT(m_doc==nullptr); // should never be called in doc-specific prefs
-	PrefsContext *fontPrefsContext = PrefsManager::instance()->prefsFile->getContext("Fonts");
+	PrefsContext *fontPrefsContext = PrefsManager::instance().prefsFile->getContext("Fonts");
 	PrefsTable *fontPathTable = fontPrefsContext->getTable("ExtraFontDirs");
 	fontPathTable->clear();
 	for (int i = 0; i < pathListWidget->count(); ++i)
@@ -342,7 +346,7 @@ void Prefs_Fonts::SelectPath(QListWidgetItem *c)
 void Prefs_Fonts::AddPath()
 {
 	Q_ASSERT(m_doc==nullptr); // should never be called in doc-specific prefs
-	PrefsContext* dirs = PrefsManager::instance()->prefsFile->getContext("dirs");
+	PrefsContext* dirs = PrefsManager::instance().prefsFile->getContext("dirs");
 	CurrentPath = dirs->get("fontprefs", ".");
 	QString s = QFileDialog::getExistingDirectory(this, tr("Choose a Directory"), CurrentPath);
 	if (s.isEmpty())
@@ -360,9 +364,9 @@ void Prefs_Fonts::AddPath()
 	removeButton->setEnabled(false);
 	CurrentPath = s;
 	QString dir(QDir::fromNativeSeparators(s2));
-	m_availFonts.AddScalableFonts(dir +"/");
+	m_availFonts.addScalableFonts(dir +"/");
 	m_availFonts.updateFontMap();
-	m_availFonts.WriteCacheList();
+	m_availFonts.writeFontCache();
 
 	updateFontList();
 	updateRejectedFontList();
@@ -394,7 +398,7 @@ void Prefs_Fonts::ChangePath()
 	//writePaths();
 	CurrentPath = s;
 	QString dir = QDir::fromNativeSeparators(s2);
-	m_availFonts.AddScalableFonts(dir +"/");
+	m_availFonts.addScalableFonts(dir +"/");
 	m_availFonts.updateFontMap();
 	updateFontList();
 	updateRejectedFontList();
@@ -405,7 +409,7 @@ void Prefs_Fonts::ChangePath()
 void Prefs_Fonts::DelPath()
 {
 	Q_ASSERT(m_doc==nullptr); // should never be called in doc-specific prefs
-	QFile fx(PrefsManager::instance()->preferencesLocation()+"/scribusfont13.rc");
+	QFile fx(PrefsManager::instance().preferencesLocation()+"/scribusfont13.rc");
 	if (!fx.open(QIODevice::WriteOnly))
 		return;
 

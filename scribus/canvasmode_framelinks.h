@@ -41,7 +41,7 @@ class CanvasMode_FrameLinks :  public CanvasMode
 
 public:
 	explicit CanvasMode_FrameLinks(ScribusView* view);
-	~CanvasMode_FrameLinks() override {}
+	~CanvasMode_FrameLinks() override = default;
 
 	void enterEvent(QEvent *) override;
 	void leaveEvent(QEvent *) override;
@@ -64,7 +64,7 @@ private:
 	void createContextMenu(PageItem *currItem, double mx, double my);
 
 	int    m_frameResizeHandle;
-	double m_Mxp, m_Myp, m_Dxp, m_Dyp;
+	double m_Mxp, m_Myp;
 	ScribusMainWindow* m_ScMW;
 };
 

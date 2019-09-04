@@ -31,22 +31,10 @@ IconManager::IconManager(QObject *parent)
 {
 }
 
-IconManager::~IconManager()
+IconManager& IconManager::instance()
 {
-}
-
-IconManager* IconManager::instance()
-{
-	if (m_instance == nullptr)
-		m_instance = new IconManager();
-
+	static IconManager m_instance;
 	return m_instance;
-}
-
-void IconManager::deleteInstance()
-{
-	delete m_instance;
-	m_instance = nullptr;
 }
 
 bool IconManager::setup()
@@ -205,7 +193,7 @@ QPixmap IconManager::loadPixmap(const QString& nam, bool forceUseColor, bool rtl
 		qWarning("Unable to load icon %s: Got null pixmap", iconFilePath.toLatin1().constData());
 //	else
 //		qDebug()<<"Successful icon load from"<<iconFilePath;
-	if (PrefsManager::instance()->appPrefs.uiPrefs.grayscaleIcons && !forceUseColor)
+	if (PrefsManager::instance().appPrefs.uiPrefs.grayscaleIcons && !forceUseColor)
 		iconToGrayscale(pm);
 	if (rtlFlip)
 	{
@@ -263,7 +251,7 @@ QString IconManager::baseNameForTranslation(const QString& transName) const
 
 QString IconManager::pathForIcon(const QString& nam)
 {
-	//QString iconset(PrefsManager::instance()->appPrefs.uiPrefs.iconSet);
+	//QString iconset(PrefsManager::instance().appPrefs.uiPrefs.iconSet);
 	QString iconSubdir(m_iconSets[m_activeSetBasename].path+"/");
 	QString primaryIconSubdir(m_iconSets[m_backupSetBasename].path+"/");
 

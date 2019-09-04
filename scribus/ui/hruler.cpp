@@ -35,7 +35,6 @@ for which a new license (GPL+exception) is in place.
 
 #include "canvasgesture_rulermove.h"
 #include "hruler.h"
-#include "prefsmanager.h"
 #include "scpage.h"
 
 #include "scribusdoc.h"
@@ -56,47 +55,12 @@ for which a new license (GPL+exception) is in place.
 #define midline (topline + rulerheight/2)
 #define tabline 7
 
-enum ruler_code 
-{ 
-	rc_none = 0,
-	rc_leftFrameDist = 1,
-	rc_rightFrameDist = 2,
-	rc_indentFirst = 3,
-	rc_leftMargin = 4,
-	rc_tab = 5,
-	rc_rightMargin = 6
-};
 
 
 Hruler::Hruler(ScribusView *pa, ScribusDoc *doc) : QWidget(pa),
-	m_textEditMode(false),
-	m_colGap(0.0),
-	m_lineCorr(0.0),
-	m_cols(0),
-	m_distLeft(0.0),
-	m_distRight(0.0),
-	m_firstIndent(0.0),
-	m_leftMargin(0.0),
-	m_rightMargin(0.0),
-	m_reverse(false),
-	m_currItem(nullptr),
-	m_itemPos(0.0),
-	m_itemEndPos(0.0),
-	m_offset(0.0),
-	m_itemScale(1.0),
-	m_oldMark(0),
-	m_mousePressed(false),
-	m_currCol(1),
-	m_currTab(0),
-	m_scaling(0.0),
-	m_rulerCode(rc_none),
-	m_mouseX(0),
 	m_doc(doc),
-	m_view(pa),
-	m_whereToDraw(0),
-	m_drawMark(false)
+	m_view(pa)
 {
-	prefsManager=PrefsManager::instance();
 	setBackgroundRole(QPalette::Window);
 	setAutoFillBackground(true);
 	QPalette palette;
@@ -106,7 +70,6 @@ Hruler::Hruler(ScribusView *pa, ScribusDoc *doc) : QWidget(pa),
 	rulerGesture = new RulerGesture(m_view, RulerGesture::HORIZONTAL);
 	unitChange();
 }
-
 
 double Hruler::textBase() const
 {
@@ -348,7 +311,7 @@ void Hruler::mouseReleaseEvent(QMouseEvent *m)
 void Hruler::enterEvent(QEvent *e)
 {
 	if (m_textEditMode)
-		qApp->changeOverrideCursor(IconManager::instance()->loadCursor("tab.png", 3));
+		qApp->changeOverrideCursor(IconManager::instance().loadCursor("tab.png", 3));
 }
 
 void Hruler::leaveEvent(QEvent *m)
@@ -449,7 +412,7 @@ void Hruler::mouseMoveEvent(QMouseEvent *m)
 		}
 		if ((!m_mousePressed) && (m->y() < height()) && (m->y() > 0) && (m->x() > ColStart - 2*m_doc->guidesPrefs().grabRadius) && (m->x() < ColEnd + 2*m_doc->guidesPrefs().grabRadius))
 		{
-			setCursor(IconManager::instance()->loadCursor("tab.png", 3));
+			setCursor(IconManager::instance().loadCursor("tab.png", 3));
 			switch (findRulerHandle(m->pos(), m_doc->guidesPrefs().grabRadius))
 			{
 				case rc_leftFrameDist:
@@ -478,7 +441,7 @@ void Hruler::mouseMoveEvent(QMouseEvent *m)
 		}
 		if ((m_mousePressed) && (m_rulerCode == rc_tab) && ((m->y() > height()) || (m->y() < 0)))
 		{
-			setCursor(IconManager::instance()->loadCursor("DelPoint.png", 1, 1));
+			setCursor(IconManager::instance().loadCursor("DelPoint.png", 1, 1));
 			return;
 		}
 		setCursor(QCursor(Qt::ArrowCursor));

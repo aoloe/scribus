@@ -26,10 +26,7 @@ ScPlugin::~ScPlugin()
 {
 }
 
-bool ScPlugin::newPrefsPanelWidget( QWidget* /* parent */,
-									Prefs_Pane*& /* panel */,
-									QString& /* caption */,
-									QPixmap& /* icon */)
+bool ScPlugin::newPrefsPanelWidget( QWidget* /* parent */, Prefs_Pane*& /* panel */)
 {
 	return false;
 }

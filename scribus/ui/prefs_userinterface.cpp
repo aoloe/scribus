@@ -26,6 +26,8 @@ Prefs_UserInterface::Prefs_UserInterface(QWidget* parent, ScribusDoc* doc)
 {
 	setupUi(this);
 	languageChange();
+	m_caption = tr("User Interface");
+	m_icon = "scribus16.png";
 
 	QStringList languageList;
 	LanguageManager::instance()->fillInstalledGUIStringList(&languageList);
@@ -45,7 +47,7 @@ Prefs_UserInterface::Prefs_UserInterface(QWidget* parent, ScribusDoc* doc)
 	themeComboBox->addItem("");
 	themeComboBox->addItems(styleList);
 	QStringList iconSetList;
-	iconSetList=IconManager::instance()->nameList(ScQApp->currGUILanguage());
+	iconSetList=IconManager::instance().nameList(ScQApp->currGUILanguage());
 	iconSetComboBox->addItems(iconSetList);
 
 	connect(languageComboBox, SIGNAL(activated(const QString &)), this, SLOT(setSelectedGUILang(const QString &)));
@@ -53,9 +55,7 @@ Prefs_UserInterface::Prefs_UserInterface(QWidget* parent, ScribusDoc* doc)
 	connect(storyEditorFontColorPushButton, SIGNAL(clicked()), this, SLOT(changeStoryEditorFontColor()));
 }
 
-Prefs_UserInterface::~Prefs_UserInterface()
-{
-}
+Prefs_UserInterface::~Prefs_UserInterface() = default;
 
 void Prefs_UserInterface::languageChange()
 {
@@ -115,7 +115,7 @@ void Prefs_UserInterface::saveGuiToPrefs(struct ApplicationPrefs *prefsData) con
 {
 	prefsData->uiPrefs.language=selectedGUILang;
 	prefsData->uiPrefs.style=themeComboBox->currentText();
-	prefsData->uiPrefs.iconSet=IconManager::instance()->baseNameForTranslation(iconSetComboBox->currentText());
+	prefsData->uiPrefs.iconSet=IconManager::instance().baseNameForTranslation(iconSetComboBox->currentText());
 	prefsData->uiPrefs.applicationFontSize=fontSizeMenuSpinBox->value();
 	prefsData->uiPrefs.paletteFontSize=fontSizePaletteSpinBox->value();
 	prefsData->uiPrefs.wheelJump=wheelJumpSpinBox->value();

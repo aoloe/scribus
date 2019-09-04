@@ -43,8 +43,6 @@ for which a new license (GPL+exception) is in place.
 
 ScripterCore::ScripterCore(QWidget* parent)
 {
-	m_menuMgr = nullptr;
-
 	m_pyConsole = new PythonConsole(parent);
 	m_scripterActions.clear();
 	m_recentScriptActions.clear();
@@ -124,19 +122,18 @@ void ScripterCore::disableMainWindowMenu()
 void ScripterCore::buildScribusScriptsMenu()
 {
 	QString pfad = ScPaths::instance().scriptDir();
-	QString pfad2;
-	pfad2 = QDir::toNativeSeparators(pfad);
+	QString pfad2 = QDir::toNativeSeparators(pfad);
 	QDir ds(pfad2, "*.py", QDir::Name | QDir::IgnoreCase, QDir::Files | QDir::NoSymLinks);
-	if ((ds.exists()) && (ds.count() != 0))
+	if ((!ds.exists()) || (ds.count() == 0))
+		return;
+
+	for (uint dc = 0; dc < ds.count(); ++dc)
 	{
-		for (uint dc = 0; dc < ds.count(); ++dc)
-		{
-			QFileInfo fs(ds[dc]);
-			QString strippedName=fs.baseName();
-			m_scripterActions.insert(strippedName, new ScrAction( ScrAction::RecentScript, strippedName, QKeySequence(), this, strippedName));
-			connect( m_scripterActions[strippedName], SIGNAL(triggeredData(QString)), this, SLOT(StdScript(QString)) );
-			m_menuMgr->addMenuItemString(strippedName, "ScribusScripts");
-		}
+		QFileInfo fs(ds[dc]);
+		QString strippedName=fs.baseName();
+		m_scripterActions.insert(strippedName, new ScrAction( ScrAction::RecentScript, strippedName, QKeySequence(), this, strippedName));
+		connect( m_scripterActions[strippedName], SIGNAL(triggeredData(QString)), this, SLOT(StdScript(QString)) );
+		m_menuMgr->addMenuItemString(strippedName, "ScribusScripts");
 	}
 }
 
@@ -144,7 +141,7 @@ void ScripterCore::rebuildRecentScriptsMenu()
 {
 	m_menuMgr->clearMenuStrings("RecentScripts");
 	m_recentScriptActions.clear();
-	uint max = qMin(PrefsManager::instance()->appPrefs.uiPrefs.recentDocCount, m_recentScripts.count());
+	uint max = qMin(PrefsManager::instance().appPrefs.uiPrefs.recentDocCount, m_recentScripts.count());
 	for (uint m = 0; m < max; ++m)
 	{
 		QString strippedName=m_recentScripts[m];
@@ -483,7 +480,7 @@ void ScripterCore::slotExecute()
 
 void ScripterCore::readPlugPrefs()
 {
-	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
+	PrefsContext* prefs = PrefsManager::instance().prefsFile->getPluginContext("scriptplugin");
 	if (!prefs)
 	{
 		qDebug("scriptplugin: Unable to load prefs");
@@ -504,13 +501,13 @@ void ScripterCore::readPlugPrefs()
 	// then get more general preferences
 	m_enableExtPython = prefs->getBool("extensionscripts",false);
 	m_importAllNames = prefs->getBool("importall",true);
-	m_startupScript = prefs->get("startupscript", QString::null);
+	m_startupScript = prefs->get("startupscript", QString());
 	// and have the console window set up its position
 }
 
 void ScripterCore::savePlugPrefs()
 {
-	PrefsContext* prefs = PrefsManager::instance()->prefsFile->getPluginContext("scriptplugin");
+	PrefsContext* prefs = PrefsManager::instance().prefsFile->getPluginContext("scriptplugin");
 	if (!prefs)
 	{
 		qDebug("scriptplugin: Unable to load prefs");
@@ -535,7 +532,7 @@ void ScripterCore::savePlugPrefs()
 void ScripterCore::aboutScript()
 {
 	QString fname = ScCore->primaryMainWindow()->CFileDialog(".", tr("Examine Script"), tr("Python Scripts (*.py *.PY);;All Files (*)"), "", fdNone);
-	if (fname == QString::null)
+	if (fname.isNull())
 		return;
 	QString html("<html><body>");
 	QFileInfo fi = QFileInfo(fname);

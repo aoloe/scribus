@@ -60,10 +60,11 @@ void ParaStyleComboBox::updateFormatList()
 	{
 		QStringList st;
 		addItem( CommonStrings::trDefaultParagraphStyle );
-		for (int x = 0; x < currentDoc->paragraphStyles().count(); ++x)
+		for (int i = 0; i < currentDoc->paragraphStyles().count(); ++i)
 		{
-			if ( !currentDoc->paragraphStyles()[x].name().isEmpty() && !currentDoc->paragraphStyles()[x].isDefaultStyle())
-				st.append(currentDoc->paragraphStyles()[x].name());
+			const ParagraphStyle& paraStyle = currentDoc->paragraphStyles()[i];
+			if (!paraStyle.name().isEmpty() && !paraStyle.isDefaultStyle())
+				st.append(paraStyle.name());
 		}
 		st.sort();
 		addItems(st);
@@ -88,7 +89,7 @@ void ParaStyleComboBox::updateFormatList()
 void ParaStyleComboBox::selFormat(int e)
 {
 	if (e == 0)
-		emit newStyle(QString::null);
+		emit newStyle(QString());
 	else
 		emit newStyle(currentText());
 }
@@ -124,11 +125,11 @@ void CharStyleComboBox::updateFormatList()
 	{
 		QStringList st;
 		addItem( CommonStrings::trDefaultCharacterStyle );
-		for (int x = 0; x < currentDoc->charStyles().count(); ++x)
+		for (int i = 0; i < currentDoc->charStyles().count(); ++i)
 		{
-			if ( !currentDoc->charStyles()[x].name().isEmpty() &&
-			    !currentDoc->charStyles()[x].isDefaultStyle())
-				st.append(currentDoc->charStyles()[x].name());
+			const CharStyle& charStyle = currentDoc->charStyles()[i];
+			if (!charStyle.name().isEmpty() && !charStyle.isDefaultStyle())
+				st.append(charStyle.name());
 		}
 		st.sort();
 		addItems(st);
@@ -153,7 +154,7 @@ void CharStyleComboBox::updateFormatList()
 void CharStyleComboBox::selFormat(int e)
 {
 	if (e == 0)
-		emit newStyle(QString::null);
+		emit newStyle(QString());
 	else
 		emit newStyle(currentText());
 }
@@ -189,11 +190,11 @@ void CellStyleComboBox::updateFormatList()
 	{
 		QStringList st;
 		addItem( CommonStrings::trDefaultCellStyle  );
-		for (int x = 0; x < currentDoc->cellStyles().count(); ++x)
+		for (int i = 0; i < currentDoc->cellStyles().count(); ++i)
 		{
-			if ( !currentDoc->cellStyles()[x].name().isEmpty() &&
-			    !currentDoc->cellStyles()[x].isDefaultStyle())
-				st.append(currentDoc->cellStyles()[x].name());
+			const CellStyle& cellStyle = currentDoc->cellStyles()[i];
+			if (!cellStyle.name().isEmpty() && !cellStyle.isDefaultStyle())
+				st.append(cellStyle.name());
 		}
 		st.sort();
 		addItems(st);
@@ -216,7 +217,7 @@ void CellStyleComboBox::selFormat(int e)
 {
 	if (e == 0)
 	{
-		emit newStyle(QString::null);
+		emit newStyle(QString());
 	}
 	else
 	{
@@ -255,11 +256,11 @@ void TableStyleComboBox::updateFormatList()
 	{
 		QStringList st;
 		addItem( CommonStrings::trDefaultTableStyle );
-		for (int x = 0; x < currentDoc->tableStyles().count(); ++x)
+		for (int i = 0; i < currentDoc->tableStyles().count(); ++i)
 		{
-			if ( !currentDoc->tableStyles()[x].name().isEmpty() &&
-			    !currentDoc->tableStyles()[x].isDefaultStyle())
-				st.append(currentDoc->tableStyles()[x].name());
+			const TableStyle& tableStyle = currentDoc->tableStyles()[i];
+			if (!tableStyle.name().isEmpty() && !tableStyle.isDefaultStyle())
+				st.append(tableStyle.name());
 		}
 		st.sort();
 		addItems(st);
@@ -282,7 +283,7 @@ void TableStyleComboBox::selFormat(int e)
 {
 	if (e == 0)
 	{
-		emit newStyle(QString::null);
+		emit newStyle(QString());
 	}
 	else
 	{

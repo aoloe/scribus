@@ -43,12 +43,12 @@ class MissingGlyphsPainter: public TextLayoutPainter
 //	const TextLayout& m_textLayout;
 
 public:
-	MissingGlyphsPainter(errorCodes& itemError, const TextLayout& textLayout)
+	MissingGlyphsPainter(errorCodes& itemError, const TextLayout&  /*textLayout*/)
 		: m_itemError(itemError)
 //		, m_textLayout(textLayout)
 	{ }
 
-	void drawGlyph(const GlyphCluster& gc)
+	void drawGlyph(const GlyphCluster& gc) override
 	{
 		if (gc.isEmpty())
 		{
@@ -56,13 +56,13 @@ public:
 			m_itemError.insert(MissingGlyph, pos);
 		}
 	}
-	void drawGlyphOutline(const GlyphCluster& gc, bool)
+	void drawGlyphOutline(const GlyphCluster& gc, bool) override
 	{
 		drawGlyph(gc);
 	}
-	void drawLine(QPointF, QPointF) { }
-	void drawRect(QRectF) { }
-	void drawObject(PageItem*) { }
+	void drawLine(QPointF, QPointF) override { }
+	void drawRect(QRectF) override { }
+	void drawObject(PageItem*) override { }
 };
 
 bool isPartFilledImageFrame(PageItem * currItem)
@@ -117,7 +117,7 @@ void DocumentChecker::checkPages(ScribusDoc *currDoc, struct CheckerPrefs checke
 			bool error = false;
 			int masterPageNumber = -1, masterPageLocation = -1;
 			PageLocation pageLoc = currDoc->locationOfPage(i);
-			masterPageNumber = currDoc->MasterNames.value(currDoc->DocPages[i]->MPageNam, -1);
+			masterPageNumber = currDoc->MasterNames.value(currDoc->DocPages[i]->masterPageName(), -1);
 			if (masterPageNumber >= 0)
 				masterPageLocation = currDoc->MasterPages[masterPageNumber]->LeftPg;
 			if (currDoc->pagePositioning() == singlePage)

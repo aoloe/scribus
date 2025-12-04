@@ -318,7 +318,8 @@ void PageGrid::setPageLayout(PageLayout layout)
 
 void PageGrid::setPageOffset(int pageCount)
 {
-	m_pageOffset = pageCount;
+	m_pageOffset = columnNormalized(pageCount);
+
 	calculateSize();
 	update();
 }
@@ -327,6 +328,8 @@ int PageGrid::pageId(int r, int c, bool clampId)
 {
 
 	if ( r == -1 || c == -1) return -1;
+
+	c = columnNormalized(c);
 
 	int id = (r == 0) ? c : r * columns() + c;
 	id -= m_pageOffset;
@@ -363,9 +366,9 @@ int PageGrid::pageHeight()
 	return m_rowHeight - m_fontSize - m_labelGap;
 }
 
-void PageGrid::setSelectedPage(int pageID)
+void PageGrid::setSelectedPage(int pageId)
 {
-	m_selectedPage = clampPageId(pageID);
+	m_selectedPage = clampPageId(pageId);
 	update();
 }
 
@@ -398,6 +401,11 @@ int PageGrid::rows()
 	return qCeil( (double)(pageCount() + m_pageOffset + 1) / (double)columns() );
 }
 
+int PageGrid::columnNormalized(int column)
+{
+	return m_rtlBinding ? columns() - column - 1: column;
+}
+
 int PageGrid::columnAt(QPoint pos)
 {
 	if(pageCount() == 0) return -1;
@@ -407,35 +415,27 @@ int PageGrid::columnAt(QPoint pos)
 
 	int m_col = -1;
 
-	int cellId = row * m_cellsInGroup;
-	int pageId = cellId - m_pageOffset;
 	QRect cellRect(m_groupSpace, m_rowSpace + row * (rowHeight() + m_rowSpace), dummyPageSize().width(), rowHeight());
 	int width = 0;
 
-	for (int i = 0; i < m_cellsInGroup; ++i)
+	for (int i = 0; i <= m_cellsInGroup; ++i)
 	{
-
-		int id = cellId + i;
+		int id = pageId(row, i, false);
 
 		// skip empty cells
-		if (id < m_pageOffset || id >= pageCount() + m_pageOffset)
+		if (pageInRange(id))
 		{
-			//qDebug() << "Cell" << id << "is Empty";
-			width = dummyPageSize().width();
-		}
-		else
-		{
-			//qDebug() << "Cell" << id << "is Page" << "PageId" << pageId + i;
-			PageCell *pc = pageList.at(pageId + i);
+			PageCell *pc = pageList.at(id);
 			width = pc->pageWidthByHeight(pageHeight());
 		}
+		else
+			width = dummyPageSize().width();
 
 		cellRect.setWidth( width );
 
 		if(cellRect.contains(pos))
 		{
 			m_col = i;
-			//qDebug() << "Page" << pageId + i << "at" << pos << "in column"<< i;
 			break;
 		}
 
@@ -462,23 +462,19 @@ int PageGrid::rowWidth(int rowId)
 {
 	if(pageCount() == 0 || rowId < 0) return -1;
 
-	int cellId = rowId * m_cellsInGroup;
-	int pageId = cellId - m_pageOffset;
 	int width = 0;
 
 	for (int i = 0; i < m_cellsInGroup; ++i)
 	{
-		int id = cellId + i;
+		int id = pageId(rowId, i, false);
 
-		if (id < m_pageOffset || id >= pageCount() + m_pageOffset)
+		if (pageInRange(id))
 		{
-			width += dummyPageSize().width();
-		}
-		else
-		{
-			PageCell *pc = pageList.at(pageId + i);
+			PageCell *pc = pageList.at(id);
 			width += pc->pageWidthByHeight(pageHeight());
 		}
+		else
+			width += dummyPageSize().width();
 
 		width += m_cellGap;
 
@@ -494,33 +490,26 @@ QRect PageGrid::rectAt(int row, int col)
 {
 	if ( row == -1 || col == -1) return QRect();
 
-	int cellId = row * m_cellsInGroup;
-	int pageId = cellId - m_pageOffset;
 	QRect cellRect(m_groupSpace, m_rowSpace + row * (rowHeight() + m_rowSpace), dummyPageSize().width(), rowHeight());
 	int width = 0;
 
-	for (int i = 0; i < m_cellsInGroup; ++i)
+	for (int i = 0; i <= m_cellsInGroup; ++i)
 	{
-
-		int id = cellId + i;
+		int id = pageId(row, i, false);
 
 		// skip empty cells
-		if (id < m_pageOffset || id >= pageCount() + m_pageOffset)
+		if (pageInRange(id))
 		{
-			width = dummyPageSize().width();
-		}
-		else
-		{
-			PageCell *pc = pageList.at(pageId + i);
+			PageCell *pc = pageList.at(id);
 			width = pc->pageWidthByHeight(pageHeight());
 		}
+		else
+			width = dummyPageSize().width();
 
 		cellRect.setWidth( width );
 
-		if(i == col)
-		{
+		if(id == pageId(row, col, false))
 			return cellRect;
-		}
 
 		cellRect.setX(cellRect.x() + width + m_cellGap);
 	};
@@ -534,12 +523,10 @@ QSize PageGrid::dummyPageSize()
 	double ratio = m_documentPageSize.width() / m_documentPageSize.height();
 	QSize dummySize(pageHeight() * ratio, pageHeight());
 
-	//qDebug() << dummySize << ratio << m_documentPageSize.width() << m_documentPageSize.height();
-
 	return dummySize;
 }
 
-QPoint PageGrid::mapPosToCell(QPoint pos, Mode &mode)
+QRect PageGrid::mapPosToCell(QPoint pos, Mode &mode)
 {
 	int col = columnAt(pos);
 	int row = rowAt(pos);
@@ -548,7 +535,7 @@ QPoint PageGrid::mapPosToCell(QPoint pos, Mode &mode)
 	if (col == -1 || row == -1)
 	{
 		mode = Mode::Invalid;
-		return QPoint();
+		return QRect();
 	}
 
 	int id = pageId(row, col, false);
@@ -557,39 +544,42 @@ QPoint PageGrid::mapPosToCell(QPoint pos, Mode &mode)
 	int y = cellRect.y();
 
 	// cell doesn't have a page
-	if (id < 0 || id >= pageCount()){
+	if (!pageInRange(id)){
 		mode = Mode::Add;
 	}
 	else
 	{
 		// check if mouse is on "insert area"
 		QRect insertArea(x, y, 8, rowHeight());
+
+		if (m_rtlBinding)
+			insertArea = QRect(cellRect.right() - 8, y, 8, rowHeight());
+
 		if (insertArea.contains(pos))
 			mode = Mode::Insert;
 		else
 			mode = Mode::Hover;
 	}
 
-	return QPoint(x,y);
+	return cellRect;
 }
 
 QPoint PageGrid::pagePosition(int pageId)
 {
-	if (pageId < 0 || pageId >= pageCount()) return QPoint();
+	if (!pageInRange(pageId)) return QPoint();
 
 	int row = qCeil( (pageId + m_pageOffset) / m_cellsInGroup );
-	int col = 0;
 
-	return rectAt(row, col).topLeft();
+	return rectAt(row, 0).topLeft();
 }
 
-int PageGrid::clampPageId(int pageID, bool allowPlusOne)
+int PageGrid::clampPageId(int pageId, bool allowPlusOne)
 {
 	// Always returns 0 if there is no page in the page list
 	if (pageCount() == 0) return 0;
 
 	int max = (allowPlusOne) ? pageCount() : pageCount() -1;
-	return qBound( 0, pageID, max);
+	return qBound( 0, pageId, max);
 }
 
 
@@ -606,7 +596,7 @@ void PageGrid::updateSelectedPage(QPoint pos)
 	int id = pageId(row, col);
 
 	// check if page id is in range of an existing cell
-	if (id > -1 && id < pageCount() )
+	if (pageInRange(id))
 	{
 		int newSelectedPage = clampPageId( id );
 
@@ -623,7 +613,7 @@ void PageGrid::updateSelectedPage(QPoint pos)
 void PageGrid::updateModeMarker(QPoint pos)
 {	
 	Mode mode;
-	QPoint mapPos = mapPosToCell(pos, mode);
+	QRect mapPos = mapPosToCell(pos, mode);
 
 	// check if mouse is on "insert area"
 	switch (mode)
@@ -636,7 +626,13 @@ void PageGrid::updateModeMarker(QPoint pos)
 	case Mode::Insert:
 	{
 		int selectorWidth = 4;
-		int offsetX = mapPos.x() - selectorWidth / 2 - qRound((double)m_cellGap / 2);
+		int offsetX;
+
+		if (m_rtlBinding)
+			offsetX = mapPos.right() - selectorWidth / 2 + qRound((double)m_cellGap / 2);
+		else
+			offsetX = mapPos.left() - selectorWidth / 2 - qRound((double)m_cellGap / 2);
+
 		m_rectInsert = QRect(offsetX, mapPos.y() - 4, selectorWidth, pageHeight() + 8 );
 		m_rectAdd = QRect();
 		m_hoveredPage = -1;
@@ -789,6 +785,12 @@ void PageGrid::showContextMenu(QPoint pos)
 	m_contextMenu->exec( mapToGlobal(pos) );
 }
 
+
+void PageGrid::setBindingDirection(int rtl_binding)
+{
+	m_rtlBinding = rtl_binding == 1;
+}
+
 /* ********************************************************************************* *
  *
  * Events
@@ -797,8 +799,6 @@ void PageGrid::showContextMenu(QPoint pos)
 
 void PageGrid::paintEvent(QPaintEvent *event)
 {
-
-	int count = 0;
 	int x = m_groupSpace;
 	int y = m_rowSpace;
 	int offset = 0;
@@ -812,9 +812,6 @@ void PageGrid::paintEvent(QPaintEvent *event)
 
 	if (pageCount() == 0) return;
 
-//	QElapsedTimer timer;
-//	timer.start();
-
 	// Draw pages
 	for (int r = 0; r < rows(); r++)
 	{
@@ -825,32 +822,41 @@ void PageGrid::paintEvent(QPaintEvent *event)
 		for (int c = 0; c < columns(); c++)
 		{
 
+			int id = pageId(r, c, false);
+
 			// cell is after last page cell
-			if (count >= pageCount() + m_pageOffset)
+			if (id >= pageCount() + columns())
 				break;
 
 			// cell is a page cell
-			if (count >= m_pageOffset && count < pageCount() + m_pageOffset)
+			if (pageInRange(id))
 			{
-				int id = count - m_pageOffset;
 				PageCell * cell = getPageItem(id);
+
 				if (id == m_selectedPage)
 					selectedPageRect = QRect(x, y, cell->pageWidthByHeight(pageHeight()), pageHeight() );
+
 				QPoint pos(x,y);
 				bool isRightPage = (m_cellsInGroup == c + 1 && m_cellsInGroup > 1);
 				drawTile(painter, pos, cell, (id == m_selectedPage) ? true : false, (id == m_hoveredPage) ? true : false, foregroundColor, isRightPage);
 
+				bool ltrLast = !m_rtlBinding && id == pageCount() -1;
+				bool rtlFirst = m_rtlBinding && id == 0;
+
 				// add space only between pages
-				if ((c + 1) % m_cellsInGroup == 0 || count == pageCount() + m_pageOffset -1)
+				if ((c + 1) % m_cellsInGroup == 0 || ltrLast || rtlFirst)
 					offset = 0;
 				else
 					offset = m_cellGap;
 
+				if(isLastRow(r + 1))
+					groupStart = m_rtlBinding ? x : m_groupSpace;
 
-				x += cell->pageWidthByHeight(pageHeight()) + offset;
-				groupWidth += cell->pageWidthByHeight(pageHeight()) + offset;
+				int w = cell->pageWidthByHeight(pageHeight()) + offset;
+				x += w;
+				groupWidth += w;
+
 				drawGroupRect = true;
-
 
 			}
 			// cell is before first page cell
@@ -860,11 +866,9 @@ void PageGrid::paintEvent(QPaintEvent *event)
 				x += dummyPageSize().width() + offset;
 
 				// adjust start on first row if first page has an offset
-				if(r == 0)
-					groupStart = x;
+				if(isFirstRow(r))
+					groupStart = m_rtlBinding ? m_groupSpace : x;
 			}
-
-			count++;
 		}
 
 		// Draw group border
@@ -952,7 +956,7 @@ void PageGrid::dropEvent(QDropEvent *event)
 		if ( r == -1 || c == -1 )
 			return;
 
-		int p = pageId(r, c);
+		int id = pageId(r, c);
 		Mode mode;
 		mapPosToCell(dropEventPos, mode);
 
@@ -960,10 +964,10 @@ void PageGrid::dropEvent(QDropEvent *event)
 		{
 		case Mode::Add:
 		case Mode::Insert:
-			emit newPage(p, tmp);
+			emit newPage(id, tmp);
 			break;
 		case Mode::Hover:
-			emit useTemplate(tmp, clampPageId(p));
+			emit useTemplate(tmp, clampPageId(id));
 			break;
 		case Mode::Invalid:
 			break;
@@ -1050,9 +1054,9 @@ void PageGrid::mouseReleaseEvent(QMouseEvent *event)
 
 			int row = rowAt(mouseEventPos);
 			int col = columnAt(mouseEventPos);
-			int pageID = pageId(row, col);
+			int id = pageId(row, col);
 
-			if (pageID > -1 && pageID < pageCount() )
+			if (pageInRange(id))
 				emit click(m_selectedPage, event->button());
 		}
 		break;

@@ -134,6 +134,9 @@ public:
 	void setPageLayout(PageLayout layout);
 	PageLayout pageLayout() { return m_pageLayout; };
 
+	/**
+	 * @param offset currrently it's 0 for single page document documents, 0 or 1 for double page document.
+	 */
 	void setPageOffset(int pageCount);
 	int pageOffset() { return m_pageOffset; };
 
@@ -147,7 +150,8 @@ public:
 	int pageCount();
 	int pageHeight();
 
-	void setSelectedPage(int pageID);
+	void setSelectedPage(int pageId);
+	void setBindingDirection(int rtl_binding);
 	int selectedPage() { return m_selectedPage; };
 
 	void deleteSelectedPage();
@@ -190,9 +194,15 @@ private:
 	int m_cellsInGroup {1}; // 1 for single page
 	int m_pageOffset {0};
 	QMenu *m_contextMenu {nullptr};
+	bool m_rtlBinding = false;
 
 	int columns();
 	int rows();
+
+	int columnNormalized(int column);
+
+	bool isFirstRow(int row) { return row == 0 ? true : false; };
+	bool isLastRow(int row) { return row == rows() ? true : false; };
 
 	int columnAt(QPoint pos);
 	int rowAt(QPoint pos);
@@ -201,10 +211,11 @@ private:
 
 	QSize dummyPageSize();
 
-	QPoint mapPosToCell(QPoint pos, Mode &mode);
+	QRect mapPosToCell(QPoint pos, Mode &mode);
 	QPoint pagePosition(int pageId);
 
-	int clampPageId(int pageID, bool allowPlusOne = false);
+	int clampPageId(int pageId, bool allowPlusOne = false);
+	bool pageInRange(int pageId) { return pageId >= 0 && pageId < pageCount(); };
 
 	void updateSelectedPage(QPoint pos);
 	void updateModeMarker(QPoint pos);

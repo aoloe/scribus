@@ -63,6 +63,9 @@ Prefs_DocumentSetup::Prefs_DocumentSetup(QWidget* parent, ScribusDoc* doc)
 	layoutFirstPageIsComboBox->addItem(" ");
 	layoutFirstPageIsComboBox->setCurrentIndex(0);
 	layoutFirstPageIsComboBox->setEnabled(false);
+	bindingDirectionButtonGroup->setId(leftToRightRadioButton, 0);
+	bindingDirectionButtonGroup->setId(rightToLeftRadioButton, 1);
+	leftToRightRadioButton->setChecked(true);
 
 	pageWidthSpinBox->setMaximum(16777215);
 	pageHeightSpinBox->setMaximum(16777215);
@@ -176,6 +179,16 @@ void Prefs_DocumentSetup::restoreDefaults(struct ApplicationPrefs *prefsData)
 
 	layoutFirstPageIsComboBox->setCurrentIndex(prefsData->pageSets[prefsData->docSetupPrefs.pagePositioning].FirstPage);
 
+	switch (prefsData->docSetupPrefs.bindingDirection)
+	{
+		case 0:
+				leftToRightRadioButton->setChecked(true);
+				break;
+		case 1:
+				rightToLeftRadioButton->setChecked(true);
+				break;
+	}
+
 	pageWidthSpinBox->blockSignals(false);
 	pageHeightSpinBox->blockSignals(false);
 	pageOrientationComboBox->blockSignals(false);
@@ -221,6 +234,7 @@ void Prefs_DocumentSetup::saveGuiToPrefs(struct ApplicationPrefs *prefsData) con
 	prefsData->docSetupPrefs.pageWidth = pageW;
 	prefsData->docSetupPrefs.pageHeight = pageH;
 	prefsData->docSetupPrefs.pagePositioning = pageLayoutButtonGroup->checkedId();
+	prefsData->docSetupPrefs.bindingDirection = bindingDirectionButtonGroup->checkedId();
 	prefsData->pageSets[prefsData->docSetupPrefs.pagePositioning].FirstPage = layoutFirstPageIsComboBox->currentIndex();
 
 	prefsData->docSetupPrefs.margins = marginsWidget->margins();

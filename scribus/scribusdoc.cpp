@@ -6124,8 +6124,8 @@ void ScribusDoc::reformPages(bool moveObjects)
 			{
 				if (rtlBinding)
 				{
-					ScPage* next_page = Pages->at(i+1); // check width of next page for correct offset
-					int w = next_page ? next_page->width() : page->width();
+					// check width of next page for correct offset
+					int w = i < Pages->size() - 1 ? Pages->at(i+1)->width() : page->width();
 					currentXPos -= w + m_docPrefsData.displayPrefs.pageGapHorizontal;
 				}
 				else
